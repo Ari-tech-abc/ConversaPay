@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConversaPay - נציג המכירות החכם שלך</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            direction: rtl;
+            text-align: right;
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            padding: 0 30px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        
+        .navbar-brand { font-size: 1.5rem; font-weight: 800; color: #fff; }
+        
+        .navbar-nav {
+            display: flex;
+            list-style: none;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-size: 0.95rem;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .nav-link:hover {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .container { max-width: 1200px; margin: 0 auto; padding: 60px 20px; }
+        
+        .hero {
+            text-align: center;
+            padding: 80px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #0f172a 100%);
+            border-radius: 24px;
+            margin-bottom: 60px;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, #fff, #e2e8f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            color: #e2e8f0;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        
+        .btn-outline:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.5);
+        }
+        
+        .section {
+            margin-bottom: 80px;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 50px;
+            color: #fff;
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #94a3b8;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-right: auto;
+            margin-left: auto;
+        }
+        
+        .steps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+        
+        .step-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+        }
+        
+        .step-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.08);
+        }
+        
+        .step-number {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 auto 20px;
+        }
+        
+        .step-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+        
+        .step-card p {
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+        
+        .feature-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            transition: all 0.3s;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.08);
+        }
+        
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .feature-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        
+        .feature-card p {
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .pricing-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .pricing-card.pro {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1));
+            border-color: #3b82f6;
+        }
+        
+        .best-value {
+            position: absolute;
+            top: -12px;
+            right: 50%;
+            transform: translateX(50%);
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 6px 20px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+        
+        .price-amount {
+            font-size: 3rem;
+            font-weight: 800;
+            margin: 20px 0;
+            color: #fff;
+        }
+        
+        .price-currency {
+            font-size: 1.5rem;
+            vertical-align: top;
+        }
+        
+        .price-period {
+            font-size: 1rem;
+            color: #94a3b8;
+        }
+        
+        .pricing-features {
+            list-style: none;
+            margin: 30px 0;
+            text-align: right;
+        }
+        
+        .pricing-features li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            color: #e2e8f0;
+        }
+        
+        .pricing-features li:last-child {
+            border-bottom: none;
+        }
+        
+        .pricing-features li::before {
+            content: "✓";
+            color: #10b981;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin-top: 60px;
+        }
+        
+        .footer p {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2rem; }
+            .hero p { font-size: 1.1rem; }
+            .section-title { font-size: 1.8rem; }
+            .container { padding: 40px 16px; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">🤖 ConversaPay</div>
+        <ul class="navbar-nav">
+            <li><a href="/login.html" class="nav-link">התחברות</a></li>
+            <li><a href="/register.html" class="nav-link btn-outline">הרשמה</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <h1>נציג המכירות שמעולם לא ישן 🤖</h1>
+            <p>
+                ConversaPay הופכת את שיחות השירות שלכם למכירות ישירות. 
+                הבוט שלכם מוכר מוצרים וסולק תשלומים מאובטחים ישירות בתוך הצ'אט.
+            </p>
+            <a href="/register.html" class="btn btn-primary">🚀 התחל עכשיו בחינם</a>
+        </section>
+
+        <!-- How It Works Section -->
+        <section class="section">
+            <h2 class="section-title">כיצד זה עובד</h2>
+            <p class="section-subtitle">שלושה שלבים פשוטים והבוט שלכם חי ופעיל באתר</p>
+            
+            <div class="steps-grid">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h3>יוצרים חשבון</h3>
+                    <p>מגדירים את העסק והמוצרים שלכם בלחיצות פשוטות. המערכת מוכנה במספר דקות בלבד.</p>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h3>מתקנים את הבוט</h3>
+                    <p>מטמיעים את הבוט באתר בלחיצת כפתור אחת או בעזרת תוסף הוורדפרס המותאם אישית שלנו.</p>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h3>מרוויחים מכירות</h3>
+                    <p>ה-AI מנהל שיחות עם הלקוחות שלכם, מציע להם מוצרים ומפיק קישורי תשלום מהירים.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="section">
+            <h2 class="section-title">פיצ'רים מרכזיים</h2>
+            <p class="section-subtitle">כל מה שצריך לניהול מכירות חכמות באתר האינטרנט שלכם</p>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🚀</div>
+                    <h3>סליקה ישירה בצ'אט</h3>
+                    <p>אין צורך לצאת מהשיחה כדי לשלם. הלקוחות שלכם משלמים ישירות דרך הצ'אט באמצעות Stripe.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>אנליטיקות מתקדמות</h3>
+                    <p>מעקב אחר הזמנות, הכנסות ויחסי המרה בזמן אמת. כל הנתונים שלכם במקום אחד.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔌</div>
+                    <h3>התקנה ב-0 מאמץ</h3>
+                    <p>תוסף וורדפרס מותאם אישית בלחיצת כפתור אחת. אין צורך בידע טכני.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>שירות לקוחות 24/7</h3>
+                    <p>הבוט שלכם זמין תמיד, גם מחוץ לשעות הפעילות של החנות.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">💳</div>
+                    <h3>תשלומים מאובטחים</h3>
+                    <p>שילוב מלא עם Stripe לתשלומים מאובטחים ומקובלים בישראל ובעולם.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>ריספונסיבי לחלוטין</h3>
+                    <p>הבוט מותאם למובייל ולטאבלט. נראה מושלם בכל מכשיר.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pricing Section -->
+        <section class="section">
+            <h2 class="section-title">חבילות ומחירים</h2>
+            <p class="section-subtitle">בחרו את החבילה המתאימה לכם. אפשרות ניסיון חופשי זמינה.</p>
+            
+            <div class="pricing-grid">
+                <!-- Free Sandbox Plan -->
+                <div class="pricing-card">
+                    <h3 style="font-size:1.5rem;margin-bottom:10px;">מסלול התנסות</h3>
+                    <p style="color:#94a3b8;margin-bottom:20px;">מיועד לבדיקות פנימיות בלבד</p>
+                    
+                    <div class="price-amount">
+                        <span class="price-currency">₪</span>0
+                        <span class="price-period" style="display:block;font-size:0.9rem;color:#94a3b8;">חודשי</span>
+                    </div>
+                    
+                    <ul class="pricing-features">
+                        <li>עד 5 הזמנות בדיקה בלבד</li>
+                        <li>גישה ללוח הבקרה</li>
+                        <li>ניהול מוצרים בסיסי</li>
+                        <li>תמיכה במייל</li>
+                    </ul>
+                    
+                    <a href="/register.html" class="btn btn-outline w-full">התחל ניסיון חינם</a>
+                </div>
+                
+                <!-- Pro Seller Plan -->
+                <div class="pricing-card pro">
+                    <div class="best-value">הכי משתלם</div>
+                    <h3 style="font-size:1.5rem;margin-bottom:10px;">מסלול מקצוען</h3>
+                    <p style="color:#94a3b8;margin-bottom:20px;">למכירות ללא הגבלה</p>
+                    
+                    <div class="price-amount">
+                        <span class="price-currency">$</span>29
+                        <span class="price-period" style="display:block;font-size:0.9rem;color:#94a3b8;">לחודש</span>
+                    </div>
+                    
+                    <ul class="pricing-features">
+                        <li>הזמנות ללא הגבלה</li>
+                        <li>התקנה באתרים חיצוניים</li>
+                        <li>דשבורד מלא ומתקדם</li>
+                        <li>תוסף וורדפרס בלחיצת כפתור</li>
+                        <li>תמיכה מועדפת</li>
+                        <li>אינטגרציות API</li>
+                    </ul>
+                    
+                    <a href="/register.html?plan=pro" class="btn btn-primary w-full">הירשם ל-Pro</a>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="footer">
+        <p>© 2024 ConversaPay. כל הזכויות שמורות.</p>
+        <p style="margin-top:10px;">
+            <a href="/login.html" class="nav-link" style="font-size:0.9rem;">התחברות</a>
+            <a href="/register.html" class="nav-link" style="font-size:0.9rem;">הרשמה</a>
+        </p>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConversaPay AI Chat - שירות לקוחות</title>
+    <link rel="stylesheet" href="frontend/css/main.css">
+    <style>
+        .chat-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-header {
+            background: var(--primary);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .chat-header h1 {
+            margin: 0;
+            font-size: 1.3rem;
+            color: white;
+        }
+        
+        .chat-header p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+            font-size: 0.9rem;
+            color: white;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .message {
+            max-width: 75%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+        
+        .message.user {
+            background: var(--primary);
+            color: white;
+            align-self: flex-start;
+            border-top-right-radius: 4px;
+        }
+        
+        .message.bot {
+            background: white;
+            color: #333;
+            align-self: flex-end;
+            border-top-left-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .checkout-btn {
+            display: inline-block;
+            margin-top: 10px;
+            background: var(--success);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        
+        .checkout-btn:hover {
+            background: var(--success-dark);
+        }
+        
+        .chat-input-area {
+            padding: 15px 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input-area input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            outline: none;
+            font-size: 1rem;
+            font-family: var(--font-family);
+        }
+        
+        .chat-input-area input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        
+        .chat-input-area button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: background var(--transition-fast);
+        }
+        
+        .chat-input-area button:hover {
+            background: var(--primary-dark);
+        }
+        
+        .error-screen {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--danger);
+        }
+        
+        .typing-indicator {
+            display: none;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 8px;
+            align-self: flex-end;
+            color: #666;
+            font-size: 0.85rem;
+        }
+        
+        .typing-indicator.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="chat-container" id="chatArea">
+            <div class="chat-header">
+                <h1 id="businessName">טוען נתוני עסק...</h1>
+                <p id="businessSub">אנא המתן</p>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot">שלום! אני הסוכן הוירטואלי. במה אוכל לעזור לך?</div>
+            </div>
+
+            <div class="typing-indicator" id="typingIndicator">מקליד...</div>
+
+            <div class="chat-input-area">
+                <input 
+                    type="text" 
+                    id="userInput" 
+                    placeholder="הקלד הודעה כאן..." 
+                    onkeypress="if(event.key==='Enter') sendMessage()"
+                >
+                <button onclick="sendMessage()">שלח</button>
+            </div>
+        </div>
+
+        <div class="chat-container error-screen" id="errorArea">
+            <h2>שגיאה בגישה למערכת הצ'אט</h2>
+            <p id="errorMessage">מזהה העסק אינו צוין או שאינו קיים במערכת.</p>
+        </div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const businessId = urlParams.get('biz');
+        const BACKEND_URL = window.location.origin;
+        let sessionId = null;
+        let conversationId = null;
+
+        window.onload = async function() {
+            if (!businessId) {
+                showError("מזהה העסק חסר בכתובת ה-URL.");
+                return;
+            }
+            await loadBusinessDetails();
+        };
+
+        async function loadBusinessDetails() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/v1/products/business/${businessId}/public`);
+                if (!response.ok) {
+                    showError(`העסק המבוקש לא נמצא במערכת.`);
+                    return;
+                }
+                
+                const products = await response.json();
+                
+                document.getElementById('businessName').textContent = 'סוכן AI';
+                document.getElementById('businessSub').textContent = `מסחר ${products.length} מוצרים בקטלוג`;
+            } catch (error) {
+                console.error(error);
+                showError("חלה שגיאה בטעינת נתוני העסק מהשרת.");
+            }
+        }
+
+        function showError(msg) {
+            document.getElementById('chatArea').style.display = 'none';
+            document.getElementById('errorArea').style.display = 'flex';
+            document.getElementById('errorMessage').textContent = msg;
+        }
+
+        async function sendMessage() {
+            const inputField = document.getElementById('userInput');
+            const messageText = inputField.value.trim();
+            
+            if (!messageText) return;
+
+            appendMessage(messageText, 'user');
+            inputField.value = '';
+
+            // Show typing indicator
+            const typing = document.getElementById('typingIndicator');
+            typing.classList.add('active');
+
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/v1/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: messageText,
+                        business_id: businessId,
+                        session_id: sessionId
+                    })
+                });
+
+                const data = await response.json();
+                
+                // Update session and conversation IDs
+                if (data.session_id) sessionId = data.session_id;
+                if (data.conversation_id) conversationId = data.conversation_id;
+
+                // Hide typing indicator
+                typing.classList.remove('active');
+
+                if (data.intent === "checkout" && data.payment_url) {
+                    appendMessage(
+                        `${data.response}<br><br><a href="${data.payment_url}" class="checkout-btn" target="_blank">מעבר מאובטח לתשלום</a>`, 
+                        'bot'
+                    );
+                } else {
+                    appendMessage(data.response, 'bot');
+                }
+
+            } catch (error) {
+                console.error(error);
+                typing.classList.remove('active');
+                appendMessage('חלה שגיאה בתקשורת עם השרת.', 'bot');
+            }
+        }
+
+        function appendMessage(text, sender) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', sender);
+            messageElement.innerHTML = text;
+            messagesContainer.appendChild(messageElement);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConversaPay - Orders Dashboard</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f1f5f9;
+            direction: rtl;
+            text-align: right;
+            color: #0f172a;
+        }
+        
+        .navbar {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            padding: 0 30px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .navbar-brand { font-size: 1.3rem; font-weight: 700; }
+        
+        .navbar-nav {
+            display: flex;
+            list-style: none;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .nav-link {
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .nav-link:hover, .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .container { max-width: 1400px; margin: 0 auto; padding: 30px 20px; }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+        
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-title { font-size: 1.1rem; font-weight: 600; }
+        .card-body { padding: 24px; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-right: 4px solid #3b82f6;
+        }
+        
+        .stat-card.success { border-right-color: #10b981; }
+        .stat-card.warning { border-right-color: #f59e0b; }
+        .stat-card.danger { border-right-color: #ef4444; }
+        
+        .stat-label { font-size: 0.85rem; color: #64748b; margin-bottom: 8px; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; }
+        .stat-sub { font-size: 0.85rem; color: #94a3b8; margin-top: 4px; }
+        
+        .table-container { overflow-x: auto; }
+        
+        table { width: 100%; border-collapse: collapse; }
+        
+        th {
+            text-align: right;
+            padding: 12px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #64748b;
+            border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
+        }
+        
+        td {
+            padding: 14px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.9rem;
+        }
+        
+        tr:hover td { background: #f8fafc; }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .badge-success { background: #d4edda; color: #155724; }
+        .badge-warning { background: #fff3cd; color: #856404; }
+        .badge-danger { background: #f8d7da; color: #721c24; }
+        .badge-info { background: #d1ecf1; color: #0c5460; }
+        .badge-primary { background: #cce5ff; color: #004085; }
+        .badge-secondary { background: #e2e8f0; color: #475569; }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        
+        .btn-primary { background: #3b82f6; color: white; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-outline { background: transparent; color: #3b82f6; border: 1px solid #3b82f6; }
+        .btn-outline:hover { background: #3b82f6; color: white; }
+        .btn-sm { padding: 6px 12px; font-size: 0.85rem; }
+        .btn-lg { padding: 14px 32px; font-size: 1.1rem; }
+        
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; }
+        input, textarea, select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.1);
+        }
+        
+        .d-none { display: none !important; }
+        .d-flex { display: flex; }
+        .justify-between { justify-content: space-between; }
+        .align-center { align-items: center; }
+        .align-start { align-items: flex-start; }
+        .gap-2 { gap: 8px; }
+        .gap-3 { gap: 16px; }
+        .mt-3 { margin-top: 16px; }
+        .mb-3 { margin-bottom: 16px; }
+        .mb-4 { margin-bottom: 24px; }
+        .text-center { text-align: center; }
+        .text-muted { color: #94a3b8; }
+        .w-full { width: 100%; }
+        
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #94a3b8;
+        }
+        .empty-state .icon { font-size: 4rem; margin-bottom: 20px; }
+        .empty-state h2 { color: #0f172a; font-size: 1.5rem; margin-bottom: 12px; }
+        .empty-state p { margin-bottom: 8px; font-size: 1rem; }
+        .empty-state .btn { margin-top: 24px; }
+        
+        /* Loading Spinner */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Pro Upgrade State */
+        .upgrade-state {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 60px 40px;
+            text-align: center;
+            color: white;
+            margin: 40px auto;
+            max-width: 800px;
+        }
+        
+        .upgrade-state .icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+        
+        .upgrade-state h1 {
+            font-size: 2rem;
+            margin-bottom: 16px;
+            font-weight: 700;
+        }
+        
+        .upgrade-state .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+            text-align: right;
+        }
+        
+        .upgrade-state .feature {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .upgrade-state .feature .emoji {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .upgrade-state .feature h3 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .upgrade-state .feature p {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin: 0;
+        }
+        
+        .upgrade-state .price {
+            font-size: 1.5rem;
+            margin: 20px 0;
+            opacity: 0.9;
+        }
+        
+        .upgrade-state .btn-upgrade {
+            background: #10b981;
+            color: white;
+            font-size: 1.2rem;
+            padding: 16px 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+        }
+        
+        .upgrade-state .btn-upgrade:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+        }
+        
+        /* Business header */
+        .business-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+        }
+        .business-header h2 { margin: 0; font-size: 1.5rem; }
+        .business-header .slug { opacity: 0.8; font-size: 0.9rem; margin-top: 4px; }
+        
+        .order-items-list { list-style: none; padding: 0; margin: 0; }
+        .order-items-list li { padding: 4px 0; font-size: 0.85rem; color: #475569; }
+        
+        @media (max-width: 768px) {
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .navbar { padding: 0 16px; }
+            .container { padding: 16px; }
+        }
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+    <body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+    </div>
+    
+    <nav class="navbar">
+        <div class="navbar-brand">📊 ConversaPay Dashboard</div>
+        <ul class="navbar-nav">
+            <li><button id="logoutBtn" class="btn btn-outline btn-sm" style="color:white;border-color:rgba(255,255,255,0.3);">התנתק</button></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <!-- Pro Plan Banner -->
+        <div id="proPlanBanner" class="card d-none" style="border-right:4px solid #10b981;">
+            <div class="card-body d-flex justify-between align-center">
+                <div>
+                    <strong style="color:#10b981;font-size:1.1rem;">✓ תוכנית Pro פעילה!</strong>
+                    <p style="margin:4px 0 0;color:#64748b;">הבוט שלך פעיל ומוכן לשירות לקוחות 24/7</p>
+                </div>
+                <span class="badge badge-success" style="font-size:1rem;padding:6px 20px;">PRO</span>
+            </div>
+        </div>
+
+        <!-- Chart.js Library -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+        <!-- State 0: Non-Pro User - Upgrade Required -->
+        <div id="upgradeState" class="upgrade-state d-none">
+            <div class="icon">🚀</div>
+            <h1>שדרוג ל-Pro והפעלת הבוט</h1>
+            <p style="font-size:1.1rem;opacity:0.9;margin-bottom:30px;">
+                הפכו את האתר שלכם לחנות חכה עם בוט AI שמוכר מוצרים ב-Telegram ובצ'אט ישיר
+            </p>
+            
+            <div class="features">
+                <div class="feature">
+                    <div class="emoji">🤖</div>
+                    <h3>שירות לקוחות 24/7</h3>
+                    <p>פתור את שירות הלקוחות שלך אוטומטית, בכל זמן ובכל מקום</p>
+                </div>
+                <div class="feature">
+                    <div class="emoji">💳</div>
+                    <h3>סליקה אוטומטית בצ'אט</h3>
+                    <p>קבלו תשלומים ישירות דרך השיחה עם הבוט</p>
+                </div>
+                <div class="feature">
+                    <div class="emoji">📊</div>
+                    <h3>פאנל ניהול הזמנות מתקדם</h3>
+                    <p>עקוב אחרי הזמנות, מלאי, והכנסות בזמן אמת</p>
+                </div>
+            </div>
+            
+            <div class="price">💳 רק $29 לחודש</div>
+            <button id="upgradeToProBtn" class="btn btn-upgrade">💳 שדרג ל-Pro והפעל את הבוט</button>
+        </div>
+
+        <!-- State A: No Business Yet (Pro User) -->
+        <div id="noBusinessState" class="card">
+            <div class="empty-state">
+                <div class="icon">🏪</div>
+                <h2>ברוך הבא ל-ConversaPay!</h2>
+                <p>עוד לא יצרת עסק. צור עסק כדי להתחיל לקבל הזמנות דרך ה-AI.</p>
+                <button id="showCreateFromEmpty" class="btn btn-success btn-lg">🆕 צור עסק</button>
+            </div>
+        </div>
+
+        <!-- Create Business Form -->
+        <div id="createBusinessFormCard" class="card d-none" style="max-width:600px;margin:0 auto 24px;">
+            <div class="card-header"><h3 class="card-title">יצירת עסק חדש</h3></div>
+            <div class="card-body">
+                <form id="createBusinessForm">
+                    <div class="form-group">
+                        <label for="businessId">מזהה עסק (אנגלית, ללא רווחים)</label>
+                        <input type="text" id="businessId" required pattern="[a-z0-9_]+" placeholder="my_business">
+                    </div>
+                    <div class="form-group">
+                        <label for="businessName">שם העסק</label>
+                        <input type="text" id="businessName" required placeholder="העסק שלי">
+                    </div>
+                    <div class="form-group">
+                        <label for="businessDescription">תיאור והנחיות לסוכן ה-AI</label>
+                        <textarea id="businessDescription" required placeholder="תאר את העסק והסגנון הרצוי..."></textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">צור עסק</button>
+                        <button type="button" id="cancelCreateBusiness" class="btn btn-outline">ביטול</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- State B: Business Created - Full Dashboard -->
+        <div id="dashboardContent" class="d-none">
+            <!-- Business Header -->
+            <div class="business-header">
+                <h2 id="businessDisplayName">🏢 העסק שלי</h2>
+                <div class="slug" id="businessDisplaySlug"></div>
+            </div>
+
+            <!-- Analytics KPI Cards -->
+            <div class="stats-grid">
+                <div class="stat-card success">
+                    <div class="stat-label">💰 סה"כ הכנסות</div>
+                    <div class="stat-value" id="kpiRevenue">₪0</div>
+                    <div class="stat-sub">מכל ההזמנות ששולמו</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-label">📈 שיעור המרה</div>
+                    <div class="stat-value" id="kpiConversion">0%</div>
+                    <div class="stat-sub">הזמנות ששולמו / סשנים</div>
+                    <div style="margin-top:8px;background:#e2e8f0;border-radius:4px;height:8px;overflow:hidden;">
+                        <div id="conversionBar" style="background:linear-gradient(90deg,#f59e0b,#fbbf24);height:100%;width:0%;transition:width 0.5s ease;"></div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">💵 ערך הזמנה ממוצע</div>
+                    <div class="stat-value" id="kpiAOV">₪0</div>
+                    <div class="stat-sub">Average Order Value</div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-label">💬 סשנים ייחודיים</div>
+                    <div class="stat-value" id="kpiSessions">0</div>
+                    <div class="stat-sub">שיחות צ'אט ייחודיות</div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="card" style="margin-bottom:24px;">
+                <div class="card-header">
+                    <h3 class="card-title">📊 אנליטיקות</h3>
+                    <select id="analyticsPeriod" style="width:auto;padding:6px 12px;font-size:0.85rem;" onchange="loadAnalytics()">
+                        <option value="7">7 ימים אחרונים</option>
+                        <option value="30" selected>30 ימים אחרונים</option>
+                        <option value="90">90 ימים אחרונים</option>
+                    </select>
+                </div>
+                <div class="card-body">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+                        <!-- Revenue Chart -->
+                        <div>
+                            <h4 style="margin-bottom:16px;font-size:0.95rem;color:#64748b;">📈 הכנסות יומיות</h4>
+                            <div style="position:relative;height:300px;">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                        <!-- Orders Chart -->
+                        <div>
+                            <h4 style="margin-bottom:16px;font-size:0.95rem;color:#64748b;">📦 הזמנות לפי סטטוס</h4>
+                            <div style="position:relative;height:300px;">
+                                <canvas id="ordersChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📋 הזמנות אחרונות</h3>
+                    <div class="d-flex gap-2">
+                        <select id="statusFilter" style="width:auto;padding:6px 12px;font-size:0.85rem;" onchange="loadOrders()">
+                            <option value="">כל הסטטוסים</option>
+                            <option value="pending">ממתין</option>
+                            <option value="paid">שולם</option>
+                            <option value="processing">בטיפול</option>
+                            <option value="shipped">נשלח</option>
+                            <option value="delivered">נמסר</option>
+                            <option value="canceled">בוטל</option>
+                            <option value="refunded">הוחזר</option>
+                        </select>
+                        <button class="btn btn-sm btn-outline" onclick="loadOrders()">🔄 רענן</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="noOrders" class="empty-state" style="padding:40px 20px;">
+                        <div class="icon" style="font-size:3rem;">📭</div>
+                        <p>אין הזמנות עדיין</p>
+                        <p style="font-size:0.9rem;">הזמנות יופיעו כאן לאחר שהלקוחות ישלמו דרך ה-AI Widget</p>
+                    </div>
+                    <div id="ordersTableContainer" class="table-container d-none">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>מספר הזמנה</th>
+                                    <th>לקוח</th>
+                                    <th>פריטים</th>
+                                    <th>סכום</th>
+                                    <th>סטטוס תשלום</th>
+                                    <th>תאריך</th>
+                                    <th>פעולות</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Products Section -->
+            <div class="card" style="margin-bottom:24px;">
+                <div class="card-header">
+                    <h3 class="card-title">🏆 המוצרים הנמכרים ביותר</h3>
+                </div>
+                <div class="card-body">
+                    <div id="noProductsData" class="empty-state" style="padding:40px 20px;">
+                        <div class="icon" style="font-size:3rem;">📊</div>
+                        <p>אין נתוני מכירות עדיין</p>
+                        <p style="font-size:0.9rem;">המוצרים הנמכרים יופיעו כאן לאחר ביצוע הזמנות</p>
+                    </div>
+                    <div id="topProductsTableContainer" class="table-container d-none">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>שם המוצר</th>
+                                    <th>קוד מוצר</th>
+                                    <th>כמות שנמכרה</th>
+                                    <th>מספר הזמנות</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topProductsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📦 ניהול מוצרים</h3>
+                    <button id="addProductBtn" class="btn btn-primary btn-sm">+ הוסף מוצר</button>
+                </div>
+                <div class="card-body">
+                    <div id="productFormContainer" class="d-none" style="max-width:600px;margin:0 auto 30px;padding:20px;background:#f8fafc;border-radius:12px;">
+                        <h4 id="productFormTitle" style="margin-bottom:20px;">הוסף מוצר חדש</h4>
+                        <form id="productForm">
+                            <input type="hidden" id="productId">
+                            <div class="form-group">
+                                <label for="productItemKey">קוד מוצר (אנגלית, ללא רווחים)</label>
+                                <input type="text" id="productItemKey" required pattern="[a-z0-9_]+" placeholder="PIZZA">
+                            </div>
+                            <div class="form-group">
+                                <label for="productName">שם המוצר</label>
+                                <input type="text" id="productName" required placeholder="פיצה מרגריטה">
+                            </div>
+                            <div class="form-group">
+                                <label for="productDescription">תיאור המוצר</label>
+                                <textarea id="productDescription" rows="3" placeholder="תיאור מפורט של המוצר..."></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="productPrice">מחיר (₪)</label>
+                                <input type="number" id="productPrice" required min="0" step="0.01" placeholder="49.90">
+                            </div>
+                            <div class="form-group">
+                                <label for="productImageUrl">קישור לתמונה (אופציונלי)</label>
+                                <input type="url" id="productImageUrl" placeholder="https://example.com/image.jpg">
+                            </div>
+                            <div class="form-group">
+                                <label><input type="checkbox" id="productIsActive" checked> מוצר פעיל</label>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-success" id="productSubmitBtn">שמור מוצר</button>
+                                <button type="button" id="cancelProductBtn" class="btn btn-outline">ביטול</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div id="noProducts" class="empty-state" style="padding:40px 20px;">
+                        <div class="icon" style="font-size:3rem;">📦</div>
+                        <p>אין מוצרים בקטלוג עדיין</p>
+                        <p style="font-size:0.9rem;">לחץ על "הוסף מוצר" כדי להתחיל</p>
+                    </div>
+                     <div id="productsGrid" class="d-none"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Integrations Section -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">🔌 חיבור לאתר שלך</h3>
+            </div>
+            <div class="card-body">
+                <p style="margin-bottom:20px;color:#64748b;">בחר את השיטה המועדפת עבורך להתקנת הצ'אטבוט:</p>
+                
+                <div class="stats-grid" style="margin-bottom:0;">
+                    <!-- WordPress Card -->
+                    <div class="stat-card" style="border-right-color:#21759b;">
+                        <div style="text-align:center;margin-bottom:15px;">
+                            <div style="font-size:2.5rem;">🌐</div>
+                            <h3 style="margin:10px 0;font-size:1.1rem;">וורדפרס</h3>
+                        </div>
+                        <p style="font-size:0.85rem;color:#64748b;margin-bottom:15px;">
+                            הורד תוסף וורדפרס מותאם אישית עם קוד העסק שלך מוכנה מראש.
+                        </p>
+                        <button id="downloadWordPressPlugin" class="btn btn-primary w-full" style="background:#21759b;">
+                            📥 הורד תוסף לוורדפרס בלחיצה אחת
+                        </button>
+                    </div>
+                    
+                    <!-- HTML Embed Card -->
+                    <div class="stat-card" style="border-right-color:#3b82f6;">
+                        <div style="text-align:center;margin-bottom:15px;">
+                            <div style="font-size:2.5rem;">💻</div>
+                            <h3 style="margin:10px 0;font-size:1.1rem;">HTML / Wix / Shopify</h3>
+                        </div>
+                        <p style="font-size:0.85rem;color:#64748b;margin-bottom:15px;">
+                            העתק את קוד ההטמעה והדבק באתר שלך.
+                        </p>
+                        <div style="background:#1e293b;color:#e2e8f0;padding:15px;border-radius:8px;margin-bottom:15px;direction:ltr;text-align:left;font-family:monospace;font-size:0.8rem;overflow-x:auto;">
+                            <code id="embedCodeSnippet" style="white-space:pre-wrap;word-break:break-all;"><!-- ConversaPay AI Chatbot -->
+<script>
+  window.ConversaPayWidgetConfig = { business_id: "YOUR_BUSINESS_ID" };
+</script>
+<script src="YOUR_FRONTEND_URL/frontend/js/widget.js" defer></script></code>
+                        </div>
+                        <button id="copyEmbedCode" class="btn btn-success w-full">
+                            📋 העתק קוד
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/frontend/js/auth.js"></script>
+    <script src="/frontend/js/dashboard.js"></script>
+</body>
