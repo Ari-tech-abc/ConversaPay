@@ -322,8 +322,8 @@ pytest --cov=backend --cov-report=html
 ## 📞 תמיכה
 
 לשאלות ותמיכה, פנה ל:
-- Email: support@conversapay.com
-- Documentation: [docs.conversapay.com](https://docs.conversapay.com)
+- Email: support@conversapay.org
+- Documentation: [docs.conversapay.org](https://docs.conversapay.org)
 
 ## 🗺️ מפת דרכים
 

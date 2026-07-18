@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConversaPay Site Builder - AI-Powered Website Generator</title>
+    <meta name="description" content="Build beautiful, responsive websites with AI. Describe your business and watch the magic happen.">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#6366F1',
+                        secondary: '#8B5CF6',
+                        dark: '#0F172A',
+                        darker: '#020617',
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'glow': 'glow 2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        glow: {
+                            '0%, 100%': { boxShadow: '0 0 20px rgba(99, 102, 241, 0.5)' },
+                            '50%': { boxShadow: '0 0 40px rgba(99, 102, 241, 0.8)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        :root {
+            --bg-primary: #0F172A;
+            --bg-secondary: #1E293B;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --accent: #6366F1;
+            --accent-glow: rgba(99, 102, 241, 0.5);
+        }
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4F46E5;
+        }
+        
+        /* Gradient Text */
+        .gradient-text {
+            background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #A855F7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Glass Effect */
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Form Inputs */
+        .form-input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        
+        /* Vibe Cards */
+        .vibe-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .vibe-card:hover {
+            border-color: rgba(99, 102, 241, 0.5);
+            transform: translateY(-4px);
+        }
+        
+        .vibe-card.selected {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+        
+        /* Generate Button */
+        .generate-btn {
+            background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .generate-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .generate-btn:hover::before {
+            left: 100%;
+        }
+        
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.4);
+        }
+        
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .generate-btn:disabled:hover {
+            transform: none;
+        }
+        
+        /* Preview Container */
+        .preview-container {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Fade In Animation */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Mobile Preview Toggle */
+        .preview-toggle {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    
+    <!-- Header -->
+    <header class="glass fixed top-0 left-0 right-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <span class="text-xl font-bold gradient-text">Site Builder</span>
+                </div>
+                
+                <div class="preview-toggle px-4 py-2 rounded-lg flex items-center gap-2">
+                    <span class="text-sm text-gray-300">Preview:</span>
+                    <button id="desktopView" class="px-3 py-1 rounded text-sm bg-primary text-white">Desktop</button>
+                    <button id="mobileView" class="px-3 py-1 rounded text-sm text-gray-300 hover:text-white">Mobile</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="pt-16 min-h-screen">
+        <div class="flex flex-col lg:flex-row h-screen">
+            
+            <!-- Left Panel: Wizard -->
+            <div class="w-full lg:w-1/2 p-8 overflow-y-auto">
+                <div class="max-w-2xl mx-auto">
+                    <!-- Title -->
+                    <div class="mb-8">
+                        <h1 class="text-4xl font-bold mb-4">
+                            Build Your <span class="gradient-text">Dream Website</span>
+                        </h1>
+                        <p class="text-gray-400 text-lg">
+                            Describe your business and our AI will create a stunning, production-ready landing page in seconds.
+                        </p>
+                    </div>
+                    
+                    <!-- Form -->
+                    <form id="builderForm" class="space-y-6">
+                        <!-- Business Name -->
+                        <div>
+                            <label for="businessName" class="block text-sm font-semibold mb-2 text-gray-200">
+                                Business Name
+                            </label>
+                            <input 
+                                type="text" 
+                                id="businessName" 
+                                name="businessName"
+                                required
+                                placeholder="e.g., Sushi Master Tokyo"
+                                class="form-input w-full px-4 py-3 rounded-lg"
+                            >
+                        </div>
+                        
+                        <!-- Industry -->
+                        <div>
+                            <label for="industry" class="block text-sm font-semibold mb-2 text-gray-200">
+                                Industry
+                            </label>
+                            <select 
+                                id="industry" 
+                                name="industry"
+                                required
+                                class="form-input w-full px-4 py-3 rounded-lg"
+                            >
+                                <option value="">Select your industry</option>
+                                <option value="restaurant">Restaurant & Food</option>
+                                <option value="technology">Technology</option>
+                                <option value="health">Health & Wellness</option>
+                                <option value="finance">Finance & Consulting</option>
+                                <option value="education">Education</option>
+                                <option value="ecommerce">E-Commerce</option>
+                                <option value="creative">Creative & Design</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Description -->
+                        <div>
+                            <label for="description" class="block text-sm font-semibold mb-2 text-gray-200">
+                                Describe Your Business
+                            </label>
+                            <textarea 
+                                id="description" 
+                                name="description"
+                                required
+                                rows="4"
+                                placeholder="Tell us about your business, what makes it special, and what you offer..."
+                                class="form-input w-full px-4 py-3 rounded-lg resize-none"
+                            ></textarea>
+                        </div>
+                        
+                        <!-- Design Vibe -->
+                        <div>
+                            <label class="block text-sm font-semibold mb-3 text-gray-200">
+                                Choose Your Design Vibe
+                            </label>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="vibe-card selected p-4 rounded-xl" data-vibe="minimalist">
+                                    <div class="text-2xl mb-2">✨</div>
+                                    <div class="font-semibold">Minimalist Light</div>
+                                    <div class="text-xs text-gray-400">Clean & elegant</div>
+                                </div>
+                                <div class="vibe-card p-4 rounded-xl" data-vibe="cyber">
+                                    <div class="text-2xl mb-2">🌃</div>
+                                    <div class="font-semibold">Cyber Dark</div>
+                                    <div class="text-xs text-gray-400">Futuristic & bold</div>
+                                </div>
+                                <div class="vibe-card p-4 rounded-xl" data-vibe="luxury">
+                                    <div class="text-2xl mb-2">💎</div>
+                                    <div class="font-semibold">Luxury Gold</div>
+                                    <div class="text-xs text-gray-400">Premium & sophisticated</div>
+                                </div>
+                                <div class="vibe-card p-4 rounded-xl" data-vibe="playful">
+                                    <div class="text-2xl mb-2">🎨</div>
+                                    <div class="font-semibold">Playful</div>
+                                    <div class="text-xs text-gray-400">Fun & energetic</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Sections -->
+                        <div>
+                            <label class="block text-sm font-semibold mb-3 text-gray-200">
+                                Sections to Include
+                            </label>
+                            <div class="space-y-2">
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input type="checkbox" checked disabled class="w-4 h-4 rounded">
+                                    <span class="text-sm">Hero Section</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input type="checkbox" checked disabled class="w-4 h-4 rounded">
+                                    <span class="text-sm">Features</span>
+                                </label>
+                                <label class="flex items-center gap-3 cursor-pointer">
+                                    <input type="checkbox" checked disabled class="w-4 h-4 rounded">
+                                    <span class="text-sm">Testimonials</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Generate Button -->
+                        <button 
+                            type="submit" 
+                            id="generateBtn"
+                            class="generate-btn w-full py-4 rounded-lg font-bold text-lg text-white flex items-center justify-center gap-2"
+                        >
+                            <span id="btnText">Generate Site with AI</span>
+                            <div id="btnLoader" class="spinner hidden"></div>
+                        </button>
+                    </form>
+                    
+                    <!-- Error Message -->
+                    <div id="errorMessage" class="hidden mt-4 p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Panel: Preview -->
+            <div class="w-full lg:w-1/2 bg-darker p-8 overflow-y-auto">
+                <div class="max-w-5xl mx-auto">
+                    <div class="mb-4 flex items-center justify-between">
+                        <h2 class="text-xl font-semibold text-gray-300">Live Preview</h2>
+                        <div id="previewStatus" class="text-sm text-gray-500">
+                            Ready to generate
+                        </div>
+                    </div>
+                    
+                    <!-- Preview Container -->
+                    <div id="previewContainer" class="preview-container">
+                        <!-- Empty State -->
+                        <div id="emptyState" class="py-32 px-8 text-center">
+                            <div class="text-6xl mb-4">🚀</div>
+                            <h3 class="text-2xl font-bold text-gray-800 mb-2">Your website will appear here</h3>
+                            <p class="text-gray-600">Fill out the form and click "Generate Site with AI" to see the magic happen</p>
+                        </div>
+                        
+                        <!-- Generated Site Preview -->
+                        <iframe 
+                            id="previewFrame" 
+                            class="hidden w-full border-0"
+                            style="height: 800px;"
+                            sandbox="allow-scripts"
+                        ></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- JavaScript -->
+    <script>
+        // API Configuration
+        const API_BASE_URL = window.location.origin;
+        
+        // State
+        let selectedVibe = 'minimalist';
+        let isGenerating = false;
+        
+        // DOM Elements
+        const form = document.getElementById('builderForm');
+        const generateBtn = document.getElementById('generateBtn');
+        const btnText = document.getElementById('btnText');
+        const btnLoader = document.getElementById('btnLoader');
+        const errorMessage = document.getElementById('errorMessage');
+        const previewFrame = document.getElementById('previewFrame');
+        const emptyState = document.getElementById('emptyState');
+        const previewStatus = document.getElementById('previewStatus');
+        const vibeCards = document.querySelectorAll('.vibe-card');
+        const desktopView = document.getElementById('desktopView');
+        const mobileView = document.getElementById('mobileView');
+        
+        // Vibe Selection
+        vibeCards.forEach(card => {
+            card.addEventListener('click', () => {
+                vibeCards.forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                selectedVibe = card.dataset.vibe;
+            });
+        });
+        
+        // Preview Toggle
+        desktopView.addEventListener('click', () => {
+            previewFrame.style.width = '100%';
+            desktopView.classList.add('bg-primary', 'text-white');
+            desktopView.classList.remove('text-gray-300');
+            mobileView.classList.remove('bg-primary', 'text-white');
+            mobileView.classList.add('text-gray-300');
+        });
+        
+        mobileView.addEventListener('click', () => {
+            previewFrame.style.width = '375px';
+            mobileView.classList.add('bg-primary', 'text-white');
+            mobileView.classList.remove('text-gray-300');
+            desktopView.classList.remove('bg-primary', 'text-white');
+            desktopView.classList.add('text-gray-300');
+        });
+        
+        // Form Submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (isGenerating) return;
+            
+            // Get form data
+            const businessName = document.getElementById('businessName').value.trim();
+            const industry = document.getElementById('industry').value;
+            const description = document.getElementById('description').value.trim();
+            
+            // Validation
+            if (!businessName || !industry || !description) {
+                showError('Please fill in all fields');
+                return;
+            }
+            
+            // Set loading state
+            setLoading(true);
+            hideError();
+            
+            try {
+                // Prepare request
+                const requestData = {
+                    prompt: description,
+                    business_name: businessName,
+                    industry: industry,
+                    vibe: selectedVibe,
+                    sections: ["hero", "features", "testimonials"]
+                };
+                
+                // Send request
+                const response = await fetch(`${API_BASE_URL}/api/v1/builder/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Failed to generate site');
+                }
+                
+                const data = await response.json();
+                
+                if (data.success && data.html) {
+                    // Show preview
+                    showPreview(data.html);
+                    previewStatus.textContent = 'Generated successfully!';
+                    previewStatus.classList.add('text-green-400');
+                } else {
+                    throw new Error(data.error || 'Failed to generate site');
+                }
+                
+            } catch (error) {
+                console.error('Generation error:', error);
+                showError(error.message || 'Failed to generate site. Please try again.');
+                previewStatus.textContent = 'Generation failed';
+                previewStatus.classList.add('text-red-400');
+            } finally {
+                setLoading(false);
+            }
+        });
+        
+        // Helper Functions
+        function setLoading(loading) {
+            isGenerating = loading;
+            generateBtn.disabled = loading;
+            
+            if (loading) {
+                btnText.textContent = 'Generating...';
+                btnLoader.classList.remove('hidden');
+            } else {
+                btnText.textContent = 'Generate Site with AI';
+                btnLoader.classList.add('hidden');
+            }
+        }
+        
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('hidden');
+        }
+        
+        function hideError() {
+            errorMessage.classList.add('hidden');
+        }
+        
+        function showPreview(html) {
+            // Hide empty state
+            emptyState.classList.add('hidden');
+            
+            // Show iframe
+            previewFrame.classList.remove('hidden');
+            previewFrame.classList.add('fade-in');
+            
+            // Inject HTML into iframe
+            const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(html);
+            iframeDoc.close();
+        }
+    </script>
+</body>
+</html>

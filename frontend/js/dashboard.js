@@ -298,6 +298,82 @@ function showDashboardState() {
     // Update embed code with actual business_id
     updateEmbedCode();
     
+    // Check if business has a website - show onboarding if not
+    checkWebsiteStatus();
+}
+
+async function checkWebsiteStatus() {
+    try {
+        const token = ConversaPayAuth.getToken();
+        const response = await fetch(`${API_BASE_URL}/businesses/${currentBusiness.business_id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const business = await response.json();
+            const hasWebsite = business.website_url && business.website_url.trim() !== '';
+            
+            if (!hasWebsite) {
+                // Show onboarding card, hide standard dashboard
+                showWebsiteOnboarding();
+            } else {
+                // Show standard dashboard
+                showStandardDashboard();
+            }
+        } else {
+            // Default to standard dashboard on error
+            showStandardDashboard();
+        }
+    } catch (error) {
+        console.error('Error checking website status:', error);
+        // Default to standard dashboard on error
+        showStandardDashboard();
+    }
+}
+
+function showWebsiteOnboarding() {
+    // Hide standard analytics sections
+    const analyticsSection = document.querySelector('.stats-grid');
+    const chartsSection = document.querySelectorAll('.card')[1]; // Charts card
+    const ordersSection = document.querySelectorAll('.card')[2]; // Orders card
+    const productsSection = document.querySelectorAll('.card')[3]; // Products card
+    
+    if (analyticsSection) analyticsSection.classList.add('d-none');
+    if (chartsSection) chartsSection.classList.add('d-none');
+    if (ordersSection) ordersSection.classList.add('d-none');
+    if (productsSection) productsSection.classList.add('d-none');
+    
+    // Show onboarding card
+    const onboardingCard = document.getElementById('websiteOnboardingCard');
+    if (onboardingCard) {
+        onboardingCard.classList.remove('d-none');
+        
+        // Set dynamic link to site builder
+        const token = ConversaPayAuth.getToken();
+        const siteBuilderUrl = `http://localhost:8001/frontend/index.html?business_id=${currentBusiness.business_id}&token=${token}`;
+        const generateBtn = document.getElementById('generateSiteBtn');
+        if (generateBtn) {
+            generateBtn.href = siteBuilderUrl;
+        }
+    }
+}
+
+function showStandardDashboard() {
+    // Hide onboarding card
+    const onboardingCard = document.getElementById('websiteOnboardingCard');
+    if (onboardingCard) onboardingCard.classList.add('d-none');
+    
+    // Show standard analytics sections
+    const analyticsSection = document.querySelector('.stats-grid');
+    const chartsSection = document.querySelectorAll('.card')[1];
+    const ordersSection = document.querySelectorAll('.card')[2];
+    const productsSection = document.querySelectorAll('.card')[3];
+    
+    if (analyticsSection) analyticsSection.classList.remove('d-none');
+    if (chartsSection) chartsSection.classList.remove('d-none');
+    if (ordersSection) ordersSection.classList.remove('d-none');
+    if (productsSection) productsSection.classList.remove('d-none');
+    
     // Load all data
     loadAllData();
 }
@@ -357,7 +433,7 @@ async function downloadWordPressPlugin() {
                       '2. העלה אותו לתיקיית wp-content/plugins/ בשרת ה-WordPress\n' +
                       '3. הפעל את התוסף בלוח הבקרה של וורדפרס\n' +
                       '4. עבור להגדרות התוסף והכנס את Business ID: ' + currentBusiness.business_id + '\n\n' +
-                      'למדריך מלא: https://conversapay.com/docs/wordpress');
+'למדריך מלא: https://conversapay.org/docs/wordpress');
             }, 500);
         } else {
             const data = await response.json();
@@ -475,13 +551,13 @@ function updateKPICards(analytics) {
         conversionEl.textContent = `${rate.toFixed(1)}%`;
         conversionBar.style.width = `${Math.min(rate, 100)}%`;
         
-        // Color based on performance
+        // Color based on performance (cyan for good, purple for medium, red for low)
         if (rate >= 30) {
-            conversionBar.style.background = 'linear-gradient(90deg, #10b981, #34d399)';
+            conversionBar.style.background = 'linear-gradient(90deg, #00D9FF, #3B82F6)';
         } else if (rate >= 15) {
-            conversionBar.style.background = 'linear-gradient(90deg, #f59e0b, #fbbf24)';
+            conversionBar.style.background = 'linear-gradient(90deg, #A855F7, #C084FC)';
         } else {
-            conversionBar.style.background = 'linear-gradient(90deg, #ef4444, #f87171)';
+            conversionBar.style.background = 'linear-gradient(90deg, #EF4444, #F87171)';
         }
     }
     
@@ -523,13 +599,13 @@ function renderRevenueChart(revenueData) {
             datasets: [{
                 label: 'הכנסות (₪)',
                 data: data,
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderColor: '#A855F7',
+                backgroundColor: 'rgba(168, 85, 247, 0.1)',
                 borderWidth: 2,
                 fill: true,
                 tension: 0.4,
                 pointRadius: 3,
-                pointBackgroundColor: '#3b82f6',
+                pointBackgroundColor: '#A855F7',
                 pointBorderColor: '#fff',
                 pointBorderWidth: 2,
                 pointHoverRadius: 5
@@ -726,7 +802,7 @@ function renderOrders(orders) {
     tbody.innerHTML = orders.map((order, index) => {
         const itemsList = order.items && order.items.length > 0
             ? order.items.map(item => `<li>• ${item.name || item.item_key} × ${item.quantity || 1} - ₪${(item.price || 0).toFixed(2)}</li>`).join('')
-            : '<li style="color:#94a3b8;">אין פירוט פריטים</li>';
+            : '<li style="color:#9CA3AF;">אין פירוט פריטים</li>';
         
         const customerName = order.customer_info?.name || order.customer_info?.email || 'לקוח אנונימי';
         const orderDate = new Date(order.created_at).toLocaleDateString('he-IL', {
@@ -747,7 +823,7 @@ function renderOrders(orders) {
                 </td>
                 <td><strong>₪${(order.total || 0).toFixed(2)}</strong></td>
                 <td><span class="badge badge-${badgeClass}">${statusText}</span></td>
-                <td style="font-size:0.85rem;color:#64748b;">${orderDate}</td>
+                <td style="font-size:0.85rem;color:#9CA3AF;">${orderDate}</td>
                 <td>
                     <button class="btn btn-sm btn-outline" onclick="viewOrderDetails('${order.id}')">👁️ פרטים</button>
                 </td>
@@ -963,18 +1039,18 @@ async function loadProducts() {
                     <div class="card" style="margin-bottom:16px;">
                         <div class="card-body">
                             <div class="d-flex justify-between align-start" style="gap:20px;">
-                                <div style="flex: 0 0 80px; height:80px; background:${product.image_url ? 'transparent' : '#f1f5f9'}; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:2.5rem; overflow:hidden;">
+                                <div style="flex: 0 0 80px; height:80px; background:${product.image_url ? 'transparent' : 'rgba(168, 85, 247, 0.1)'}; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:2.5rem; overflow:hidden; border: 1px solid rgba(255, 255, 255, 0.1);">
                                     ${product.image_url ? `<img src="${product.image_url}" alt="${product.name}" style="width:100%;height:100%;object-fit:cover;">` : '📦'}
                                 </div>
                                 <div style="flex:1;">
                                     <div class="d-flex justify-between" style="margin-bottom:8px;">
                                         <div>
                                             <h4 style="margin:0;font-size:1rem;">${escapeHtml(product.name)}</h4>
-                                            <code style="font-size:0.8rem;color:#64748b;">${product.item_key}</code>
+                                    <code style="font-size:0.8rem;color:#9CA3AF;">${product.item_key}</code>
                                         </div>
-                                        <div style="font-size:1.2rem;font-weight:700;color:#3b82f6;">₪${(product.price || 0).toFixed(2)}</div>
+                                        <div style="font-size:1.2rem;font-weight:700;color:#A855F7;">₪${(product.price || 0).toFixed(2)}</div>
                                     </div>
-                                    ${product.description ? `<p style="color:#64748b;font-size:0.9rem;margin:4px 0 8px;">${escapeHtml(product.description)}</p>` : ''}
+                                    ${product.description ? `<p style="color:#9CA3AF;font-size:0.9rem;margin:4px 0 8px;">${escapeHtml(product.description)}</p>` : ''}
                                     <div class="d-flex justify-between align-center">
                                         <span class="badge ${product.is_active ? 'badge-success' : 'badge-danger'}">
                                             ${product.is_active ? '✓ פעיל' : '✗ לא פעיל'}

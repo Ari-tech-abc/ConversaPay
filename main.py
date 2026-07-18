@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 # Import routers and services
 from backend.config import settings
-from backend.routers import auth, businesses, products, chat, orders, payments, logs, webhooks, analytics
+from backend.routers import auth, businesses, products, chat, orders, payments, logs, webhooks, analytics, widget
 from backend.services.monitoring_service import monitoring_service
 
 
@@ -87,6 +87,7 @@ class DualCORSMiddleware(BaseHTTPMiddleware):
             or path.startswith(f"{settings.API_PREFIX}/payments/checkout-session")
             or path.startswith(f"{settings.API_PREFIX}/payments/webhook")
             or path.startswith(f"{settings.API_PREFIX}/webhooks")
+            or path.startswith(f"{settings.API_PREFIX}/widget")
         )
 
         # Handle preflight requests
@@ -171,6 +172,7 @@ app.include_router(payments.router, prefix=f"{settings.API_PREFIX}", tags=["paym
 app.include_router(logs.router, prefix=f"{settings.API_PREFIX}", tags=["logs"])
 app.include_router(webhooks.router, prefix=f"{settings.API_PREFIX}", tags=["webhooks"])
 app.include_router(analytics.router, prefix=f"{settings.API_PREFIX}", tags=["analytics"])
+app.include_router(widget.router, prefix=f"{settings.API_PREFIX}/widget", tags=["widget"])
 
 
 # ============================================
@@ -192,8 +194,8 @@ app.mount("/frontend", StaticFiles(directory=frontend_dir), name="frontend")
 # Serve static HTML pages from root
 @app.get("/")
 async def root_index():
-    """Serve index/chat page as root."""
-    return FileResponse("index.html")
+    """Serve home/landing page as root."""
+    return FileResponse("home.html")
 
 @app.get("/dashboard")
 async def dashboard():
@@ -230,6 +232,21 @@ async def login():
 async def register():
     """Serve register page."""
     return FileResponse("register.html")
+
+
+# ============================================
+# SEO & Utility Routes
+# ============================================
+
+@app.get("/robots.txt")
+async def robots_txt():
+    """Serve robots.txt for SEO."""
+    return FileResponse("backend/static/robots.txt", media_type="text/plain")
+
+@app.get("/sitemap.xml", include_in_schema=False)
+async def sitemap_xml():
+    """Serve sitemap.xml for SEO."""
+    return FileResponse("backend/static/sitemap.xml", media_type="application/xml")
 
 
 # ============================================

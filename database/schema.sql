@@ -21,6 +21,7 @@ CREATE TABLE profiles (
     user_id UUID UNIQUE NOT NULL,
     email VARCHAR(255) NOT NULL,
     full_name VARCHAR(255),
+    role VARCHAR(50) DEFAULT 'user' CHECK (role IN ('admin', 'user', 'viewer')),
     is_pro BOOLEAN DEFAULT false,
     subscription_expires_at TIMESTAMP WITH TIME ZONE,
     stripe_customer_id VARCHAR(255),

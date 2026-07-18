@@ -1,11 +1,11 @@
 <?php
 /*
 Plugin Name: ConversaPay AI Chatbot
-Plugin URI: https://conversapay.com
+Plugin URI: https://conversapay.org
 Description: Effortless AI sales assistant for your website. Provides 24/7 customer service and automated checkout.
 Version: 1.0.0
 Author: ConversaPay
-Author URI: https://conversapay.com
+Author URI: https://conversapay.org
 License: GPL2
 */
 
@@ -47,7 +47,7 @@ function conversapay_settings_page() {
         if (!empty($business_id) && preg_match('/^[a-zA-Z0-9_-]+$/', $business_id)) {
             $settings = array(
                 'business_id' => $business_id,
-                'frontend_url' => !empty($frontend_url) ? $frontend_url : 'https://conversapay.com'
+                'frontend_url' => !empty($frontend_url) ? $frontend_url : 'https://conversapay.org'
             );
             update_option(CONVERSAPAY_OPTION_NAME, $settings);
             echo '<div class="notice notice-success is-dismissible"><p>Settings saved successfully!</p></div>';
@@ -59,7 +59,7 @@ function conversapay_settings_page() {
     // Get current settings
     $settings = get_option(CONVERSAPAY_OPTION_NAME, array());
     $business_id = isset($settings['business_id']) ? esc_attr($settings['business_id']) : '';
-    $frontend_url = isset($settings['frontend_url']) ? esc_attr($settings['frontend_url']) : 'https://conversapay.com';
+    $frontend_url = isset($settings['frontend_url']) ? esc_attr($settings['frontend_url']) : 'https://conversapay.org';
     ?>
     <div class="wrap">
         <h1>ConversaPay AI Chatbot Settings</h1>
@@ -87,7 +87,7 @@ function conversapay_settings_page() {
                                    placeholder="e.g., my-business-123"
                                    required>
                             <p class="description">
-                                Find this ID in your <a href="https://conversapay.com/dashboard" target="_blank">ConversaPay Dashboard</a>
+                                Find this ID in your <a href="https://conversapay.org/dashboard" target="_blank">ConversaPay Dashboard</a>
                             </p>
                         </td>
                     </tr>
@@ -103,7 +103,7 @@ function conversapay_settings_page() {
                                    value="<?php echo $frontend_url; ?>" 
                                    class="regular-text">
                             <p class="description">
-                                Your ConversaPay frontend URL (usually https://conversapay.com)
+                                Your ConversaPay frontend URL (usually https://conversapay.org)
                             </p>
                         </td>
                     </tr>
@@ -138,7 +138,7 @@ function conversapay_settings_page() {
         <div class="card" style="max-width: 600px; margin-top: 20px;">
             <h2>Need Help?</h2>
             <p>
-                Visit <a href="https://conversapay.com" target="_blank">conversapay.com</a> to:
+                Visit <a href="https://conversapay.org" target="_blank">conversapay.org</a> to:
             </p>
             <ul>
                 <li>Create your Business ID</li>
@@ -186,7 +186,7 @@ function conversapay_activate() {
     // Set default settings on activation
     $default_settings = array(
         'business_id' => '',
-        'frontend_url' => 'https://conversapay.com'
+        'frontend_url' => 'https://conversapay.org'
     );
     add_option(CONVERSAPAY_OPTION_NAME, $default_settings);
 }

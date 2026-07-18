@@ -588,16 +588,47 @@ async def _handle_subscription_deleted(subscription: dict) -> dict:
 async def _handle_order_checkout_completed(session: dict) -> dict:
     """
     Handle completed order checkout session.
-    Updates payment and order status.
+    Routes to appropriate handler based on payment_flow metadata.
+    
+    Payment Flows:
+    - 'bot_purchase': B2B flow - business owner purchasing/subscribing to a bot
+    - 'chat_escrow': C2B flow - end-customer paying business through AI chatbot
     """
     try:
         # Log session data for verification
         logger.info(f"Checkout session completed: {session}")
         logger.info(f"Session ID: {session.get('id')}")
         logger.info(f"Payment status: {session.get('payment_status')}")
-        logger.info(f"Amount: {session.get('amount_total')}")
-        logger.info(f"Customer email: {session.get('customer_details', {}).get('email')}")
         
+        # Extract metadata to determine payment flow
+        metadata = session.get('metadata', {})
+        payment_flow = metadata.get('payment_flow', 'chat_escrow')  # Default to chat_escrow
+        
+        logger.info(f"Routing payment flow: {payment_flow}")
+        
+        # Route to appropriate handler based on payment_flow
+        if payment_flow == 'bot_purchase':
+            return await _handle_bot_purchase_flow(session)
+        elif payment_flow == 'chat_escrow':
+            return await _handle_chat_escrow_flow(session)
+        else:
+            logger.warning(f"Unknown payment_flow: {payment_flow}, defaulting to chat_escrow")
+            return await _handle_chat_escrow_flow(session)
+    
+    except Exception as e:
+        logger.error(f"Error processing checkout.session.completed: {str(e)}", exc_info=True)
+        return {"status": "error", "message": str(e), "event": "checkout.session.completed"}
+
+
+async def _handle_bot_purchase_flow(session: dict) -> dict:
+    """
+    B2B Flow: Handle business owner purchasing/subscribing to a bot.
+    
+    SECURITY: Implements Double Tenant Validation Pattern to prevent cross-tenant data leaks.
+    - Validates business_id and order_id against database
+    - Activates bot/business status after validation
+    """
+    try:
         # Extract data from session
         customer_email = session.get('customer_details', {}).get('email')
         customer_name = session.get('customer_details', {}).get('name')
@@ -609,50 +640,83 @@ async def _handle_order_checkout_completed(session: dict) -> dict:
         client_reference_id = session.get('client_reference_id')
         
         # Extract business_id from metadata or client_reference_id
-        business_id = metadata.get('business_id') or client_reference_id
+        business_id_from_stripe = metadata.get('business_id') or client_reference_id
         order_id = metadata.get('order_id')
         
-        logger.info(f"Processing payment for business_id: {business_id}, order_id: {order_id}")
+        logger.info(f"B2B Flow - Processing bot purchase for business_id: {business_id_from_stripe}, order_id: {order_id}")
         
-        # Step 1: Create or update business record
-        if business_id:
-            # Check if business exists
-            existing_business = supabase.table("businesses")\
-                .select("*")\
-                .eq("business_id", business_id)\
-                .execute()
-            
-            business_data = {
-                "subscription_tier": "pro",
-                "subscription_status": "active",
-                "is_active": True,
-                "updated_at": datetime.utcnow().isoformat()
-            }
-            
-            # Add Stripe customer ID if available
-            if session.get('customer'):
-                business_data["stripe_customer_id"] = session.get('customer')
-            
-            if existing_business.data:
-                # Update existing business
-                logger.info(f"Updating existing business: {business_id}")
-                supabase.table("businesses")\
-                    .update(business_data)\
-                    .eq("business_id", business_id)\
-                    .execute()
-            else:
-                # Create new business
-                logger.info(f"Creating new business: {business_id}")
-                business_data["business_id"] = business_id
-                business_data["business_name"] = f"Business {business_id}"
-                business_data["owner_id"] = "00000000-0000-0000-0000-000000000000"  # Placeholder
-                business_data["description"] = f"Auto-created from Stripe payment"
-                
-                supabase.table("businesses")\
-                    .insert(business_data)\
-                    .execute()
+        # ============================================
+        # DOUBLE TENANT VALIDATION - CRITICAL SECURITY
+        # ============================================
+        if not order_id:
+            logger.error("SECURITY ALERT: No order_id in Stripe session metadata for bot_purchase flow")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid session: missing order_id"
+            )
         
-        # Step 2: Find and update payment record
+        # Step 1: Fetch the order from database by order_id
+        order_result = supabase.table("orders")\
+            .select("*")\
+            .eq("id", order_id)\
+            .execute()
+        
+        if not order_result.data:
+            logger.error(f"SECURITY ALERT: Order not found in database for bot_purchase: {order_id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Order not found"
+            )
+        
+        order_data = order_result.data[0]
+        business_id_from_db = order_data.get('business_id')
+        
+        # Step 2: Validate that business_id from Stripe matches business_id in database
+        if not business_id_from_db:
+            logger.error(f"SECURITY ALERT: Order {order_id} has no business_id in database for bot_purchase")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid order: missing business_id"
+            )
+        
+        if business_id_from_stripe != business_id_from_db:
+            # CRITICAL SECURITY VIOLATION - Cross-tenant data leak attempt
+            logger.critical(
+                f"SECURITY ALERT: B2B Cross-tenant validation failed! "
+                f"Stripe business_id '{business_id_from_stripe}' does not match "
+                f"database business_id '{business_id_from_db}' for order {order_id}. "
+                f"Possible data tampering or cross-tenant attack in bot_purchase flow."
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Security validation failed: business_id mismatch"
+            )
+        
+        # Validation passed - use the business_id from database (trusted source)
+        business_id = business_id_from_db
+        logger.info(f"B2B Double tenant validation passed for order {order_id}, business {business_id}")
+        
+        # Step 3: Activate bot/business status
+        business_data = {
+            "subscription_tier": "pro",
+            "subscription_status": "active",
+            "is_active": True,
+            "updated_at": datetime.utcnow().isoformat()
+        }
+        
+        # Add Stripe customer ID if available
+        if session.get('customer'):
+            business_data["stripe_customer_id"] = session.get('customer')
+        
+        # Update business to activate bot
+        supabase.table("businesses")\
+            .update(business_data)\
+            .eq("business_id", business_id)\
+            .execute()
+        
+        logger.info(f"B2B Bot activated for business: {business_id}")
+        
+        # Step 4: Find and update payment record
         if session_id:
             payment = supabase.table("payments")\
                 .select("*")\
@@ -661,8 +725,18 @@ async def _handle_order_checkout_completed(session: dict) -> dict:
             
             if payment.data:
                 payment_id = payment.data[0]['id']
-                order_id = payment.data[0]['order_id']
                 business_uuid = payment.data[0]['business_id']
+                
+                # Additional validation: ensure payment record's business_id matches validated order
+                if business_uuid != business_id:
+                    logger.critical(
+                        f"SECURITY ALERT: B2B Payment record business_id mismatch! "
+                        f"Payment {payment_id} has business_id '{business_uuid}' but order {order_id} has '{business_id}'"
+                    )
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Security validation failed: payment business_id mismatch"
+                    )
                 
                 # Update payment status
                 supabase.table("payments")\
@@ -673,72 +747,226 @@ async def _handle_order_checkout_completed(session: dict) -> dict:
                             **payment.data[0].get('metadata', {}),
                             "stripe_status": payment_status,
                             "stripe_session_id": session_id,
-                            "amount_total": amount_total
+                            "amount_total": amount_total,
+                            "payment_flow": "bot_purchase"
                         }
                     })\
                     .eq("id", payment_id)\
                     .execute()
                 
-                # Step 3: Update order status
-                if order_id:
-                    supabase.table("orders")\
-                        .update({
-                            "status": "paid",
-                            "updated_at": datetime.utcnow().isoformat()
-                        })\
-                        .eq("id", order_id)\
-                        .execute()
-                
-                # Step 4: Create or update customer record
-                if customer_email and business_uuid:
-                    existing_customer = supabase.table("customers")\
-                        .select("*")\
-                        .eq("business_id", business_uuid)\
-                        .eq("email", customer_email)\
-                        .execute()
-                    
-                    customer_data = {
-                        "email": customer_email,
-                        "name": customer_name,
-                        "business_id": business_uuid,
+                # Update order status
+                supabase.table("orders")\
+                    .update({
+                        "status": "paid",
                         "updated_at": datetime.utcnow().isoformat()
-                    }
-                    
-                    # Convert amount from smallest unit to main unit
-                    amount_in_main_unit = amount_total / 100 if amount_total else 0
-                    
-                    if existing_customer.data:
-                        # Update existing customer stats
-                        customer_id = existing_customer.data[0]['id']
-                        supabase.table("customers")\
-                            .update({
-                                "total_purchases": existing_customer.data[0].get('total_purchases', 0) + amount_in_main_unit,
-                                "purchase_count": existing_customer.data[0].get('purchase_count', 0) + 1,
-                                "last_purchase_at": datetime.utcnow().isoformat()
-                            })\
-                            .eq("id", customer_id)\
-                            .execute()
-                    else:
-                        # Create new customer
-                        customer_data["total_purchases"] = amount_in_main_unit
-                        customer_data["purchase_count"] = 1
-                        customer_data["last_purchase_at"] = datetime.utcnow().isoformat()
-                        
-                        supabase.table("customers")\
-                            .insert(customer_data)\
-                            .execute()
-                    
-                    logger.info(f"Customer record updated: {customer_email}")
+                    })\
+                    .eq("id", order_id)\
+                    .execute()
                 
-                logger.info(f"Payment succeeded for session {session_id}, order {order_id}")
+                logger.info(f"B2B Order {order_id} marked as paid, bot activated")
             else:
-                logger.warning(f"No payment record found for session {session_id}")
+                logger.warning(f"No payment record found for B2B session {session_id}")
         
-        return {"status": "success", "event": "checkout.session.completed", "processed": True}
+        return {"status": "success", "event": "checkout.session.completed", "flow": "bot_purchase", "processed": True}
     
     except Exception as e:
-        logger.error(f"Error processing checkout.session.completed: {str(e)}", exc_info=True)
-        return {"status": "error", "message": str(e), "event": "checkout.session.completed"}
+        logger.error(f"Error processing B2B bot purchase: {str(e)}", exc_info=True)
+        return {"status": "error", "message": str(e), "event": "checkout.session.completed", "flow": "bot_purchase"}
+
+
+async def _handle_chat_escrow_flow(session: dict) -> dict:
+    """
+    C2B Flow: Handle end-customer paying business through AI Chatbot (Escrow/Direct payment).
+    
+    SECURITY: Validates that the escrow order belongs to the correct customer and business,
+    then updates milestone status to 'funded'.
+    """
+    try:
+        # Extract data from session
+        customer_email = session.get('customer_details', {}).get('email')
+        customer_name = session.get('customer_details', {}).get('name')
+        session_id = session.get('id')
+        payment_status = session.get('payment_status')
+        amount_total = session.get('amount_total')
+        currency = session.get('currency', 'ils')
+        metadata = session.get('metadata', {})
+        client_reference_id = session.get('client_reference_id')
+        
+        # Extract business_id and order_id from metadata
+        business_id_from_stripe = metadata.get('business_id') or client_reference_id
+        order_id = metadata.get('order_id')
+        customer_id = metadata.get('customer_id')
+        
+        logger.info(f"C2B Flow - Processing escrow payment for business_id: {business_id_from_stripe}, order_id: {order_id}, customer_id: {customer_id}")
+        
+        # ============================================
+        # DOUBLE TENANT VALIDATION - CRITICAL SECURITY
+        # ============================================
+        if not order_id:
+            logger.error("SECURITY ALERT: No order_id in Stripe session metadata for chat_escrow flow")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid session: missing order_id"
+            )
+        
+        # Step 1: Fetch the order from database by order_id
+        order_result = supabase.table("orders")\
+            .select("*")\
+            .eq("id", order_id)\
+            .execute()
+        
+        if not order_result.data:
+            logger.error(f"SECURITY ALERT: Order not found in database for chat_escrow: {order_id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Order not found"
+            )
+        
+        order_data = order_result.data[0]
+        business_id_from_db = order_data.get('business_id')
+        order_customer_id = order_data.get('customer_id')
+        
+        # Step 2: Validate business_id
+        if not business_id_from_db:
+            logger.error(f"SECURITY ALERT: Order {order_id} has no business_id in database for chat_escrow")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid order: missing business_id"
+            )
+        
+        if business_id_from_stripe != business_id_from_db:
+            # CRITICAL SECURITY VIOLATION
+            logger.critical(
+                f"SECURITY ALERT: C2B Cross-tenant validation failed! "
+                f"Stripe business_id '{business_id_from_stripe}' does not match "
+                f"database business_id '{business_id_from_db}' for order {order_id}. "
+                f"Possible data tampering or cross-tenant attack in chat_escrow flow."
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Security validation failed: business_id mismatch"
+            )
+        
+        # Step 3: Validate customer_id if provided
+        if customer_id and order_customer_id:
+            if customer_id != order_customer_id:
+                logger.critical(
+                    f"SECURITY ALERT: C2B Customer mismatch! "
+                    f"Stripe customer_id '{customer_id}' does not match "
+                    f"order customer_id '{order_customer_id}' for order {order_id}."
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Security validation failed: customer_id mismatch"
+                )
+        
+        # Validation passed - use the business_id from database (trusted source)
+        business_id = business_id_from_db
+        logger.info(f"C2B Double tenant validation passed for order {order_id}, business {business_id}")
+        
+        # Step 4: Update order status to 'paid' and mark as funded
+        order_update_data = {
+            "status": "paid",
+            "payment_status": "funded",
+            "updated_at": datetime.utcnow().isoformat()
+        }
+        
+        supabase.table("orders")\
+            .update(order_update_data)\
+            .eq("id", order_id)\
+            .execute()
+        
+        logger.info(f"C2B Order {order_id} marked as paid and funded")
+        
+        # Step 5: Find and update payment record
+        if session_id:
+            payment = supabase.table("payments")\
+                .select("*")\
+                .eq("stripe_session_id", session_id)\
+                .execute()
+            
+            if payment.data:
+                payment_id = payment.data[0]['id']
+                business_uuid = payment.data[0]['business_id']
+                
+                # Additional validation: ensure payment record's business_id matches validated order
+                if business_uuid != business_id:
+                    logger.critical(
+                        f"SECURITY ALERT: C2B Payment record business_id mismatch! "
+                        f"Payment {payment_id} has business_id '{business_uuid}' but order {order_id} has '{business_id}'"
+                    )
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="Security validation failed: payment business_id mismatch"
+                    )
+                
+                # Update payment status
+                supabase.table("payments")\
+                    .update({
+                        "status": "succeeded",
+                        "paid_at": datetime.utcnow().isoformat(),
+                        "metadata": {
+                            **payment.data[0].get('metadata', {}),
+                            "stripe_status": payment_status,
+                            "stripe_session_id": session_id,
+                            "amount_total": amount_total,
+                            "payment_flow": "chat_escrow",
+                            "customer_id": customer_id
+                        }
+                    })\
+                    .eq("id", payment_id)\
+                    .execute()
+                
+                logger.info(f"C2B Payment record updated for session {session_id}")
+            else:
+                logger.warning(f"No payment record found for C2B session {session_id}")
+        
+        # Step 6: Create or update customer record
+        if customer_email and business_id:
+            existing_customer = supabase.table("customers")\
+                .select("*")\
+                .eq("business_id", business_id)\
+                .eq("email", customer_email)\
+                .execute()
+            
+            customer_data = {
+                "email": customer_email,
+                "name": customer_name,
+                "business_id": business_id,
+                "updated_at": datetime.utcnow().isoformat()
+            }
+            
+            # Convert amount from smallest unit to main unit
+            amount_in_main_unit = amount_total / 100 if amount_total else 0
+            
+            if existing_customer.data:
+                # Update existing customer stats
+                customer_id = existing_customer.data[0]['id']
+                supabase.table("customers")\
+                    .update({
+                        "total_purchases": existing_customer.data[0].get('total_purchases', 0) + amount_in_main_unit,
+                        "purchase_count": existing_customer.data[0].get('purchase_count', 0) + 1,
+                        "last_purchase_at": datetime.utcnow().isoformat()
+                    })\
+                    .eq("id", customer_id)\
+                    .execute()
+            else:
+                # Create new customer
+                customer_data["total_purchases"] = amount_in_main_unit
+                customer_data["purchase_count"] = 1
+                customer_data["last_purchase_at"] = datetime.utcnow().isoformat()
+                
+                supabase.table("customers")\
+                    .insert(customer_data)\
+                    .execute()
+            
+            logger.info(f"C2B Customer record updated: {customer_email}")
+        
+        return {"status": "success", "event": "checkout.session.completed", "flow": "chat_escrow", "processed": True}
+    
+    except Exception as e:
+        logger.error(f"Error processing C2B chat escrow: {str(e)}", exc_info=True)
+        return {"status": "error", "message": str(e), "event": "checkout.session.completed", "flow": "chat_escrow"}
 
 
 # ============================================

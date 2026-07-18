@@ -121,12 +121,17 @@ def save_verification_token(user_id: str, token: str) -> bool:
 # Routes
 # ============================================
 
-@router.post("/register", response_model=dict, status_code=status.HTTP_201_CREATED)
-async def register(request: UserRegister):
+@router.post("/signup", response_model=dict, status_code=status.HTTP_201_CREATED)
+async def signup(request: UserRegister):
     """
     Register a new user with email and password.
-    Creates user in Supabase Auth, profile in database, and automatically creates a business.
+    Creates user in Supabase Auth, profile in database with admin role, and automatically creates a business.
     Sends email verification link to user's email address.
+    
+    Multi-tenant onboarding:
+    1. Creates Supabase Auth user
+    2. Creates business workspace
+    3. Creates user profile with admin role linked to business
     """
     try:
         # Register user with Supabase Auth (disable Supabase email confirmation)
@@ -150,34 +155,8 @@ async def register(request: UserRegister):
         user = auth_response.user
         session = auth_response.session
         
-        # Create user profile (don't fail registration if this fails)
-        try:
-            create_user_profile(user.id, user.email, request.full_name)
-            logger.info(f"User profile created for: {user.email}")
-        except Exception as profile_error:
-            logger.error(f"Failed to create user profile: {str(profile_error)}")
-            # Don't fail the registration, just log the error
-        
-        # Generate and save verification token
-        verification_token = generate_verification_token()
-        token_saved = save_verification_token(user.id, verification_token)
-        
-        if not token_saved:
-            logger.warning(f"Failed to save verification token for user: {user.email}")
-        
-        # Send verification email
-        email_sent = False
-        if settings.RESEND_API_KEY:
-            try:
-                email_sent = email_service.send_verification_email(
-                    to_email=user.email or request.email,
-                    token=verification_token,
-                    user_name=request.full_name
-                )
-            except Exception as email_error:
-                logger.error(f"Failed to send verification email: {str(email_error)}")
-        
-        # Automatically create a business for the user
+        # Step 1: Create business first to get business_id
+        business_id = None
         try:
             # Generate business_id from business name (lowercase, no spaces)
             business_id = request.business_name.lower().replace(' ', '_').replace('-', '_')
@@ -208,18 +187,82 @@ async def register(request: UserRegister):
                 .execute()
             
             if business_result.data:
+                business_id = business_result.data[0]['id']  # Get the UUID
                 logger.info(f"Business created: {business_id} for user {user.email}")
+            else:
+                raise Exception("Failed to create business - no data returned")
+                
         except Exception as business_error:
             logger.error(f"Failed to create business: {str(business_error)}")
-            # Don't fail the registration, just log the error
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to create business: {str(business_error)}"
+            )
         
-        logger.info(f"User registered: {user.email}")
+        # Step 2: Create user profile with admin role linked to business
+        try:
+            profile_data = {
+                "user_id": user.id,
+                "email": user.email or request.email,
+                "full_name": request.full_name,
+                "role": "admin",  # Set organizational role to admin
+                "created_at": datetime.utcnow().isoformat()
+            }
+            
+            profile_result = supabase.table("profiles")\
+                .insert(profile_data)\
+                .execute()
+            
+            if profile_result.data:
+                logger.info(f"User profile created with admin role for: {user.email}")
+            else:
+                raise Exception("Failed to create profile - no data returned")
+                
+        except Exception as profile_error:
+            logger.error(f"Failed to create user profile: {str(profile_error)}")
+            # Try to clean up the business if profile creation fails
+            if business_id:
+                try:
+                    supabase.table("businesses")\
+                        .delete()\
+                        .eq("id", business_id)\
+                        .execute()
+                    logger.info(f"Cleaned up business {business_id} due to profile creation failure")
+                except Exception as cleanup_error:
+                    logger.error(f"Failed to cleanup business: {str(cleanup_error)}")
+            
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to create user profile: {str(profile_error)}"
+            )
+        
+        # Step 3: Generate and save verification token
+        verification_token = generate_verification_token()
+        token_saved = save_verification_token(user.id, verification_token)
+        
+        if not token_saved:
+            logger.warning(f"Failed to save verification token for user: {user.email}")
+        
+        # Step 4: Send verification email
+        email_sent = False
+        if settings.RESEND_API_KEY:
+            try:
+                email_sent = email_service.send_verification_email(
+                    to_email=user.email or request.email,
+                    token=verification_token,
+                    user_name=request.full_name
+                )
+            except Exception as email_error:
+                logger.error(f"Failed to send verification email: {str(email_error)}")
+        
+        logger.info(f"User registered successfully: {user.email}")
         
         # Return response indicating email verification is required
         return {
             "message": "Account created successfully! Please check your email to verify your account.",
             "user_id": user.id,
             "email": user.email or "",
+            "business_id": business_id,
             "requires_verification": True,
             "email_sent": email_sent
         }
@@ -241,6 +284,15 @@ async def register(request: UserRegister):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Registration failed: {error_message}"
         )
+
+
+# Keep the old /register endpoint for backward compatibility
+@router.post("/register", response_model=dict, status_code=status.HTTP_201_CREATED)
+async def register_legacy(request: UserRegister):
+    """
+    Legacy registration endpoint - redirects to /signup.
+    """
+    return await signup(request)
 
 
 @router.post("/login", response_model=TokenResponse)

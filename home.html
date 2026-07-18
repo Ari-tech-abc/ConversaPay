@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Meta Tags -->
+    <title>ConversaPay - AI-Powered Freelancer Marketplace with Secure Escrow Payments</title>
+    <meta name="description" content="Transform your freelance business with ConversaPay's autonomous AI infrastructure. Natural language smart contracts, secure Stripe escrow payments, and intelligent project management. Join the future of work today.">
+    <meta name="keywords" content="AI freelancer platform, autonomous marketplace, escrow payments, smart contracts, Stripe payments, AI project management, freelance automation, secure payments, ConversaPay">
+    <meta name="author" content="ConversaPay">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://conversapay.org/">
+    
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="ConversaPay - AI-Powered Freelancer Marketplace with Secure Escrow Payments">
+    <meta property="og:description" content="Transform your freelance business with autonomous AI infrastructure. Natural language smart contracts, secure Stripe escrow, and intelligent project management.">
+    <meta property="og:image" content="https://conversapay.org/static/og-image.png">
+    <meta property="og:url" content="https://conversapay.org/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="ConversaPay">
+    
+    <!-- Twitter Card Tags -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="ConversaPay - AI-Powered Freelancer Marketplace">
+    <meta name="twitter:description" content="Autonomous AI infrastructure with secure escrow payments. Transform your freelance business today.">
+    <meta name="twitter:image" content="https://conversapay.org/static/og-image.png">
+    
+    <!-- Fonts: Plus Jakarta Sans for premium tech aesthetic -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'jakarta': ['Plus Jakarta Sans', 'sans-serif'],
+                    },
+                    colors: {
+                        'midnight': '#0B0F19',
+                        'midnight-light': '#111827',
+                        'cyber-cyan': '#00D9FF',
+                        'neon-purple': '#A855F7',
+                        'royal-blue': '#3B82F6',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.8s ease-out',
+                        'slide-up': 'slideUp 1s ease-out',
+                        'glow-pulse': 'glowPulse 3s ease-in-out infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(40px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        glowPulse: {
+                            '0%, 100%': { boxShadow: '0 0 20px rgba(168, 85, 247, 0.4)' },
+                            '50%': { boxShadow: '0 0 40px rgba(168, 85, 247, 0.8)' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0px)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Custom CSS Variables & Styles -->
+    <style>
+        :root {
+            --bg-primary: #0B0F19;
+            --bg-secondary: #111827;
+            --bg-card: rgba(17, 24, 39, 0.7);
+            --text-primary: #F9FAFB;
+            --text-secondary: #9CA3AF;
+            --accent-purple: #A855F7;
+            --accent-cyan: #00D9FF;
+            --accent-blue: #3B82F6;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        * {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+        
+        /* Gradient Text */
+        .gradient-text {
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 50%, var(--accent-blue) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Gradient Backgrounds */
+        .gradient-primary {
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-blue) 100%);
+        }
+        
+        .gradient-glow {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(0, 217, 255, 0.2) 100%);
+        }
+        
+        /* Frosted Glass */
+        .glass {
+            background: rgba(17, 24, 39, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+        }
+        
+        .glass-light {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+        }
+        
+        /* Navigation */
+        .nav-blur {
+            backdrop-filter: blur(20px) saturate(180%);
+            background: rgba(11, 15, 25, 0.8);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-blue) 100%);
+            color: white;
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .btn-primary:hover::before {
+            opacity: 1;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(168, 85, 247, 0.4);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            padding: 14px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--accent-cyan);
+            transform: translateY(-2px);
+        }
+        
+        /* Cards */
+        .bento-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 32px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .bento-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+        
+        .bento-card:hover::before {
+            opacity: 1;
+        }
+        
+        .bento-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(168, 85, 247, 0.3);
+            box-shadow: 0 20px 60px rgba(168, 85, 247, 0.2);
+        }
+        
+        /* Terminal Mockup */
+        .terminal {
+            background: #1E1E1E;
+            border-radius: 16px;
+            border: 1px solid #333;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        .terminal-header {
+            background: #2D2D2D;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .terminal-body {
+            padding: 24px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        /* Pricing Card */
+        .pricing-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 40px;
+            transition: all 0.4s ease;
+            position: relative;
+        }
+        
+        .pricing-card.featured {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 60px rgba(168, 85, 247, 0.3);
+            transform: scale(1.05);
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 60px rgba(168, 85, 247, 0.2);
+        }
+        
+        .pricing-card.featured:hover {
+            transform: translateY(-8px) scale(1.07);
+        }
+        
+        /* Glow Effects */
+        .glow-purple {
+            box-shadow: 0 0 60px rgba(168, 85, 247, 0.4);
+        }
+        
+        .glow-cyan {
+            box-shadow: 0 0 60px rgba(0, 217, 255, 0.4);
+        }
+        
+        /* Scroll Animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Mobile Menu */
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(11, 15, 25, 0.98);
+            backdrop-filter: blur(20px);
+            z-index: 100;
+            padding: 80px 24px 24px;
+        }
+        
+        .mobile-menu.active {
+            display: block;
+        }
+        
+        /* Grid Background */
+        .grid-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(168, 85, 247, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(168, 85, 247, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            mask-image: radial-gradient(circle at center, black 0%, transparent 70%);
+            -webkit-mask-image: radial-gradient(circle at center, black 0%, transparent 70%);
+        }
+    </style>
+</head>
+<body>
+    
+    <!-- Navigation -->
+    <header class="nav-blur fixed top-0 left-0 right-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <!-- Logo -->
+                <a href="/" class="flex items-center space-x-3 group">
+                    <div class="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                    </div>
+                    <span class="text-2xl font-bold gradient-text">ConversaPay</span>
+                </a>
+                
+                <!-- Desktop Menu -->
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a href="#features" class="text-gray-300 hover:text-white transition-colors text-sm font-medium">Features</a>
+                    <a href="#how-it-works" class="text-gray-300 hover:text-white transition-colors text-sm font-medium">How It Works</a>
+                    <a href="#pricing" class="text-gray-300 hover:text-white transition-colors text-sm font-medium">Pricing</a>
+                    <a href="/login.html" class="text-gray-300 hover:text-white transition-colors text-sm font-medium">Login</a>
+                    <a href="/register.html" class="btn-primary text-sm">Launch App</a>
+                </nav>
+                
+                <!-- Mobile Menu Button -->
+                <button id="mobileMenuBtn" class="md:hidden text-gray-300 hover:text-white transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Mobile Menu -->
+    <div id="mobileMenu" class="mobile-menu">
+        <div class="flex flex-col space-y-6">
+            <a href="#features" class="text-2xl text-gray-300 hover:text-white transition">Features</a>
+            <a href="#how-it-works" class="text-2xl text-gray-300 hover:text-white transition">How It Works</a>
+            <a href="#pricing" class="text-2xl text-gray-300 hover:text-white transition">Pricing</a>
+            <a href="/login.html" class="text-2xl text-gray-300 hover:text-white transition">Login</a>
+            <a href="/register.html" class="btn-primary text-center text-lg mt-4">Launch App</a>
+        </div>
+    </div>
+
+    <!-- Hero Section -->
+    <section class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
+        <!-- Background Effects -->
+        <div class="grid-bg"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-midnight"></div>
+        
+        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <div class="text-center animate-slide-up">
+                <!-- Badge -->
+                <div class="inline-flex items-center px-4 py-2 rounded-full glass-light mb-8">
+                    <span class="w-2 h-2 bg-cyber-cyan rounded-full mr-2 animate-pulse"></span>
+                    <span class="text-sm font-medium text-gray-300">Now in Public Beta - Join 500+ Early Adopters</span>
+                </div>
+                
+                <!-- Main Headline -->
+                <h1 class="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold mb-8 leading-tight tracking-tight">
+                    <span class="block text-white mb-2">The Autonomous</span>
+                    <span class="gradient-text">Infrastructure for</span>
+                    <span class="block text-white mt-2">Modern Freelancing</span>
+                </h1>
+                
+                <!-- Sub-headline -->
+                <p class="text-xl sm:text-2xl text-gray-400 mb-12 max-w-4xl mx-auto leading-relaxed font-light">
+                    Transform your freelance business with intelligent AI infrastructure. 
+                    <span class="text-white font-medium">Natural language smart contracts</span>, 
+                    secure escrow payments, and autonomous project management.
+                </p>
+                
+                <!-- CTA Buttons -->
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+                    <a href="/register.html" class="btn-primary text-lg px-10 py-5">
+                        Get Started Free
+                        <svg class="inline-block ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                        </svg>
+                    </a>
+                    <a href="#how-it-works" class="btn-secondary text-lg px-10 py-5">
+                        Watch Demo
+                        <svg class="inline-block ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </a>
+                </div>
+                
+                <!-- Trust Badges -->
+                <div class="flex flex-wrap justify-center items-center gap-8 text-gray-400 text-sm">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-cyber-cyan" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>No Credit Card Required</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-cyber-cyan" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>14-Day Free Trial</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5 text-cyber-cyan" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span>Cancel Anytime</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section - Bento Grid -->
+    <section id="features" class="py-32 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Section Header -->
+            <div class="text-center mb-20 reveal">
+                <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
+                    <span class="gradient-text">Powerful Features</span>
+                    <br>
+                    <span class="text-white">for Modern Teams</span>
+                </h2>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto">
+                    Everything you need to automate, scale, and secure your freelance operations
+                </p>
+            </div>
+            
+            <!-- Bento Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- Feature 1: AI Agents (Large) -->
+                <div class="bento-card lg:col-span-2 reveal">
+                    <div class="flex items-start gap-6">
+                        <div class="w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center flex-shrink-0">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-white mb-3">Autonomous AI Agents</h3>
+                            <p class="text-gray-400 leading-relaxed mb-4">
+                                Powered by Google Gemini, our AI agents understand natural language and handle complex negotiations, contract generation, and customer support autonomously.
+                            </p>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-3 py-1 rounded-full glass-light text-xs text-gray-300">Natural Language Processing</span>
+                                <span class="px-3 py-1 rounded-full glass-light text-xs text-gray-300">Context-Aware</span>
+                                <span class="px-3 py-1 rounded-full glass-light text-xs text-gray-300">24/7 Active</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Feature 2: Escrow Payments -->
+                <div class="bento-card reveal">
+                    <div class="w-14 h-14 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Secure Escrow</h3>
+                    <p class="text-gray-400 leading-relaxed">
+                        Stripe-powered escrow ensures zero fraud risk. Funds released automatically on milestone completion.
+                    </p>
+                </div>
+                
+                <!-- Feature 3: Analytics Dashboard -->
+                <div class="bento-card reveal">
+                    <div class="w-14 h-14 bg-gradient-to-br from-cyber-cyan to-blue-600 rounded-xl flex items-center justify-center mb-6">
+                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3">Real-Time Analytics</h3>
+                    <p class="text-gray-400 leading-relaxed">
+                        Multi-tenant dashboard with live metrics, conversion tracking, and revenue analytics.
+                    </p>
+                </div>
+                
+                <!-- Feature 4: Chat Widget (Large) -->
+                <div class="bento-card lg:col-span-2 reveal">
+                    <div class="flex items-start gap-6">
+                        <div class="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center flex-shrink-0">
+                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-white mb-3">Embeddable Chat Widget</h3>
+                            <p class="text-gray-400 leading-relaxed mb-4">
+                                One-line integration for any website. Floating AI assistant that converts visitors into paying customers with intelligent product recommendations.
+                            </p>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-3 py-1 rounded-full glass-light text-xs text-gray-300">One-Line Embed</span>
+                                <span class="px-3 py-1 rounded-full glass-light text-xs text-gray-300">Customizable</span>
+                                <span class="px-3 py-1 rounded-full glass-light text-xs text-gray-300">Mobile Responsive</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works - Terminal Mockup -->
+    <section id="how-it-works" class="py-32 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-20 reveal">
+                <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
+                    <span class="text-white">How It</span>
+                    <span class="gradient-text">Works</span>
+                </h2>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto">
+                    From natural language to secured contract in seconds
+                </p>
+            </div>
+            
+            <!-- Terminal Mockup -->
+            <div class="terminal max-w-5xl mx-auto reveal">
+                <div class="terminal-header">
+                    <div class="terminal-dot bg-red-500"></div>
+                    <div class="terminal-dot bg-yellow-500"></div>
+                    <div class="terminal-dot bg-green-500"></div>
+                    <span class="text-gray-400 text-sm ml-4">conversapay-terminal</span>
+                </div>
+                <div class="terminal-body">
+                    <div class="space-y-6">
+                        <!-- Step 1 -->
+                        <div class="flex items-start gap-4">
+                            <span class="text-cyber-cyan font-bold">$</span>
+                            <div class="flex-1">
+                                <p class="text-gray-300 mb-2">"Create a smart contract for website redesign, $5000 budget, 30 days"</p>
+                                <div class="flex items-center gap-2 text-green-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    <span class="text-sm">AI parsing request...</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 2 -->
+                        <div class="flex items-start gap-4">
+                            <span class="text-neon-purple font-bold">→</span>
+                            <div class="flex-1">
+                                <p class="text-gray-300 mb-2">Generating contract with milestones...</p>
+                                <div class="bg-midnight-light rounded-lg p-4 font-mono text-sm">
+                                    <div class="text-gray-400">Milestone 1: Design Mockups - $1,500</div>
+                                    <div class="text-gray-400">Milestone 2: Development - $2,500</div>
+                                    <div class="text-gray-400">Milestone 3: Testing & Launch - $1,000</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Step 3 -->
+                        <div class="flex items-start gap-4">
+                            <span class="text-green-400 font-bold">✓</span>
+                            <div class="flex-1">
+                                <p class="text-white font-semibold mb-2">Contract secured in Stripe escrow</p>
+                                <div class="flex items-center gap-4 text-sm">
+                                    <span class="text-cyber-cyan">Contract ID: #CON-2026-001</span>
+                                    <span class="text-green-400">Status: Active</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-32 relative overflow-hidden">
+        <div class="absolute inset-0 gradient-glow opacity-30"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+                <div class="reveal">
+                    <div class="text-5xl sm:text-6xl font-bold gradient-text mb-4">$2.5M+</div>
+                    <div class="text-gray-400 text-lg">Transactions Processed</div>
+                </div>
+                <div class="reveal">
+                    <div class="text-5xl sm:text-6xl font-bold gradient-text mb-4">500+</div>
+                    <div class="text-gray-400 text-lg">Active Freelancers</div>
+                </div>
+                <div class="reveal">
+                    <div class="text-5xl sm:text-6xl font-bold gradient-text mb-4">99.9%</div>
+                    <div class="text-gray-400 text-lg">Uptime SLA</div>
+                </div>
+                <div class="reveal">
+                    <div class="text-5xl sm:text-6xl font-bold gradient-text mb-4">24/7</div>
+                    <div class="text-gray-400 text-lg">AI Support</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="py-32 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-20 reveal">
+                <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
+                    <span class="text-white">Simple,</span>
+                    <span class="gradient-text">Transparent</span>
+                    <span class="text-white">Pricing</span>
+                </h2>
+                <p class="text-xl text-gray-400 max-w-3xl mx-auto">
+                    Start free, upgrade when you need more
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <!-- Starter Plan -->
+                <div class="pricing-card reveal">
+                    <h3 class="text-2xl font-bold text-white mb-2">Starter</h3>
+                    <div class="text-5xl font-bold text-white mb-2">$0<span class="text-2xl text-gray-500">/mo</span></div>
+                    <p class="text-gray-400 mb-8">Perfect for trying out ConversaPay</p>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-300">3 Active Projects</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-300">Basic AI Features</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-300">Email Support</span>
+                        </li>
+                    </ul>
+                    <a href="/register.html" class="block w-full btn-secondary text-center">Get Started</a>
+                </div>
+                
+                <!-- Pro Plan (Featured) -->
+                <div class="pricing-card featured reveal">
+                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                        <span class="gradient-primary text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">MOST POPULAR</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-white mb-2">Pro</h3>
+                    <div class="text-5xl font-bold text-white mb-2">$29<span class="text-2xl text-gray-500">/mo</span></div>
+                    <p class="text-gray-400 mb-8">For serious freelancers and agencies</p>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-300">Unlimited Projects</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-300">Advanced AI Features</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-300">Priority Support</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-300">Custom Branding</span>
+                        </li>
+                    </ul>
+                    <a href="/register.html" class="block w-full btn-primary text-center">Start Free Trial</a>
+                </div>
+                
+                <!-- Enterprise Plan -->
+                <div class="pricing-card reveal">
+                    <h3 class="text-2xl font-bold text-white mb-2">Enterprise</h3>
+                    <div class="text-5xl font-bold text-white mb-2">Custom</div>
+                    <p class="text-gray-400 mb-8">For teams and organizations</p>
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-300">Everything in Pro</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-300">Dedicated Support</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-300">Custom Integrations</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            <span class="text-gray-300">SLA Guarantee</span>
+                        </li>
+                    </ul>
+                    <a href="/register.html" class="block w-full btn-secondary text-center">Contact Sales</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-32 relative">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="gradient-primary rounded-3xl p-16 text-center relative overflow-hidden reveal">
+                <div class="absolute inset-0 bg-black opacity-20"></div>
+                <div class="relative z-10">
+                    <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
+                        Ready to Transform Your Freelance Business?
+                    </h2>
+                    <p class="text-xl text-blue-100 mb-10 max-w-3xl mx-auto">
+                        Join hundreds of freelancers already using ConversaPay to automate their workflow and secure payments.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <a href="/register.html" class="bg-white text-midnight px-10 py-5 rounded-xl font-bold text-lg hover:shadow-2xl transition transform hover:scale-105">
+                            Create Free Account
+                            <svg class="inline-block ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                            </svg>
+                        </a>
+                        <a href="/login.html" class="bg-transparent border-2 border-white text-white px-10 py-5 rounded-xl font-bold text-lg hover:bg-white hover:text-midnight transition">
+                            Sign In
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/10 py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
+                <div>
+                    <a href="/" class="flex items-center space-x-3 mb-6">
+                        <div class="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                            </svg>
+                        </div>
+                        <span class="text-2xl font-bold gradient-text">ConversaPay</span>
+                    </a>
+                    <p class="text-gray-400 text-sm leading-relaxed">
+                        The future of freelance work is autonomous, AI-powered, and secure.
+                    </p>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold text-white mb-4">Product</h4>
+                    <ul class="space-y-3 text-gray-400 text-sm">
+                        <li><a href="#features" class="hover:text-cyber-cyan transition">Features</a></li>
+                        <li><a href="#pricing" class="hover:text-cyber-cyan transition">Pricing</a></li>
+                        <li><a href="#" class="hover:text-cyber-cyan transition">Documentation</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold text-white mb-4">Company</h4>
+                    <ul class="space-y-3 text-gray-400 text-sm">
+                        <li><a href="#" class="hover:text-cyber-cyan transition">About</a></li>
+                        <li><a href="#" class="hover:text-cyber-cyan transition">Blog</a></li>
+                        <li><a href="#" class="hover:text-cyber-cyan transition">Careers</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold text-white mb-4">Legal</h4>
+                    <ul class="space-y-3 text-gray-400 text-sm">
+                        <li><a href="#" class="hover:text-cyber-cyan transition">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-cyber-cyan transition">Terms of Service</a></li>
+                        <li><a href="#" class="hover:text-cyber-cyan transition">Cookie Policy</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-white/10 pt-8 text-center text-gray-500 text-sm">
+                <p>&copy; 2026 ConversaPay. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Mobile menu toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        
+        mobileMenuBtn?.addEventListener('click', () => {
+            mobileMenu.classList.toggle('active');
+        });
+
+        // Close mobile menu when clicking links
+        mobileMenu?.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.remove('active');
+            });
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // Scroll reveal animation
+        const revealElements = document.querySelectorAll('.reveal');
+        
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        });
+
+        revealElements.forEach(el => revealObserver.observe(el));
+    </script>
+</body>
+</html>
