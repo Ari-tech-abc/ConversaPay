@@ -412,8 +412,20 @@
                     // Reset form
                     document.getElementById('registerForm').reset();
                 } else {
-                    // Show error message
-                    errorMessage.textContent = data.detail || 'שגיאה בהרשמה. נא לנסות שוב.';
+                    // Map error codes to friendly Hebrew messages
+                    let errorMessageText = 'שגיאה בהרשמה. נא לנסות שוב.';
+                    
+                    if (data.detail === 'email_exists') {
+                        errorMessageText = 'נראה שכתובת המייל הזו כבר רשומה במערכת. אולי תרצה לנסות להתחבר?';
+                    } else if (data.detail === 'rate_limit') {
+                        errorMessageText = 'יותר מדי ניסיונות הרשמה. אנא המתן רגע ונסה שוב.';
+                    } else if (data.detail === 'server_error') {
+                        errorMessageText = 'אופס! משהו קטן השתבש אצלנו במערכת בזמן יצירת הפרופיל. הצוות הטכני שלנו כבר עודכן, אנא נסה שוב בעוד כמה רגעים.';
+                    } else if (data.detail) {
+                        errorMessageText = data.detail;
+                    }
+                    
+                    errorMessage.textContent = errorMessageText;
                     errorMessage.classList.add('show');
                 }
             } catch (error) {

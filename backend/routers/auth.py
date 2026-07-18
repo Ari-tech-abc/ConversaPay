@@ -273,16 +273,24 @@ async def signup(request: UserRegister):
         error_message = str(e)
         logger.error(f"Registration error: {error_message}", exc_info=True)
         
+        # Handle specific errors with friendly error codes
+        if "already exists" in error_message.lower() or "duplicate" in error_message.lower():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="email_exists"
+            )
+        
         # Handle rate limiting
         if "rate limit" in error_message.lower() or "429" in error_message:
             raise HTTPException(
                 status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="Too many registration attempts. Please wait a moment and try again."
+                detail="rate_limit"
             )
         
+        # Generic error
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Registration failed: {error_message}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="server_error"
         )
 
 

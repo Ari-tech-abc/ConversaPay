@@ -5,11 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ConversaPay - נציג המכירות החכם שלך</title>
     <style>
+        :root {
+            --bg-primary: #0B0F19;
+            --bg-secondary: #111827;
+            --text-primary: #F9FAFB;
+            --text-secondary: #9CA3AF;
+            --accent-purple: #A855F7;
+            --accent-cyan: #00D9FF;
+            --accent-blue: #3B82F6;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+        
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            font-family: 'Plus Jakarta Sans', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0B0F19 0%, #111827 100%);
             direction: rtl;
             text-align: right;
             color: #f8fafc;
@@ -25,11 +36,19 @@
             position: sticky;
             top: 0;
             z-index: 100;
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(10px);
+            background: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
         }
         
-        .navbar-brand { font-size: 1.5rem; font-weight: 800; color: #fff; }
+        .navbar-brand { 
+            font-size: 1.5rem; 
+            font-weight: 800; 
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
         
         .navbar-nav {
             display: flex;
@@ -56,17 +75,18 @@
         
         .hero {
             text-align: center;
-            padding: 80px 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #0f172a 100%);
+            padding: 100px 40px;
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(59, 130, 246, 0.2) 50%, rgba(11, 15, 25, 1) 100%);
             border-radius: 24px;
             margin-bottom: 60px;
+            border: 1px solid var(--border-color);
         }
         
         .hero h1 {
             font-size: 3rem;
             font-weight: 800;
             margin-bottom: 20px;
-            background: linear-gradient(90deg, #fff, #e2e8f0);
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 50%, var(--accent-blue) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -78,6 +98,7 @@
             max-width: 700px;
             margin: 0 auto 40px;
             line-height: 1.6;
+            color: var(--text-secondary);
         }
         
         .btn {
@@ -95,14 +116,14 @@
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-blue) 100%);
             color: white;
-            box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 4px 14px rgba(168, 85, 247, 0.4);
         }
         
         .btn-primary:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+            box-shadow: 0 8px 25px rgba(168, 85, 247, 0.5);
         }
         
         .btn-outline {
@@ -131,7 +152,7 @@
         .section-subtitle {
             text-align: center;
             font-size: 1.1rem;
-            color: #94a3b8;
+            color: var(--text-secondary);
             margin-bottom: 40px;
             max-width: 600px;
             margin-right: auto;
@@ -149,7 +170,7 @@
             border-radius: 16px;
             padding: 30px;
             text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid var(--border-color);
             transition: all 0.3s;
         }
         
@@ -161,7 +182,7 @@
         .step-number {
             width: 50px;
             height: 50px;
-            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-blue) 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -178,7 +199,7 @@
         }
         
         .step-card p {
-            color: #94a3b8;
+            color: var(--text-secondary);
             line-height: 1.6;
         }
         
@@ -192,7 +213,7 @@
             background: rgba(255,255,255,0.05);
             border-radius: 16px;
             padding: 30px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid var(--border-color);
             transition: all 0.3s;
         }
         
@@ -213,7 +234,7 @@
         }
         
         .feature-card p {
-            color: #94a3b8;
+            color: var(--text-secondary);
             line-height: 1.6;
         }
         
@@ -221,7 +242,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 30px;
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
         }
         
@@ -230,7 +251,7 @@
             border-radius: 20px;
             padding: 40px 30px;
             text-align: center;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid var(--border-color);
             position: relative;
             transition: all 0.3s;
         }
@@ -240,8 +261,8 @@
         }
         
         .pricing-card.pro {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.1));
-            border-color: #3b82f6;
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(59, 130, 246, 0.1));
+            border-color: var(--accent-purple);
         }
         
         .best-value {
@@ -271,7 +292,7 @@
         
         .price-period {
             font-size: 1rem;
-            color: #94a3b8;
+            color: var(--text-secondary);
         }
         
         .pricing-features {
@@ -282,7 +303,7 @@
         
         .pricing-features li {
             padding: 10px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid var(--border-color);
             color: #e2e8f0;
         }
         
@@ -300,12 +321,12 @@
         .footer {
             text-align: center;
             padding: 40px 20px;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            border-top: 1px solid var(--border-color);
             margin-top: 60px;
         }
         
         .footer p {
-            color: #64748b;
+            color: var(--text-secondary);
             font-size: 0.9rem;
         }
         
@@ -329,10 +350,10 @@
     <div class="container">
         <!-- Hero Section -->
         <section class="hero">
-            <h1>נציג המכירות שמעולם לא ישן 🤖</h1>
+            <h1>הפוך את האתר שלך למכונת מכירות מבוססת AI</h1>
             <p>
-                ConversaPay הופכת את שיחות השירות שלכם למכירות ישירות. 
-                הבוט שלכם מוכר מוצרים וסולק תשלומים מאובטחים ישירות בתוך הצ'אט.
+                סוכן AI חכם שמנהל שיחות עם לקוחות, מציע מוצרים מהקטלוג שלך, ומעבד תשלומים מאובטחים 
+                ישירות בתוך הצ'אט. הטמעה קלה בכל אתר או וורדפרס.
             </p>
             <a href="/register.html" class="btn btn-primary">🚀 התחל עכשיו בחינם</a>
         </section>
@@ -351,14 +372,14 @@
                 
                 <div class="step-card">
                     <div class="step-number">2</div>
-                    <h3>מתקנים את הבוט</h3>
-                    <p>מטמיעים את הבוט באתר בלחיצת כפתור אחת או בעזרת תוסף הוורדפרס המותאם אישית שלנו.</p>
+                    <h3>מטמיעים את הבוט</h3>
+                    <p>ווידג'ט צף בשורת קוד אחת או תוסף וורדפרס מותאם אישית. הבוט מופיע אוטומטית באתר.</p>
                 </div>
                 
                 <div class="step-card">
                     <div class="step-number">3</div>
                     <h3>מרוויחים מכירות</h3>
-                    <p>ה-AI מנהל שיחות עם הלקוחות שלכם, מציע להם מוצרים ומפיק קישורי תשלום מהירים.</p>
+                    <p>ה-AI מבוסס Gemini מנהל שיחות, מציע מוצרים ומפיק קישורי תשלום מאובטחים דרך Stripe.</p>
                 </div>
             </div>
         </section>
@@ -366,43 +387,43 @@
         <!-- Features Section -->
         <section class="section">
             <h2 class="section-title">פיצ'רים מרכזיים</h2>
-            <p class="section-subtitle">כל מה שצריך לניהול מכירות חכמות באתר האינטרנט שלכם</p>
+            <p class="section-subtitle">תשתית מלאה למכירות חכמות ואוטומטיות</p>
             
             <div class="features-grid">
                 <div class="feature-card">
-                    <div class="feature-icon">🚀</div>
-                    <h3>סליקה ישירה בצ'אט</h3>
-                    <p>אין צורך לצאת מהשיחה כדי לשלם. הלקוחות שלכם משלמים ישירות דרך הצ'אט באמצעות Stripe.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
-                    <h3>אנליטיקות מתקדמות</h3>
-                    <p>מעקב אחר הזמנות, הכנסות ויחסי המרה בזמן אמת. כל הנתונים שלכם במקום אחד.</p>
-                </div>
-                
-                <div class="feature-card">
-                    <div class="feature-icon">🔌</div>
-                    <h3>התקנה ב-0 מאמץ</h3>
-                    <p>תוסף וורדפרס מותאם אישית בלחיצת כפתור אחת. אין צורך בידע טכני.</p>
-                </div>
-                
-                <div class="feature-card">
                     <div class="feature-icon">🤖</div>
-                    <h3>שירות לקוחות 24/7</h3>
-                    <p>הבוט שלכם זמין תמיד, גם מחוץ לשעות הפעילות של החנות.</p>
+                    <h3>סוכן AI מבוסס Gemini</h3>
+                    <p>בינה מלאכותית מתקדמה שמבינה כוונות לקוחות, מזהה הזדמנויות רכישה ומנהלת שיחות מכירה אוטונומיות.</p>
                 </div>
                 
                 <div class="feature-card">
                     <div class="feature-icon">💳</div>
-                    <h3>תשלומים מאובטחים</h3>
-                    <p>שילוב מלא עם Stripe לתשלומים מאובטחים ומקובלים בישראל ובעולם.</p>
+                    <h3>סליקת Stripe מאובטחת</h3>
+                    <p>תשלומים ישירים בצ'אט עם קישורי Stripe Checkout מותאמים. תמיכה בכל אמצעי התשלום הגלובליים.</p>
                 </div>
                 
                 <div class="feature-card">
-                    <div class="feature-icon">📱</div>
-                    <h3>ריספונסיבי לחלוטין</h3>
-                    <p>הבוט מותאם למובייל ולטאבלט. נראה מושלם בכל מכשיר.</p>
+                    <div class="feature-icon">📊</div>
+                    <h3>דשבורד אנליטיקס מתקדם</h3>
+                    <p>מעקב בזמן אמת אחר הכנסות, יחס המרה, ערך הזמנה ממוצע, וגרפים אינטראקטיביים.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🔌</div>
+                    <h3>ווידג'ט צף להטמעה קלה</h3>
+                    <p>סקריפט JS קל משקל להטמעה בכל אתר. עיצוב רספונסיבי, אבטחה מבוססת דומיינים, ואינטגרציה מלאה.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>תוסף וורדפרס רשמי</h3>
+                    <p>התקנה בלחיצת כפתור מלוח הבקרה של וורדפרס. הגדרות מתקדמות והטמעה אוטומטית בעמודים נבחרים.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🏗️</div>
+                    <h3>בונה אתרים מבוסס AI</h3>
+                    <p>יצירת דפי נחיתה אוטומטיים עם בינה מלאכותית. תצוגה מקדימה בזמן אמת ופרסום בלחיצה אחת.</p>
                 </div>
             </div>
         </section>
@@ -410,45 +431,45 @@
         <!-- Pricing Section -->
         <section class="section">
             <h2 class="section-title">חבילות ומחירים</h2>
-            <p class="section-subtitle">בחרו את החבילה המתאימה לכם. אפשרות ניסיון חופשי זמינה.</p>
+            <p class="section-subtitle">התחל עם חשבון סנדבוקס חינמי, שדרג כשאתה צריך יותר</p>
             
             <div class="pricing-grid">
                 <!-- Free Sandbox Plan -->
                 <div class="pricing-card">
-                    <h3 style="font-size:1.5rem;margin-bottom:10px;">מסלול התנסות</h3>
-                    <p style="color:#94a3b8;margin-bottom:20px;">מיועד לבדיקות פנימיות בלבד</p>
+                    <h3 style="font-size:1.5rem;margin-bottom:10px;">סנדבוקס</h3>
+                    <p style="color:var(--text-secondary);margin-bottom:20px;">להתנסות ופיתוח</p>
                     
                     <div class="price-amount">
                         <span class="price-currency">₪</span>0
-                        <span class="price-period" style="display:block;font-size:0.9rem;color:#94a3b8;">חודשי</span>
+                        <span class="price-period" style="display:block;font-size:0.9rem;color:var(--text-secondary);">חודשי</span>
                     </div>
                     
                     <ul class="pricing-features">
-                        <li>עד 5 הזמנות בדיקה בלבד</li>
-                        <li>גישה ללוח הבקרה</li>
+                        <li>עד 5 הזמנות בדיקה</li>
+                        <li>גישה לדשבורד בסיסי</li>
                         <li>ניהול מוצרים בסיסי</li>
                         <li>תמיכה במייל</li>
                     </ul>
                     
-                    <a href="/register.html" class="btn btn-outline w-full">התחל ניסיון חינם</a>
+                    <a href="/register.html" class="btn btn-outline w-full">התחל בחינם</a>
                 </div>
                 
                 <!-- Pro Seller Plan -->
                 <div class="pricing-card pro">
                     <div class="best-value">הכי משתלם</div>
-                    <h3 style="font-size:1.5rem;margin-bottom:10px;">מסלול מקצוען</h3>
-                    <p style="color:#94a3b8;margin-bottom:20px;">למכירות ללא הגבלה</p>
+                    <h3 style="font-size:1.5rem;margin-bottom:10px;">Pro</h3>
+                    <p style="color:var(--text-secondary);margin-bottom:20px;">עבור עסקים צומחים</p>
                     
                     <div class="price-amount">
                         <span class="price-currency">$</span>29
-                        <span class="price-period" style="display:block;font-size:0.9rem;color:#94a3b8;">לחודש</span>
+                        <span class="price-period" style="display:block;font-size:0.9rem;color:var(--text-secondary);">לחודש</span>
                     </div>
                     
                     <ul class="pricing-features">
                         <li>הזמנות ללא הגבלה</li>
-                        <li>התקנה באתרים חיצוניים</li>
-                        <li>דשבורד מלא ומתקדם</li>
-                        <li>תוסף וורדפרס בלחיצת כפתור</li>
+                        <li>ווידג'ט צף + תוסף וורדפרס</li>
+                        <li>בונה אתרים מבוסס AI</li>
+                        <li>אנליטיקות מתקדמות</li>
                         <li>תמיכה מועדפת</li>
                         <li>אינטגרציות API</li>
                     </ul>
@@ -460,7 +481,7 @@
     </div>
 
     <footer class="footer">
-        <p>© 2024 ConversaPay. כל הזכויות שמורות.</p>
+        <p>© 2026 ConversaPay. כל הזכויות שמורות.</p>
         <p style="margin-top:10px;">
             <a href="/login.html" class="nav-link" style="font-size:0.9rem;">התחברות</a>
             <a href="/register.html" class="nav-link" style="font-size:0.9rem;">הרשמה</a>
