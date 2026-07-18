@@ -3,6 +3,9 @@
  * Embeddable chat widget for external websites
  * 
  * Usage: <script src="https://your-domain.com/frontend/js/widget.js" data-business-id="YOUR_BUSINESS_ID" defer></script>
+ * 
+ * Security: For non-Pro (Starter) users, the widget silently exits on external domains.
+ * Only the private dashboard preview and the official landing page (business_id: "conversapay") are allowed.
  */
 
 (function() {
@@ -25,6 +28,17 @@
             text: '#F9FAFB',
             userBubble: 'rgba(168, 85, 247, 0.2)',
             botBubble: 'rgba(59, 130, 246, 0.15)'
+        },
+        // Hebrew localization
+        LOCALE: {
+            placeholder: 'הקלד הודעה...',
+            online: '● מחובר',
+            botName: 'נציג ConversaPay',
+            typing: 'מקליד...',
+            error: 'מצטער, אירעה שגיאה. אנא נסה שוב.',
+            paymentLink: '💳 השלם תשלום',
+            upgradePrompt: 'מעוניין לשדרג ל-Pro? לחץ כאן',
+            proCheckout: 'https://conversapay.org/api/v1/payments/create-checkout-session'
         }
     };
 
@@ -33,22 +47,22 @@
     // ============================================
 
     function init() {
-        // Extract business ID from script tag
+        // Extract business ID from script tag or window config
         const currentScript = document.currentScript || document.querySelector('script[src*="widget.js"]');
         
-        if (!currentScript) {
-            console.error('ConversaPay Widget: Could not find script tag');
-            return;
+        // First check for window config (used by home.html)
+        if (window.ConversaPayWidgetConfig && window.ConversaPayWidgetConfig.business_id) {
+            CONFIG.BUSINESS_ID = window.ConversaPayWidgetConfig.business_id;
+        } else if (currentScript) {
+            CONFIG.BUSINESS_ID = currentScript.getAttribute('data-business-id');
         }
-
-        CONFIG.BUSINESS_ID = currentScript.getAttribute('data-business-id');
         
         if (!CONFIG.BUSINESS_ID) {
-            console.error('ConversaPay Widget: Missing data-business-id attribute');
+            console.error('ConversaPay Widget: Missing business_id');
             return;
         }
 
-        // Load widget configuration
+        // Load widget configuration (includes pro check)
         loadWidgetConfig();
     }
 
@@ -66,6 +80,11 @@
             });
 
             if (!response.ok) {
+                // If 403 (domain not authorized), silently exit for non-Pro users
+                if (response.status === 403) {
+                    console.warn('ConversaPay Widget: Domain not authorized. Upgrade to Pro to enable widget on external sites.');
+                    return;
+                }
                 console.error('ConversaPay Widget: Failed to load config');
                 return;
             }
@@ -75,6 +94,11 @@
             // Merge custom colors if provided
             if (config.theme_colors) {
                 CONFIG.COLORS = { ...CONFIG.COLORS, ...config.theme_colors };
+            }
+            
+            // Use configured bot name or default Hebrew name
+            if (config.bot_name) {
+                CONFIG.LOCALE.botName = config.bot_name;
             }
 
             // Inject widget
@@ -126,8 +150,8 @@
                     <div class="cp-chat-header-info">
                         <div class="cp-chat-avatar">🤖</div>
                         <div>
-                            <div class="cp-chat-title">${escapeHtml(config.bot_name || 'AI Assistant')}</div>
-                            <div class="cp-chat-status">● Online</div>
+                            <div class="cp-chat-title">${escapeHtml(config.bot_name || CONFIG.LOCALE.botName)}</div>
+                            <div class="cp-chat-status">${CONFIG.LOCALE.online}</div>
                         </div>
                     </div>
                     <button class="cp-chat-close" onclick="window.ConversaPayWidget.close()">✕</button>
@@ -137,7 +161,7 @@
                     <input 
                         type="text" 
                         id="cpChatInput" 
-                        placeholder="Type a message..." 
+                        placeholder="${CONFIG.LOCALE.placeholder}" 
                         onkeypress="if(event.key==='Enter') window.ConversaPayWidget.sendMessage()"
                     >
                     <button onclick="window.ConversaPayWidget.sendMessage()">
@@ -163,9 +187,9 @@
                 font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
                 position: fixed;
                 bottom: 20px;
-                right: 20px;
+                left: 20px;
                 z-index: 99999;
-                direction: ltr;
+                direction: rtl;
             }
 
             .cp-chat-toggle {
@@ -189,7 +213,7 @@
             .cp-chat-window {
                 position: absolute;
                 bottom: 75px;
-                right: 0;
+                left: 0;
                 width: 380px;
                 height: 550px;
                 background: #0B0F19;
@@ -408,7 +432,7 @@
                 .cp-chat-window {
                     width: calc(100vw - 40px);
                     height: calc(100vh - 120px);
-                    right: 0;
+                    left: 0;
                     bottom: 75px;
                 }
             }
@@ -480,7 +504,7 @@
                 
                 if (data.intent === 'checkout' && data.payment_url) {
                     appendMessage(
-                        `${data.response}<br><br><a href="${data.payment_url}" target="_blank" style="color: #00D9FF; text-decoration: underline;">💳 Complete Payment</a>`,
+                        `${data.response}<br><br><a href="${data.payment_url}" target="_blank" style="color: #00D9FF; text-decoration: underline;">${CONFIG.LOCALE.paymentLink}</a>`,
                         'bot'
                     );
                 } else {
@@ -490,7 +514,7 @@
             .catch(error => {
                 hideTypingIndicator();
                 console.error('ConversaPay Widget: Error sending message', error);
-                appendMessage('Sorry, I encountered an error. Please try again.', 'bot');
+                appendMessage(CONFIG.LOCALE.error, 'bot');
             });
         }
     };
@@ -517,7 +541,7 @@
         const indicator = document.createElement('div');
         indicator.className = 'cp-typing-indicator active';
         indicator.id = 'cpTypingIndicator';
-        indicator.textContent = 'Typing...';
+        indicator.textContent = CONFIG.LOCALE.typing;
         messagesContainer.appendChild(indicator);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }

@@ -295,11 +295,56 @@ function showDashboardState() {
         window.history.replaceState({}, document.title, '/dashboard.html');
     }
     
+    // Check Pro status to determine integrations visibility
+    checkProStatusForIntegrations();
+    
     // Update embed code with actual business_id
     updateEmbedCode();
     
     // Check if business has a website - show onboarding if not
     checkWebsiteStatus();
+}
+
+async function checkProStatusForIntegrations() {
+    try {
+        const token = ConversaPayAuth.getToken();
+        const response = await fetch(`${API_BASE_URL}/payments/profile`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (response.ok) {
+            const profile = await response.json();
+            const isPro = profile.is_pro || false;
+            
+            const integrationsSection = document.querySelector('.card:last-of-type');
+            if (!integrationsSection) return;
+            
+            if (!isPro) {
+                // Non-Pro: Replace integrations with upgrade prompt
+                integrationsSection.innerHTML = `
+                    <div class="card-header">
+                        <h3 class="card-title">🔒 חיבור לאתר שלך</h3>
+                    </div>
+                    <div class="card-body" style="text-align:center;padding:40px;">
+                        <div style="font-size:4rem;margin-bottom:20px;">🔒</div>
+                        <h3 style="font-size:1.5rem;font-weight:700;margin-bottom:16px;color:var(--text-primary);">
+                            שדרג ל-Pro עכשיו כדי להפעיל את הבוט באתר שלך
+                        </h3>
+                        <p style="color:var(--text-secondary);margin-bottom:24px;max-width:500px;margin-left:auto;margin-right:auto;">
+                            ולקבל גישה מיידית להדרכה הבלעדית למנויי פרו!
+                        </p>
+                        <button id="upgradeFromIntegrationsBtn" class="btn btn-lg" style="background:linear-gradient(135deg, var(--accent-green) 0%, #059669 100%);color:white;padding:16px 40px;font-size:1.1rem;border-radius:12px;box-shadow:0 4px 14px rgba(16,185,129,0.4);">
+                            💳 שדרג ל-Pro עכשיו
+                        </button>
+                    </div>
+                `;
+                
+                document.getElementById('upgradeFromIntegrationsBtn')?.addEventListener('click', handleUpgradeToPro);
+            }
+        }
+    } catch (error) {
+        console.error('Error checking Pro status for integrations:', error);
+    }
 }
 
 async function checkWebsiteStatus() {
@@ -565,6 +610,12 @@ function updateKPICards(analytics) {
     const aovEl = document.getElementById('kpiAOV');
     if (aovEl) {
         aovEl.textContent = `₪${analytics.average_order_value.toFixed(2)}`;
+    }
+    
+    // Fix the English subtitle
+    const aovSub = aovEl?.closest('.stat-card')?.querySelector('.stat-sub');
+    if (aovSub) {
+        aovSub.textContent = 'ערך הזמנה ממוצע';
     }
     
     // Unique Sessions

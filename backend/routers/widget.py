@@ -1,14 +1,66 @@
 """
 Widget Router - Public API for embedded chat widget
-Handles widget configuration with domain-based security
+Handles widget configuration with domain-based security and Pro tier enforcement
 """
 from fastapi import APIRouter, HTTPException, status, Request
 from fastapi.responses import JSONResponse
 import logging
-from typing import Optional
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["widget"])
+
+
+async def check_business_pro_status(business_id: str, supabase_client) -> bool:
+    """
+    Check if the business owner has an active Pro subscription.
+    This is used to enforce widget rendering restrictions for free users.
+    """
+    try:
+        # Get the business record to find the owner
+        biz_result = supabase_client.table('businesses')\
+            .select('user_id')\
+            .eq('business_id', business_id)\
+            .single()\
+            .execute()
+        
+        if not biz_result.data:
+            return False
+        
+        user_id = biz_result.data.get('user_id')
+        if not user_id:
+            return False
+        
+        # Check the user's profile for pro status
+        profile_result = supabase_client.table('profiles')\
+            .select('is_pro, subscription_expires_at')\
+            .eq('user_id', user_id)\
+            .single()\
+            .execute()
+        
+        if not profile_result.data:
+            return False
+        
+        is_pro = profile_result.data.get('is_pro', False)
+        expires_at = profile_result.data.get('subscription_expires_at')
+        
+        if not is_pro:
+            return False
+        
+        # Check if subscription has expired
+        if expires_at:
+            try:
+                expires_dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
+                if expires_dt < datetime.utcnow():
+                    return False
+            except (ValueError, AttributeError):
+                pass
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error checking Pro status for business {business_id}: {str(e)}")
+        return False
 
 
 @router.get("/config/{business_id}")
@@ -19,7 +71,12 @@ async def get_widget_config(business_id: str, request: Request):
     Security:
     - Validates the requesting domain against allowed_domains whitelist
     - Returns 403 if domain is not authorized
+    - For non-Pro users, widget is strictly blocked on external domains
     - Only returns public, non-sensitive data
+    
+    Pro Enforcement:
+    - Free/Starter users: widget only works on localhost/internal dashboard preview
+    - Pro users: widget works on all their configured allowed_domains
     """
     try:
         # Get the origin/referer from request headers
@@ -37,7 +94,6 @@ async def get_widget_config(business_id: str, request: Request):
         logger.info(f"Widget config request for business {business_id} from domain: {requesting_domain}")
         
         # Database lookup for business and allowed_domains
-        # allowed_domains is stored in the settings JSONB column
         from backend.config import settings as app_settings
         from supabase import create_client
         
@@ -59,21 +115,15 @@ async def get_widget_config(business_id: str, request: Request):
             business = result.data
             
             # Extract allowed_domains from settings JSONB
-            settings = business.get('settings', {})
-            allowed_domains = settings.get('allowed_domains', [])
-            
-            # If no allowed_domains configured, deny access (secure by default)
-            if not allowed_domains:
-                logger.warning(f"No allowed_domains configured for business {business_id}")
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Widget not configured for this domain"
-                )
+            biz_settings = business.get('settings', {})
+            allowed_domains = biz_settings.get('allowed_domains', [])
             
             bot_name = business.get('bot_name', 'AI Assistant')
             greeting_message = business.get('greeting_message', 'Hello! How can I help you today?')
             theme_colors = business.get('theme_colors', {})
             
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error(f"Database error: {str(e)}")
             raise HTTPException(
@@ -81,13 +131,45 @@ async def get_widget_config(business_id: str, request: Request):
                 detail="Failed to load widget configuration"
             )
         
-        # Security check: validate domain
-        if requesting_domain not in allowed_domains:
-            logger.warning(f"Unauthorized widget access attempt from {requesting_domain} for business {business_id}")
+        # Pro status enforcement:
+        # 1. Check if the business owner has an active Pro subscription
+        is_pro = await check_business_pro_status(business_id, supabase)
+        
+        # 2. If no allowed_domains configured, deny access (secure by default)
+        if not allowed_domains and not is_pro:
+            logger.warning(f"No allowed_domains configured for business {business_id}")
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Domain not authorized to embed this widget"
+                detail="Widget not configured for this domain. Upgrade to Pro to enable widget on external sites."
             )
+        
+        # 3. For non-Pro users: block widget on external domains
+        # Only allow widget to render on localhost, dashboard preview, or our own domain
+        if not is_pro:
+            # Extract our own domain from BASE_URL for comparison
+            own_domain = app_settings.BASE_URL.split('://')[-1].split('/')[0] if '://' in app_settings.BASE_URL else app_settings.BASE_URL
+            is_development = (
+                'localhost' in requesting_domain or
+                '127.0.0.1' in requesting_domain or
+                'conversapay.org' in requesting_domain or
+                'conversapay' in requesting_domain or
+                own_domain in requesting_domain
+            )
+            
+            if not is_development and requesting_domain not in allowed_domains:
+                logger.warning(f"BLOCKED: Non-Pro widget access attempt from {requesting_domain} for business {business_id}")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Domain not authorized. Upgrade to Pro to embed this widget on external sites."
+                )
+        else:
+            # Pro user: validate domain against allowed_domains
+            if allowed_domains and requesting_domain not in allowed_domains:
+                logger.warning(f"Unauthorized widget access attempt from {requesting_domain} for business {business_id}")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Domain not authorized to embed this widget"
+                )
         
         # Build response with actual data from database
         config = {
@@ -102,7 +184,8 @@ async def get_widget_config(business_id: str, request: Request):
             },
             "features": {
                 "checkout": True,
-                "product_catalog": True
+                "product_catalog": True,
+                "is_pro": is_pro
             }
         }
         
@@ -124,5 +207,5 @@ async def widget_health():
     return {
         "status": "healthy",
         "service": "conversapay-widget",
-        "version": "1.0.0"
+        "version": "2.0.0"
     }

@@ -194,7 +194,10 @@ app.mount("/frontend", StaticFiles(directory=frontend_dir), name="frontend")
 # Serve static HTML pages from root
 @app.get("/")
 async def root_index():
-    """Serve home/landing page as root."""
+    """
+    Serve the official public marketing Landing Page (home.html).
+    This is the main entry point for visitors - fully localized in Hebrew.
+    """
     return FileResponse("home.html")
 
 @app.get("/dashboard")
@@ -215,7 +218,11 @@ async def dashboard_html():
 
 @app.get("/index.html")
 async def index_html():
-    """Serve chat widget page (legacy)."""
+    """
+    Serve the standalone internal sandbox chat preview (index.html at root).
+    NOTE: This is a developer/sandbox preview page for testing the chat interface,
+    NOT the marketing homepage. The official landing page is served at / (home.html).
+    """
     return FileResponse("index.html")
 
 @app.get("/pay.html")

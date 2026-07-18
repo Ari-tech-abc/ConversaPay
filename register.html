@@ -416,9 +416,9 @@
                     let errorMessageText = 'שגיאה בהרשמה. נא לנסות שוב.';
                     
                     if (data.detail === 'email_exists') {
-                        errorMessageText = 'נראה שכתובת המייל הזו כבר רשומה במערכת. אולי תרצה לנסות להתחבר?';
+                        errorMessageText = 'נראה שכתובת המייל הזו כבר רשומה במערכת. נסה להתחבר.';
                     } else if (data.detail === 'rate_limit') {
-                        errorMessageText = 'יותר מדי ניסיונות הרשמה. אנא המתן רגע ונסה שוב.';
+                        errorMessageText = 'יותר מדי ניסיונות הרשמה. אנא המתן 10 דקות ונסה שוב.';
                     } else if (data.detail === 'server_error') {
                         errorMessageText = 'אופס! משהו קטן השתבש אצלנו במערכת בזמן יצירת הפרופיל. הצוות הטכני שלנו כבר עודכן, אנא נסה שוב בעוד כמה רגעים.';
                     } else if (data.detail) {
