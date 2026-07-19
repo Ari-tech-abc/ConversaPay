@@ -33,14 +33,16 @@ class Settings(BaseSettings):
     # AI
     GEMINI_API_KEY: str
     
-    # Stripe
-    STRIPE_API_KEY: str
-    STRIPE_WEBHOOK_SECRET: str
+    # Stripe (Optional - being replaced by PayMe)
+    STRIPE_API_KEY: Optional[str] = None
+    STRIPE_WEBHOOK_SECRET: Optional[str] = None
     STRIPE_PRO_PLAN_PRICE_ID: Optional[str] = None  # Optional: Use pre-configured price in Stripe
 
     # PayMe (Israeli Payment Gateway)
     PAYME_PAY_KEY: str
     PAYME_SELLER_KEY: str
+    PAYME_SELLER_ID: str  # Production seller ID for PayMe
+    PAYME_BUSINESS_ID: str  # Business ID for PayMe
     PAYME_API_URL: str = "https://ng.payme.co.il/api"  # Production API
     PAYME_SANDBOX_URL: str = "https://sandbox.payme.co.il/api"  # Sandbox API
     

@@ -28,6 +28,7 @@ class PayMeService:
         self.api_url = settings.PAYME_API_URL if settings.is_production else settings.PAYME_SANDBOX_URL
         self.pay_key = settings.PAYME_PAY_KEY
         self.seller_key = settings.PAYME_SELLER_KEY
+        logger.info(f"PayMe Service initialized with API URL: {self.api_url}")
     
     async def create_hosted_setup_session(
         self,
@@ -76,9 +77,17 @@ class PayMeService:
             payload["cancel_url"] = cancel_url
         
         try:
-            async with httpx.AsyncClient() as client:
+            # Construct the full URL and log it for debugging
+            full_url = f"{self.api_url}/generate-sale"
+            logger.info(f"Making PayMe API request to: {full_url}")
+            
+            # Force IPv4 to avoid DNS resolution issues on Windows
+            # Create a custom transport that only uses IPv4
+            transport = httpx.AsyncHTTPTransport(local_address="0.0.0.0")
+            
+            async with httpx.AsyncClient(transport=transport) as client:
                 response = await client.post(
-                    f"{self.api_url}/generate-sale",
+                    full_url,
                     json=payload,
                     headers={"Content-Type": "application/json"},
                     timeout=30.0

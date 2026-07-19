@@ -1,5 +1,5 @@
 """
-Payments router for managing payments and Stripe integration.
+Payments router for managing payments and PayMe integration.
 Handles payment sessions, subscription checkout, and webhooks.
 """
 from fastapi import APIRouter, HTTPException, status, Depends, Request
@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from typing import Optional, List
 from datetime import datetime
 import logging
-import stripe
+import httpx
 
 from supabase import create_client, Client
 from backend.config import settings
@@ -17,7 +17,7 @@ from backend.models.schemas import (
     SubscriptionCreate, SubscriptionResponse,
     ProfileResponse
 )
-from backend.services.payment_service import payment_service
+from backend.services.payme_service import payme_service
 
 # Supabase client
 supabase: Client = create_client(
@@ -31,7 +31,7 @@ router = APIRouter(prefix="/payments", tags=["payments"])
 
 
 # ============================================
-# Subscription Checkout Session
+# Subscription Checkout Session (PayMe Integration)
 # ============================================
 
 @router.post("/create-checkout-session", response_model=SubscriptionResponse)
@@ -40,8 +40,12 @@ async def create_subscription_checkout_session(
     current_user: AuthUser = Depends(require_auth)
 ):
     """
-    Create a Stripe Checkout session for Pro Plan subscription ($29/month).
+    Create a PayMe checkout session for Pro Plan subscription (200 ₪/month).
     User must be authenticated.
+    
+    This endpoint:
+    - Step 1: Calls PayMe's generate-sale endpoint with seller_id, amount (200), currency (ILS)
+    - Step 2: Returns the payment URL and payme_sale_id for frontend redirect
     """
     try:
         # Verify the user is the owner of the request
@@ -51,54 +55,66 @@ async def create_subscription_checkout_session(
                 detail="User ID mismatch"
             )
         
-        # Build dynamic URLs based on environment
-        success_url = f"{settings.FRONTEND_URL}/payment/success?session_id={{CHECKOUT_SESSION_ID}}"
-        cancel_url = f"{settings.FRONTEND_URL}/payment/canceled"
+        # Build success and cancel URLs for redirect after payment
+        success_url = f"{settings.FRONTEND_URL}/pay?status=success&sale_id={{sale_id}}"
+        cancel_url = f"{settings.FRONTEND_URL}/pay?status=canceled"
         
-        # Build session parameters
-        session_params = {
-            'payment_method_types': ['card'],
-            'mode': 'subscription',
-            'success_url': success_url,
-            'cancel_url': cancel_url,
-            'customer_email': request.email,
-            'metadata': {
-                'user_id': request.user_id,
-                'type': 'pro_subscription',
-                'full_name': request.full_name or ''
-            },
+        # Step 1: Call PayMe's generate-sale endpoint
+        # Pro tier price is exactly 200 NIS (no decimals)
+        try:
+            payme_result = await payme_service.create_hosted_setup_session(
+                user_id=request.user_id,
+                plan_type="pro",
+                success_url=success_url,
+                cancel_url=cancel_url
+            )
+            
+            # Extract the returned values
+            payme_sale_id = payme_result.get("sale_id")
+            payment_url = payme_result.get("sale_url")
+            
+            if not payme_sale_id or not payment_url:
+                logger.error(f"PayMe API returned unexpected structure: {payme_result}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="PayMe API returned invalid response structure"
+                )
+            
+            logger.info(f"PayMe sale created: {payme_sale_id} for user {request.user_id}")
+            
+        except httpx.HTTPError as e:
+            logger.error(f"PayMe API HTTP error: {str(e)}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Failed to connect to PayMe API"
+            )
+        except Exception as e:
+            logger.error(f"PayMe API error: {str(e)}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create PayMe payment session"
+            )
+        
+        # Step 2: Prepare transaction details for database sync
+        # Log the transaction details to be ready for webhook confirmation
+        transaction_data = {
+            "user_id": request.user_id,
+            "payme_sale_id": payme_sale_id,
+            "amount": 200,  # 200 NIS for Pro tier
+            "currency": "ILS",
+            "plan_type": "pro",
+            "status": "pending",
+            "created_at": datetime.utcnow().isoformat()
         }
         
-        # Use pre-configured price ID if available, otherwise use inline price
-        if settings.STRIPE_PRO_PLAN_PRICE_ID:
-            session_params['line_items'] = [{
-                'price': settings.STRIPE_PRO_PLAN_PRICE_ID,
-                'quantity': 1,
-            }]
-        else:
-            session_params['line_items'] = [{
-                'price_data': {
-                    'currency': 'ils',
-                    'product_data': {
-                        'name': 'מסלול PRO לעסקים',
-                        'description': 'מסלול PRO - 200 ₪ לחודש',
-                    },
-                    'unit_amount': 20000,  # 200 ₪ in agorot (cents)
-                    'recurring': {
-                        'interval': 'month',
-                    },
-                },
-                'quantity': 1,
-            }]
+        # Log transaction for debugging and database sync preparation
+        logger.info(f"Transaction prepared for PayMe sync: {transaction_data}")
         
-        # Create Stripe checkout session for subscription
-        session = stripe.checkout.Session.create(**session_params)
-        
-        logger.info(f"Subscription checkout session created: {session.id} for user {request.user_id}")
-        
+        # Return the payment URL and sale_id for frontend redirect
         return {
-            "session_id": session.id,
-            "url": session.url
+            "session_id": payme_sale_id,
+            "url": payment_url,
+            "payme_sale_id": payme_sale_id
         }
     
     except HTTPException:
@@ -150,7 +166,7 @@ async def get_profile(
 
 
 # ============================================
-# Order Checkout Session (existing)
+# Order Checkout Session (PayMe Integration)
 # ============================================
 
 @router.post("/checkout-session", response_model=dict)
@@ -159,7 +175,7 @@ async def create_checkout_session(
     current_user: AuthUser = Depends(require_auth)
 ):
     """
-    Create a Stripe Checkout session for an order.
+    Create a PayMe Checkout session for an order.
     User must be the owner of the business.
     SECURITY: Amount is fetched from database, not trusted from client request.
     """
@@ -204,7 +220,7 @@ async def create_checkout_session(
         # SECURITY: Use amount from database, not from client request
         order_data = order.data[0]
         amount = order_data.get('total')
-        currency = order_data.get('currency', 'ils')
+        currency = order_data.get('currency', 'ILS')
         
         if not amount:
             raise HTTPException(
@@ -212,32 +228,75 @@ async def create_checkout_session(
                 detail="Order has no total amount"
             )
         
-        # Create Stripe checkout session
-        success_url = f"{settings.FRONTEND_URL}/payment/success?session_id={{CHECKOUT_SESSION_ID}}"
-        cancel_url = f"{settings.FRONTEND_URL}/payment/canceled"
+        # Build success and cancel URLs
+        success_url = f"{settings.FRONTEND_URL}/pay?status=success&order_id={order_id}"
+        cancel_url = f"{settings.FRONTEND_URL}/pay?status=canceled"
         
-        session = await payment_service.create_checkout_session(
-            business_id=business_id,
-            order_id=order_id,
-            amount=amount,
-            currency=currency,
-            customer_email=customer_email,
-            customer_name=customer_name,
-            success_url=success_url,
-            cancel_url=cancel_url
-        )
+        # Create PayMe payment session
+        try:
+            # Convert amount to integer NIS (PayMe expects NIS, not agorot)
+            amount_nis = int(float(amount))
+            
+            # Build payload for PayMe API
+            payload = {
+                "pay_key": settings.PAYME_PAY_KEY,
+                "seller_key": settings.PAYME_SELLER_KEY,
+                "amount": amount_nis,
+                "currency": "ILS",
+                "description": f"Order #{order_id}",
+                "extra1": business_id,
+                "extra2": order_id,
+                "success_url": success_url,
+                "cancel_url": cancel_url,
+            }
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    f"{settings.PAYME_API_URL}/generate-sale",
+                    json=payload,
+                    headers={"Content-Type": "application/json"},
+                    timeout=30.0
+                )
+                
+                response.raise_for_status()
+                data = response.json()
+                
+                sale_url = data.get("sale_url")
+                sale_id = data.get("sale_id")
+                
+                if not sale_url or not sale_id:
+                    logger.error(f"PayMe API returned unexpected structure: {data}")
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail="PayMe API returned invalid response structure"
+                    )
+                
+                logger.info(f"PayMe checkout session created: {sale_id} for order {order_id}")
+                
+        except httpx.HTTPError as e:
+            logger.error(f"PayMe API HTTP error: {str(e)}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Failed to connect to PayMe API"
+            )
+        except Exception as e:
+            logger.error(f"PayMe API error: {str(e)}", exc_info=True)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create PayMe payment session"
+            )
         
         # Create payment record
         payment_data = {
             "business_id": business.data[0]['id'],
             "order_id": order_id,
-            "stripe_session_id": session['session_id'],
+            "payme_sale_id": sale_id,
             "amount": amount,
             "currency": currency,
             "status": PaymentStatus.PENDING.value,
             "customer_email": customer_email,
             "customer_name": customer_name,
-            "metadata": {"stripe_session_id": session['session_id']}
+            "metadata": {"payme_sale_id": sale_id}
         }
         
         payment_result = supabase.table("payments")\
@@ -247,8 +306,8 @@ async def create_checkout_session(
         logger.info(f"Checkout session created for order {order_id}")
         
         return {
-            "session_id": session['session_id'],
-            "url": session['url'],
+            "session_id": sale_id,
+            "url": sale_url,
             "payment_id": payment_result.data[0]['id'] if payment_result.data else None
         }
     
@@ -263,25 +322,16 @@ async def create_checkout_session(
 
 
 @router.get("/success")
-async def payment_success(session_id: str):
+async def payment_success(sale_id: str):
     """
     Payment success page.
     Verifies the payment and updates order status.
     """
     try:
-        # Retrieve session from Stripe
-        session = await payment_service.retrieve_session(session_id)
-        
-        if not session:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Session not found"
-            )
-        
-        # Update payment status
+        # Get payment record from database
         payment = supabase.table("payments")\
             .select("*")\
-            .eq("stripe_session_id", session_id)\
+            .eq("payme_sale_id", sale_id)\
             .execute()
         
         if payment.data:
@@ -296,7 +346,7 @@ async def payment_success(session_id: str):
                     "paid_at": datetime.utcnow().isoformat(),
                     "metadata": {
                         **payment.data[0].get('metadata', {}),
-                        "stripe_status": session['status']
+                        "payme_status": "success"
                     }
                 })\
                 .eq("id", payment_id)\
@@ -308,33 +358,10 @@ async def payment_success(session_id: str):
                 .eq("id", order_id)\
                 .execute()
             
-            # Update customer stats
-            if payment.data[0].get('customer_email'):
-                customer = supabase.table("customers")\
-                    .select("id")\
-                    .eq("business_id", business_id)\
-                    .eq("email", payment.data[0]['customer_email'])\
-                    .execute()
-                
-                if customer.data:
-                    customer_id = customer.data[0]['id']
-                    amount = payment.data[0]['amount']
-                    
-                    supabase.table("customers")\
-                        .update({
-                            "total_purchases": supabase.rpc("increment", {"field": "total_purchases", "value": amount}),
-                            "purchase_count": supabase.rpc("increment", {"field": "purchase_count", "value": 1}),
-                            "last_purchase_at": datetime.utcnow().isoformat()
-                        })\
-                        .eq("id", customer_id)\
-                        .execute()
-            
-            logger.info(f"Payment succeeded for session {session_id}")
+            logger.info(f"Payment succeeded for sale {sale_id}")
         
         return {"status": "success", "message": "Payment completed successfully"}
     
-    except HTTPException:
-        raise
     except Exception as e:
         logger.error(f"Error processing payment success: {str(e)}", exc_info=True)
         raise HTTPException(
@@ -352,72 +379,49 @@ async def payment_canceled():
 
 
 # ============================================
-# Stripe Webhook Handler
+# PayMe Webhook Handler
 # ============================================
 
 @router.post("/webhook")
-async def stripe_webhook(request: Request):
+async def payme_webhook(request: Request):
     """
-    Stripe webhook endpoint.
-    Handles payment events and subscription events from Stripe.
+    PayMe webhook endpoint.
+    Handles payment events from PayMe payment gateway.
     Listens for:
-    - checkout.session.completed (for one-time payments)
-    - invoice.payment_succeeded (for subscription payments)
-    - customer.subscription.deleted (for subscription cancellations)
+    - sale.completed (for successful payments)
+    - sale.failed (for failed payments)
+    - sale.canceled (for canceled payments)
     """
     try:
-        # Get raw body and signature
-        payload = await request.body()
-        signature = request.headers.get("stripe-signature")
+        # Get raw body
+        payload = await request.json()
         
-        if not signature:
+        logger.info(f"Received PayMe webhook: {payload}")
+        
+        # Extract key fields
+        sale_id = payload.get("sale_id")
+        status_value = payload.get("status")
+        amount = payload.get("amount")
+        user_id = payload.get("extra1")
+        plan_type = payload.get("extra2")
+        
+        if not sale_id:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Missing stripe-signature header"
+                detail="Missing sale_id in webhook payload"
             )
         
-        # Verify Stripe signature
-        try:
-            event = stripe.Webhook.construct_event(
-                payload,
-                signature,
-                settings.STRIPE_WEBHOOK_SECRET
-            )
-        except stripe.error.SignatureVerificationError as e:
-            logger.error(f"Invalid webhook signature: {str(e)}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid webhook signature"
-            )
+        # Check if this is a successful payment
+        is_success = status_value == "success" or str(status_value) == "0"
         
-        # Log the event
-        logger.info(f"Received Stripe webhook event: {event['type']}")
+        if is_success:
+            # Successful payment - activate subscription
+            await _handle_subscription_activated(user_id, plan_type, sale_id)
+        else:
+            # Failed/cancelled payment - deactivate subscription
+            await _handle_subscription_deactivated(user_id, sale_id)
         
-        # Handle checkout.session.completed event (one-time payments)
-        if event['type'] == 'checkout.session.completed':
-            session = event['data']['object']
-            
-            # Check if this is a subscription checkout
-            metadata = session.get('metadata', {})
-            if metadata.get('type') == 'pro_subscription':
-                return await _handle_subscription_checkout_completed(session)
-            
-            # Handle regular order payment
-            return await _handle_order_checkout_completed(session)
-        
-        # Handle invoice.payment_succeeded (subscription payments)
-        elif event['type'] == 'invoice.payment_succeeded':
-            invoice = event['data']['object']
-            return await _handle_invoice_payment_succeeded(invoice)
-        
-        # Handle customer.subscription.deleted (subscription cancellation)
-        elif event['type'] == 'customer.subscription.deleted':
-            subscription = event['data']['object']
-            return await _handle_subscription_deleted(subscription)
-        
-        # Handle other events
-        logger.info(f"Unhandled event type: {event['type']}")
-        return {"status": "success", "event": event['type']}
+        return {"status": "success", "processed": True}
     
     except HTTPException:
         raise
@@ -429,38 +433,19 @@ async def stripe_webhook(request: Request):
         )
 
 
-async def _handle_subscription_checkout_completed(session: dict) -> dict:
+async def _handle_subscription_activated(
+    user_id: Optional[str],
+    plan_type: Optional[str],
+    sale_id: str
+) -> dict:
     """
-    Handle completed subscription checkout session.
+    Handle successful subscription payment.
     Updates user profile with Pro status.
     """
     try:
-        customer_email = session.get('customer_details', {}).get('email')
-        customer_name = session.get('customer_details', {}).get('name')
-        session_id = session.get('id')
-        stripe_customer_id = session.get('customer')
-        subscription_id = session.get('subscription')
-        metadata = session.get('metadata', {})
-        user_id = metadata.get('user_id')
-        
-        logger.info(f"Processing subscription for user_id: {user_id}")
-        
         if not user_id:
-            logger.warning(f"No user_id in subscription session metadata: {session_id}")
+            logger.warning(f"No user_id in successful PayMe payment: {sale_id}")
             return {"status": "error", "message": "No user_id in metadata"}
-        
-        # Get subscription details to find expiration
-        subscription_expires_at = None
-        if subscription_id:
-            try:
-                subscription = stripe.Subscription.retrieve(subscription_id)
-                if subscription.get('current_period_end'):
-                    # Convert Unix timestamp to ISO format
-                    subscription_expires_at = datetime.utcfromtimestamp(
-                        subscription['current_period_end']
-                    ).isoformat()
-            except Exception as e:
-                logger.warning(f"Could not retrieve subscription details: {str(e)}")
         
         # Update or create profile
         existing_profile = supabase.table("profiles")\
@@ -470,9 +455,9 @@ async def _handle_subscription_checkout_completed(session: dict) -> dict:
         
         profile_data = {
             "is_pro": True,
-            "subscription_expires_at": subscription_expires_at,
-            "stripe_customer_id": stripe_customer_id,
-            "stripe_subscription_id": subscription_id,
+            "plan_type": plan_type or "pro",
+            "payme_sale_id": sale_id,
+            "subscription_activated_at": datetime.utcnow().isoformat(),
             "updated_at": datetime.utcnow().isoformat()
         }
         
@@ -484,489 +469,47 @@ async def _handle_subscription_checkout_completed(session: dict) -> dict:
             logger.info(f"Updated profile for user {user_id} to Pro status")
         else:
             profile_data["user_id"] = user_id
-            profile_data["email"] = customer_email
-            profile_data["full_name"] = customer_name
             supabase.table("profiles")\
                 .insert(profile_data)\
                 .execute()
             logger.info(f"Created Pro profile for user {user_id}")
         
-        return {"status": "success", "event": "subscription_checkout_completed", "processed": True}
+        return {"status": "success", "event": "subscription_activated", "processed": True}
     
     except Exception as e:
-        logger.error(f"Error processing subscription checkout: {str(e)}", exc_info=True)
-        return {"status": "error", "message": str(e), "event": "subscription_checkout_completed"}
+        logger.error(f"Error processing subscription activation: {str(e)}", exc_info=True)
+        return {"status": "error", "message": str(e), "event": "subscription_activated"}
 
 
-async def _handle_invoice_payment_succeeded(invoice: dict) -> dict:
+async def _handle_subscription_deactivated(user_id: Optional[str], sale_id: str) -> dict:
     """
-    Handle successful subscription payment.
-    Updates subscription expiration date.
-    """
-    try:
-        subscription_id = invoice.get('subscription')
-        customer_id = invoice.get('customer')
-        
-        logger.info(f"Processing invoice payment for subscription: {subscription_id}")
-        
-        if not subscription_id:
-            return {"status": "error", "message": "No subscription ID in invoice"}
-        
-        # Get subscription to find new period end
-        try:
-            subscription = stripe.Subscription.retrieve(subscription_id)
-            current_period_end = subscription.get('current_period_end')
-            
-            if current_period_end:
-                subscription_expires_at = datetime.utcfromtimestamp(
-                    current_period_end
-                ).isoformat()
-                
-                # Update profile with new expiration
-                profile = supabase.table("profiles")\
-                    .select("*")\
-                    .eq("stripe_subscription_id", subscription_id)\
-                    .execute()
-                
-                if profile.data:
-                    supabase.table("profiles")\
-                        .update({
-                            "is_pro": True,
-                            "subscription_expires_at": subscription_expires_at,
-                            "updated_at": datetime.utcnow().isoformat()
-                        })\
-                        .eq("id", profile.data[0]['id'])\
-                        .execute()
-                    logger.info(f"Updated subscription expiration for profile {profile.data[0]['id']}")
-        
-        except Exception as e:
-            logger.warning(f"Could not retrieve subscription for invoice: {str(e)}")
-        
-        return {"status": "success", "event": "invoice_payment_succeeded", "processed": True}
-    
-    except Exception as e:
-        logger.error(f"Error processing invoice payment: {str(e)}", exc_info=True)
-        return {"status": "error", "message": str(e), "event": "invoice_payment_succeeded"}
-
-
-async def _handle_subscription_deleted(subscription: dict) -> dict:
-    """
-    Handle subscription deletion/cancellation.
+    Handle failed/cancelled subscription payment.
     Revokes Pro status from user.
     """
     try:
-        subscription_id = subscription.get('id')
-        customer_id = subscription.get('customer')
+        if not user_id:
+            logger.warning(f"No user_id in failed PayMe payment: {sale_id}")
+            return {"status": "error", "message": "No user_id in metadata"}
         
-        logger.info(f"Processing subscription deletion: {subscription_id}")
-        
-        # Update profile to revoke Pro status
-        profile = supabase.table("profiles")\
-            .select("*")\
-            .eq("stripe_subscription_id", subscription_id)\
-            .execute()
-        
-        if profile.data:
-            supabase.table("profiles")\
-                .update({
-                    "is_pro": False,
-                    "subscription_expires_at": None,
-                    "stripe_subscription_id": None,
-                    "updated_at": datetime.utcnow().isoformat()
-                })\
-                .eq("id", profile.data[0]['id'])\
-                .execute()
-            logger.info(f"Revoked Pro status for profile {profile.data[0]['id']}")
-        
-        return {"status": "success", "event": "subscription_deleted", "processed": True}
-    
-    except Exception as e:
-        logger.error(f"Error processing subscription deletion: {str(e)}", exc_info=True)
-        return {"status": "error", "message": str(e), "event": "subscription_deleted"}
-
-
-async def _handle_order_checkout_completed(session: dict) -> dict:
-    """
-    Handle completed order checkout session.
-    Routes to appropriate handler based on payment_flow metadata.
-    
-    Payment Flows:
-    - 'bot_purchase': B2B flow - business owner purchasing/subscribing to a bot
-    - 'chat_escrow': C2B flow - end-customer paying business through AI chatbot
-    """
-    try:
-        # Log session data for verification
-        logger.info(f"Checkout session completed: {session}")
-        logger.info(f"Session ID: {session.get('id')}")
-        logger.info(f"Payment status: {session.get('payment_status')}")
-        
-        # Extract metadata to determine payment flow
-        metadata = session.get('metadata', {})
-        payment_flow = metadata.get('payment_flow', 'chat_escrow')  # Default to chat_escrow
-        
-        logger.info(f"Routing payment flow: {payment_flow}")
-        
-        # Route to appropriate handler based on payment_flow
-        if payment_flow == 'bot_purchase':
-            return await _handle_bot_purchase_flow(session)
-        elif payment_flow == 'chat_escrow':
-            return await _handle_chat_escrow_flow(session)
-        else:
-            logger.warning(f"Unknown payment_flow: {payment_flow}, defaulting to chat_escrow")
-            return await _handle_chat_escrow_flow(session)
-    
-    except Exception as e:
-        logger.error(f"Error processing checkout.session.completed: {str(e)}", exc_info=True)
-        return {"status": "error", "message": str(e), "event": "checkout.session.completed"}
-
-
-async def _handle_bot_purchase_flow(session: dict) -> dict:
-    """
-    B2B Flow: Handle business owner purchasing/subscribing to a bot.
-    
-    SECURITY: Implements Double Tenant Validation Pattern to prevent cross-tenant data leaks.
-    - Validates business_id and order_id against database
-    - Activates bot/business status after validation
-    """
-    try:
-        # Extract data from session
-        customer_email = session.get('customer_details', {}).get('email')
-        customer_name = session.get('customer_details', {}).get('name')
-        session_id = session.get('id')
-        payment_status = session.get('payment_status')
-        amount_total = session.get('amount_total')
-        currency = session.get('currency', 'ils')
-        metadata = session.get('metadata', {})
-        client_reference_id = session.get('client_reference_id')
-        
-        # Extract business_id from metadata or client_reference_id
-        business_id_from_stripe = metadata.get('business_id') or client_reference_id
-        order_id = metadata.get('order_id')
-        
-        logger.info(f"B2B Flow - Processing bot purchase for business_id: {business_id_from_stripe}, order_id: {order_id}")
-        
-        # ============================================
-        # DOUBLE TENANT VALIDATION - CRITICAL SECURITY
-        # ============================================
-        if not order_id:
-            logger.error("SECURITY ALERT: No order_id in Stripe session metadata for bot_purchase flow")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid session: missing order_id"
-            )
-        
-        # Step 1: Fetch the order from database by order_id
-        order_result = supabase.table("orders")\
-            .select("*")\
-            .eq("id", order_id)\
-            .execute()
-        
-        if not order_result.data:
-            logger.error(f"SECURITY ALERT: Order not found in database for bot_purchase: {order_id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Order not found"
-            )
-        
-        order_data = order_result.data[0]
-        business_id_from_db = order_data.get('business_id')
-        
-        # Step 2: Validate that business_id from Stripe matches business_id in database
-        if not business_id_from_db:
-            logger.error(f"SECURITY ALERT: Order {order_id} has no business_id in database for bot_purchase")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid order: missing business_id"
-            )
-        
-        if business_id_from_stripe != business_id_from_db:
-            # CRITICAL SECURITY VIOLATION - Cross-tenant data leak attempt
-            logger.critical(
-                f"SECURITY ALERT: B2B Cross-tenant validation failed! "
-                f"Stripe business_id '{business_id_from_stripe}' does not match "
-                f"database business_id '{business_id_from_db}' for order {order_id}. "
-                f"Possible data tampering or cross-tenant attack in bot_purchase flow."
-            )
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Security validation failed: business_id mismatch"
-            )
-        
-        # Validation passed - use the business_id from database (trusted source)
-        business_id = business_id_from_db
-        logger.info(f"B2B Double tenant validation passed for order {order_id}, business {business_id}")
-        
-        # Step 3: Activate bot/business status
-        business_data = {
-            "subscription_tier": "pro",
-            "subscription_status": "active",
-            "is_active": True,
-            "updated_at": datetime.utcnow().isoformat()
-        }
-        
-        # Add Stripe customer ID if available
-        if session.get('customer'):
-            business_data["stripe_customer_id"] = session.get('customer')
-        
-        # Update business to activate bot
-        supabase.table("businesses")\
-            .update(business_data)\
-            .eq("business_id", business_id)\
-            .execute()
-        
-        logger.info(f"B2B Bot activated for business: {business_id}")
-        
-        # Step 4: Find and update payment record
-        if session_id:
-            payment = supabase.table("payments")\
-                .select("*")\
-                .eq("stripe_session_id", session_id)\
-                .execute()
-            
-            if payment.data:
-                payment_id = payment.data[0]['id']
-                business_uuid = payment.data[0]['business_id']
-                
-                # Additional validation: ensure payment record's business_id matches validated order
-                if business_uuid != business_id:
-                    logger.critical(
-                        f"SECURITY ALERT: B2B Payment record business_id mismatch! "
-                        f"Payment {payment_id} has business_id '{business_uuid}' but order {order_id} has '{business_id}'"
-                    )
-                    raise HTTPException(
-                        status_code=status.HTTP_403_FORBIDDEN,
-                        detail="Security validation failed: payment business_id mismatch"
-                    )
-                
-                # Update payment status
-                supabase.table("payments")\
-                    .update({
-                        "status": "succeeded",
-                        "paid_at": datetime.utcnow().isoformat(),
-                        "metadata": {
-                            **payment.data[0].get('metadata', {}),
-                            "stripe_status": payment_status,
-                            "stripe_session_id": session_id,
-                            "amount_total": amount_total,
-                            "payment_flow": "bot_purchase"
-                        }
-                    })\
-                    .eq("id", payment_id)\
-                    .execute()
-                
-                # Update order status
-                supabase.table("orders")\
-                    .update({
-                        "status": "paid",
-                        "updated_at": datetime.utcnow().isoformat()
-                    })\
-                    .eq("id", order_id)\
-                    .execute()
-                
-                logger.info(f"B2B Order {order_id} marked as paid, bot activated")
-            else:
-                logger.warning(f"No payment record found for B2B session {session_id}")
-        
-        return {"status": "success", "event": "checkout.session.completed", "flow": "bot_purchase", "processed": True}
-    
-    except Exception as e:
-        logger.error(f"Error processing B2B bot purchase: {str(e)}", exc_info=True)
-        return {"status": "error", "message": str(e), "event": "checkout.session.completed", "flow": "bot_purchase"}
-
-
-async def _handle_chat_escrow_flow(session: dict) -> dict:
-    """
-    C2B Flow: Handle end-customer paying business through AI Chatbot (Escrow/Direct payment).
-    
-    SECURITY: Validates that the escrow order belongs to the correct customer and business,
-    then updates milestone status to 'funded'.
-    """
-    try:
-        # Extract data from session
-        customer_email = session.get('customer_details', {}).get('email')
-        customer_name = session.get('customer_details', {}).get('name')
-        session_id = session.get('id')
-        payment_status = session.get('payment_status')
-        amount_total = session.get('amount_total')
-        currency = session.get('currency', 'ils')
-        metadata = session.get('metadata', {})
-        client_reference_id = session.get('client_reference_id')
-        
-        # Extract business_id and order_id from metadata
-        business_id_from_stripe = metadata.get('business_id') or client_reference_id
-        order_id = metadata.get('order_id')
-        customer_id = metadata.get('customer_id')
-        
-        logger.info(f"C2B Flow - Processing escrow payment for business_id: {business_id_from_stripe}, order_id: {order_id}, customer_id: {customer_id}")
-        
-        # ============================================
-        # DOUBLE TENANT VALIDATION - CRITICAL SECURITY
-        # ============================================
-        if not order_id:
-            logger.error("SECURITY ALERT: No order_id in Stripe session metadata for chat_escrow flow")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid session: missing order_id"
-            )
-        
-        # Step 1: Fetch the order from database by order_id
-        order_result = supabase.table("orders")\
-            .select("*")\
-            .eq("id", order_id)\
-            .execute()
-        
-        if not order_result.data:
-            logger.error(f"SECURITY ALERT: Order not found in database for chat_escrow: {order_id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Order not found"
-            )
-        
-        order_data = order_result.data[0]
-        business_id_from_db = order_data.get('business_id')
-        order_customer_id = order_data.get('customer_id')
-        
-        # Step 2: Validate business_id
-        if not business_id_from_db:
-            logger.error(f"SECURITY ALERT: Order {order_id} has no business_id in database for chat_escrow")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid order: missing business_id"
-            )
-        
-        if business_id_from_stripe != business_id_from_db:
-            # CRITICAL SECURITY VIOLATION
-            logger.critical(
-                f"SECURITY ALERT: C2B Cross-tenant validation failed! "
-                f"Stripe business_id '{business_id_from_stripe}' does not match "
-                f"database business_id '{business_id_from_db}' for order {order_id}. "
-                f"Possible data tampering or cross-tenant attack in chat_escrow flow."
-            )
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Security validation failed: business_id mismatch"
-            )
-        
-        # Step 3: Validate customer_id if provided
-        if customer_id and order_customer_id:
-            if customer_id != order_customer_id:
-                logger.critical(
-                    f"SECURITY ALERT: C2B Customer mismatch! "
-                    f"Stripe customer_id '{customer_id}' does not match "
-                    f"order customer_id '{order_customer_id}' for order {order_id}."
-                )
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Security validation failed: customer_id mismatch"
-                )
-        
-        # Validation passed - use the business_id from database (trusted source)
-        business_id = business_id_from_db
-        logger.info(f"C2B Double tenant validation passed for order {order_id}, business {business_id}")
-        
-        # Step 4: Update order status to 'paid' and mark as funded
-        order_update_data = {
-            "status": "paid",
-            "payment_status": "funded",
-            "updated_at": datetime.utcnow().isoformat()
-        }
-        
-        supabase.table("orders")\
-            .update(order_update_data)\
-            .eq("id", order_id)\
-            .execute()
-        
-        logger.info(f"C2B Order {order_id} marked as paid and funded")
-        
-        # Step 5: Find and update payment record
-        if session_id:
-            payment = supabase.table("payments")\
-                .select("*")\
-                .eq("stripe_session_id", session_id)\
-                .execute()
-            
-            if payment.data:
-                payment_id = payment.data[0]['id']
-                business_uuid = payment.data[0]['business_id']
-                
-                # Additional validation: ensure payment record's business_id matches validated order
-                if business_uuid != business_id:
-                    logger.critical(
-                        f"SECURITY ALERT: C2B Payment record business_id mismatch! "
-                        f"Payment {payment_id} has business_id '{business_uuid}' but order {order_id} has '{business_id}'"
-                    )
-                    raise HTTPException(
-                        status_code=status.HTTP_403_FORBIDDEN,
-                        detail="Security validation failed: payment business_id mismatch"
-                    )
-                
-                # Update payment status
-                supabase.table("payments")\
-                    .update({
-                        "status": "succeeded",
-                        "paid_at": datetime.utcnow().isoformat(),
-                        "metadata": {
-                            **payment.data[0].get('metadata', {}),
-                            "stripe_status": payment_status,
-                            "stripe_session_id": session_id,
-                            "amount_total": amount_total,
-                            "payment_flow": "chat_escrow",
-                            "customer_id": customer_id
-                        }
-                    })\
-                    .eq("id", payment_id)\
-                    .execute()
-                
-                logger.info(f"C2B Payment record updated for session {session_id}")
-            else:
-                logger.warning(f"No payment record found for C2B session {session_id}")
-        
-        # Step 6: Create or update customer record
-        if customer_email and business_id:
-            existing_customer = supabase.table("customers")\
-                .select("*")\
-                .eq("business_id", business_id)\
-                .eq("email", customer_email)\
-                .execute()
-            
-            customer_data = {
-                "email": customer_email,
-                "name": customer_name,
-                "business_id": business_id,
+        # Update user profile to deactivate subscription
+        supabase.table("profiles")\
+            .update({
+                "is_pro": False,
+                "plan_type": None,
+                "payme_sale_id": None,
+                "subscription_cancelled_at": datetime.utcnow().isoformat(),
                 "updated_at": datetime.utcnow().isoformat()
-            }
-            
-            # Convert amount from smallest unit to main unit
-            amount_in_main_unit = amount_total / 100 if amount_total else 0
-            
-            if existing_customer.data:
-                # Update existing customer stats
-                customer_id = existing_customer.data[0]['id']
-                supabase.table("customers")\
-                    .update({
-                        "total_purchases": existing_customer.data[0].get('total_purchases', 0) + amount_in_main_unit,
-                        "purchase_count": existing_customer.data[0].get('purchase_count', 0) + 1,
-                        "last_purchase_at": datetime.utcnow().isoformat()
-                    })\
-                    .eq("id", customer_id)\
-                    .execute()
-            else:
-                # Create new customer
-                customer_data["total_purchases"] = amount_in_main_unit
-                customer_data["purchase_count"] = 1
-                customer_data["last_purchase_at"] = datetime.utcnow().isoformat()
-                
-                supabase.table("customers")\
-                    .insert(customer_data)\
-                    .execute()
-            
-            logger.info(f"C2B Customer record updated: {customer_email}")
+            })\
+            .eq("user_id", user_id)\
+            .execute()
         
-        return {"status": "success", "event": "checkout.session.completed", "flow": "chat_escrow", "processed": True}
+        logger.info(f"Deactivated subscription for user {user_id}")
+        
+        return {"status": "success", "event": "subscription_deactivated", "processed": True}
     
     except Exception as e:
-        logger.error(f"Error processing C2B chat escrow: {str(e)}", exc_info=True)
-        return {"status": "error", "message": str(e), "event": "checkout.session.completed", "flow": "chat_escrow"}
+        logger.error(f"Error processing subscription deactivation: {str(e)}", exc_info=True)
+        return {"status": "error", "message": str(e), "event": "subscription_deactivated"}
 
 
 # ============================================

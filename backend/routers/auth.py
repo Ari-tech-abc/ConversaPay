@@ -22,6 +22,7 @@ from backend.models.schemas import (
     PasswordReset
 )
 from backend.services.email_service import email_service
+from backend.services.payme_service import payme_service
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,7 @@ class UserInfoResponse(BaseModel):
 def get_user_profile(user_id: str) -> Optional[dict]:
     """Get user profile from database."""
     try:
-        result = supabase.table("profiles").select("*").eq("id", user_id).execute()
+        result = supabase.table("profiles").select("*").eq("user_id", user_id).execute()
         if result.data:
             return result.data[0]
     except Exception as e:
@@ -69,9 +70,11 @@ def create_user_profile(user_id: str, email: str, full_name: str) -> dict:
     """Create user profile in database."""
     try:
         result = supabase.table("profiles").insert({
-            "id": user_id,
+            "user_id": user_id,
             "email": email,
             "full_name": full_name,
+            "is_pro": False,
+            "plan_type": "free",
             "created_at": datetime.utcnow().isoformat()
         }).execute()
         
@@ -81,6 +84,101 @@ def create_user_profile(user_id: str, email: str, full_name: str) -> dict:
         logger.error(f"Error creating user profile: {str(e)}")
     
     return {}
+
+
+def create_business_for_user(user_id: str, business_name: str) -> Optional[str]:
+    """Create business for user and return business_id."""
+    try:
+        # Generate business_id from business name (lowercase, no spaces)
+        business_id = business_name.lower().replace(' ', '_').replace('-', '_')
+        business_id = ''.join(c for c in business_id if c.isalnum() or c == '_')
+        
+        # Ensure uniqueness by appending user ID if needed
+        existing = supabase.table("businesses")\
+            .select("id")\
+            .eq("business_id", business_id)\
+            .execute()
+        
+        if existing.data:
+            # Append user ID to make it unique
+            business_id = f"{business_id}_{user_id[:8]}"
+        
+        business_data = {
+            "business_id": business_id,
+            "business_name": business_name,
+            "description": f"עסק של {business_name}",
+            "owner_id": user_id,
+            "subscription_tier": "free",
+            "subscription_status": "active",
+            "is_active": True
+        }
+        
+        business_result = supabase.table("businesses")\
+            .insert(business_data)\
+            .execute()
+        
+        if business_result.data:
+            logger.info(f"Business created: {business_id} for user {user_id}")
+            return business_result.data[0]['id']  # Return the UUID
+        
+    except Exception as e:
+        logger.error(f"Failed to create business: {str(e)}")
+    
+    return None
+
+
+async def initialize_user_workspace(user_id: str, email: str, full_name: str, business_name: str) -> dict:
+    """
+    Initialize user workspace (profile + business) on first login.
+    This should be called after email confirmation.
+    """
+    result = {
+        "profile_created": False,
+        "business_created": False,
+        "business_id": None,
+        "payme_url": None
+    }
+    
+    # Step 1: Create profile if it doesn't exist
+    profile = get_user_profile(user_id)
+    if not profile:
+        profile = create_user_profile(user_id, email, full_name)
+        if profile:
+            result["profile_created"] = True
+            logger.info(f"User profile created for: {email}")
+    
+    # Step 2: Create business if it doesn't exist
+    if profile:
+        # Check if user already has a business
+        existing_business = supabase.table("businesses")\
+            .select("id")\
+            .eq("owner_id", user_id)\
+            .execute()
+        
+        if not existing_business.data:
+            business_uuid = create_business_for_user(user_id, business_name)
+            if business_uuid:
+                result["business_created"] = True
+                result["business_id"] = business_uuid
+    
+    # Step 3: If is_pro is false, prepare PayMe checkout URL for Pro tier
+    if profile and not profile.get("is_pro", False):
+        try:
+            # Prepare PayMe checkout for Pro tier (200 NIS)
+            payme_result = await payme_service.create_hosted_setup_session(
+                user_id=user_id,
+                plan_type="pro",
+                success_url=f"{settings.FRONTEND_URL}/pay?status=success&sale_id={{sale_id}}",
+                cancel_url=f"{settings.FRONTEND_URL}/pay?status=canceled"
+            )
+            if payme_result.get("sale_url"):
+                result["payme_url"] = payme_result.get("sale_url")
+                result["payme_sale_id"] = payme_result.get("sale_id")
+                logger.info(f"PayMe checkout prepared for user {user_id}")
+        except Exception as e:
+            logger.error(f"Failed to prepare PayMe checkout: {str(e)}")
+    
+    return result
 
 
 def generate_verification_token() -> str:
@@ -108,7 +206,7 @@ def save_verification_token(user_id: str, token: str) -> bool:
                 "email_verification_expires_at": expires_at.isoformat(),
                 "email_verified": False
             })\
-            .eq("id", user_id)\
+            .eq("user_id", user_id)\
             .execute()
         
         return bool(result.data)
@@ -125,24 +223,21 @@ def save_verification_token(user_id: str, token: str) -> bool:
 async def signup(request: UserRegister):
     """
     Register a new user with email and password.
-    Creates user in Supabase Auth, profile in database with admin role, and automatically creates a business.
-    Sends email verification link to user's email address.
+    Only performs Supabase Auth sign_up - does NOT create profile or business yet.
+    Profile and business will be created on first login after email confirmation.
     
-    Multi-tenant onboarding:
-    1. Creates Supabase Auth user
-    2. Creates business workspace
-    3. Creates user profile with admin role linked to business
+    Returns a success response indicating that a confirmation email has been sent.
     """
     try:
-        # Register user with Supabase Auth (disable Supabase email confirmation)
+        # Register user with Supabase Auth (with email confirmation enabled)
         auth_response = supabase.auth.sign_up({
             "email": request.email,
             "password": request.password,
             "options": {
                 "data": {
-                    "full_name": request.full_name
-                },
-                "email_redirect_to": None  # Disable Supabase email confirmation
+                    "full_name": request.full_name,
+                    "business_name": request.business_name  # Store for later use
+                }
             }
         })
         
@@ -153,118 +248,12 @@ async def signup(request: UserRegister):
             )
         
         user = auth_response.user
-        session = auth_response.session
-        
-        # Step 1: Create business first to get business_id
-        business_id = None
-        try:
-            # Generate business_id from business name (lowercase, no spaces)
-            business_id = request.business_name.lower().replace(' ', '_').replace('-', '_')
-            business_id = ''.join(c for c in business_id if c.isalnum() or c == '_')
-            
-            # Ensure uniqueness by appending user ID if needed
-            existing = supabase.table("businesses")\
-                .select("id")\
-                .eq("business_id", business_id)\
-                .execute()
-            
-            if existing.data:
-                # Append user ID to make it unique
-                business_id = f"{business_id}_{user.id[:8]}"
-            
-            business_data = {
-                "business_id": business_id,
-                "business_name": request.business_name,
-                "description": f"עסק של {request.full_name}",
-                "owner_id": user.id,
-                "subscription_tier": "free",
-                "subscription_status": "active",
-                "is_active": True
-            }
-            
-            business_result = supabase.table("businesses")\
-                .insert(business_data)\
-                .execute()
-            
-            if business_result.data:
-                business_id = business_result.data[0]['id']  # Get the UUID
-                logger.info(f"Business created: {business_id} for user {user.email}")
-            else:
-                raise Exception("Failed to create business - no data returned")
-                
-        except Exception as business_error:
-            logger.error(f"Failed to create business: {str(business_error)}")
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to create business: {str(business_error)}"
-            )
-        
-        # Step 2: Create user profile with admin role linked to business
-        try:
-            profile_data = {
-                "user_id": user.id,
-                "email": user.email or request.email,
-                "full_name": request.full_name,
-                "role": "admin",  # Set organizational role to admin
-                "created_at": datetime.utcnow().isoformat()
-            }
-            
-            profile_result = supabase.table("profiles")\
-                .insert(profile_data)\
-                .execute()
-            
-            if profile_result.data:
-                logger.info(f"User profile created with admin role for: {user.email}")
-            else:
-                raise Exception("Failed to create profile - no data returned")
-                
-        except Exception as profile_error:
-            logger.error(f"Failed to create user profile: {str(profile_error)}")
-            # Try to clean up the business if profile creation fails
-            if business_id:
-                try:
-                    supabase.table("businesses")\
-                        .delete()\
-                        .eq("id", business_id)\
-                        .execute()
-                    logger.info(f"Cleaned up business {business_id} due to profile creation failure")
-                except Exception as cleanup_error:
-                    logger.error(f"Failed to cleanup business: {str(cleanup_error)}")
-            
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Failed to create user profile: {str(profile_error)}"
-            )
-        
-        # Step 3: Generate and save verification token
-        verification_token = generate_verification_token()
-        token_saved = save_verification_token(user.id, verification_token)
-        
-        if not token_saved:
-            logger.warning(f"Failed to save verification token for user: {user.email}")
-        
-        # Step 4: Send verification email
-        email_sent = False
-        if settings.RESEND_API_KEY:
-            try:
-                email_sent = email_service.send_verification_email(
-                    to_email=user.email or request.email,
-                    token=verification_token,
-                    user_name=request.full_name
-                )
-            except Exception as email_error:
-                logger.error(f"Failed to send verification email: {str(email_error)}")
         
         logger.info(f"User registered successfully: {user.email}")
         
         # Return response indicating email verification is required
         return {
-            "message": "Account created successfully! Please check your email to verify your account.",
-            "user_id": user.id,
-            "email": user.email or "",
-            "business_id": business_id,
-            "requires_verification": True,
-            "email_sent": email_sent
+            "message": "Confirmation email sent. Please check your inbox."
         }
     
     except HTTPException:
@@ -308,6 +297,7 @@ async def login(request: UserLogin):
     """
     Login with email and password.
     Returns JWT access token.
+    Also initializes user workspace (profile + business) on first login.
     """
     try:
         # Authenticate with Supabase
@@ -324,6 +314,22 @@ async def login(request: UserLogin):
         
         user = auth_response.user
         session = auth_response.session
+        
+        # Initialize user workspace on first login (if not already done)
+        # Get user metadata to retrieve business_name if available
+        business_name = user.user_metadata.get("business_name", "My Business") if user.user_metadata else "My Business"
+        full_name = user.user_metadata.get("full_name", "") if user.user_metadata else ""
+        
+        # Initialize user workspace (profile + business) on first login
+        workspace_result = await initialize_user_workspace(
+            user_id=user.id,
+            email=user.email or request.email,
+            full_name=full_name,
+            business_name=business_name
+        )
+        
+        if workspace_result.get("profile_created") or workspace_result.get("business_created"):
+            logger.info(f"Workspace initialized for user: {user.email}")
         
         logger.info(f"User logged in: {user.email}")
         
@@ -717,7 +723,7 @@ async def update_current_user(
                 detail="No data to update"
             )
         
-        result = supabase.table("profiles").update(update_data).eq("id", current_user.user_id).execute()
+        result = supabase.table("profiles").update(update_data).eq("user_id", current_user.user_id).execute()
         
         if result.data:
             return {

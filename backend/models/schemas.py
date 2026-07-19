@@ -334,6 +334,7 @@ class SubscriptionResponse(BaseModel):
     
     session_id: str
     url: str
+    payme_sale_id: Optional[str] = None
 
 
 # ============================================
