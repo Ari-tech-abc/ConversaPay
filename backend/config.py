@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     STRIPE_API_KEY: str
     STRIPE_WEBHOOK_SECRET: str
     STRIPE_PRO_PLAN_PRICE_ID: Optional[str] = None  # Optional: Use pre-configured price in Stripe
+
+    # PayMe (Israeli Payment Gateway)
+    PAYME_PAY_KEY: str
+    PAYME_SELLER_KEY: str
+    PAYME_API_URL: str = "https://ng.payme.co.il/api"  # Production API
+    PAYME_SANDBOX_URL: str = "https://sandbox.payme.co.il/api"  # Sandbox API
     
     # Email (Resend)
     RESEND_API_KEY: str

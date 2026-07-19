@@ -226,12 +226,44 @@ if (response.ok) {
         return userStr ? JSON.parse(userStr) : null;
     }
     
+    /**
+     * Decode a JWT token's payload (base64url) without verifying the signature.
+     * Returns the parsed payload object, or null if decoding fails.
+     */
+    function decodeJwtPayload(token) {
+        try {
+            const parts = token.split('.');
+            if (parts.length !== 3) return null;
+            // Base64url decode the payload (second part)
+            const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+            const decoded = atob(base64);
+            return JSON.parse(decoded);
+        } catch {
+            return null;
+        }
+    }
+
     function isAuthenticated() {
         const token = getToken();
         if (!token) return false;
         
-        // Optionally verify token is still valid
-        // For now, just check if it exists
+        // Decode JWT payload to check expiration
+        const payload = decodeJwtPayload(token);
+        if (!payload) return false;
+        
+        // Check if token has expired
+        if (payload.exp) {
+            const now = Math.floor(Date.now() / 1000);
+            if (now >= payload.exp) {
+                // Token expired - clean up storage
+                localStorage.removeItem(TOKEN_KEY);
+                localStorage.removeItem(USER_KEY);
+                sessionStorage.removeItem(TOKEN_KEY);
+                sessionStorage.removeItem(USER_KEY);
+                return false;
+            }
+        }
+        
         return true;
     }
     

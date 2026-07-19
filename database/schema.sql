@@ -23,15 +23,26 @@ CREATE TABLE profiles (
     full_name VARCHAR(255),
     role VARCHAR(50) DEFAULT 'user' CHECK (role IN ('admin', 'user', 'viewer')),
     is_pro BOOLEAN DEFAULT false,
+    plan_type VARCHAR(50) DEFAULT 'free' CHECK (plan_type IN ('free', 'pro', 'premium')),
     subscription_expires_at TIMESTAMP WITH TIME ZONE,
     stripe_customer_id VARCHAR(255),
     stripe_subscription_id VARCHAR(255),
+    -- WhatsApp Business integration fields for Premium tier
+    whatsapp_phone_number_id VARCHAR(255),
+    whatsapp_access_token TEXT,
+    whatsapp_verify_token VARCHAR(255),
     email_verified BOOLEAN DEFAULT false,
     email_verification_token VARCHAR(255),
     email_verification_expires_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
+
+-- Add index for WhatsApp phone number ID
+CREATE INDEX idx_profiles_whatsapp_phone_number_id ON profiles(whatsapp_phone_number_id);
+
+-- Add index for plan_type
+CREATE INDEX idx_profiles_plan_type ON profiles(plan_type);
 
 CREATE INDEX idx_profiles_user_id ON profiles(user_id);
 CREATE INDEX idx_profiles_is_pro ON profiles(is_pro);
@@ -391,6 +402,7 @@ RETURNS TRIGGER AS $$
 BEGIN
     -- Check if any subscription-related fields are being updated
     IF (NEW.is_pro IS DISTINCT FROM OLD.is_pro) OR
+       (NEW.plan_type IS DISTINCT FROM OLD.plan_type) OR
        (NEW.subscription_expires_at IS DISTINCT FROM OLD.subscription_expires_at) OR
        (NEW.stripe_customer_id IS DISTINCT FROM OLD.stripe_customer_id) OR
        (NEW.stripe_subscription_id IS DISTINCT FROM OLD.stripe_subscription_id) THEN

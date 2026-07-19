@@ -226,8 +226,8 @@
                 <button type="submit" class="pay-button" id="submitBtn">בצע תשלום מאובטח</button>
             </form>
 
-            <div class="secure-footer">
-                🔒 תשלום מאובטח באמצעות Stripe<br>
+<div class="secure-footer">
+                🔒 סליקה מאובטחת באמצעות PayMe<br>
                 <small>פרטי הכרטיס מוצפנים ומאובטחים בתקן PCI-DSS</small>
             </div>
         </div>
@@ -320,8 +320,8 @@
             document.getElementById('loadingSpinner').style.display = 'block';
             
             try {
-                // Create Stripe checkout session
-                const checkoutResponse = await fetch(`${BACKEND_URL}/api/v1/payments/checkout-session`, {
+// Create PayMe hosted payment page
+                const checkoutResponse = await fetch(`${BACKEND_URL}/api/v1/payments/create-checkout-session`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json'
@@ -341,11 +341,11 @@
                 
                 const checkoutData = await checkoutResponse.json();
                 
-                // Redirect to Stripe Checkout
-                if (checkoutData.url) {
-                    window.location.href = checkoutData.url;
+// Redirect to PayMe hosted payment page
+                if (checkoutData.sale_url) {
+                    window.location.href = checkoutData.sale_url;
                 } else {
-                    throw new Error('No checkout URL returned');
+                    throw new Error('No sale URL returned');
                 }
                 
             } catch (error) {

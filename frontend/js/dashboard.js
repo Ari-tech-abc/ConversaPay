@@ -153,11 +153,15 @@ async function handleUpgradeToPro() {
             })
         });
         
-        if (response.ok) {
-            const data = await response.json();
-            // Redirect to Stripe Checkout
-            window.location.href = data.url;
-        } else {
+if (response.ok) {
+             const data = await response.json();
+             // Redirect to PayMe hosted payment page
+             if (data.url) {
+                 window.location.href = data.url;
+             } else {
+                 throw new Error('No URL returned');
+             }
+         } else {
             const data = await response.json();
             alert('שגיאה: ' + (data.detail || 'נסה שוב'));
         }
@@ -316,7 +320,7 @@ async function checkProStatusForIntegrations() {
             const profile = await response.json();
             const isPro = profile.is_pro || false;
             
-            const integrationsSection = document.querySelector('.card:last-of-type');
+            const integrationsSection = document.getElementById('integrationsCard');
             if (!integrationsSection) return;
             
             if (!isPro) {

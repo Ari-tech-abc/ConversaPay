@@ -756,30 +756,66 @@
         state.paymentPolls[orderId] = pollInterval;
     };
 
+    /**
+     * Safely validate a payment URL before attaching it to an anchor.
+     * Only allows relative paths (starting with '/') or URLs matching our verified origin.
+     */
+    function isValidPaymentUrl(url) {
+        if (!url) return false;
+        // Allow relative paths
+        if (url.startsWith('/')) return true;
+        try {
+            const parsed = new URL(url);
+            const allowedOrigins = [
+                window.location.origin,
+                'https://conversapay.org',
+                'http://localhost:8000',
+                'http://localhost:3000'
+            ];
+            return allowedOrigins.some(origin => parsed.origin === origin);
+        } catch {
+            return false;
+        }
+    }
+
     function addMessage(content, role, paymentUrl = null) {
         const messagesContainer = document.getElementById('cp-messages');
         
-        // Parse content for payment links
-        let formattedContent = escapeHtml(content);
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `cp-message ${role}`;
         
-        // If there's a payment URL, add a button
-        if (paymentUrl) {
-            formattedContent += `<br><a href="${paymentUrl}" class="cp-payment-btn" target="_blank">לתשלום מהיר 💳</a>`;
+        // Use textContent for the message text (XSS-safe)
+        const textSpan = document.createElement('span');
+        textSpan.textContent = content;
+        messageDiv.appendChild(textSpan);
+        
+        // If there's a payment URL, securely add a button
+        if (paymentUrl && isValidPaymentUrl(paymentUrl)) {
+            const link = document.createElement('a');
+            link.href = paymentUrl;
+            link.className = 'cp-payment-btn';
+            link.target = '_blank';
+            link.textContent = 'לתשלום מהיר 💳';
+            messageDiv.appendChild(document.createElement('br'));
+            messageDiv.appendChild(link);
         } else {
             // Check for CHECKOUT pattern in content
             const checkoutMatch = content.match(/CHECKOUT:\s*ITEM=(\w+)\s+AMOUNT=([\d.]+)/);
             if (checkoutMatch) {
                 const itemKey = checkoutMatch[1];
                 const amount = checkoutMatch[2];
-                const paymentUrl = `${window.location.origin}/pay.html?biz=${state.businessId}&item=${itemKey}&amt=${amount}`;
-                formattedContent = formattedContent.replace(/CHECKOUT:.*$/, '');
-                formattedContent += `<br><a href="${paymentUrl}" class="cp-payment-btn" target="_blank">לתשלום מהיר 💳</a>`;
+                const generatedUrl = `${window.location.origin}/pay.html?biz=${state.businessId}&item=${itemKey}&amt=${amount}`;
+                if (isValidPaymentUrl(generatedUrl)) {
+                    const link = document.createElement('a');
+                    link.href = generatedUrl;
+                    link.className = 'cp-payment-btn';
+                    link.target = '_blank';
+                    link.textContent = 'לתשלום מהיר 💳';
+                    messageDiv.appendChild(document.createElement('br'));
+                    messageDiv.appendChild(link);
+                }
             }
         }
-        
-        const messageDiv = document.createElement('div');
-        messageDiv.className = `cp-message ${role}`;
-        messageDiv.innerHTML = formattedContent;
         
         messagesContainer.appendChild(messageDiv);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;

@@ -78,12 +78,12 @@ async def create_subscription_checkout_session(
         else:
             session_params['line_items'] = [{
                 'price_data': {
-                    'currency': 'usd',
+                    'currency': 'ils',
                     'product_data': {
-                        'name': 'ConversaPay Pro Plan',
-                        'description': 'Pro Plan - $29/month',
+                        'name': 'מסלול PRO לעסקים',
+                        'description': 'מסלול PRO - 200 ₪ לחודש',
                     },
-                    'unit_amount': 2900,  # $29.00 in cents
+                    'unit_amount': 20000,  # 200 ₪ in agorot (cents)
                     'recurring': {
                         'interval': 'month',
                     },

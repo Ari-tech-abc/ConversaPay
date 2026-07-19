@@ -53,6 +53,7 @@ function conversapay_chat_register_settings() {
             'sanitize_callback' => 'conversapay_chat_sanitize_settings',
             'default' => array(
                 'business_id' => '',
+                'frontend_url' => '',
                 'widget_position' => 'bottom-right',
                 'widget_color' => '#A855F7',
                 'enable_on_pages' => 'all'
@@ -68,6 +69,11 @@ function conversapay_chat_sanitize_settings($input) {
     // Sanitize business ID
     if (isset($input['business_id'])) {
         $sanitized['business_id'] = sanitize_text_field($input['business_id']);
+    }
+    
+    // Sanitize frontend URL
+    if (isset($input['frontend_url'])) {
+        $sanitized['frontend_url'] = esc_url_raw($input['frontend_url']);
     }
     
     // Sanitize widget position
@@ -97,8 +103,11 @@ function conversapay_chat_sanitize_settings($input) {
 
 function conversapay_chat_settings_page() {
     // Get current settings
+    // The business_id and frontend_url may be pre-filled by the backend
+    // substitution engine when the plugin is downloaded from the dashboard.
     $settings = get_option(CONVERSAPAY_CHAT_OPTION_KEY, array());
     $business_id = isset($settings['business_id']) ? esc_attr($settings['business_id']) : '';
+    $frontend_url = isset($settings['frontend_url']) ? esc_attr($settings['frontend_url']) : '';
     $widget_position = isset($settings['widget_position']) ? esc_attr($settings['widget_position']) : 'bottom-right';
     $widget_color = isset($settings['widget_color']) ? esc_attr($settings['widget_color']) : '#A855F7';
     $enable_on_pages = isset($settings['enable_on_pages']) ? esc_attr($settings['enable_on_pages']) : 'all';
@@ -137,6 +146,31 @@ function conversapay_chat_settings_page() {
                             >
                             <p class="description">
                                 Enter your ConversaPay Business ID. You can find this in your dashboard.
+                                <?php if (!empty($business_id) && $business_id !== '{{BUSINESS_ID}}'): ?>
+                                    <strong style="color: #10b981;">✓ Pre-filled from your dashboard.</strong>
+                                <?php endif; ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row">
+                            <label for="frontend_url">Frontend URL</label>
+                        </th>
+                        <td>
+                            <input 
+                                type="text" 
+                                id="frontend_url" 
+                                name="<?php echo CONVERSAPAY_CHAT_OPTION_KEY; ?>[frontend_url]" 
+                                value="<?php echo $frontend_url; ?>" 
+                                class="regular-text"
+                                placeholder="https://conversapay.org"
+                            >
+                            <p class="description">
+                                The ConversaPay frontend URL for loading the chat widget.
+                                <?php if (!empty($frontend_url) && $frontend_url !== '{{FRONTEND_URL}}'): ?>
+                                    <strong style="color: #10b981;">✓ Pre-filled from your dashboard.</strong>
+                                <?php endif; ?>
                             </p>
                         </td>
                     </tr>
@@ -248,6 +282,7 @@ function conversapay_chat_inject_widget() {
     // Get settings
     $settings = get_option(CONVERSAPAY_CHAT_OPTION_KEY, array());
     $business_id = isset($settings['business_id']) ? $settings['business_id'] : '';
+    $frontend_url = isset($settings['frontend_url']) ? $settings['frontend_url'] : '';
     
     // Don't inject if no business ID configured
     if (empty($business_id)) {
@@ -272,8 +307,12 @@ function conversapay_chat_inject_widget() {
     $widget_position = isset($settings['widget_position']) ? $settings['widget_position'] : 'bottom-right';
     $widget_color = isset($settings['widget_color']) ? $settings['widget_color'] : '#A855F7';
     
-    // Build the widget URL
-    $widget_url = CONVERSAPAY_CHAT_PLUGIN_URL . '../frontend/js/widget.js';
+    // Build the widget URL - use frontend_url if provided, otherwise fall back to plugin URL
+    if (!empty($frontend_url) && $frontend_url !== '{{FRONTEND_URL}}') {
+        $widget_url = rtrim($frontend_url, '/') . '/frontend/js/widget.js';
+    } else {
+        $widget_url = CONVERSAPAY_CHAT_PLUGIN_URL . '../frontend/js/widget.js';
+    }
     
     // Inject the widget script
     ?>
@@ -293,9 +332,13 @@ add_action('wp_footer', 'conversapay_chat_inject_widget');
 // ============================================
 
 function conversapay_chat_activate() {
-    // Initialize default settings
+    // Initialize default settings with template hooks
+    // The {{BUSINESS_ID}} and {{FRONTEND_URL}} tokens are replaced
+    // by the ConversaPay backend substitution engine when the plugin
+    // is downloaded from the dashboard.
     $default_settings = array(
-        'business_id' => '',
+        'business_id'  => '{{BUSINESS_ID}}',
+        'frontend_url' => '{{FRONTEND_URL}}',
         'widget_position' => 'bottom-right',
         'widget_color' => '#A855F7',
         'enable_on_pages' => 'all'

@@ -414,9 +414,14 @@ class ProfileUpdate(BaseModel):
     """Schema for updating a profile."""
     full_name: Optional[str] = None
     is_pro: Optional[bool] = None
+    plan_type: Optional[str] = None
     subscription_expires_at: Optional[datetime] = None
     stripe_customer_id: Optional[str] = None
     stripe_subscription_id: Optional[str] = None
+    # WhatsApp Business integration fields for Premium tier
+    whatsapp_phone_number_id: Optional[str] = None
+    whatsapp_access_token: Optional[str] = None
+    whatsapp_verify_token: Optional[str] = None
 
 
 class ProfileResponse(ProfileBase):
@@ -426,9 +431,14 @@ class ProfileResponse(ProfileBase):
     id: str
     user_id: str
     is_pro: bool
+    plan_type: str
     subscription_expires_at: Optional[datetime] = None
     stripe_customer_id: Optional[str] = None
     stripe_subscription_id: Optional[str] = None
+    # WhatsApp Business integration fields for Premium tier
+    whatsapp_phone_number_id: Optional[str] = None
+    whatsapp_access_token: Optional[str] = None
+    whatsapp_verify_token: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
@@ -598,3 +608,39 @@ class OrderStats(BaseModel):
     orders_by_status: Dict[str, int]
     average_order_value: float
     period_days: int
+
+
+# ============================================
+# Analytics Models (Task 4 - Analytics Dashboard)
+# ============================================
+
+class AnalyticsOverviewResponse(BaseModel):
+    """
+    Schema for the /analytics/overview endpoint response.
+    Returns aggregated metrics for the authenticated user's businesses.
+    
+    Fields:
+    - total_revenue: Sum of all successful (paid) transaction amounts
+    - closed_deals_count: Total count of successful transactions driven by the AI agent
+    - average_order_value: Total revenue divided by closed deals count (0 if no deals)
+    - total_conversations: Total count of unique chat sessions initiated by visitors
+    """
+    total_revenue: float = Field(
+        default=0.0,
+        description="Sum of amount_nis for all successful (paid) transactions"
+    )
+    closed_deals_count: int = Field(
+        default=0,
+        ge=0,
+        description="Total count of successful transactions driven by the AI agent"
+    )
+    average_order_value: float = Field(
+        default=0.0,
+        ge=0,
+        description="Total revenue divided by closed deals count (0 if no deals)"
+    )
+    total_conversations: int = Field(
+        default=0,
+        ge=0,
+        description="Total count of unique chat sessions initiated by visitors"
+    )

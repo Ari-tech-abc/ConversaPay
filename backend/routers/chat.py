@@ -2,6 +2,7 @@
 Chat router for AI conversations.
 Handles chat messages with extended context from database.
 Supports AI-powered product search and order creation.
+Enforces plan-based restrictions for Free/Trial users.
 """
 from fastapi import APIRouter, HTTPException, status, Depends, Request
 from fastapi.security import HTTPBearer
@@ -27,6 +28,52 @@ supabase: Client = create_client(
     settings.SUPABASE_SERVICE_ROLE_KEY
 )
 
+# Static FAQ for Free/Trial users
+FREE_TIER_FAQ = [
+    {
+        "question": "מה זה ConversaPay?",
+        "answer": "ConversaPay היא פלטפורמה המאפשרת לעסקים להוסיף צ'אטבוט AI מכירות לאתר שלהם. הבוט מנהל שיחות עם לקוחות, מציע מוצרים, ומעביר לתשלום."
+    },
+    {
+        "question": "כיצד זה עובד?",
+        "answer": "לאחר הרשמה והגדרת העסק, הווידג'ט צף מתווסף לאתר שלך. הלקוחות מתקשרים עם הבוט, והוא מנהל שיחות מכירה אוטונומיות."
+    },
+    {
+        "question": "מהן התכונות של המסלול PRO?",
+        "answer": "מסלול PRO כולל: סוכן AI מבוסס Gemini, ווידג'ט צף, סליקה מאובטחת דרך PayMe, דשבורד אנליטיקס מתקדם, והזמנות ללא הגבלה."
+    },
+    {
+        "question": "מהן התכונות של המסלול PREMIUM?",
+        "answer": "מסלול PREMIUM כולל את כל תכונות ה-PRO, ולעוסק בתוספות: נפח שיחות גבוה יותר, פריסה במספר דומיינים, תמיכה מועדפת, והכנה לאינטגרציות מתקדמות (WhatsApp, CRM)."
+    },
+    {
+        "question": "כיצד אדפת תשלמו?",
+        "answer": "אנו תומכים בכל אמצעי התשלום הגלובליים דרך PayMe, כולל כרטיסי אשראי, אפל פייס, והעברה בנקאית."
+    },
+    {
+        "question": "האם יש חשבון ניסיון חינם?",
+        "answer": "כן! אתה יכול להתחיל בחינם עם מסלול היכרות. לחץ על 'התחל בחינם' כדי ליצור חשבון."
+    }
+]
+
+FREE_TIER_UPGRADE_MESSAGE = "מערכת הבינה המלאכותית ואפשרות הרכישה המהירה זמינות במסלול ה-PRO בלבד."
+
+
+def _check_free_tier_faq(message: str) -> Optional[str]:
+    """
+    Check if the message matches any FAQ entry for free tier users.
+    Returns the answer if found, None otherwise.
+    """
+    message_lower = message.lower().strip()
+    
+    for faq_item in FREE_TIER_FAQ:
+        question_lower = faq_item["question"].lower()
+        # Check if the message contains keywords from the question
+        if any(word in message_lower for word in question_lower.split()):
+            return faq_item["answer"]
+    
+    return None
+
 
 @router.post("", response_model=ChatResponse)
 async def chat(request: ChatRequest, request_obj: Request = Depends()):
@@ -35,6 +82,11 @@ async def chat(request: ChatRequest, request_obj: Request = Depends()):
     Public endpoint - no authentication required.
     Includes extended context from database.
     Rate limited to 10 requests per minute per IP.
+    
+    Plan-based restrictions:
+    - Free/Trial users: No AI access, no payments, FAQ only
+    - PRO users: Full AI access, PayMe integration
+    - PREMIUM users: All PRO features + advanced integrations
     """
     # Check rate limit
     check_rate_limit(request_obj)
@@ -53,6 +105,21 @@ async def chat(request: ChatRequest, request_obj: Request = Depends()):
             )
         
         business = business_result.data[0]
+        
+        # Get merchant profile to check subscription tier
+        owner_id = business.get('owner_id')
+        profile_result = supabase.table("profiles")\
+            .select("is_pro, plan_type")\
+            .eq("user_id", owner_id)\
+            .execute()
+        
+        is_pro = False
+        plan_type = 'free'
+        
+        if profile_result.data:
+            profile = profile_result.data[0]
+            is_pro = profile.get('is_pro', False)
+            plan_type = profile.get('plan_type', 'free')
         
         # Get or create conversation
         conversation = await session_service.get_or_create_conversation(
@@ -123,7 +190,48 @@ async def chat(request: ChatRequest, request_obj: Request = Depends()):
             content=request.message
         )
         
-        # Get AI response
+        # ============================================
+        # PLAN-BASED RESTRICTION ENFORCEMENT
+        # ============================================
+        # Free/Trial users: No AI access, no payments, FAQ only
+        if not is_pro or plan_type == 'free':
+            # Check if message matches FAQ
+            faq_answer = _check_free_tier_faq(request.message)
+            
+            if faq_answer:
+                # Return FAQ answer
+                ai_response = {
+                    'response': faq_answer,
+                    'intent': 'chat',
+                    'action_data': None
+                }
+            else:
+                # Return upgrade message for non-FAQ queries
+                ai_response = {
+                    'response': FREE_TIER_UPGRADE_MESSAGE,
+                    'intent': 'upgrade_required',
+                    'action_data': None
+                }
+            
+            # Save assistant message
+            await session_service.add_message(
+                conversation_id=conversation_id,
+                role="assistant",
+                content=ai_response['response'],
+                intent=ai_response['intent']
+            )
+            
+            response = ChatResponse(
+                intent=ai_response['intent'],
+                response=ai_response['response'],
+                session_id=session_id,
+                conversation_id=conversation_id
+            )
+            
+            logger.info(f"Free tier response for business {request.business_id}, session {session_id}")
+            return response
+        
+        # PRO/PREMIUM users: Full AI access
         ai_response = await gemini_service.chat(
             business_id=business['id'],
             session_id=session_id,

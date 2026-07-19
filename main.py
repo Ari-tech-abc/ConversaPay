@@ -24,7 +24,16 @@ logger = logging.getLogger(__name__)
 # Import routers and services
 from backend.config import settings
 from backend.routers import auth, businesses, products, chat, orders, payments, logs, webhooks, analytics, widget
+from backend.routers.payme_webhook import router as payme_webhook_router
+from backend.routers.whatsapp import router as whatsapp_webhook_router
 from backend.services.monitoring_service import monitoring_service
+
+# Conditionally import the dev simulator router (never in production)
+if not settings.is_production:
+    from backend.routers.dev_simulator import router as dev_simulator_router
+    logger.warning("⚠️  Development simulator router loaded - DO NOT RUN IN PRODUCTION")
+else:
+    dev_simulator_router = None
 
 
 # ============================================
@@ -53,6 +62,8 @@ async def lifespan(app: FastAPI):
         logger.warning("⚠️  STRIPE_API_KEY not configured")
     if not settings.RESEND_API_KEY:
         logger.warning("⚠️  RESEND_API_KEY not configured - email notifications disabled")
+    if not settings.PAYME_PAY_KEY or not settings.PAYME_SELLER_KEY:
+        logger.warning("⚠️  PayMe API keys not configured - PayMe payments disabled")
     
     logger.info("✅ Application startup complete")
     
@@ -79,21 +90,22 @@ class DualCORSMiddleware(BaseHTTPMiddleware):
         origin = request.headers.get("origin")
         path = request.url.path
 
-        # Widget endpoints (public customer-facing)
-        is_widget = (
+        # Widget endpoints (public customer-facing) and webhooks
+        is_public_endpoint = (
             path.startswith(f"{settings.API_PREFIX}/chat")
             or path.startswith(f"{settings.API_PREFIX}/orders/pay")
             or path.startswith(f"{settings.API_PREFIX}/orders/") and ("/summary" in path or "/status" in path)
             or path.startswith(f"{settings.API_PREFIX}/payments/checkout-session")
             or path.startswith(f"{settings.API_PREFIX}/payments/webhook")
-            or path.startswith(f"{settings.API_PREFIX}/webhooks")
+            or path.startswith(f"{settings.API_PREFIX}/webhooks/payme") # PayMe webhook is public
+            or path.startswith(f"{settings.API_PREFIX}/webhooks/whatsapp") # WhatsApp webhook is public
             or path.startswith(f"{settings.API_PREFIX}/widget")
         )
 
         # Handle preflight requests
         if request.method == "OPTIONS":
             response = Response()
-            if is_widget:
+            if is_public_endpoint:
                 response.headers["Access-Control-Allow-Origin"] = "*"
                 response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
                 response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
@@ -111,8 +123,8 @@ class DualCORSMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
 
         # Add CORS headers to response
-        if is_widget:
-            # Allow any origin for widget endpoints, no credentials
+        if is_public_endpoint:
+            # Allow any origin for public endpoints, no credentials
             response.headers["Access-Control-Allow-Origin"] = "*"
             response.headers["Vary"] = "Origin"
         else:
@@ -174,6 +186,16 @@ app.include_router(webhooks.router, prefix=f"{settings.API_PREFIX}", tags=["webh
 app.include_router(analytics.router, prefix=f"{settings.API_PREFIX}", tags=["analytics"])
 app.include_router(widget.router, prefix=f"{settings.API_PREFIX}/widget", tags=["widget"])
 
+# Register PayMe webhook router
+app.include_router(payme_webhook_router, prefix=f"{settings.API_PREFIX}", tags=["payme-webhook"])
+
+# Register WhatsApp webhook router
+app.include_router(whatsapp_webhook_router, prefix=f"{settings.API_PREFIX}", tags=["whatsapp-webhook"])
+
+# Conditionally include the dev simulator router (never in production)
+if not settings.is_production and dev_simulator_router is not None:
+    app.include_router(dev_simulator_router, prefix=f"{settings.API_PREFIX}", tags=["dev-simulator"])
+
 
 # ============================================
 # Static Files & Frontend Routes
@@ -202,18 +224,24 @@ async def root_index():
 
 @app.get("/dashboard")
 async def dashboard():
-    """Serve dashboard page."""
+    """
+    Serve dashboard page.
+    """
     return FileResponse("dashboard.html")
 
 @app.get("/pay")
 async def pay():
-    """Serve payment page."""
+    """
+    Serve payment page.
+    """
     return FileResponse("pay.html")
 
 # Keep .html routes for backward compatibility
 @app.get("/dashboard.html")
 async def dashboard_html():
-    """Serve dashboard page (legacy)."""
+    """
+    Serve dashboard page (legacy).
+    """
     return FileResponse("dashboard.html")
 
 @app.get("/index.html")
@@ -227,17 +255,23 @@ async def index_html():
 
 @app.get("/pay.html")
 async def pay_html():
-    """Serve payment page (legacy)."""
+    """
+    Serve payment page (legacy).
+    """
     return FileResponse("pay.html")
 
 @app.get("/login.html")
 async def login():
-    """Serve login page."""
+    """
+    Serve login page.
+    """
     return FileResponse("login.html")
 
 @app.get("/register.html")
 async def register():
-    """Serve register page."""
+    """
+    Serve register page.
+    """
     return FileResponse("register.html")
 
 
@@ -247,12 +281,16 @@ async def register():
 
 @app.get("/robots.txt")
 async def robots_txt():
-    """Serve robots.txt for SEO."""
+    """
+    Serve robots.txt for SEO.
+    """
     return FileResponse("backend/static/robots.txt", media_type="text/plain")
 
 @app.get("/sitemap.xml", include_in_schema=False)
 async def sitemap_xml():
-    """Serve sitemap.xml for SEO."""
+    """
+    Serve sitemap.xml for SEO.
+    """
     return FileResponse("backend/static/sitemap.xml", media_type="application/xml")
 
 
@@ -262,7 +300,9 @@ async def sitemap_xml():
 
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc):
-    """Handle 404 errors."""
+    """
+    Handle 404 errors.
+    """
     return JSONResponse(
         status_code=404,
         content={"error": "Not found", "detail": str(exc.detail)}
@@ -271,7 +311,9 @@ async def not_found_handler(request: Request, exc):
 
 @app.exception_handler(500)
 async def internal_error_handler(request: Request, exc):
-    """Handle 500 errors."""
+    """
+    Handle 500 errors.
+    """
     logger.error(f"Internal server error: {str(exc)}", exc_info=True)
     return JSONResponse(
         status_code=500,
