@@ -62,9 +62,16 @@ class PayMeService:
             "seller_payme_id": self.seller_payme_id,
             "sale_price": amount_agorot,
             "currency": "ILS",
-            "product_name": "ConversaPay Pro Plan",
+            "product_name": f"ConversaPay {plan_type.capitalize()} Plan",
             "language": "he",
             "sale_return_url": "https://www.conversapay.org/dashboard.html?payment=success",
+            
+            # Subscription parameters for recurring billing (הוראת קבע)
+            "sub_create": "1",
+            "sub_price": amount_agorot,
+            "sub_period": "1",
+            "sub_interval": "months",
+            "sub_iteration_type": "1"
         }
         
         try:
