@@ -172,7 +172,10 @@ def require_business_owner_for_business_id(
     business_id: str,
     current_user: AuthUser,
 ) -> str:
-    """Return the internal `businesses.id` for the given slug `business_id`.
+    """Verify that the authenticated user owns the business with the given UUID.
+
+    The `business_id` parameter is expected to be the primary key UUID
+    of the `businesses` table.
 
     Raises:
         403: if the authenticated user does not own the business.
@@ -180,7 +183,7 @@ def require_business_owner_for_business_id(
     try:
         business = supabase_service.table("businesses") \
             .select("id") \
-            .eq("business_id", business_id) \
+            .eq("id", business_id) \
             .eq("owner_id", current_user.user_id) \
             .execute()
 
