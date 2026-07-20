@@ -872,15 +872,22 @@ function renderTopProducts(products) {
 // ============================================
 
 async function loadOrders() {
-    if (!currentBusiness) return;
+    // Force use of window.currentBusinessId - the verified global from conversapay:business-ready event
+    const businessId = window.currentBusinessId;
+    
+    // Block execution if UUID is missing or still set to non-UUID fallback
+    if (!businessId || businessId === 'conversapay') {
+        console.warn('loadOrders blocked: businessId is missing or invalid', businessId);
+        return;
+    }
     
     try {
         const token = ConversaPayAuth.getToken();
         const statusFilter = document.getElementById('statusFilter')?.value || '';
         
-        let url = `${API_BASE_URL}/orders?business_id=${currentBusiness.business_id}&limit=50`;
+        let url = `${API_BASE_URL}/orders?business_id=${encodeURIComponent(businessId)}&limit=50`;
         if (statusFilter) {
-            url += `&status_filter=${statusFilter}`;
+            url += `&status_filter=${encodeURIComponent(statusFilter)}`;
         }
         
         const response = await fetch(url, {
@@ -891,9 +898,34 @@ async function loadOrders() {
             const orders = await response.json();
             renderOrders(orders);
             updateAnalytics(orders);
+        } else {
+            // Handle HTTP errors (including 500) with UI notice instead of silent failure
+            const errorData = await response.json().catch(() => ({}));
+            const errorMessage = errorData.detail || `שגיאה בטעינת ההזמנות (${response.status})`;
+            
+            console.error('Failed to load orders:', response.status, errorMessage);
+            
+            // Display notice in UI
+            const noOrders = document.getElementById('noOrders');
+            const tableContainer = document.getElementById('ordersTableContainer');
+            const tbody = document.getElementById('ordersTableBody');
+            
+            if (noOrders) {
+                noOrders.classList.remove('d-none');
+                noOrders.innerHTML = `<div style="text-align:center;padding:20px;color:#EF4444;">⚠️ ${errorMessage}</div>`;
+            }
+            if (tableContainer) tableContainer.classList.add('d-none');
+            if (tbody) tbody.innerHTML = '';
         }
     } catch (error) {
+        // Handle network errors with UI notice
         console.error('Error loading orders:', error);
+        
+        const noOrders = document.getElementById('noOrders');
+        if (noOrders) {
+            noOrders.classList.remove('d-none');
+            noOrders.innerHTML = '<div style="text-align:center;padding:20px;color:#EF4444;">⚠️ שגיאה בתקשורת עם השרת</div>';
+        }
     }
 }
 
