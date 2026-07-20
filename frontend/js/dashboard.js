@@ -442,8 +442,63 @@ async function checkWebsiteStatus() {
     }
 }
 
+function getSubscriptionTier() {
+    const status = window.userSubscriptionStatus;
+    if (!status) return 'free';
+    if (status.planType === 'premium') return 'premium';
+    if (status.isPro) return 'pro';
+    return 'free';
+}
+
+function showOrdersSection() {
+    const tier = getSubscriptionTier();
+    const ordersSection = document.querySelectorAll('.card')[2]; // Orders card
+    
+    if (tier === 'free') {
+        // Free tier: Replace orders with upgrade placeholder
+        if (ordersSection) {
+            ordersSection.classList.remove('d-none');
+            ordersSection.innerHTML = `
+                <div class="card-header">
+                    <h3 class="card-title">🔒 הזמנות ותשלומים</h3>
+                </div>
+                <div class="card-body" style="text-align:center;padding:40px;">
+                    <div style="font-size:4rem;margin-bottom:20px;">💳</div>
+                    <h3 style="font-size:1.5rem;font-weight:700;margin-bottom:16px;color:var(--text-primary);">
+                        שדרג ל-Pro כדי לראות הזמנות
+                    </h3>
+                    <p style="color:var(--text-secondary);margin-bottom:32px;max-width:600px;margin-left:auto;margin-right:auto;">
+                        גישה להזמנות ולתשלומים דורשת תוכנית Pro או Premium
+                    </p>
+                    <button onclick="handleUpgradeToPlan('pro')" class="btn" style="background:linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 100%);color:white;padding:12px 20px;font-weight:700;border-radius:8px;border:none;cursor:pointer;">
+                        💳 שדרג ל-Pro - 200 ₪/חודש
+                    </button>
+                </div>
+            `;
+        }
+    } else {
+        // Pro/Premium: Show normal orders section
+        if (ordersSection) ordersSection.classList.remove('d-none');
+    }
+}
+
 function showWebsiteOnboarding() {
-    // Show onboarding card as an additional option (do not hide dashboard content)
+    // Show standard dashboard sections (they may be hidden by default in HTML)
+    const analyticsSection = document.querySelector('.stats-grid');
+    const chartsSection = document.querySelectorAll('.card')[1]; // Charts card
+    const productsSection = document.querySelectorAll('.card')[3]; // Products card
+    
+    if (analyticsSection) analyticsSection.classList.remove('d-none');
+    if (chartsSection) chartsSection.classList.remove('d-none');
+    if (productsSection) productsSection.classList.remove('d-none');
+    
+    // Handle orders section based on tier
+    showOrdersSection();
+    
+    // Load dashboard data (orders will be skipped for free users)
+    loadAllData();
+    
+    // Show onboarding card as an addition to the dashboard
     const onboardingCard = document.getElementById('websiteOnboardingCard');
     if (onboardingCard) {
         onboardingCard.classList.remove('d-none');
@@ -466,15 +521,16 @@ function showStandardDashboard() {
     // Show standard analytics sections
     const analyticsSection = document.querySelector('.stats-grid');
     const chartsSection = document.querySelectorAll('.card')[1];
-    const ordersSection = document.querySelectorAll('.card')[2];
     const productsSection = document.querySelectorAll('.card')[3];
     
     if (analyticsSection) analyticsSection.classList.remove('d-none');
     if (chartsSection) chartsSection.classList.remove('d-none');
-    if (ordersSection) ordersSection.classList.remove('d-none');
     if (productsSection) productsSection.classList.remove('d-none');
     
-    // Load all data
+    // Handle orders section based on tier
+    showOrdersSection();
+    
+    // Load all data (orders will be skipped for free users)
     loadAllData();
 }
 
@@ -580,9 +636,16 @@ async function copyEmbedCode() {
 }
 
 function loadAllData() {
-    loadOrders();
+    const tier = getSubscriptionTier();
+    
+    // Always load products and analytics for all tiers
     loadProducts();
     loadAnalytics();
+    
+    // Only load orders for Pro and Premium tiers
+    if (tier !== 'free') {
+        loadOrders();
+    }
 }
 
 // ============================================
