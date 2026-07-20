@@ -496,10 +496,8 @@ function showWebsiteOnboarding() {
     showOrdersSection();
     
     // Load dashboard data (orders will be skipped for free users) and hide loading when done
-    loadAllData().then(() => {
-        hideLoading();
-    }).catch((error) => {
-        console.error('Error loading dashboard data:', error);
+    loadAllData().finally(() => {
+        // Always hide loading, even if there was an error
         hideLoading();
     });
     
@@ -536,10 +534,8 @@ function showStandardDashboard() {
     showOrdersSection();
     
     // Load all data (orders will be skipped for free users) and hide loading when done
-    loadAllData().then(() => {
-        hideLoading();
-    }).catch((error) => {
-        console.error('Error loading dashboard data:', error);
+    loadAllData().finally(() => {
+        // Always hide loading, even if there was an error
         hideLoading();
     });
 }
@@ -782,22 +778,94 @@ function renderRevenueChart(revenueData) {
     const canvas = document.getElementById('revenueChart');
     if (!canvas) return;
     
-    // Handle empty or missing data
-    const revenueByDay = revenueData?.revenue_by_day || [];
-    if (revenueByDay.length === 0) {
-        // Show empty chart with zero data
+    try {
+        // Handle empty or missing data
+        const revenueByDay = revenueData?.revenue_by_day || [];
+        if (revenueByDay.length === 0) {
+            // Show empty chart with zero data
+            const ctx = canvas.getContext('2d');
+            if (revenueChart) {
+                revenueChart.destroy();
+            }
+            
+            revenueChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['אין נתונים'],
+                    datasets: [{
+                        label: 'הכנסות (₪)',
+                        data: [0],
+                        borderColor: '#A855F7',
+                        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#A855F7',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            rtl: true,
+                            textDirection: 'rtl',
+                            callbacks: {
+                                label: function(context) {
+                                    return `₪${context.parsed.y.toFixed(2)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return `₪${value}`;
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+            return;
+        }
+        
         const ctx = canvas.getContext('2d');
+        
+        // Destroy existing chart
         if (revenueChart) {
             revenueChart.destroy();
         }
         
+        const labels = revenueByDay.map(d => {
+            const date = new Date(d.date);
+            return date.toLocaleDateString('he-IL', { month: 'short', day: 'numeric' });
+        });
+        
+        const data = revenueByDay.map(d => d.revenue || 0);
+        
         revenueChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: ['אין נתונים'],
+                labels: labels,
                 datasets: [{
                     label: 'הכנסות (₪)',
-                    data: [0],
+                    data: data,
                     borderColor: '#A855F7',
                     backgroundColor: 'rgba(168, 85, 247, 0.1)',
                     borderWidth: 2,
@@ -845,154 +913,148 @@ function renderRevenueChart(revenueData) {
                 }
             }
         });
-        return;
-    }
-    
-    const ctx = canvas.getContext('2d');
-    
-    // Destroy existing chart
-    if (revenueChart) {
-        revenueChart.destroy();
-    }
-    
-    const labels = revenueByDay.map(d => {
-        const date = new Date(d.date);
-        return date.toLocaleDateString('he-IL', { month: 'short', day: 'numeric' });
-    });
-    
-    const data = revenueByDay.map(d => d.revenue || 0);
-    
-    revenueChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'הכנסות (₪)',
-                data: data,
-                borderColor: '#A855F7',
-                backgroundColor: 'rgba(168, 85, 247, 0.1)',
-                borderWidth: 2,
-                fill: true,
-                tension: 0.4,
-                pointRadius: 3,
-                pointBackgroundColor: '#A855F7',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2,
-                pointHoverRadius: 5
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    rtl: true,
-                    textDirection: 'rtl',
-                    callbacks: {
-                        label: function(context) {
-                            return `₪${context.parsed.y.toFixed(2)}`;
-                        }
-                    }
-                }
+    } catch (error) {
+        console.error('Error rendering revenue chart:', error);
+        // Show empty chart on error
+        const ctx = canvas.getContext('2d');
+        if (revenueChart) {
+            revenueChart.destroy();
+        }
+        revenueChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['שגיאה בטעינה'],
+                datasets: [{
+                    label: 'הכנסות (₪)',
+                    data: [0],
+                    borderColor: '#EF4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    borderWidth: 2
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        callback: function(value) {
-                            return `₪${value}`;
-                        }
-                    }
-                },
-                x: {
-                    ticks: {
-                        maxRotation: 45,
-                        minRotation: 45
-                    }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
                 }
             }
-        }
-    });
+        });
+    }
 }
 
 function renderOrdersChart(ordersData) {
     const canvas = document.getElementById('ordersChart');
     if (!canvas) return;
     
-    // Handle empty or missing data
-    const ordersByStatus = ordersData?.orders_by_status || {};
-    const labels = Object.keys(ordersByStatus).map(s => getStatusText(s));
-    const data = Object.values(ordersByStatus);
-    
-    // If no data, show empty chart
-    if (labels.length === 0) {
-        labels.push('אין נתונים');
-        data.push(0);
-    }
-    
-    const colors = Object.keys(ordersByStatus).map(s => {
-        const colorsMap = {
-            'pending': '#f59e0b',
-            'paid': '#10b981',
-            'processing': '#3b82f6',
-            'shipped': '#8b5cf6',
-            'delivered': '#10b981',
-            'canceled': '#ef4444',
-            'refunded': '#ef4444',
-            'failed': '#ef4444'
-        };
-        return colorsMap[s] || '#64748b';
-    });
-    
-    // If no data, add default color
-    if (colors.length === 0) {
-        colors.push('#64748b');
-    }
-    
-    const ctx = canvas.getContext('2d');
-    
-    // Destroy existing chart
-    if (ordersChart) {
-        ordersChart.destroy();
-    }
-    
-    ordersChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'מספר הזמנות',
-                data: data,
-                backgroundColor: colors,
-                borderRadius: 8,
-                borderSkipped: false
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    rtl: true,
-                    textDirection: 'rtl'
-                }
+    try {
+        // Handle empty or missing data
+        const ordersByStatus = ordersData?.orders_by_status || {};
+        const labels = Object.keys(ordersByStatus).map(s => getStatusText(s));
+        const data = Object.values(ordersByStatus);
+        
+        // If no data, show empty chart
+        if (labels.length === 0) {
+            labels.push('אין נתונים');
+            data.push(0);
+        }
+        
+        const colors = Object.keys(ordersByStatus).map(s => {
+            const colorsMap = {
+                'pending': '#f59e0b',
+                'paid': '#10b981',
+                'processing': '#3b82f6',
+                'shipped': '#8b5cf6',
+                'delivered': '#10b981',
+                'canceled': '#ef4444',
+                'refunded': '#ef4444',
+                'failed': '#ef4444'
+            };
+            return colorsMap[s] || '#64748b';
+        });
+        
+        // If no data, add default color
+        if (colors.length === 0) {
+            colors.push('#64748b');
+        }
+        
+        const ctx = canvas.getContext('2d');
+        
+        // Destroy existing chart
+        if (ordersChart) {
+            ordersChart.destroy();
+        }
+        
+        ordersChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'מספר הזמנות',
+                    data: data,
+                    backgroundColor: colors,
+                    borderRadius: 8,
+                    borderSkipped: false
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        rtl: true,
+                        textDirection: 'rtl'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
                     }
                 }
             }
+        });
+    } catch (error) {
+        console.error('Error rendering orders chart:', error);
+        // Show empty chart on error
+        const ctx = canvas.getContext('2d');
+        if (ordersChart) {
+            ordersChart.destroy();
         }
-    });
+        ordersChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['שגיאה בטעינה'],
+                datasets: [{
+                    label: 'מספר הזמנות',
+                    data: [0],
+                    backgroundColor: ['#EF4444'],
+                    borderRadius: 8,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
 }
 
 async function loadTopProducts() {

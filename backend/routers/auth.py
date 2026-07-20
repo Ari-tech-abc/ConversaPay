@@ -136,8 +136,7 @@ async def initialize_user_workspace(user_id: str, email: str, full_name: str, bu
     result = {
         "profile_created": False,
         "business_created": False,
-        "business_id": None,
-        "payme_url": None
+        "business_id": None
     }
     
     # Step 1: Create profile if it doesn't exist
@@ -162,22 +161,8 @@ async def initialize_user_workspace(user_id: str, email: str, full_name: str, bu
                 result["business_created"] = True
                 result["business_id"] = business_uuid
     
-    # Step 3: If is_pro is false, prepare PayMe checkout URL for Pro tier
-    if profile and not profile.get("is_pro", False):
-        try:
-            # Prepare PayMe checkout for Pro tier (200 NIS)
-            payme_result = await payme_service.create_hosted_setup_session(
-                user_id=user_id,
-                plan_type="pro",
-                success_url=f"{settings.FRONTEND_URL}/pay?status=success&sale_id={{sale_id}}",
-                cancel_url=f"{settings.FRONTEND_URL}/pay?status=canceled"
-            )
-            if payme_result.get("sale_url"):
-                result["payme_url"] = payme_result.get("sale_url")
-                result["payme_sale_id"] = payme_result.get("sale_id")
-                logger.info(f"PayMe checkout prepared for user {user_id}")
-        except Exception as e:
-            logger.error(f"Failed to prepare PayMe checkout: {str(e)}")
+    # Note: PayMe checkout is NOT created during login/initialization
+    # It will only be created when user explicitly clicks "Upgrade" button
     
     return result
 
