@@ -977,21 +977,27 @@ function renderOrders(orders) {
 }
 
 function updateAnalytics(orders) {
+    const revenueEl = document.getElementById('kpiRevenue');
+    const conversionEl = document.getElementById('kpiConversion');
+    const conversionBar = document.getElementById('conversionBar');
+    const aovEl = document.getElementById('kpiAOV');
+    const sessionsEl = document.getElementById('kpiSessions');
+    
     if (!orders || orders.length === 0) {
-        document.getElementById('statRevenue').textContent = '₪0';
-        document.getElementById('statPending').textContent = '0';
-        document.getElementById('statPendingValue').textContent = '0';
-        document.getElementById('statCompleted').textContent = '0';
-        document.getElementById('statFailed').textContent = '0';
-        document.getElementById('statTotal').textContent = '0';
+        if (revenueEl) revenueEl.textContent = '₪0';
+        if (aovEl) aovEl.textContent = '₪0';
+        if (sessionsEl) sessionsEl.textContent = '0';
+        if (conversionEl) conversionEl.textContent = '0%';
+        if (conversionBar) conversionBar.style.width = '0%';
         return;
     }
     
     let totalRevenue = 0;
     let pendingCount = 0;
-    let pendingValue = 0;
-    let completedCount = 0;
-    let failedCount = 0;
+    pendingValue = 0;
+    completedCount = 0;
+    failedCount = 0;
+    let totalSessions = 0;
     
     orders.forEach(order => {
         const total = order.total || 0;
@@ -1006,14 +1012,19 @@ function updateAnalytics(orders) {
         } else if (status === 'canceled' || status === 'refunded' || status === 'failed') {
             failedCount++;
         }
+        
+        // Count unique sessions (simplified - using order count as proxy)
+        totalSessions++;
     });
     
-    document.getElementById('statRevenue').textContent = `₪${totalRevenue.toFixed(2)}`;
-    document.getElementById('statPending').textContent = pendingCount;
-    document.getElementById('statPendingValue').textContent = pendingValue.toFixed(2);
-    document.getElementById('statCompleted').textContent = completedCount;
-    document.getElementById('statFailed').textContent = failedCount;
-    document.getElementById('statTotal').textContent = orders.length;
+    const aov = orders.length > 0 ? totalRevenue / orders.length : 0;
+    const conversionRate = totalSessions > 0 ? ((completedCount / totalSessions) * 100) : 0;
+    
+    if (revenueEl) revenueEl.textContent = `₪${totalRevenue.toFixed(2)}`;
+    if (aovEl) aovEl.textContent = `₪${aov.toFixed(2)}`;
+    if (sessionsEl) sessionsEl.textContent = totalSessions.toString();
+    if (conversionEl) conversionEl.textContent = `${conversionRate.toFixed(1)}%`;
+    if (conversionBar) conversionBar.style.width = `${Math.min(conversionRate, 100)}%`;
 }
 
 async function viewOrderDetails(orderId) {
