@@ -495,8 +495,13 @@ function showWebsiteOnboarding() {
     // Handle orders section based on tier
     showOrdersSection();
     
-    // Load dashboard data (orders will be skipped for free users)
-    loadAllData();
+    // Load dashboard data (orders will be skipped for free users) and hide loading when done
+    loadAllData().then(() => {
+        hideLoading();
+    }).catch((error) => {
+        console.error('Error loading dashboard data:', error);
+        hideLoading();
+    });
     
     // Show onboarding card as an addition to the dashboard
     const onboardingCard = document.getElementById('websiteOnboardingCard');
@@ -530,8 +535,13 @@ function showStandardDashboard() {
     // Handle orders section based on tier
     showOrdersSection();
     
-    // Load all data (orders will be skipped for free users)
-    loadAllData();
+    // Load all data (orders will be skipped for free users) and hide loading when done
+    loadAllData().then(() => {
+        hideLoading();
+    }).catch((error) => {
+        console.error('Error loading dashboard data:', error);
+        hideLoading();
+    });
 }
 
 // ============================================
@@ -635,16 +645,23 @@ async function copyEmbedCode() {
     }
 }
 
-function loadAllData() {
+async function loadAllData() {
     const tier = getSubscriptionTier();
     
-    // Always load products and analytics for all tiers
-    loadProducts();
-    loadAnalytics();
-    
-    // Only load orders for Pro and Premium tiers
-    if (tier !== 'free') {
-        loadOrders();
+    try {
+        // Always load products and analytics for all tiers
+        await Promise.all([
+            loadProducts(),
+            loadAnalytics()
+        ]);
+        
+        // Only load orders for Pro and Premium tiers
+        if (tier !== 'free') {
+            await loadOrders();
+        }
+    } catch (error) {
+        console.error('Error in loadAllData:', error);
+        // Don't throw - allow UI to proceed with empty data
     }
 }
 
@@ -700,10 +717,27 @@ async function loadAnalytics() {
 }
 
 function updateKPICards(analytics) {
+    if (!analytics) {
+        // Set default zero values if analytics data is missing
+        const revenueEl = document.getElementById('kpiRevenue');
+        const conversionEl = document.getElementById('kpiConversion');
+        const conversionBar = document.getElementById('conversionBar');
+        const aovEl = document.getElementById('kpiAOV');
+        const sessionsEl = document.getElementById('kpiSessions');
+        
+        if (revenueEl) revenueEl.textContent = '₪0';
+        if (conversionEl) conversionEl.textContent = '0%';
+        if (conversionBar) conversionBar.style.width = '0%';
+        if (aovEl) aovEl.textContent = '₪0';
+        if (sessionsEl) sessionsEl.textContent = '0';
+        return;
+    }
+    
     // Revenue
     const revenueEl = document.getElementById('kpiRevenue');
     if (revenueEl) {
-        revenueEl.textContent = `₪${analytics.total_revenue.toFixed(2)}`;
+        const revenue = analytics.total_revenue || 0;
+        revenueEl.textContent = `₪${revenue.toFixed(2)}`;
     }
     
     // Conversion Rate
@@ -727,7 +761,8 @@ function updateKPICards(analytics) {
     // Average Order Value
     const aovEl = document.getElementById('kpiAOV');
     if (aovEl) {
-        aovEl.textContent = `₪${analytics.average_order_value.toFixed(2)}`;
+        const aov = analytics.average_order_value || 0;
+        aovEl.textContent = `₪${aov.toFixed(2)}`;
     }
     
     // Fix the English subtitle
@@ -745,7 +780,73 @@ function updateKPICards(analytics) {
 
 function renderRevenueChart(revenueData) {
     const canvas = document.getElementById('revenueChart');
-    if (!canvas || !revenueData.revenue_by_day) return;
+    if (!canvas) return;
+    
+    // Handle empty or missing data
+    const revenueByDay = revenueData?.revenue_by_day || [];
+    if (revenueByDay.length === 0) {
+        // Show empty chart with zero data
+        const ctx = canvas.getContext('2d');
+        if (revenueChart) {
+            revenueChart.destroy();
+        }
+        
+        revenueChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['אין נתונים'],
+                datasets: [{
+                    label: 'הכנסות (₪)',
+                    data: [0],
+                    borderColor: '#A855F7',
+                    backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#A855F7',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        rtl: true,
+                        textDirection: 'rtl',
+                        callbacks: {
+                            label: function(context) {
+                                return `₪${context.parsed.y.toFixed(2)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return `₪${value}`;
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
+                }
+            }
+        });
+        return;
+    }
     
     const ctx = canvas.getContext('2d');
     
@@ -754,12 +855,12 @@ function renderRevenueChart(revenueData) {
         revenueChart.destroy();
     }
     
-    const labels = revenueData.revenue_by_day.map(d => {
+    const labels = revenueByDay.map(d => {
         const date = new Date(d.date);
         return date.toLocaleDateString('he-IL', { month: 'short', day: 'numeric' });
     });
     
-    const data = revenueData.revenue_by_day.map(d => d.revenue);
+    const data = revenueByDay.map(d => d.revenue || 0);
     
     revenueChart = new Chart(ctx, {
         type: 'line',
@@ -819,19 +920,20 @@ function renderRevenueChart(revenueData) {
 
 function renderOrdersChart(ordersData) {
     const canvas = document.getElementById('ordersChart');
-    if (!canvas || !ordersData.orders_by_status) return;
+    if (!canvas) return;
     
-    const ctx = canvas.getContext('2d');
+    // Handle empty or missing data
+    const ordersByStatus = ordersData?.orders_by_status || {};
+    const labels = Object.keys(ordersByStatus).map(s => getStatusText(s));
+    const data = Object.values(ordersByStatus);
     
-    // Destroy existing chart
-    if (ordersChart) {
-        ordersChart.destroy();
+    // If no data, show empty chart
+    if (labels.length === 0) {
+        labels.push('אין נתונים');
+        data.push(0);
     }
     
-    const statuses = ordersData.orders_by_status;
-    const labels = Object.keys(statuses).map(s => getStatusText(s));
-    const data = Object.values(statuses);
-    const colors = Object.keys(statuses).map(s => {
+    const colors = Object.keys(ordersByStatus).map(s => {
         const colorsMap = {
             'pending': '#f59e0b',
             'paid': '#10b981',
@@ -844,6 +946,18 @@ function renderOrdersChart(ordersData) {
         };
         return colorsMap[s] || '#64748b';
     });
+    
+    // If no data, add default color
+    if (colors.length === 0) {
+        colors.push('#64748b');
+    }
+    
+    const ctx = canvas.getContext('2d');
+    
+    // Destroy existing chart
+    if (ordersChart) {
+        ordersChart.destroy();
+    }
     
     ordersChart = new Chart(ctx, {
         type: 'bar',
