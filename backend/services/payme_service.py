@@ -81,16 +81,11 @@ class PayMeService:
             full_url = f"{self.api_url}/generate-sale"
             logger.info(f"Making PayMe API request to: {full_url}")
             
-            # Force IPv4 to avoid DNS resolution issues on Windows
-            # Create a custom transport that only uses IPv4
-            transport = httpx.AsyncHTTPTransport(local_address="0.0.0.0")
-            
-            async with httpx.AsyncClient(transport=transport) as client:
+            async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.post(
                     full_url,
                     json=payload,
-                    headers={"Content-Type": "application/json"},
-                    timeout=30.0
+                    headers={"Content-Type": "application/json"}
                 )
                 
                 response.raise_for_status()

@@ -68,6 +68,9 @@ CREATE TABLE businesses (
     stripe_customer_id VARCHAR(255),
     stripe_subscription_id VARCHAR(255),
     settings JSONB DEFAULT '{}',
+    bot_name VARCHAR(255) DEFAULT 'AI Assistant',
+    greeting_message TEXT DEFAULT 'Hello! How can I help you today?',
+    theme_colors JSONB DEFAULT '{"primary": "#A855F7", "secondary": "#EC4899", "background": "#FFFFFF", "text": "#1F2937"}',
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL

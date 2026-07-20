@@ -432,7 +432,7 @@ class ProfileResponse(ProfileBase):
     id: str
     user_id: str
     is_pro: bool
-    plan_type: str
+    plan_type: Optional[str] = None
     subscription_expires_at: Optional[datetime] = None
     stripe_customer_id: Optional[str] = None
     stripe_subscription_id: Optional[str] = None
