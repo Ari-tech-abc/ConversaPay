@@ -66,6 +66,14 @@
                 if (event.detail && event.detail.business_id) {
                     CONFIG.BUSINESS_ID = event.detail.business_id;
                     console.log('ConversaPay Widget: Business ID received:', CONFIG.BUSINESS_ID);
+                    
+                    // STRONG GUARD: block "conversapay", empty strings, and non-UUID formats
+                    if (!isValidBusinessId(CONFIG.BUSINESS_ID)) {
+                        console.warn('ConversaPay Widget: BLOCKED invalid businessId="' + CONFIG.BUSINESS_ID + '" - aborting widget load to prevent 403 crash');
+                        CONFIG.BUSINESS_ID = null; // Reset to prevent further attempts
+                        return;
+                    }
+                    
                     // Load widget configuration (includes pro check)
                     loadWidgetConfig();
                 }
@@ -76,6 +84,14 @@
                 if (window.currentBusinessId) {
                     CONFIG.BUSINESS_ID = window.currentBusinessId;
                     console.log('ConversaPay Widget: Business ID from window:', CONFIG.BUSINESS_ID);
+                    
+                    // STRONG GUARD: block "conversapay", empty strings, and non-UUID formats
+                    if (!isValidBusinessId(CONFIG.BUSINESS_ID)) {
+                        console.warn('ConversaPay Widget: BLOCKED invalid businessId="' + CONFIG.BUSINESS_ID + '" - aborting widget load to prevent 403 crash');
+                        CONFIG.BUSINESS_ID = null; // Reset to prevent further attempts
+                        return;
+                    }
+                    
                     loadWidgetConfig();
                 } else {
                     // Retry after 100ms
@@ -553,6 +569,20 @@
             });
         }
     };
+
+    // ============================================
+    // Validation
+    // ============================================
+
+    function isValidBusinessId(businessId) {
+        if (!businessId || typeof businessId !== 'string') return false;
+        // Reject known fallback strings
+        if (businessId === 'conversapay') return false;
+        if (businessId === '') return false;
+        // Validate UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        return uuidRegex.test(businessId);
+    }
 
     // ============================================
     // Helper Functions

@@ -318,13 +318,13 @@ function showDashboardState() {
     document.getElementById('businessDisplayName').textContent = `🏢 ${currentBusiness.business_name}`;
     document.getElementById('businessDisplaySlug').textContent = `מזהה: ${currentBusiness.business_id}`;
     
-    // Set window.currentBusinessId for widget.js fallback
-    window.currentBusinessId = currentBusiness.business_id;
+    // Set window.currentBusinessId for widget.js fallback - MUST use the database UUID, not the slug
+    window.currentBusinessId = currentBusiness.id;
     
-    // Dispatch custom event for widget.js to listen for
+    // Dispatch custom event for widget.js to listen for - MUST pass the authentic UUID
     const businessReadyEvent = new CustomEvent('conversapay:business-ready', {
         detail: {
-            business_id: currentBusiness.business_id,
+            business_id: currentBusiness.id,
             business_name: currentBusiness.business_name
         }
     });
@@ -493,7 +493,7 @@ function updateEmbedCode() {
     
     const embedCode = `<!-- ConversaPay AI Chatbot -->
 <script>
-  window.ConversaPayWidgetConfig = { business_id: "${currentBusiness.business_id}" };
+  window.ConversaPayWidgetConfig = { business_id: "${currentBusiness.id}" };
 </script>
 <script src="${window.location.origin}/frontend/js/widget.js" defer></script>`;
     
