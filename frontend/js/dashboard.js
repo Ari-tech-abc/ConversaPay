@@ -318,13 +318,17 @@ function showDashboardState() {
     document.getElementById('businessDisplayName').textContent = `🏢 ${currentBusiness.business_name}`;
     document.getElementById('businessDisplaySlug').textContent = `מזהה: ${currentBusiness.business_id}`;
     
+    // Use currentBusiness.id (UUID) for all API calls - this is the real database primary key
+    const BUSINESS_UUID = currentBusiness.id;
+    const BUSINESS_SLUG = currentBusiness.business_id || BUSINESS_UUID;
+    
     // Set window.currentBusinessId for widget.js fallback - MUST use the database UUID, not the slug
-    window.currentBusinessId = currentBusiness.id;
+    window.currentBusinessId = BUSINESS_UUID;
     
     // Dispatch custom event for widget.js to listen for - MUST pass the authentic UUID
     const businessReadyEvent = new CustomEvent('conversapay:business-ready', {
         detail: {
-            business_id: currentBusiness.id,
+            business_id: BUSINESS_UUID,
             business_name: currentBusiness.business_name
         }
     });
@@ -411,7 +415,8 @@ async function checkProStatusForIntegrations() {
 async function checkWebsiteStatus() {
     try {
         const token = ConversaPayAuth.getToken();
-        const response = await fetch(`${API_BASE_URL}/businesses/${currentBusiness.business_id}`, {
+        // Use BUSINESS_UUID (the database primary key) for all API calls, not the slug
+        const response = await fetch(`${API_BASE_URL}/businesses/${currentBusiness.id}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
@@ -605,18 +610,18 @@ async function loadAnalytics() {
     const token = ConversaPayAuth.getToken();
     
     try {
-        // Load main analytics
-        const analyticsPromise = fetch(`${API_BASE_URL}/analytics/businesses/${currentBusiness.business_id}/analytics`, {
+        // Load main analytics — use currentBusiness.id (UUID), not the slug
+        const analyticsPromise = fetch(`${API_BASE_URL}/analytics/businesses/${currentBusiness.id}/analytics`, {
             headers: { 'Authorization': `Bearer ${token}` }
         }).then(r => r.ok ? r.json() : null);
         
         // Load revenue data
-        const revenuePromise = fetch(`${API_BASE_URL}/analytics/businesses/${currentBusiness.business_id}/revenue?days=${days}`, {
+        const revenuePromise = fetch(`${API_BASE_URL}/analytics/businesses/${currentBusiness.id}/revenue?days=${days}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         }).then(r => r.ok ? r.json() : null);
         
         // Load order analytics
-        const ordersPromise = fetch(`${API_BASE_URL}/analytics/businesses/${currentBusiness.business_id}/orders?days=${days}`, {
+        const ordersPromise = fetch(`${API_BASE_URL}/analytics/businesses/${currentBusiness.id}/orders?days=${days}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         }).then(r => r.ok ? r.json() : null);
         
@@ -829,7 +834,7 @@ async function loadTopProducts() {
     
     try {
         const token = ConversaPayAuth.getToken();
-        const response = await fetch(`${API_BASE_URL}/analytics/businesses/${currentBusiness.business_id}/analytics`, {
+        const response = await fetch(`${API_BASE_URL}/analytics/businesses/${currentBusiness.id}/analytics`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
@@ -1174,7 +1179,7 @@ async function loadProducts() {
     
     try {
         const token = ConversaPayAuth.getToken();
-        const response = await fetch(`${API_BASE_URL}/products?business_id=${currentBusiness.business_id}&active_only=false`, {
+        const response = await fetch(`${API_BASE_URL}/products?business_id=${currentBusiness.id}&active_only=false`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
         
