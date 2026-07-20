@@ -443,25 +443,14 @@ async function checkWebsiteStatus() {
 }
 
 function showWebsiteOnboarding() {
-    // Hide standard analytics sections
-    const analyticsSection = document.querySelector('.stats-grid');
-    const chartsSection = document.querySelectorAll('.card')[1]; // Charts card
-    const ordersSection = document.querySelectorAll('.card')[2]; // Orders card
-    const productsSection = document.querySelectorAll('.card')[3]; // Products card
-    
-    if (analyticsSection) analyticsSection.classList.add('d-none');
-    if (chartsSection) chartsSection.classList.add('d-none');
-    if (ordersSection) ordersSection.classList.add('d-none');
-    if (productsSection) productsSection.classList.add('d-none');
-    
-    // Show onboarding card
+    // Show onboarding card as an additional option (do not hide dashboard content)
     const onboardingCard = document.getElementById('websiteOnboardingCard');
     if (onboardingCard) {
         onboardingCard.classList.remove('d-none');
         
-        // Set dynamic link to site builder
+        // Set dynamic link to site builder - use currentBusiness.id (UUID) for API consistency
         const token = ConversaPayAuth.getToken();
-        const siteBuilderUrl = `http://localhost:8001/frontend/index.html?business_id=${currentBusiness.business_id}&token=${token}`;
+        const siteBuilderUrl = `http://localhost:8001/frontend/index.html?business_id=${currentBusiness.id}&token=${token}`;
         const generateBtn = document.getElementById('generateSiteBtn');
         if (generateBtn) {
             generateBtn.href = siteBuilderUrl;
