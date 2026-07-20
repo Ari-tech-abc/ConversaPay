@@ -356,56 +356,73 @@ function showDashboardState() {
 async function checkProStatusForIntegrations() {
     try {
         const isPro = window.userSubscriptionStatus?.isPro || false;
-        
         const integrationsSection = document.getElementById('integrationsCard');
         if (!integrationsSection) return;
         
+        // Remove any existing overlay
+        const existingOverlay = document.getElementById('integrationLockOverlay');
+        if (existingOverlay) {
+            existingOverlay.remove();
+        }
+        
         if (!isPro) {
-            // Free user: Replace integrations with 2-tier upgrade prompt
-            integrationsSection.innerHTML = `
-                <div class="card-header">
-                    <h3 class="card-title">🔒 חיבור לאתר שלך</h3>
-                </div>
-                <div class="card-body" style="text-align:center;padding:40px;">
-                    <div style="font-size:4rem;margin-bottom:20px;">⭐</div>
-                    <h3 style="font-size:1.5rem;font-weight:700;margin-bottom:16px;color:var(--text-primary);">
-                        שדרג את התוכנית שלך
+            // Free user: Add lock overlay over integration sections
+            // The integrations card keeps its original content (embed code + WordPress plugin)
+            // We just add a blurred overlay on top to lock access
+            
+            setTimeout(() => {
+                // Create overlay element
+                const overlay = document.createElement('div');
+                overlay.id = 'integrationLockOverlay';
+                overlay.style.cssText = `
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0, 0, 0, 0.75);
+                    backdrop-filter: blur(5px);
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 100;
+                    border-radius: 12px;
+                    padding: 30px;
+                    text-align: center;
+                    pointer-events: auto;
+                `;
+                
+                overlay.innerHTML = `
+                    <div style="font-size: 4rem; margin-bottom: 20px;">🔒</div>
+                    <h3 style="font-size: 1.3rem; font-weight: 700; color: white; margin-bottom: 12px; direction: rtl;">
+                        נעול - רכוש PRO או PREMIUM
                     </h3>
-                    <p style="color:var(--text-secondary);margin-bottom:32px;max-width:600px;margin-left:auto;margin-right:auto;">
-                        בחר את המסלול המתאים וקבל גישה להטמעות ולכלי פיתוח מתקדמים
+                    <p style="color: rgba(255,255,255,0.9); margin-bottom: 24px; font-size: 1rem; direction: rtl; max-width: 400px;">
+                        ותקבל את האופציות האלו
                     </p>
-                    
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;text-align:right;direction:rtl;">
-                        <!-- Pro Plan -->
-                        <div style="background:rgba(255,255,255,0.05);padding:24px;border-radius:12px;border:2px solid var(--accent-cyan);">
-                            <h4 style="color:var(--accent-cyan);font-size:1.2rem;font-weight:700;margin-bottom:12px;">Pro Plan</h4>
-                            <div style="font-size:2rem;font-weight:800;color:white;margin-bottom:16px;">200 ₪<span style="font-size:0.9rem;opacity:0.7;">/חודש</span></div>
-                            <ul style="list-style:none;padding:0;margin-bottom:20px;text-align:right;">
-                                <li style="padding:6px 0;color:var(--text-secondary);">✓ ווידג'ט צף לכל אתר</li>
-                                <li style="padding:6px 0;color:var(--text-secondary);">✓ תוסף וורדפרס</li>
-                                <li style="padding:6px 0;color:var(--text-secondary);">✓ אנליטיקות בסיסיות</li>
-                            </ul>
-                            <button onclick="handleUpgradeToPlan('pro')" class="btn" style="width:100%;background:linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 100%);color:white;padding:12px 20px;font-weight:700;border-radius:8px;border:none;cursor:pointer;">
-                                💳 שדרג ל-Pro
-                            </button>
-                        </div>
-                        
-                        <!-- Premium Plan -->
-                        <div style="background:rgba(255,255,255,0.05);padding:24px;border-radius:12px;border:2px solid var(--accent-purple);">
-                            <h4 style="color:var(--accent-purple);font-size:1.2rem;font-weight:700;margin-bottom:12px;">Premium Plan</h4>
-                            <div style="font-size:2rem;font-weight:800;color:white;margin-bottom:16px;">350 ₪<span style="font-size:0.9rem;opacity:0.7;">/חודש</span></div>
-                            <ul style="list-style:none;padding:0;margin-bottom:20px;text-align:right;">
-                                <li style="padding:6px 0;color:var(--text-secondary);">✓ כל תכונות Pro</li>
-                                <li style="padding:6px 0;color:var(--text-secondary);">✓ נפח שיחות גבוה יותר</li>
-                                <li style="padding:6px 0;color:var(--text-secondary);">✓ תמיכה מועדפת</li>
-                            </ul>
-                            <button onclick="handleUpgradeToPlan('premium')" class="btn" style="width:100%;background:linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-blue) 100%);color:white;padding:12px 20px;font-weight:700;border-radius:8px;border:none;cursor:pointer;">
-                                💳 שדרג ל-Premium
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
+                    <button onclick="handleUpgradeToPlan('pro')" class="btn" style="
+                        background: linear-gradient(135deg, #00D9FF 0%, #3B82F6 100%);
+                        color: white;
+                        padding: 14px 28px;
+                        font-weight: 700;
+                        border-radius: 8px;
+                        border: none;
+                        cursor: pointer;
+                        font-size: 1rem;
+                        direction: rtl;
+                    ">
+                        💳 שדרג עכשיו
+                    </button>
+                `;
+                
+                // Make sure the integrations card body has position relative for absolute positioning
+                const cardBody = integrationsSection.querySelector('.card-body');
+                if (cardBody) {
+                    cardBody.style.position = 'relative';
+                    cardBody.appendChild(overlay);
+                }
+            }, 200);
         }
     } catch (error) {
         console.error('Error checking Pro status for integrations:', error);
