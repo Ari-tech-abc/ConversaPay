@@ -123,13 +123,16 @@ async function checkSubscriptionStatus() {
 }
 
 function showUpgradeState() {
+    // Show billing section, hide integrations
+    document.getElementById('billing-upgrade-section').style.display = 'block';
+    document.getElementById('integrations-setup-section').style.display = 'none';
+    
     // Hide all other states
     document.getElementById('upgradeState').classList.remove('d-none');
     document.getElementById('noBusinessState').classList.add('d-none');
     document.getElementById('createBusinessFormCard').classList.add('d-none');
     document.getElementById('dashboardContent').classList.add('d-none');
     document.getElementById('proPlanBanner').classList.add('d-none');
-    document.getElementById('integrationsCard').classList.add('d-none');
     
     // Hide loading
     hideLoading();
@@ -222,6 +225,10 @@ async function loadUserBusinesses() {
 }
 
 function showNoBusinessState() {
+    // Hide billing section, show integrations for Pro users
+    document.getElementById('billing-upgrade-section').style.display = 'none';
+    document.getElementById('integrations-setup-section').style.display = 'block';
+    
     // Hide upgrade state and show no-business state for Pro users
     document.getElementById('upgradeState').classList.add('d-none');
     document.getElementById('noBusinessState').classList.remove('d-none');
@@ -288,6 +295,10 @@ async function handleCreateBusiness(event) {
 }
 
 function showDashboardState() {
+    // Hide billing section, show integrations
+    document.getElementById('billing-upgrade-section').style.display = 'none';
+    document.getElementById('integrations-setup-section').style.display = 'block';
+    
     // Hide empty state, show dashboard
     document.getElementById('noBusinessState').classList.add('d-none');
     document.getElementById('createBusinessFormCard').classList.add('d-none');

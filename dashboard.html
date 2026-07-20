@@ -617,12 +617,13 @@
         </div>
 
         <!-- State 0: Non-Pro User - Upgrade Required -->
-        <div id="upgradeState" class="upgrade-state d-none">
-            <div class="icon">🚀</div>
-            <h1>בחר את המסלול המתאים לעסק שלך</h1>
-            <p style="font-size:1.1rem;opacity:0.9;margin-bottom:30px;">
-                הפכו את האתר שלכם לחנות חכה עם בוט AI שמוכר מוצרים בצ'אט ישיר
-            </p>
+        <div id="billing-upgrade-section">
+            <div id="upgradeState" class="upgrade-state d-none">
+                <div class="icon">🚀</div>
+                <h1>בחר את המסלול המתאים לעסק שלך</h1>
+                <p style="font-size:1.1rem;opacity:0.9;margin-bottom:30px;">
+                    הפכו את האתר שלכם לפלטפורמה חכמה עם בוט AI שמוכר מוצרים בצ'אט ישיר
+                </p>
             
             <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;margin-bottom:40px;text-align:right;direction:rtl;">
                 <!-- Pro Plan Card -->
@@ -918,10 +919,11 @@
         </div>
 
         <!-- Integrations Section -->
-        <div class="card" id="integrationsCard">
-            <div class="card-header">
-                <h3 class="card-title">🔌 חיבור לאתר שלך</h3>
-            </div>
+        <div id="integrations-setup-section">
+            <div class="card" id="integrationsCard">
+                <div class="card-header">
+                    <h3 class="card-title">🔌 חיבור לאתר שלך</h3>
+                </div>
             <div class="card-body">
                 <p style="margin-bottom:20px;color:var(--text-secondary);">בחר את השיטה המועדפת עבורך להתקנת הצ'אטבוט:</p>
                 
@@ -959,10 +961,10 @@
                         <button id="copyEmbedCode" class="btn btn-success w-full">
                             📋 העתק קוד
                         </button>
-                    </div>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
     <script src="/frontend/js/auth.js"></script>
