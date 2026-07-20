@@ -304,35 +304,41 @@ async function handleCreateBusiness(event) {
     }
 }
 
-function showDashboardState() {
-    // Hide billing section, show integrations
-    document.getElementById('billing-upgrade-section').style.display = 'none';
-    document.getElementById('integrations-setup-section').style.display = 'block';
+async function initDashboard() {
+    // STEP 1: Force dashboard container visible FIRST (before any async operations)
+    const dashboardContent = document.getElementById('dashboardContent');
+    if (dashboardContent) {
+        dashboardContent.classList.remove('d-none');
+        dashboardContent.style.display = 'block';
+    }
     
-    // Hide empty state, show dashboard
-    document.getElementById('noBusinessState').classList.add('d-none');
-    document.getElementById('createBusinessFormCard').classList.add('d-none');
-    document.getElementById('dashboardContent').classList.remove('d-none');
+    // Hide other states
+    const noBusinessState = document.getElementById('noBusinessState');
+    const createBusinessFormCard = document.getElementById('createBusinessFormCard');
+    const upgradeState = document.getElementById('upgradeState');
+    
+    if (noBusinessState) noBusinessState.classList.add('d-none');
+    if (createBusinessFormCard) createBusinessFormCard.classList.add('d-none');
+    if (upgradeState) upgradeState.classList.add('d-none');
     
     // Show business name in header
-    document.getElementById('businessDisplayName').textContent = `🏢 ${currentBusiness.business_name}`;
-    document.getElementById('businessDisplaySlug').textContent = `מזהה: ${currentBusiness.business_id}`;
-    
-    // Use currentBusiness.id (UUID) for all API calls - this is the real database primary key
-    const BUSINESS_UUID = currentBusiness.id;
-    const BUSINESS_SLUG = currentBusiness.business_id || BUSINESS_UUID;
-    
-    // Set window.currentBusinessId for widget.js fallback - MUST use the database UUID, not the slug
-    window.currentBusinessId = BUSINESS_UUID;
-    
-    // Dispatch custom event for widget.js to listen for - MUST pass the authentic UUID
-    const businessReadyEvent = new CustomEvent('conversapay:business-ready', {
-        detail: {
-            business_id: BUSINESS_UUID,
-            business_name: currentBusiness.business_name
-        }
-    });
-    document.dispatchEvent(businessReadyEvent);
+    if (currentBusiness) {
+        document.getElementById('businessDisplayName').textContent = `🏢 ${currentBusiness.business_name}`;
+        document.getElementById('businessDisplaySlug').textContent = `מזהה: ${currentBusiness.business_id}`;
+        
+        // Use currentBusiness.id (UUID) for all API calls
+        const BUSINESS_UUID = currentBusiness.id;
+        window.currentBusinessId = BUSINESS_UUID;
+        
+        // Dispatch custom event for widget.js
+        const businessReadyEvent = new CustomEvent('conversapay:business-ready', {
+            detail: {
+                business_id: BUSINESS_UUID,
+                business_name: currentBusiness.business_name
+            }
+        });
+        document.dispatchEvent(businessReadyEvent);
+    }
     
     // Check for session_id from successful payment redirect
     const urlParams = new URLSearchParams(window.location.search);
@@ -343,14 +349,35 @@ function showDashboardState() {
         window.history.replaceState({}, document.title, '/dashboard.html');
     }
     
-    // Check Pro status to determine integrations visibility
-    checkProStatusForIntegrations();
+    try {
+        // STEP 2: Check Pro status and apply overlay if needed (non-blocking)
+        await checkProStatusForIntegrations();
+        
+        // STEP 3: Update embed code
+        updateEmbedCode();
+        
+        // STEP 4: Load all dashboard data in parallel
+        await loadAllData();
+        
+    } catch (error) {
+        console.error('Error in initDashboard:', error);
+    } finally {
+        // STEP 5: ALWAYS hide loading and ensure dashboard is visible (absolute guarantee)
+        hideLoading();
+        if (dashboardContent) {
+            dashboardContent.classList.remove('d-none');
+            dashboardContent.style.display = 'block';
+        }
+    }
+}
+
+function showDashboardState() {
+    // Hide billing section, show integrations
+    document.getElementById('billing-upgrade-section').style.display = 'none';
+    document.getElementById('integrations-setup-section').style.display = 'block';
     
-    // Update embed code with actual business_id
-    updateEmbedCode();
-    
-    // Check if business has a website - show onboarding if not
-    checkWebsiteStatus();
+    // Initialize dashboard with centralized flow
+    initDashboard();
 }
 
 async function checkProStatusForIntegrations() {
@@ -442,20 +469,19 @@ async function checkWebsiteStatus() {
             const hasWebsite = business.website_url && business.website_url.trim() !== '';
             
             if (!hasWebsite) {
-                // Show onboarding card, hide standard dashboard
+                // Show onboarding card as addition to dashboard
                 showWebsiteOnboarding();
             } else {
-                // Show standard dashboard
-                showStandardDashboard();
+                // Hide onboarding card for standard dashboard
+                const onboardingCard = document.getElementById('websiteOnboardingCard');
+                if (onboardingCard) onboardingCard.classList.add('d-none');
             }
-        } else {
-            // Default to standard dashboard on error
-            showStandardDashboard();
         }
     } catch (error) {
         console.error('Error checking website status:', error);
-        // Default to standard dashboard on error
-        showStandardDashboard();
+        // Hide onboarding on error
+        const onboardingCard = document.getElementById('websiteOnboardingCard');
+        if (onboardingCard) onboardingCard.classList.add('d-none');
     }
 }
 
@@ -500,24 +526,6 @@ function showOrdersSection() {
 }
 
 function showWebsiteOnboarding() {
-    // Show standard dashboard sections (they may be hidden by default in HTML)
-    const analyticsSection = document.querySelector('.stats-grid');
-    const chartsSection = document.querySelectorAll('.card')[1]; // Charts card
-    const productsSection = document.querySelectorAll('.card')[3]; // Products card
-    
-    if (analyticsSection) analyticsSection.classList.remove('d-none');
-    if (chartsSection) chartsSection.classList.remove('d-none');
-    if (productsSection) productsSection.classList.remove('d-none');
-    
-    // Handle orders section based on tier
-    showOrdersSection();
-    
-    // Load dashboard data (orders will be skipped for free users) and hide loading when done
-    loadAllData().finally(() => {
-        // Always hide loading, even if there was an error
-        hideLoading();
-    });
-    
     // Show onboarding card as an addition to the dashboard
     const onboardingCard = document.getElementById('websiteOnboardingCard');
     if (onboardingCard) {
@@ -531,6 +539,9 @@ function showWebsiteOnboarding() {
             generateBtn.href = siteBuilderUrl;
         }
     }
+    
+    // Handle orders section based on tier (only updates the orders card, not the whole layout)
+    showOrdersSection();
 }
 
 function showStandardDashboard() {
@@ -538,23 +549,8 @@ function showStandardDashboard() {
     const onboardingCard = document.getElementById('websiteOnboardingCard');
     if (onboardingCard) onboardingCard.classList.add('d-none');
     
-    // Show standard analytics sections
-    const analyticsSection = document.querySelector('.stats-grid');
-    const chartsSection = document.querySelectorAll('.card')[1];
-    const productsSection = document.querySelectorAll('.card')[3];
-    
-    if (analyticsSection) analyticsSection.classList.remove('d-none');
-    if (chartsSection) chartsSection.classList.remove('d-none');
-    if (productsSection) productsSection.classList.remove('d-none');
-    
-    // Handle orders section based on tier
+    // Handle orders section based on tier (only updates the orders card, not the whole layout)
     showOrdersSection();
-    
-    // Load all data (orders will be skipped for free users) and hide loading when done
-    loadAllData().finally(() => {
-        // Always hide loading, even if there was an error
-        hideLoading();
-    });
 }
 
 // ============================================
