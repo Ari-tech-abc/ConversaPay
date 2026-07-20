@@ -13,10 +13,54 @@ let currentBusiness = null; // { business_id, business_name, ... }
 let isDashboardInitialized = false; // Global lock to prevent duplicate initialization
 
 // ============================================
+// SAFETY NET — never leave the user on a blank/stuck loading screen
+// ============================================
+
+// 1) Catch any uncaught synchronous error anywhere in the app.
+window.addEventListener('error', (event) => {
+    console.error('🔴 [SAFETY NET] Uncaught error:', event.message, 'at', event.filename + ':' + event.lineno + ':' + event.colno, event.error);
+    forceUnstickUI('Uncaught error: ' + event.message);
+});
+
+// 2) Catch any uncaught rejected Promise (e.g. an unawaited async function that throws).
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('🔴 [SAFETY NET] Unhandled promise rejection:', event.reason);
+    forceUnstickUI('Unhandled promise rejection: ' + (event.reason?.message || event.reason));
+});
+
+// 3) Absolute last resort: if after 8 seconds the loading overlay is still visible,
+//    something silently failed. Force it away and show whatever state we can.
+let safetyNetTimer = setTimeout(() => {
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay && !overlay.classList.contains('d-none')) {
+        console.error('🔴 [SAFETY NET] Loading overlay still visible after 8s — forcing it closed.');
+        forceUnstickUI('Timeout: loading took longer than 8 seconds — check the errors logged above this line.');
+    }
+}, 8000);
+
+function forceUnstickUI(reasonForLog) {
+    console.error('🔴 [SAFETY NET] Forcing UI unstuck. Reason:', reasonForLog);
+    try { hideLoading(); } catch (e) { console.error('hideLoading itself failed:', e); }
+    // If nothing else has rendered any state yet, fall back to the "no business" screen
+    // so the user sees *something* actionable instead of a blank page.
+    const dashboardContent = document.getElementById('dashboardContent');
+    const noBusinessState = document.getElementById('noBusinessState');
+    const upgradeState = document.getElementById('upgradeState');
+    const anyVisible =
+        (dashboardContent && !dashboardContent.classList.contains('d-none')) ||
+        (noBusinessState && !noBusinessState.classList.contains('d-none')) ||
+        (upgradeState && !upgradeState.classList.contains('d-none'));
+    if (!anyVisible && noBusinessState) {
+        noBusinessState.classList.remove('d-none');
+    }
+}
+
+// ============================================
 // Initialization
 // ============================================
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('✅ [1] DOMContentLoaded fired');
     initializeEventListeners();
     checkAuthStatus();
 });
@@ -60,7 +104,9 @@ function hideLoading() {
 // ============================================
 
 function checkAuthStatus() {
+    console.log('✅ [2] checkAuthStatus() called');
     const token = ConversaPayAuth.getToken();
+    console.log('✅ [2a] token present:', !!token);
     if (token) {
         // Show loading while checking auth and subscription
         showLoading();
@@ -69,11 +115,13 @@ function checkAuthStatus() {
             headers: { 'Authorization': `Bearer ${token}` }
         })
         .then(response => {
+            console.log('✅ [3] /auth/me responded with status:', response.status);
             if (response.ok) return response.json();
             ConversaPayAuth.logout();
             return null;
         })
         .then(data => {
+            console.log('✅ [4] /auth/me data:', data);
             if (data) {
                 currentUser = data;
                 // Check subscription status first
@@ -81,7 +129,7 @@ function checkAuthStatus() {
             }
         })
         .catch(error => {
-            console.error('Auth check error:', error);
+            console.error('🔴 Auth check error:', error);
             hideLoading();
             window.location.href = '/login.html';
         });
@@ -96,14 +144,17 @@ function checkAuthStatus() {
 // ============================================
 
 async function checkSubscriptionStatus() {
+    console.log('✅ [5] checkSubscriptionStatus() called');
     try {
         const token = ConversaPayAuth.getToken();
         const response = await fetch(`${API_BASE_URL}/payments/profile`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+        console.log('✅ [6] /payments/profile responded with status:', response.status);
         
         if (response.ok) {
             const profile = await response.json();
+            console.log('✅ [7] profile data:', profile);
             const isPro = profile.is_pro || false;
             
             // Always load businesses for all users (free, pro, premium)
@@ -123,7 +174,7 @@ async function checkSubscriptionStatus() {
             };
         }
     } catch (error) {
-        console.error('Error checking subscription:', error);
+        console.error('🔴 Error checking subscription:', error);
         // Load dashboard as free user on error
         await loadUserBusinesses();
         window.userSubscriptionStatus = {
@@ -212,20 +263,29 @@ function handleLogout() {
 // ============================================
 
 async function loadUserBusinesses() {
+    console.log('✅ [8] loadUserBusinesses() called');
     try {
         const token = ConversaPayAuth.getToken();
         const response = await fetch(`${API_BASE_URL}/businesses`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
+        console.log('✅ [9] /businesses responded with status:', response.status);
         
         if (response.ok) {
             const businesses = await response.json();
+            console.log('✅ [10] businesses data (checking it is an array with items):', businesses);
             
-            if (businesses.length === 0) {
+            if (!Array.isArray(businesses)) {
+                console.error('🔴 [10a] /businesses did NOT return an array! Got:', typeof businesses, businesses);
+            }
+            
+            if (!businesses || businesses.length === 0) {
                 // State A: No business - show empty state
+                console.log('✅ [11] No businesses found -> showNoBusinessState()');
                 showNoBusinessState();
             } else {
                 // State B: Has business - auto-bind to first one
+                console.log('✅ [11] Business found, binding to first one:', businesses[0]);
                 currentBusiness = businesses[0];
                 showDashboardState();
             }
@@ -318,71 +378,82 @@ async function handleCreateBusiness(event) {
 }
 
 async function initDashboard() {
+    console.log('✅ [12] initDashboard() called. currentBusiness =', currentBusiness);
     // Guard clause: Prevent duplicate initialization
     if (isDashboardInitialized) {
         console.log("Dashboard initialization already in progress or completed. Skipping duplicate call.");
         return;
     }
     isDashboardInitialized = true;
-    
-    // STEP 1: Force dashboard container visible FIRST (before any async operations)
+
+    // Whole function wrapped in try/catch/finally so that NOTHING here can leave
+    // the loading overlay stuck, no matter what throws.
     const dashboardContent = document.getElementById('dashboardContent');
-    if (dashboardContent) {
-        dashboardContent.classList.remove('d-none');
-        dashboardContent.style.display = 'block';
-    }
-    
-    // Hide other states
-    const noBusinessState = document.getElementById('noBusinessState');
-    const createBusinessFormCard = document.getElementById('createBusinessFormCard');
-    const upgradeState = document.getElementById('upgradeState');
-    
-    if (noBusinessState) noBusinessState.classList.add('d-none');
-    if (createBusinessFormCard) createBusinessFormCard.classList.add('d-none');
-    if (upgradeState) upgradeState.classList.add('d-none');
-    
-    // Show business name in header
-    if (currentBusiness) {
-        document.getElementById('businessDisplayName').textContent = `🏢 ${currentBusiness.business_name}`;
-        document.getElementById('businessDisplaySlug').textContent = `מזהה: ${currentBusiness.business_id}`;
-        
-        // Use currentBusiness.id (UUID) for all API calls
-        const BUSINESS_UUID = currentBusiness.id;
-        window.currentBusinessId = BUSINESS_UUID;
-        
-        // Dispatch custom event for widget.js
-        const businessReadyEvent = new CustomEvent('conversapay:business-ready', {
-            detail: {
-                business_id: BUSINESS_UUID,
-                business_name: currentBusiness.business_name
-            }
-        });
-        document.dispatchEvent(businessReadyEvent);
-    }
-    
-    // Check for session_id from successful payment redirect
-    const urlParams = new URLSearchParams(window.location.search);
-    const sessionId = urlParams.get('session_id');
-    if (sessionId) {
-        const banner = document.getElementById('proPlanBanner');
-        if (banner) banner.classList.remove('d-none');
-        window.history.replaceState({}, document.title, '/dashboard.html');
-    }
-    
     try {
+        // STEP 1: Force dashboard container visible FIRST (before any async operations)
+        if (dashboardContent) {
+            dashboardContent.classList.remove('d-none');
+            dashboardContent.style.display = 'block';
+        }
+        
+        // Hide other states
+        const noBusinessState = document.getElementById('noBusinessState');
+        const createBusinessFormCard = document.getElementById('createBusinessFormCard');
+        const upgradeState = document.getElementById('upgradeState');
+        
+        if (noBusinessState) noBusinessState.classList.add('d-none');
+        if (createBusinessFormCard) createBusinessFormCard.classList.add('d-none');
+        if (upgradeState) upgradeState.classList.add('d-none');
+        
+        // Show business name in header
+        if (currentBusiness) {
+            const nameEl = document.getElementById('businessDisplayName');
+            const slugEl = document.getElementById('businessDisplaySlug');
+            if (nameEl) nameEl.textContent = `🏢 ${currentBusiness.business_name}`;
+            if (slugEl) slugEl.textContent = `מזהה: ${currentBusiness.business_id}`;
+            
+            // Use currentBusiness.id (UUID) for all API calls
+            const BUSINESS_UUID = currentBusiness.id;
+            window.currentBusinessId = BUSINESS_UUID;
+            console.log('✅ [13] window.currentBusinessId set to:', BUSINESS_UUID);
+            
+            // Dispatch custom event for widget.js
+            const businessReadyEvent = new CustomEvent('conversapay:business-ready', {
+                detail: {
+                    business_id: BUSINESS_UUID,
+                    business_name: currentBusiness.business_name
+                }
+            });
+            document.dispatchEvent(businessReadyEvent);
+        }
+        
+        // Check for session_id from successful payment redirect
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session_id');
+        if (sessionId) {
+            const banner = document.getElementById('proPlanBanner');
+            if (banner) banner.classList.remove('d-none');
+            window.history.replaceState({}, document.title, '/dashboard.html');
+        }
+        
         // STEP 2: Check Pro status and apply overlay if needed (non-blocking)
+        console.log('✅ [14] calling checkProStatusForIntegrations()');
         await checkProStatusForIntegrations();
         
         // STEP 3: Update embed code
+        console.log('✅ [15] calling updateEmbedCode()');
         updateEmbedCode();
         
         // STEP 4: Load all dashboard data in parallel
+        console.log('✅ [16] calling loadAllData()');
         await loadAllData();
+        console.log('✅ [17] loadAllData() finished');
         
     } catch (error) {
-        console.error('Error in initDashboard:', error);
+        console.error('🔴 Error in initDashboard:', error);
     } finally {
         // STEP 5: ALWAYS hide loading and ensure dashboard is visible (absolute guarantee)
+        console.log('✅ [18] initDashboard finally block -> hideLoading()');
         hideLoading();
         if (dashboardContent) {
             dashboardContent.classList.remove('d-none');
@@ -392,12 +463,22 @@ async function initDashboard() {
 }
 
 function showDashboardState() {
+    console.log('✅ [12-pre] showDashboardState() called');
     // Hide billing section, show integrations
-    document.getElementById('billing-upgrade-section').style.display = 'none';
-    document.getElementById('integrations-setup-section').style.display = 'block';
+    const billingSection = document.getElementById('billing-upgrade-section');
+    const integrationsSection = document.getElementById('integrations-setup-section');
+    if (billingSection) billingSection.style.display = 'none';
+    if (integrationsSection) integrationsSection.style.display = 'block';
     
-    // Initialize dashboard with centralized flow
-    initDashboard();
+    // Initialize dashboard with centralized flow.
+    // Explicitly catch here too: initDashboard() is async and NOT awaited (this function
+    // isn't async), so without this .catch() any error thrown before its own try/catch
+    // reaches, becomes an invisible "unhandled promise rejection" — caught by our
+    // global safety net above, but logged here as well for clarity.
+    initDashboard().catch(error => {
+        console.error('🔴 initDashboard() rejected:', error);
+        forceUnstickUI('initDashboard rejected: ' + (error?.message || error));
+    });
 }
 
 async function checkProStatusForIntegrations() {
@@ -1260,9 +1341,9 @@ function updateAnalytics(orders) {
     
     let totalRevenue = 0;
     let pendingCount = 0;
-    pendingValue = 0;
-    completedCount = 0;
-    failedCount = 0;
+    let pendingValue = 0;
+    let completedCount = 0;
+    let failedCount = 0;
     let totalSessions = 0;
     
     orders.forEach(order => {
