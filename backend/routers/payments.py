@@ -70,7 +70,7 @@ async def create_subscription_checkout_session(
             )
             
             # Extract the returned values
-            payme_sale_id = payme_result.get("sale_id")
+            payme_sale_id = payme_result.get("payme_sale_id")
             payment_url = payme_result.get("sale_url")
             
             if not payme_sale_id or not payment_url:

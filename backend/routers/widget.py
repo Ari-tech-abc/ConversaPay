@@ -15,6 +15,7 @@ async def check_business_pro_status(business_id: str, supabase_client) -> bool:
     """
     Check if the business owner has an active Pro subscription.
     This is used to enforce widget rendering restrictions for free users.
+    Uses service role client to bypass RLS for the profiles table.
     """
     try:
         # Get the business record to find the owner
@@ -31,8 +32,15 @@ async def check_business_pro_status(business_id: str, supabase_client) -> bool:
         if not user_id:
             return False
         
+        # Use service role client to bypass RLS on profiles table
+        from backend.config import settings as app_settings
+        service_role_client = create_client(
+            app_settings.SUPABASE_URL,
+            app_settings.SUPABASE_SERVICE_ROLE_KEY
+        )
+        
         # Check the user's profile for pro status
-        profile_result = supabase_client.table('profiles')\
+        profile_result = service_role_client.table('profiles')\
             .select('is_pro, subscription_expires_at')\
             .eq('user_id', user_id)\
             .single()\
