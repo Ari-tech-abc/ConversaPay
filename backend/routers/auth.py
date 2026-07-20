@@ -12,6 +12,7 @@ import logging
 import secrets
 
 from supabase import create_client, Client
+from supabase_auth.errors import AuthApiError
 from backend.config import settings
 from backend.middleware.auth import AuthUser, get_current_user
 from backend.models.schemas import (
@@ -258,6 +259,22 @@ async def signup(request: UserRegister):
     
     except HTTPException:
         raise
+    except AuthApiError as e:
+        error_message = str(e)
+        logger.error(f"Registration error (AuthApiError): {error_message}")
+        
+        # Handle duplicate user registration
+        if "already registered" in error_message.lower() or "already exists" in error_message.lower() or "duplicate" in error_message.lower():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User already registered"
+            )
+        
+        # Handle other auth API errors
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
     except Exception as e:
         error_message = str(e)
         logger.error(f"Registration error: {error_message}", exc_info=True)
@@ -342,6 +359,12 @@ async def login(request: UserLogin):
     
     except HTTPException:
         raise
+    except AuthApiError as e:
+        logger.error(f"Login error (AuthApiError): {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password"
+        )
     except Exception as e:
         logger.error(f"Login error: {str(e)}")
         raise HTTPException(
