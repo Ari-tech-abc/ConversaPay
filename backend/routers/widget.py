@@ -23,7 +23,7 @@ async def check_business_pro_status(business_id: str, supabase_client) -> bool:
         # Get the business record to find the owner
         biz_result = supabase_client.table('businesses')\
             .select('owner_id')\
-            .eq('business_id', business_id)\
+            .eq('id', business_id)\
             .single()\
             .execute()
         
@@ -115,7 +115,7 @@ async def get_widget_config(business_id: str, request: Request):
             
             result = supabase.table('businesses')\
                 .select('settings, bot_name, greeting_message, theme_colors')\
-                .eq('business_id', business_id)\
+                .eq('id', business_id)\
                 .single()\
                 .execute()
             
