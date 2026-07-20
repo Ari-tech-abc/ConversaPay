@@ -25,7 +25,9 @@ class PayMeService:
     """
     
     def __init__(self):
-        self.api_url = settings.PAYME_API_URL if settings.is_production else settings.PAYME_SANDBOX_URL
+        # Ensure URL has https:// prefix
+        raw_url = settings.PAYME_API_URL if settings.is_production else settings.PAYME_SANDBOX_URL
+        self.api_url = raw_url if raw_url.startswith(('http://', 'https://')) else f"https://{raw_url}"
         self.pay_key = settings.PAYME_PAY_KEY
         self.seller_key = settings.PAYME_SELLER_KEY
         logger.info(f"PayMe Service initialized with API URL: {self.api_url}")
