@@ -45,7 +45,7 @@ async def check_business_pro_status(business_id: str, supabase_client) -> bool:
         
         # Check the user's profile for pro/premium status
         profile_result = service_role_client.table('profiles')\
-            .select('is_pro, subscription_expires_at, subscription_tier')\
+            .select('is_pro, subscription_expires_at')\
             .eq('user_id', user_id)\
             .single()\
             .execute()
@@ -55,11 +55,10 @@ async def check_business_pro_status(business_id: str, supabase_client) -> bool:
             return False
         
         is_pro = profile_result.data.get('is_pro', False)
-        subscription_tier = profile_result.data.get('subscription_tier', 'free')
         expires_at = profile_result.data.get('subscription_expires_at')
         
         # Check if user has an active paid subscription (Pro or Premium)
-        has_paid_tier = is_pro or subscription_tier in ('pro', 'premium')
+        has_paid_tier = is_pro
         
         if not has_paid_tier:
             logger.info(f"User {user_id} is not on a paid tier")
