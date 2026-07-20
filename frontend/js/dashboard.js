@@ -481,79 +481,94 @@ function showDashboardState() {
     });
 }
 
+// Generic reusable lock overlay — used for any card that should be blurred/locked for free users
+function applyLockOverlay(cardElementId, overlayId) {
+    const card = document.getElementById(cardElementId);
+    if (!card) return;
+
+    // Remove any existing overlay first (avoid duplicates on repeated calls)
+    const existing = document.getElementById(overlayId);
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = overlayId;
+    overlay.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(5px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        border-radius: 12px;
+        padding: 30px;
+        text-align: center;
+        pointer-events: auto;
+    `;
+
+    overlay.innerHTML = `
+        <div style="font-size: 4rem; margin-bottom: 20px;">🔒</div>
+        <h3 style="font-size: 1.3rem; font-weight: 700; color: white; margin-bottom: 12px; direction: rtl;">
+            נעול - רכוש PRO או PREMIUM
+        </h3>
+        <p style="color: rgba(255,255,255,0.9); margin-bottom: 24px; font-size: 1rem; direction: rtl; max-width: 400px;">
+            ותקבל את האופציות האלו
+        </p>
+        <button onclick="handleUpgradeToPlan('pro')" class="btn" style="
+            background: linear-gradient(135deg, #00D9FF 0%, #3B82F6 100%);
+            color: white;
+            padding: 14px 28px;
+            font-weight: 700;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            direction: rtl;
+        ">
+            💳 שדרג עכשיו
+        </button>
+    `;
+
+    // Ensure the card can host an absolutely-positioned overlay, and that
+    // the card itself (not just its body) is fully covered edge-to-edge.
+    const priorPosition = getComputedStyle(card).position;
+    if (priorPosition === 'static') {
+        card.style.position = 'relative';
+    }
+    card.style.overflow = 'hidden';
+    card.appendChild(overlay);
+}
+
+function removeLockOverlay(overlayId) {
+    const existing = document.getElementById(overlayId);
+    if (existing) existing.remove();
+}
+
 async function checkProStatusForIntegrations() {
     try {
         const isPro = window.userSubscriptionStatus?.isPro || false;
-        const integrationsSection = document.getElementById('integrationsCard');
-        if (!integrationsSection) return;
-        
-        // Remove any existing overlay
-        const existingOverlay = document.getElementById('integrationLockOverlay');
-        if (existingOverlay) {
-            existingOverlay.remove();
-        }
-        
-        if (!isPro) {
-            // Free user: Add lock overlay over integration sections
-            // The integrations card keeps its original content (embed code + WordPress plugin)
-            // We just add a blurred overlay on top to lock access
-            
-            setTimeout(() => {
-                // Create overlay element
-                const overlay = document.createElement('div');
-                overlay.id = 'integrationLockOverlay';
-                overlay.style.cssText = `
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0, 0, 0, 0.75);
-                    backdrop-filter: blur(5px);
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 100;
-                    border-radius: 12px;
-                    padding: 30px;
-                    text-align: center;
-                    pointer-events: auto;
-                `;
-                
-                overlay.innerHTML = `
-                    <div style="font-size: 4rem; margin-bottom: 20px;">🔒</div>
-                    <h3 style="font-size: 1.3rem; font-weight: 700; color: white; margin-bottom: 12px; direction: rtl;">
-                        נעול - רכוש PRO או PREMIUM
-                    </h3>
-                    <p style="color: rgba(255,255,255,0.9); margin-bottom: 24px; font-size: 1rem; direction: rtl; max-width: 400px;">
-                        ותקבל את האופציות האלו
-                    </p>
-                    <button onclick="handleUpgradeToPlan('pro')" class="btn" style="
-                        background: linear-gradient(135deg, #00D9FF 0%, #3B82F6 100%);
-                        color: white;
-                        padding: 14px 28px;
-                        font-weight: 700;
-                        border-radius: 8px;
-                        border: none;
-                        cursor: pointer;
-                        font-size: 1rem;
-                        direction: rtl;
-                    ">
-                        💳 שדרג עכשיו
-                    </button>
-                `;
-                
-                // Make sure the integrations card body has position relative for absolute positioning
-                const cardBody = integrationsSection.querySelector('.card-body');
-                if (cardBody) {
-                    cardBody.style.position = 'relative';
-                    cardBody.appendChild(overlay);
-                }
-            }, 200);
-        }
+
+        // Cards that should be locked for free-tier users, exactly like the
+        // WordPress / HTML embed integration card.
+        const lockedCards = [
+            { cardId: 'integrationsCard', overlayId: 'integrationLockOverlay' },
+            { cardId: 'ordersCard', overlayId: 'ordersLockOverlay' },
+            { cardId: 'topProductsCard', overlayId: 'topProductsLockOverlay' }
+        ];
+
+        lockedCards.forEach(({ cardId, overlayId }) => {
+            removeLockOverlay(overlayId);
+            if (!isPro) {
+                applyLockOverlay(cardId, overlayId);
+            }
+        });
     } catch (error) {
-        console.error('Error checking Pro status for integrations:', error);
+        console.error('Error checking Pro status for locked cards:', error);
     }
 }
 

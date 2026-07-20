@@ -315,6 +315,10 @@
                 left: 0;
                 width: 380px;
                 height: 550px;
+                /* Never let the window be bigger than the available viewport,
+                   regardless of screen size — not just on the 480px mobile breakpoint */
+                max-width: calc(100vw - 40px);
+                max-height: calc(100vh - 110px);
                 background: #0B0F19;
                 border-radius: 20px;
                 box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
