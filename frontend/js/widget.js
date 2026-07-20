@@ -103,11 +103,12 @@
             document.addEventListener('conversapay:business-ready', waitForBusinessId);
             setTimeout(checkWindowBusinessId, 100);
             
-            // Timeout after 5 seconds
+            // Timeout after 5 seconds — hide loading overlay so the page isn't stuck forever
             setTimeout(() => {
                 if (!CONFIG.BUSINESS_ID) {
                     console.error('ConversaPay Widget: Timeout waiting for business_id');
                 }
+                hideLoadingOverlay();
             }, 5000);
             
             return;
@@ -134,9 +135,11 @@
                 // If 403 (domain not authorized), silently exit for non-Pro users
                 if (response.status === 403) {
                     console.warn('ConversaPay Widget: Domain not authorized. Upgrade to Pro to enable widget on external sites.');
-                    return;
+                } else {
+                    console.error('ConversaPay Widget: Failed to load config');
                 }
-                console.error('ConversaPay Widget: Failed to load config');
+                // Hide loading overlay so the page isn't stuck forever
+                hideLoadingOverlay();
                 return;
             }
 
@@ -154,9 +157,26 @@
 
             // Inject widget
             injectWidget(config);
+            
+            // Hide loading overlay after widget is successfully injected
+            hideLoadingOverlay();
 
         } catch (error) {
             console.error('ConversaPay Widget: Error loading config', error);
+            // Hide loading overlay even on error so the page isn't stuck
+            hideLoadingOverlay();
+        }
+    }
+
+    /**
+     * Safely hide the loading overlay if it exists on the page.
+     * This is called from multiple paths (success, error, 403, timeout)
+     * to ensure the user is never left staring at a loading spinner.
+     */
+    function hideLoadingOverlay() {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+            overlay.classList.add('d-none');
         }
     }
 
