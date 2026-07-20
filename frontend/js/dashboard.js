@@ -318,6 +318,18 @@ function showDashboardState() {
     document.getElementById('businessDisplayName').textContent = `🏢 ${currentBusiness.business_name}`;
     document.getElementById('businessDisplaySlug').textContent = `מזהה: ${currentBusiness.business_id}`;
     
+    // Set window.currentBusinessId for widget.js fallback
+    window.currentBusinessId = currentBusiness.business_id;
+    
+    // Dispatch custom event for widget.js to listen for
+    const businessReadyEvent = new CustomEvent('conversapay:business-ready', {
+        detail: {
+            business_id: currentBusiness.business_id,
+            business_name: currentBusiness.business_name
+        }
+    });
+    document.dispatchEvent(businessReadyEvent);
+    
     // Check for session_id from successful payment redirect
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get('session_id');

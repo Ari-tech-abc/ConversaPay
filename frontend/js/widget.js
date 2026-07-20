@@ -57,8 +57,43 @@
             CONFIG.BUSINESS_ID = currentScript.getAttribute('data-business-id');
         }
         
+        // If no business_id yet, wait for dashboard.js to provide it
         if (!CONFIG.BUSINESS_ID) {
-            console.error('ConversaPay Widget: Missing business_id');
+            console.log('ConversaPay Widget: Waiting for business_id from dashboard...');
+            
+            // Listen for custom event from dashboard.js
+            const waitForBusinessId = (event) => {
+                if (event.detail && event.detail.business_id) {
+                    CONFIG.BUSINESS_ID = event.detail.business_id;
+                    console.log('ConversaPay Widget: Business ID received:', CONFIG.BUSINESS_ID);
+                    // Load widget configuration (includes pro check)
+                    loadWidgetConfig();
+                }
+            };
+            
+            // Also check window.currentBusinessId as fallback
+            const checkWindowBusinessId = () => {
+                if (window.currentBusinessId) {
+                    CONFIG.BUSINESS_ID = window.currentBusinessId;
+                    console.log('ConversaPay Widget: Business ID from window:', CONFIG.BUSINESS_ID);
+                    loadWidgetConfig();
+                } else {
+                    // Retry after 100ms
+                    setTimeout(checkWindowBusinessId, 100);
+                }
+            };
+            
+            // Try both methods
+            document.addEventListener('conversapay:business-ready', waitForBusinessId);
+            setTimeout(checkWindowBusinessId, 100);
+            
+            // Timeout after 5 seconds
+            setTimeout(() => {
+                if (!CONFIG.BUSINESS_ID) {
+                    console.error('ConversaPay Widget: Timeout waiting for business_id');
+                }
+            }, 5000);
+            
             return;
         }
 
