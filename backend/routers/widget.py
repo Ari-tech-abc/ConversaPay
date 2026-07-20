@@ -117,6 +117,9 @@ async def get_widget_config(business_id: str, request: Request):
         
         logger.info(f"Widget config request for business {business_id} from domain: {requesting_domain}")
         
+        # Handle the system demo bot slug "conversapay" — resolve by slug column instead of UUID
+        is_demo_bot = (business_id == 'conversapay')
+        
         # Database lookup for business and allowed_domains
         from backend.config import settings as app_settings
         from supabase import create_client
@@ -127,12 +130,20 @@ async def get_widget_config(business_id: str, request: Request):
                 app_settings.SUPABASE_ANON_KEY
             )
             
-            # Query by UUID primary key, not by business_id slug
-            result = supabase.table('businesses')\
-                .select('settings, bot_name, greeting_message, theme_colors')\
-                .eq('id', business_id)\
-                .single()\
-                .execute()
+            if is_demo_bot:
+                # Demo bot: look up by business_id (slug) column instead of id (UUID)
+                result = supabase.table('businesses')\
+                    .select('id, settings, bot_name, greeting_message, theme_colors')\
+                    .eq('business_id', business_id)\
+                    .single()\
+                    .execute()
+            else:
+                # All other businesses: query by UUID primary key
+                result = supabase.table('businesses')\
+                    .select('settings, bot_name, greeting_message, theme_colors')\
+                    .eq('id', business_id)\
+                    .single()\
+                    .execute()
             
             if not result.data:
                 raise HTTPException(status_code=404, detail="Business not found")
