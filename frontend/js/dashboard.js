@@ -24,7 +24,8 @@ function initializeEventListeners() {
     document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);
     
     // Pro upgrade
-    document.getElementById('upgradeToProBtn')?.addEventListener('click', handleUpgradeToPro);
+    document.getElementById('upgradeToProBtn')?.addEventListener('click', () => handleUpgradeToPlan('pro'));
+    document.getElementById('upgradeToPremiumBtn')?.addEventListener('click', () => handleUpgradeToPlan('premium'));
     
     // Business creation
     document.getElementById('showCreateFromEmpty')?.addEventListener('click', showCreateBusinessForm);
@@ -128,13 +129,18 @@ function showUpgradeState() {
     document.getElementById('createBusinessFormCard').classList.add('d-none');
     document.getElementById('dashboardContent').classList.add('d-none');
     document.getElementById('proPlanBanner').classList.add('d-none');
+    document.getElementById('integrationsCard').classList.add('d-none');
     
     // Hide loading
     hideLoading();
 }
 
-async function handleUpgradeToPro() {
-    const btn = document.getElementById('upgradeToProBtn');
+async function handleUpgradeToPlan(planType) {
+    const btnId = planType === 'pro' ? 'upgradeToProBtn' : 'upgradeToPremiumBtn';
+    const btn = document.getElementById(btnId);
+    const planName = planType === 'pro' ? 'Pro' : 'Premium';
+    const planPrice = planType === 'pro' ? '200 ₪' : '350 ₪';
+    
     btn.disabled = true;
     btn.textContent = 'מפנה לתשלום...';
     
@@ -149,19 +155,20 @@ async function handleUpgradeToPro() {
             body: JSON.stringify({
                 user_id: currentUser.user_id || currentUser.id,
                 email: currentUser.email,
-                full_name: currentUser.full_name || ''
+                full_name: currentUser.full_name || '',
+                plan_type: planType
             })
         });
         
-if (response.ok) {
-             const data = await response.json();
-             // Redirect to PayMe hosted payment page
-             if (data.url) {
-                 window.location.href = data.url;
-             } else {
-                 throw new Error('No URL returned');
-             }
-         } else {
+        if (response.ok) {
+            const data = await response.json();
+            // Redirect to PayMe hosted payment page
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                throw new Error('No URL returned');
+            }
+        } else {
             const data = await response.json();
             alert('שגיאה: ' + (data.detail || 'נסה שוב'));
         }
@@ -170,7 +177,7 @@ if (response.ok) {
         alert('שגיאה בתקשורת עם השרת');
     } finally {
         btn.disabled = false;
-        btn.textContent = '💳 שדרג ל-Pro והפעל את הבוט';
+        btn.textContent = `💳 שדרג ל-${planName} - ${planPrice}`;
     }
 }
 

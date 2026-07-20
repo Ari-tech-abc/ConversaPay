@@ -43,8 +43,8 @@ class Settings(BaseSettings):
     PAYME_SELLER_KEY: str
     PAYME_SELLER_ID: str  # Production seller ID for PayMe
     PAYME_BUSINESS_ID: str  # Business ID for PayMe
-    PAYME_API_URL: str = "https://ng.payme.co.il/api"  # Production API
-    PAYME_SANDBOX_URL: str = "https://sandbox.payme.co.il/api"  # Sandbox API
+    PAYME_API_URL: str = "https://live.payme.io/api"  # Production API
+    PAYME_SANDBOX_URL: str = "https://sandbox.payme.io/api"  # Sandbox API
     
     # Email (Resend)
     RESEND_API_KEY: str

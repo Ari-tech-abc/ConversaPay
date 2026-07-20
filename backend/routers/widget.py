@@ -7,6 +7,8 @@ from fastapi.responses import JSONResponse
 import logging
 from datetime import datetime
 
+from supabase import create_client
+
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["widget"])
 
