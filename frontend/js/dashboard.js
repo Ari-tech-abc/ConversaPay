@@ -10,6 +10,7 @@
 const API_BASE_URL = window.location.origin + '/api/v1';
 let currentUser = null;
 let currentBusiness = null; // { business_id, business_name, ... }
+let isDashboardInitialized = false; // Global lock to prevent duplicate initialization
 
 // ============================================
 // Initialization
@@ -305,6 +306,13 @@ async function handleCreateBusiness(event) {
 }
 
 async function initDashboard() {
+    // Guard clause: Prevent duplicate initialization
+    if (isDashboardInitialized) {
+        console.log("Dashboard initialization already in progress or completed. Skipping duplicate call.");
+        return;
+    }
+    isDashboardInitialized = true;
+    
     // STEP 1: Force dashboard container visible FIRST (before any async operations)
     const dashboardContent = document.getElementById('dashboardContent');
     if (dashboardContent) {
