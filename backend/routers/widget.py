@@ -19,7 +19,7 @@ async def check_business_pro_status(business_id: str, supabase_client) -> bool:
     try:
         # Get the business record to find the owner
         biz_result = supabase_client.table('businesses')\
-            .select('user_id')\
+            .select('owner_id')\
             .eq('business_id', business_id)\
             .single()\
             .execute()
@@ -27,7 +27,7 @@ async def check_business_pro_status(business_id: str, supabase_client) -> bool:
         if not biz_result.data:
             return False
         
-        user_id = biz_result.data.get('user_id')
+        user_id = biz_result.data.get('owner_id')
         if not user_id:
             return False
         

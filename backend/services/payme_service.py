@@ -25,11 +25,9 @@ class PayMeService:
     """
     
     def __init__(self):
-        # Ensure URL has https:// prefix
-        raw_url = settings.PAYME_API_URL if settings.is_production else settings.PAYME_SANDBOX_URL
-        self.api_url = raw_url if raw_url.startswith(('http://', 'https://')) else f"https://{raw_url}"
-        self.pay_key = settings.PAYME_PAY_KEY
-        self.seller_key = settings.PAYME_SELLER_KEY
+        # Use verified live PayMe endpoint
+        self.api_url = "https://live.payme.io/api"
+        self.seller_payme_id = settings.PAYME_SELLER_ID
         logger.info(f"PayMe Service initialized with API URL: {self.api_url}")
     
     async def create_hosted_setup_session(
@@ -55,31 +53,22 @@ class PayMeService:
         if plan_type not in PLAN_PRICES:
             raise ValueError(f"Invalid plan type: {plan_type}. Must be 'pro' or 'premium'")
         
-        # Get price in Agora (NIS * 100)
+        # Get price in agorot (NIS * 100)
         amount_nis = PLAN_PRICES[plan_type]
-        amount_agora = amount_nis * 100  # Convert to Agora (200 ₪ = 20000 Agora)
+        amount_agorot = amount_nis * 100
         
-        # Build payload for PayMe API
+        # Build payload for PayMe API according to live.payme.io specs
         payload = {
-            "pay_key": self.pay_key,
-            "seller_key": self.seller_key,
-            "amount": amount_agora,
+            "seller_payme_id": self.seller_payme_id,
+            "sale_price": amount_agorot,
             "currency": "ILS",
-            "description": f"ConversaPay {plan_type.capitalize()} Subscription - Monthly",
-            "extra1": user_id,  # Store user_id for tenant identification
-            "extra2": plan_type,  # Store plan type
-            "capture": True,  # Enable tokenization for recurring charges
-            "generate_token": 1,  # Request card token for future billing
+            "product_name": "ConversaPay Pro Plan",
+            "language": "he",
+            "sale_return_url": "https://www.conversapay.org/dashboard.html?payment=success",
         }
         
-        # Add optional redirect URLs
-        if success_url:
-            payload["success_url"] = success_url
-        if cancel_url:
-            payload["cancel_url"] = cancel_url
-        
         try:
-            # Construct the full URL and log it for debugging
+            # Construct the full URL
             full_url = f"{self.api_url}/generate-sale"
             logger.info(f"Making PayMe API request to: {full_url}")
             
@@ -97,7 +86,7 @@ class PayMeService:
                 
                 return {
                     "sale_url": data.get("sale_url"),
-                    "sale_id": data.get("sale_id"),
+                    "payme_sale_id": data.get("payme_sale_id"),
                     "amount_nis": amount_nis,
                     "plan_type": plan_type,
                 }
