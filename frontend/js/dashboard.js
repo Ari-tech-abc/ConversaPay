@@ -229,9 +229,21 @@ async function loadUserBusinesses() {
                 currentBusiness = businesses[0];
                 showDashboardState();
             }
+        } else {
+            // Request failed (401/404/500/etc) - don't leave the user stuck on the loading screen
+            console.error('Failed to load businesses. Status:', response.status);
+            let detail = '';
+            try { detail = (await response.json()).detail || ''; } catch (e) {}
+            hideLoading();
+            showNoBusinessState();
+            alert('שגיאה בטעינת נתוני העסק' + (detail ? (': ' + detail) : ' (קוד שגיאה: ' + response.status + ')') + '\n\nרענן את הדף או פנה לתמיכה אם הבעיה נמשכת.');
         }
     } catch (error) {
+        // Network error / server unreachable - same rule: never leave the loading overlay stuck
         console.error('Error loading businesses:', error);
+        hideLoading();
+        showNoBusinessState();
+        alert('שגיאה בתקשורת עם השרת. בדוק את החיבור לאינטרנט או נסה שוב מאוחר יותר.');
     }
 }
 
