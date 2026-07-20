@@ -13,14 +13,20 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["widget"])
 
 
-async def check_business_pro_status(business_id: str, supabase_client) -> bool:
+async def get_business_plan_info(business_id: str, supabase_client) -> dict:
     """
-    Check if the business owner has an active Pro or Premium subscription.
-    This is used to enforce widget rendering restrictions for free users.
+    Get the business owner's subscription plan info.
+    Returns dict with plan_type, is_active, and expires_at.
+    
+    3-Tier Model:
+    - free:  Dashboard access + AI agent ONLY on conversapay.org
+    - pro:   Full features + widget on 1 custom external domain
+    - premium: Full features + widget on multiple custom external domains
+    
     Uses service role client to bypass RLS for the profiles table.
     """
     try:
-        # Get the business record to find the owner - query by UUID primary key
+        # Get the business record to find the owner
         biz_result = supabase_client.table('businesses')\
             .select('owner_id')\
             .eq('id', business_id)\
@@ -28,13 +34,13 @@ async def check_business_pro_status(business_id: str, supabase_client) -> bool:
             .execute()
         
         if not biz_result.data:
-            logger.warning(f"Business not found for pro status check: {business_id}")
-            return False
+            logger.warning(f"Business not found for plan check: {business_id}")
+            return {'plan_type': 'free', 'is_active': False}
         
         user_id = biz_result.data.get('owner_id')
         if not user_id:
             logger.warning(f"Business {business_id} has no owner_id")
-            return False
+            return {'plan_type': 'free', 'is_active': False}
         
         # Use service role client to bypass RLS on profiles table
         from backend.config import settings as app_settings
@@ -43,44 +49,42 @@ async def check_business_pro_status(business_id: str, supabase_client) -> bool:
             app_settings.SUPABASE_SERVICE_ROLE_KEY
         )
         
-        # Check the user's profile for pro/premium status
+        # Check the user's profile for subscription plan
         profile_result = service_role_client.table('profiles')\
-            .select('is_pro, subscription_expires_at')\
+            .select('plan_type, subscription_expires_at')\
             .eq('user_id', user_id)\
             .single()\
             .execute()
         
         if not profile_result.data:
             logger.warning(f"No profile found for user {user_id}")
-            return False
+            return {'plan_type': 'free', 'is_active': False}
         
-        is_pro = profile_result.data.get('is_pro', False)
+        plan_type = profile_result.data.get('plan_type', 'free')
         expires_at = profile_result.data.get('subscription_expires_at')
         
-        # Check if user has an active paid subscription (Pro or Premium)
-        has_paid_tier = is_pro
+        # Free tier is always active (no expiry)
+        if plan_type == 'free':
+            return {'plan_type': 'free', 'is_active': True}
         
-        if not has_paid_tier:
-            logger.info(f"User {user_id} is not on a paid tier")
-            return False
-        
-        # Check if subscription has expired
+        # Check if paid subscription has expired
+        is_active = True
         if expires_at:
             try:
                 expires_dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
                 if expires_dt < datetime.utcnow():
                     logger.warning(f"Paid subscription expired for user {user_id} at {expires_at}")
-                    return False
+                    is_active = False
             except (ValueError, AttributeError) as e:
                 logger.warning(f"Error parsing subscription expiry for user {user_id}: {e}")
                 pass
         
-        logger.info(f"User {user_id} has active paid subscription (business {business_id})")
-        return True
+        logger.info(f"User {user_id} plan: {plan_type}, active: {is_active} (business {business_id})")
+        return {'plan_type': plan_type, 'is_active': is_active}
         
     except Exception as e:
-        logger.error(f"Error checking Pro status for business {business_id}: {str(e)}", exc_info=True)
-        return False
+        logger.error(f"Error checking plan for business {business_id}: {str(e)}", exc_info=True)
+        return {'plan_type': 'free', 'is_active': False}
 
 
 @router.get("/config/{business_id}")
@@ -152,13 +156,14 @@ async def get_widget_config(business_id: str, request: Request):
                 detail="Failed to load widget configuration"
             )
         
-        # Pro status enforcement:
-        # 1. Check if the business owner has an active Pro or Premium subscription
-        is_pro = await check_business_pro_status(business_id, supabase)
+        # Determine plan info for the business owner
+        plan_info = await get_business_plan_info(business_id, supabase)
+        plan_type = plan_info.get('plan_type', 'free')
+        is_plan_active = plan_info.get('is_active', False)
         
-        # Determine if this is a development/internal domain (always allowed)
+        # Determine if this is the conversapay.org internal domain (always allowed for all tiers)
         own_domain = app_settings.BASE_URL.split('://')[-1].split('/')[0] if '://' in app_settings.BASE_URL else app_settings.BASE_URL
-        is_development = (
+        is_conversapay_domain = (
             'localhost' in requesting_domain or
             '127.0.0.1' in requesting_domain or
             'conversapay' in requesting_domain or
@@ -166,41 +171,56 @@ async def get_widget_config(business_id: str, request: Request):
             requesting_domain.endswith('conversapay.org')
         )
         
-        logger.info(f"Access check - domain: {requesting_domain}, is_development: {is_development}, is_pro: {is_pro}, allowed_domains: {allowed_domains}")
+        logger.info(f"Widget config - domain: {requesting_domain}, is_own_domain: {is_conversapay_domain}, plan: {plan_type}, plan_active: {is_plan_active}, allowed_domains: {allowed_domains}")
         
-        # 2. Access control logic:
-        #    - Development/internal domains are always allowed (localhost, conversapay.org, etc.)
-        #    - Pro users: allowed on any domain (with or without allowed_domains configured)
-        #    - Non-Pro users: require allowed_domains to be configured and domain must be in list
-        if is_development:
-            # Always allow internal/development domains
-            logger.info(f"Allowing access for development domain: {requesting_domain}")
+        # 3-Tier Access Control:
+        # Tier 1 - conversapay.org (internal): ALL tiers allowed (Free, Pro, Premium)
+        # Tier 2 - External domain, Free tier: BLOCKED
+        # Tier 3 - External domain, Pro tier: ALLOWED if no allowed_domains configured (uses default 1), or domain is in list
+        # Tier 4 - External domain, Premium tier: ALLOWED if domain is in allowed_domains list (supports multiple)
+        if is_conversapay_domain:
+            # conversapay.org is always allowed for all tiers (Free users get AI agent here)
+            logger.info(f"Allowing widget access on conversapay.org domain for plan: {plan_type}")
             pass
-        elif not is_pro:
-            # Non-Pro user on external domain
-            if not allowed_domains:
-                logger.warning(f"No allowed_domains configured for non-Pro business {business_id}")
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Widget not configured for this domain. Upgrade to Pro to enable widget on external sites."
-                )
-            elif requesting_domain not in allowed_domains:
-                logger.warning(f"BLOCKED: Non-Pro widget access attempt from {requesting_domain} for business {business_id}")
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Domain not authorized. Upgrade to Pro to embed this widget on external sites."
-                )
-        else:
-            # Pro user on external domain - always allowed, even without allowed_domains
-            # If allowed_domains is configured, still check it for Pro users
+            
+        elif plan_type == 'free':
+            # Free tier on external domain - blocked
+            logger.warning(f"BLOCKED: Free tier widget access attempt from external domain {requesting_domain} for business {business_id}")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Widget available only on conversapay.org for Free plan. Upgrade to Pro to enable on external sites."
+            )
+            
+        elif not is_plan_active:
+            # Paid subscription expired
+            logger.warning(f"BLOCKED: Expired {plan_type} subscription for business {business_id} from {requesting_domain}")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Your {plan_type.capitalize()} subscription has expired. Renew to continue using the widget."
+            )
+            
+        elif plan_type == 'pro':
+            # Pro tier on external domain
             if allowed_domains and requesting_domain not in allowed_domains:
-                logger.warning(f"Unauthorized widget access attempt from {requesting_domain} for Pro business {business_id}")
+                logger.warning(f"BLOCKED: Pro widget access from unauthorized domain {requesting_domain} for business {business_id}")
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Domain not authorized to embed this widget"
+                    detail="Domain not authorized for your Pro plan. Configure your allowed domain in settings."
+                )
+            # If no allowed_domains configured, Pro gets one free domain slot
+            if not allowed_domains:
+                logger.info(f"Pro plan: No allowed_domains configured, defaulting to allow {requesting_domain}")
+            
+        elif plan_type == 'premium':
+            # Premium tier on external domain - must be in allowed_domains list
+            if not allowed_domains or requesting_domain not in allowed_domains:
+                logger.warning(f"BLOCKED: Premium widget access from unauthorized domain {requesting_domain} for business {business_id}")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Domain not authorized for your Premium plan. Configure your allowed domains in settings."
                 )
         
-        # Build response with actual data from database
+        # Build response with plan info and actual data from database
         config = {
             "business_id": business_id,
             "bot_name": bot_name,
@@ -212,9 +232,10 @@ async def get_widget_config(business_id: str, request: Request):
                 "background": "#0B0F19"
             },
             "features": {
-                "checkout": True,
+                "checkout": plan_type in ('pro', 'premium'),
                 "product_catalog": True,
-                "is_pro": is_pro
+                "plan_type": plan_type,
+                "is_pro": plan_type in ('pro', 'premium')
             }
         }
         
