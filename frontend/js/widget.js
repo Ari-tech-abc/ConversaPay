@@ -135,15 +135,25 @@
                 // If 403 (domain not authorized), silently exit for non-Pro users
                 if (response.status === 403) {
                     console.warn('ConversaPay Widget: Domain not authorized. Upgrade to Pro to enable widget on external sites.');
+                    hideLoadingOverlay();
+                    injectErrorMessage('הדומיין לא מורשה. שדרג ל-Pro כדי להפעיל את הוידג\'ט באתרים חיצוניים.');
                 } else {
                     console.error('ConversaPay Widget: Failed to load config');
+                    hideLoadingOverlay();
+                    injectErrorMessage('שגיאה בטעינת תצורת הוידג\'ט. נסה שוב מאוחר יותר.');
                 }
-                // Hide loading overlay so the page isn't stuck forever
-                hideLoadingOverlay();
                 return;
             }
 
             const config = await response.json();
+            
+            // Guard against empty/malformed config
+            if (!config || typeof config !== 'object') {
+                console.error('ConversaPay Widget: Received empty or malformed config');
+                hideLoadingOverlay();
+                injectErrorMessage('תצורת הוידג\'ט ריקה. צור קשר עם התמיכה.');
+                return;
+            }
             
             // Merge custom colors if provided
             if (config.theme_colors) {
@@ -165,6 +175,7 @@
             console.error('ConversaPay Widget: Error loading config', error);
             // Hide loading overlay even on error so the page isn't stuck
             hideLoadingOverlay();
+            injectErrorMessage('שגיאת רשת בטעינת תצורת הוידג\'ט. בדוק את החיבור לאינטרנט ונסה שוב.');
         }
     }
 
@@ -178,6 +189,23 @@
         if (overlay) {
             overlay.classList.add('d-none');
         }
+    }
+
+    /**
+     * Inject a visible error message into the page so it's never left blank.
+     * Creates a styled container with the error text and appends it to body.
+     * @param {string} message - The error message to display (Hebrew supported).
+     */
+    function injectErrorMessage(message) {
+        // Prevent duplicate error containers
+        if (document.getElementById('conversapay-widget-error')) {
+            return;
+        }
+        const errorDiv = document.createElement('div');
+        errorDiv.id = 'conversapay-widget-error';
+        errorDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;padding:16px 20px;background:#EF4444;color:white;font-family:sans-serif;font-size:14px;text-align:center;direction:rtl;';
+        errorDiv.textContent = 'ConversaPay Widget: ' + message;
+        document.body.appendChild(errorDiv);
     }
 
     // ============================================
