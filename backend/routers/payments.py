@@ -60,11 +60,12 @@ async def create_subscription_checkout_session(
         cancel_url = f"{settings.FRONTEND_URL}/pay?status=canceled"
         
         # Step 1: Call PayMe's generate-sale endpoint
-        # Pro tier price is exactly 200 NIS (no decimals)
+        # Use dynamic plan_type from request (pro=200₪, premium=350₪)
+        plan_type = request.plan_type or "pro"
         try:
             payme_result = await payme_service.create_hosted_setup_session(
                 user_id=request.user_id,
-                plan_type="pro",
+                plan_type=plan_type,
                 success_url=success_url,
                 cancel_url=cancel_url
             )
@@ -97,12 +98,14 @@ async def create_subscription_checkout_session(
         
         # Step 2: Prepare transaction details for database sync
         # Log the transaction details to be ready for webhook confirmation
+        from backend.services.payme_service import PLAN_PRICES
+        plan_price = PLAN_PRICES.get(plan_type, 200)
         transaction_data = {
             "user_id": request.user_id,
             "payme_sale_id": payme_sale_id,
-            "amount": 200,  # 200 NIS for Pro tier
+            "amount": plan_price,
             "currency": "ILS",
-            "plan_type": "pro",
+            "plan_type": plan_type,
             "status": "pending",
             "created_at": datetime.utcnow().isoformat()
         }

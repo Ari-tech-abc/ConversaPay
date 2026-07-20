@@ -105,29 +105,39 @@ async function checkSubscriptionStatus() {
             const profile = await response.json();
             const isPro = profile.is_pro || false;
             
-            if (!isPro) {
-                // State 0: Non-Pro user - show upgrade state
-                showUpgradeState();
-            } else {
-                // Pro user - load businesses
-                loadUserBusinesses();
-            }
+            // Always load businesses for all users (free, pro, premium)
+            await loadUserBusinesses();
+            
+            // Store subscription status for later use
+            window.userSubscriptionStatus = {
+                isPro: isPro,
+                planType: profile.plan_type || null
+            };
         } else {
-            // If profile check fails, assume not Pro
-            showUpgradeState();
+            // If profile check fails, still load dashboard as free user
+            await loadUserBusinesses();
+            window.userSubscriptionStatus = {
+                isPro: false,
+                planType: null
+            };
         }
     } catch (error) {
         console.error('Error checking subscription:', error);
-        showUpgradeState();
+        // Load dashboard as free user on error
+        await loadUserBusinesses();
+        window.userSubscriptionStatus = {
+            isPro: false,
+            planType: null
+        };
     }
 }
 
 function showUpgradeState() {
-    // Show billing section, hide integrations
+    // Show billing section with 2-tier pricing, hide integrations
     document.getElementById('billing-upgrade-section').style.display = 'block';
     document.getElementById('integrations-setup-section').style.display = 'none';
     
-    // Hide all other states
+    // Hide dashboard content
     document.getElementById('upgradeState').classList.remove('d-none');
     document.getElementById('noBusinessState').classList.add('d-none');
     document.getElementById('createBusinessFormCard').classList.add('d-none');
@@ -329,40 +339,57 @@ function showDashboardState() {
 
 async function checkProStatusForIntegrations() {
     try {
-        const token = ConversaPayAuth.getToken();
-        const response = await fetch(`${API_BASE_URL}/payments/profile`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+        const isPro = window.userSubscriptionStatus?.isPro || false;
         
-        if (response.ok) {
-            const profile = await response.json();
-            const isPro = profile.is_pro || false;
-            
-            const integrationsSection = document.getElementById('integrationsCard');
-            if (!integrationsSection) return;
-            
-            if (!isPro) {
-                // Non-Pro: Replace integrations with upgrade prompt
-                integrationsSection.innerHTML = `
-                    <div class="card-header">
-                        <h3 class="card-title">🔒 חיבור לאתר שלך</h3>
+        const integrationsSection = document.getElementById('integrationsCard');
+        if (!integrationsSection) return;
+        
+        if (!isPro) {
+            // Free user: Replace integrations with 2-tier upgrade prompt
+            integrationsSection.innerHTML = `
+                <div class="card-header">
+                    <h3 class="card-title">🔒 חיבור לאתר שלך</h3>
+                </div>
+                <div class="card-body" style="text-align:center;padding:40px;">
+                    <div style="font-size:4rem;margin-bottom:20px;">⭐</div>
+                    <h3 style="font-size:1.5rem;font-weight:700;margin-bottom:16px;color:var(--text-primary);">
+                        שדרג את התוכנית שלך
+                    </h3>
+                    <p style="color:var(--text-secondary);margin-bottom:32px;max-width:600px;margin-left:auto;margin-right:auto;">
+                        בחר את המסלול המתאים וקבל גישה להטמעות ולכלי פיתוח מתקדמים
+                    </p>
+                    
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;text-align:right;direction:rtl;">
+                        <!-- Pro Plan -->
+                        <div style="background:rgba(255,255,255,0.05);padding:24px;border-radius:12px;border:2px solid var(--accent-cyan);">
+                            <h4 style="color:var(--accent-cyan);font-size:1.2rem;font-weight:700;margin-bottom:12px;">Pro Plan</h4>
+                            <div style="font-size:2rem;font-weight:800;color:white;margin-bottom:16px;">200 ₪<span style="font-size:0.9rem;opacity:0.7;">/חודש</span></div>
+                            <ul style="list-style:none;padding:0;margin-bottom:20px;text-align:right;">
+                                <li style="padding:6px 0;color:var(--text-secondary);">✓ ווידג'ט צף לכל אתר</li>
+                                <li style="padding:6px 0;color:var(--text-secondary);">✓ תוסף וורדפרס</li>
+                                <li style="padding:6px 0;color:var(--text-secondary);">✓ אנליטיקות בסיסיות</li>
+                            </ul>
+                            <button onclick="handleUpgradeToPlan('pro')" class="btn" style="width:100%;background:linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 100%);color:white;padding:12px 20px;font-weight:700;border-radius:8px;border:none;cursor:pointer;">
+                                💳 שדרג ל-Pro
+                            </button>
+                        </div>
+                        
+                        <!-- Premium Plan -->
+                        <div style="background:rgba(255,255,255,0.05);padding:24px;border-radius:12px;border:2px solid var(--accent-purple);">
+                            <h4 style="color:var(--accent-purple);font-size:1.2rem;font-weight:700;margin-bottom:12px;">Premium Plan</h4>
+                            <div style="font-size:2rem;font-weight:800;color:white;margin-bottom:16px;">350 ₪<span style="font-size:0.9rem;opacity:0.7;">/חודש</span></div>
+                            <ul style="list-style:none;padding:0;margin-bottom:20px;text-align:right;">
+                                <li style="padding:6px 0;color:var(--text-secondary);">✓ כל תכונות Pro</li>
+                                <li style="padding:6px 0;color:var(--text-secondary);">✓ נפח שיחות גבוה יותר</li>
+                                <li style="padding:6px 0;color:var(--text-secondary);">✓ תמיכה מועדפת</li>
+                            </ul>
+                            <button onclick="handleUpgradeToPlan('premium')" class="btn" style="width:100%;background:linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-blue) 100%);color:white;padding:12px 20px;font-weight:700;border-radius:8px;border:none;cursor:pointer;">
+                                💳 שדרג ל-Premium
+                            </button>
+                        </div>
                     </div>
-                    <div class="card-body" style="text-align:center;padding:40px;">
-                        <div style="font-size:4rem;margin-bottom:20px;">🔒</div>
-                        <h3 style="font-size:1.5rem;font-weight:700;margin-bottom:16px;color:var(--text-primary);">
-                            שדרג ל-Pro עכשיו כדי להפעיל את הבוט באתר שלך
-                        </h3>
-                        <p style="color:var(--text-secondary);margin-bottom:24px;max-width:500px;margin-left:auto;margin-right:auto;">
-                            ולקבל גישה מיידית להדרכה הבלעדית למנויי פרו!
-                        </p>
-                        <button id="upgradeFromIntegrationsBtn" class="btn btn-lg" style="background:linear-gradient(135deg, var(--accent-green) 0%, #059669 100%);color:white;padding:16px 40px;font-size:1.1rem;border-radius:12px;box-shadow:0 4px 14px rgba(16,185,129,0.4);">
-                            💳 שדרג ל-Pro עכשיו
-                        </button>
-                    </div>
-                `;
-                
-                document.getElementById('upgradeFromIntegrationsBtn')?.addEventListener('click', handleUpgradeToPro);
-            }
+                </div>
+            `;
         }
     } catch (error) {
         console.error('Error checking Pro status for integrations:', error);
