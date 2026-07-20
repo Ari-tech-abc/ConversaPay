@@ -137,7 +137,7 @@ async def get_business(
     try:
         result = supabase.table("businesses")\
             .select("*")\
-            .eq("business_id", business_id)\
+            .eq("id", business_id)\
             .eq("owner_id", current_user.user_id)\
             .execute()
         
@@ -173,7 +173,7 @@ async def update_business(
         # Verify ownership
         existing = supabase.table("businesses")\
             .select("id")\
-            .eq("business_id", business_id)\
+            .eq("id", business_id)\
             .eq("owner_id", current_user.user_id)\
             .execute()
         
@@ -195,7 +195,7 @@ async def update_business(
         # Update business
         result = supabase.table("businesses")\
             .update(update_data)\
-            .eq("business_id", business_id)\
+            .eq("id", business_id)\
             .execute()
         
         if result.data:
@@ -230,7 +230,7 @@ async def delete_business(
         # Verify ownership
         existing = supabase.table("businesses")\
             .select("id")\
-            .eq("business_id", business_id)\
+            .eq("id", business_id)\
             .eq("owner_id", current_user.user_id)\
             .execute()
         
@@ -243,7 +243,7 @@ async def delete_business(
         # Delete business (cascade will handle related records)
         supabase.table("businesses")\
             .delete()\
-            .eq("business_id", business_id)\
+            .eq("id", business_id)\
             .execute()
         
         logger.info(f"Business deleted: {business_id}")
@@ -271,7 +271,7 @@ async def get_business_stats(
         # Verify ownership
         business = supabase.table("businesses")\
             .select("id")\
-            .eq("business_id", business_id)\
+            .eq("id", business_id)\
             .eq("owner_id", current_user.user_id)\
             .execute()
         

@@ -174,10 +174,10 @@ async def get_business_analytics(
     - Top Selling Products: Products grouped by sales volume
     """
     try:
-        # Verify business ownership
+        # Verify business ownership — business_id is the UUID primary key
         business = supabase.table("businesses")\
             .select("id")\
-            .eq("business_id", business_id)\
+            .eq("id", business_id)\
             .eq("owner_id", current_user.user_id)\
             .execute()
         
@@ -337,10 +337,10 @@ async def get_revenue_analytics(
     Returns daily revenue for the specified period.
     """
     try:
-        # Verify business ownership
+        # Verify business ownership — business_id is the UUID primary key
         business = supabase.table("businesses")\
             .select("id")\
-            .eq("business_id", business_id)\
+            .eq("id", business_id)\
             .eq("owner_id", current_user.user_id)\
             .execute()
         
@@ -415,10 +415,10 @@ async def get_order_analytics(
     Returns daily order counts and status breakdown.
     """
     try:
-        # Verify business ownership
+        # Verify business ownership — business_id is the UUID primary key
         business = supabase.table("businesses")\
             .select("id")\
-            .eq("business_id", business_id)\
+            .eq("id", business_id)\
             .eq("owner_id", current_user.user_id)\
             .execute()
         
