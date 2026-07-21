@@ -37,12 +37,24 @@ async def chat(request: ChatRequest, request_obj: Request):
     check_rate_limit(request_obj)
     
     try:
-        # Get business
-        business_result = supabase.table("businesses")\
-            .select("*")\
-            .eq("business_id", request.business_id)\
-            .eq("is_active", True)\
-            .execute()
+        # Get business — accept both UUID (from widget embed) and slug (legacy)
+        import re
+        is_uuid = bool(re.match(
+            r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+            request.business_id, re.IGNORECASE
+        ))
+        if is_uuid:
+            business_result = supabase.table("businesses")\
+                .select("*")\
+                .eq("id", request.business_id)\
+                .eq("is_active", True)\
+                .execute()
+        else:
+            business_result = supabase.table("businesses")\
+                .select("*")\
+                .eq("business_id", request.business_id)\
+                .eq("is_active", True)\
+                .execute()
         
         if not business_result.data:
             raise HTTPException(
