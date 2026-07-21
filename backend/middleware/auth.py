@@ -10,7 +10,6 @@ SECURITY FIXES:
 from fastapi import Request, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional
-from jose import JWTError, jwt
 from supabase import create_client, Client
 import logging
 from datetime import datetime, timezone
@@ -52,30 +51,17 @@ async def get_current_user(
     """Validate the JWT token via Supabase Auth and return the caller."""
     token = credentials.credentials
     try:
-        # Decode JWT token using Supabase's public key
-        # The token is signed by Supabase, so we verify it
-        payload = jwt.decode(
-            token,
-            settings.SUPABASE_ANON_KEY,
-            algorithms=["HS256"],
-            options={"verify_signature": False}  # Supabase tokens are verified server-side
-        )
-        
-        user_id = payload.get("sub")
-        email = payload.get("email")
-        
-        if not user_id:
-            raise HTTPException(status_code=401, detail="Invalid token: missing user ID")
-        
-        return AuthUser(user_id=user_id, email=email or "")
-    except JWTError as e:
-        logger.warning(f"JWT validation error: {str(e)}")
-        raise HTTPException(status_code=401, detail="Could not validate credentials")
+        # Validate token server-side via Supabase Auth
+        user_response = supabase_service.auth.get_user(token)
+        if not user_response or not user_response.user:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        user = user_response.user
+        return AuthUser(user_id=user.id, email=user.email or "")
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Authentication error: {str(e)}")
-        raise HTTPException(status_code=401, detail="Authentication failed")
+        logger.warning(f"JWT validation error: {str(e)}")
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
 
 
 async def get_current_user_optional(request: Request) -> Optional[AuthUser]:
