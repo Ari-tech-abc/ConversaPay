@@ -244,6 +244,12 @@ async def register():
     """Register page."""
     return FileResponse(_html("register.html"))
 
+@app.get("/demo")
+@app.get("/demo.html")
+async def demo():
+    """Widget demo test page."""
+    return FileResponse(_html("demo.html"))
+
 
 # ============================================
 # SEO & Utility Routes
