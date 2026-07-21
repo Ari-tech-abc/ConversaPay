@@ -23,7 +23,7 @@ class GeminiService:
     def __init__(self):
         """Initialize Gemini client."""
         self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
-        self.model_name = "gemini-1.5-flash"
+        self.model_name = "gemini-2.0-flash"
         
         # Define function declarations for Gemini
         self.search_products_function = types.FunctionDeclaration(
