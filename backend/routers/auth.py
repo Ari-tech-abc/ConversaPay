@@ -234,10 +234,16 @@ async def signup(request: UserRegister):
         
         # Create profile immediately
         profile = create_user_profile(user.id, request.email, request.full_name)
+        if not profile:
+            logger.error(f"Failed to create profile for {request.email}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="server_error")
         
-        # Generate and save verification token
+        # Generate, save token, and send email
         token = generate_verification_token()
-        save_verification_token(user.id, token)
+        token_saved = save_verification_token(user.id, token)
+        if not token_saved:
+            logger.error(f"Failed to save verification token for {request.email}")
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="server_error")
         
         # Send verification email via Resend
         email_sent = email_service.send_verification_email(
@@ -248,8 +254,6 @@ async def signup(request: UserRegister):
         
         if not email_sent:
             logger.error(f"Failed to send verification email to {request.email}")
-        else:
-            logger.info(f"Verification email sent to {request.email}")
         
         logger.info(f"User registered: {user.email}")
         return {"message": "Confirmation email sent. Please check your inbox."}
