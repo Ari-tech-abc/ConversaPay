@@ -214,48 +214,52 @@ function injectWidget() {
     // Parse and inject the script tag
     const parser = new DOMParser();
     const doc = parser.parseFromString(code, 'text/html');
-    const scriptTag = doc.querySelector('script');
+    const scriptTags = doc.querySelectorAll('script');
 
-    if (!scriptTag) {
+    if (!scriptTags.length) {
         status.className = 'inject-status error';
         status.textContent = '❌ לא נמצא תג <script> תקין בקוד';
         return;
     }
 
-    const newScript = document.createElement('script');
-    // Copy all attributes (src, data-business-id, defer, etc.)
-    Array.from(scriptTag.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
-    if (scriptTag.textContent) newScript.textContent = scriptTag.textContent;
+    // Inject all script tags in order
+    const injectNext = (index) => {
+        if (index >= scriptTags.length) {
+            // All scripts injected — check if widget appeared
+            setTimeout(() => {
+                if (document.getElementById('conversapay-chat-widget')) {
+                    status.className = 'inject-status success';
+                    status.textContent = '✅ הווידג\'ט נטען! חפש את כפתור הצ\'אט בפינה השמאלית התחתונה';
+                } else {
+                    status.className = 'inject-status error';
+                    status.textContent = '❌ הווידג\'ט לא נטען — בדוק שגיאות בקונסול (F12)';
+                }
+            }, 3000);
+            return;
+        }
 
-    newScript.onload = () => {
-        status.className = 'inject-status success';
-        status.textContent = '✅ הווידג\'ט נטען! חפש את כפתור הצ\'אט בפינה השמאלית התחתונה';
-    };
-    newScript.onerror = () => {
-        status.className = 'inject-status error';
-        status.textContent = '❌ שגיאה בטעינת הסקריפט — בדוק שה-URL נכון';
-    };
+        const tag = scriptTags[index];
+        const newScript = document.createElement('script');
+        Array.from(tag.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+        if (tag.textContent.trim()) newScript.textContent = tag.textContent;
 
-    document.body.appendChild(newScript);
-
-    // Fallback: if no src (inline script), onload won't fire — check after short delay
-    if (!newScript.src) {
-        status.className = 'inject-status success';
-        status.textContent = '✅ הווידג\'ט הוזרק! חפש את כפתור הצ\'אט בפינה השמאלית התחתונה';
-    } else {
-        status.className = 'inject-status';
-        status.textContent = '⏳ טוען...';
-        // Fallback timeout — if onload didn't fire after 5s, check if widget exists
-        setTimeout(() => {
-            if (document.getElementById('conversapay-chat-widget')) {
-                status.className = 'inject-status success';
-                status.textContent = '✅ הווידג\'ט נטען! חפש את כפתור הצ\'אט בפינה השמאלית התחתונה';
-            } else if (status.textContent === '⏳ טוען...') {
+        if (newScript.src) {
+            newScript.onload = () => injectNext(index + 1);
+            newScript.onerror = () => {
                 status.className = 'inject-status error';
-                status.textContent = '❌ הווידג\'ט לא נטען — בדוק את ה-business ID ואת ה-URL בקונסול (F12)';
-            }
-        }, 5000);
-    }
+                status.textContent = '❌ שגיאה בטעינת הסקריפט — בדוק שה-URL נכון';
+            };
+        }
+
+        document.body.appendChild(newScript);
+
+        // Inline scripts execute synchronously — move to next immediately
+        if (!newScript.src) injectNext(index + 1);
+    };
+
+    status.className = 'inject-status';
+    status.textContent = '⏳ טוען...';
+    injectNext(0);
 }
 </script>
 
