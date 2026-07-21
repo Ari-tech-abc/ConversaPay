@@ -598,7 +598,9 @@
                 },
                 body: JSON.stringify({
                     message: message,
-                    business_id: CONFIG.BUSINESS_ID
+                    business_id: String(CONFIG.BUSINESS_ID),
+                    session_id: null,
+                    customer_info: null
                 })
             })
             .then(response => response.json())
