@@ -571,18 +571,16 @@ function removeLockOverlay(overlayId) {
 
 async function checkProStatusForIntegrations() {
     try {
-        // Re-fetch profile directly to get the authoritative subscription status.
-        // window.userSubscriptionStatus may not yet be set when this runs.
         const token = ConversaPayAuth.getToken();
         const response = await fetch(`${API_BASE_URL}/payments/profile`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
         let isPro = false;
+        let profile = null;
         if (response.ok) {
-            const profile = await response.json();
+            profile = await response.json();
             isPro = profile.plan_type === 'pro' || profile.plan_type === 'premium';
-            // Keep window.userSubscriptionStatus in sync
             window.userSubscriptionStatus = {
                 isPro,
                 planType: profile.plan_type || null
@@ -742,12 +740,12 @@ function updateEmbedCode() {
 
 function downloadWordPressPlugin() {
     if (!currentBusiness) { alert('נא ליצור עסק תחילה'); return; }
-    window.location.href = `/frontend/html/setup-guide.html?business_id=${currentBusiness.business_id}&tab=wordpress`;
+    window.location.href = `/frontend/html/setup-guide.html?business_id=${currentBusiness.id}&tab=wordpress`;
 }
 
 function copyEmbedCode() {
     if (!currentBusiness) { alert('נא ליצור עסק תחילה'); return; }
-    window.location.href = `/frontend/html/setup-guide.html?business_id=${currentBusiness.business_id}&tab=html`;
+    window.location.href = `/frontend/html/setup-guide.html?business_id=${currentBusiness.id}&tab=html`;
 }
 
 async function loadAllData() {
