@@ -947,6 +947,39 @@
             </div>
         </div>
 
+        <!-- WhatsApp Integration (PREMIUM only) -->
+        <div id="whatsappSection" class="card d-none" style="border-right: 3px solid #25D366;">
+            <div class="card-header">
+                <h3 class="card-title">💬 חיבור WhatsApp Business <span style="background:linear-gradient(135deg,#A855F7,#C084FC);color:white;font-size:0.75rem;padding:3px 10px;border-radius:20px;margin-right:8px;">PREMIUM</span></h3>
+            </div>
+            <div class="card-body">
+                <p style="color:var(--text-secondary);margin-bottom:20px;">חבר את הצ'אטבוט לוואטסאפ Business שלך — הבוט יענה ללקוחות ישירות בוואטסאפ.</p>
+                <div style="background:rgba(37,211,102,0.08);border:1px solid rgba(37,211,102,0.25);border-radius:12px;padding:16px;margin-bottom:24px;">
+                    <p style="color:#25D366;font-size:0.9rem;margin:0;">📋 <strong>איך מקבלים את הפרטים?</strong> כנס ל-<a href="https://developers.facebook.com" target="_blank" style="color:#25D366;">Meta for Developers</a> → צור App → WhatsApp Business API → העתק את הפרטים מטה.</p>
+                </div>
+                <form id="whatsappForm">
+                    <div class="form-group">
+                        <label>Phone Number ID</label>
+                        <input type="text" id="waPhoneNumberId" placeholder="123456789012345" dir="ltr">
+                    </div>
+                    <div class="form-group">
+                        <label>Access Token</label>
+                        <input type="password" id="waAccessToken" placeholder="EAAxxxxx..." dir="ltr">
+                    </div>
+                    <div class="form-group">
+                        <label>Verify Token (בחר מחרוזת סודית משלך)</label>
+                        <input type="text" id="waVerifyToken" placeholder="my_secret_token_123" dir="ltr">
+                    </div>
+                    <div id="waWebhookUrl" style="background:rgba(0,0,0,0.3);border:1px solid var(--border-color);border-radius:8px;padding:12px;margin-bottom:16px;direction:ltr;font-family:monospace;font-size:0.85rem;color:var(--accent-cyan);display:none;"></div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">💾 שמור הגדרות WhatsApp</button>
+                        <button type="button" id="waCopyWebhook" class="btn btn-outline" style="display:none;">📋 העתק Webhook URL</button>
+                    </div>
+                </form>
+                <div id="waStatus" style="margin-top:16px;display:none;"></div>
+            </div>
+        </div>
+
         <!-- Integrations Section (PRO+) -->
         <div id="integrations-setup-section">
             <div class="card" id="integrationsCard">

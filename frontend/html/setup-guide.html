@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConversaPay - מדריך התקנה</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0B0F19;
+            --bg-secondary: #111827;
+            --text-primary: #F9FAFB;
+            --text-secondary: #9CA3AF;
+            --accent-purple: #A855F7;
+            --accent-cyan: #00D9FF;
+            --accent-blue: #3B82F6;
+            --accent-green: #10B981;
+            --border-color: rgba(255,255,255,0.1);
+        }
+        * { font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; direction: rtl; }
+        body::before {
+            content: '';
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at 50% 20%, rgba(168,85,247,0.08) 0%, transparent 60%);
+            pointer-events: none; z-index: 0;
+        }
+        .navbar {
+            background: rgba(11,15,25,0.85);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 30px; height: 64px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .navbar-brand {
+            font-size: 1.2rem; font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border: none; border-radius: 8px;
+            font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+            text-decoration: none;
+        }
+        .btn-outline { background: transparent; color: var(--text-primary); border: 1px solid var(--border-color); }
+        .btn-outline:hover { background: rgba(255,255,255,0.05); border-color: var(--accent-purple); }
+        .btn-primary { background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue)); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(168,85,247,0.3); }
+        .btn-success { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(16,185,129,0.3); }
+        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; position: relative; z-index: 1; }
+        .page-header { text-align: center; margin-bottom: 40px; }
+        .page-header h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 12px; }
+        .page-header p { color: var(--text-secondary); font-size: 1.05rem; }
+        /* Tabs */
+        .tabs { display: flex; gap: 0; margin-bottom: 32px; background: rgba(255,255,255,0.04); border-radius: 12px; padding: 4px; border: 1px solid var(--border-color); }
+        .tab-btn {
+            flex: 1; padding: 12px 20px; border: none; border-radius: 9px;
+            background: transparent; color: var(--text-secondary);
+            font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .tab-btn.active { background: rgba(168,85,247,0.2); color: var(--text-primary); border: 1px solid rgba(168,85,247,0.4); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        /* Cards */
+        .card {
+            background: rgba(17,24,39,0.7); backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color); border-radius: 20px;
+            margin-bottom: 20px; overflow: hidden;
+        }
+        .card-header { padding: 18px 24px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 12px; }
+        .step-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 0.9rem; flex-shrink: 0;
+        }
+        .card-header h3 { font-size: 1rem; font-weight: 700; }
+        .card-body { padding: 24px; }
+        .card-body p { color: var(--text-secondary); line-height: 1.7; margin-bottom: 16px; }
+        .card-body p:last-child { margin-bottom: 0; }
+        /* Code block */
+        .code-block {
+            background: rgba(0,0,0,0.4); border: 1px solid var(--border-color);
+            border-radius: 10px; padding: 16px; margin: 16px 0;
+            direction: ltr; text-align: left; font-family: 'Courier New', monospace;
+            font-size: 0.85rem; color: var(--accent-cyan); overflow-x: auto;
+            white-space: pre; position: relative;
+        }
+        .copy-btn {
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(168,85,247,0.2); border: 1px solid rgba(168,85,247,0.4);
+            color: white; padding: 4px 10px; border-radius: 6px;
+            font-size: 0.75rem; cursor: pointer; font-family: inherit;
+        }
+        .copy-btn:hover { background: rgba(168,85,247,0.4); }
+        /* Alert */
+        .alert {
+            padding: 14px 18px; border-radius: 10px; margin-bottom: 16px;
+            font-size: 0.9rem; line-height: 1.6;
+        }
+        .alert-info { background: rgba(0,217,255,0.08); border: 1px solid rgba(0,217,255,0.25); color: var(--accent-cyan); }
+        .alert-success { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); color: var(--accent-green); }
+        .alert-warning { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); color: #F59E0B; }
+        /* Download area */
+        .download-area {
+            background: linear-gradient(135deg, rgba(168,85,247,0.12), rgba(59,130,246,0.12));
+            border: 2px dashed rgba(168,85,247,0.4); border-radius: 14px;
+            padding: 32px; text-align: center; margin: 20px 0;
+        }
+        .download-area .icon { font-size: 3.5rem; margin-bottom: 16px; }
+        .download-area h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
+        .download-area p { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px; }
+        /* Business ID badge */
+        .business-id-badge {
+            display: inline-block; background: rgba(0,217,255,0.1);
+            border: 1px solid rgba(0,217,255,0.3); border-radius: 8px;
+            padding: 6px 14px; font-family: monospace; font-size: 0.95rem;
+            color: var(--accent-cyan); margin: 8px 0;
+        }
+        /* Back link */
+        .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+        .back-link:hover { color: var(--text-primary); }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">📋 מדריך התקנה - ConversaPay</div>
+        <a href="/frontend/html/dashboard.html" class="btn btn-outline">← חזור לדאשבורד</a>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>🚀 חיבור הצ'אטבוט לאתר שלך</h1>
+            <p id="personalGreeting" style="display:none;color:var(--accent-cyan);font-size:1.1rem;font-weight:600;margin-bottom:8px;"></p>
+            <p>בחר את שיטת ההתקנה המתאימה לפלטפורמה שלך</p>
+            <div style="margin-top:16px;">
+                <span style="color:var(--text-secondary);font-size:0.9rem;">מזהה העסק שלך: </span>
+                <span class="business-id-badge" id="displayBusinessId">טוען...</span>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('wordpress')">🌐 וורדפרס</button>
+            <button class="tab-btn" onclick="switchTab('html')">💻 HTML / Wix / Shopify</button>
+        </div>
+
+        <!-- WordPress Tab -->
+        <div id="tab-wordpress" class="tab-content active">
+            <div class="alert alert-success">✅ הדרך הקלה ביותר — תוסף מוכן להתקנה עם Business ID שלך מוכנה מראש</div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="step-num">1</div>
+                    <h3>הורד את התוסף</h3>
+                </div>
+                <div class="card-body">
+                    <p>לחץ על הכפתור להורדת קובץ ה-PHP של התוסף. הקובץ כבר מכיל את מזהה העסק שלך.</p>
+                    <div class="download-area">
+                        <div class="icon">📦</div>
+                        <h3>conversapay-chat.php</h3>
+                        <p>תוסף וורדפרס מותאם אישית עם Business ID שלך</p>
+                        <button id="wpDownloadBtn" class="btn btn-primary" style="font-size:1rem;padding:12px 28px;">
+                            📥 הורד תוסף לוורדפרס
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="step-num">2</div>
+                    <h3>העלה את התוסף לוורדפרס</h3>
+                </div>
+                <div class="card-body">
+                    <p>יש שתי דרכים להעלות את התוסף:</p>
+                    <p><strong style="color:var(--text-primary);">דרך א׳ — דרך לוח הבקרה (קל יותר):</strong></p>
+                    <p>כנס ל-<strong style="color:var(--accent-cyan);">לוח הבקרה → תוספים → הוסף חדש → העלה תוסף</strong> ← בחר את הקובץ שהורדת ← לחץ "התקן עכשיו"</p>
+                    <p><strong style="color:var(--text-primary);">דרך ב׳ — דרך FTP:</strong></p>
+                    <p>העלה את הקובץ לתיקייה: <code style="color:var(--accent-cyan);background:rgba(0,0,0,0.3);padding:2px 8px;border-radius:4px;">/wp-content/plugins/</code></p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="step-num">3</div>
+                    <h3>הפעל את התוסף</h3>
+                </div>
+                <div class="card-body">
+                    <p>לאחר ההעלאה, כנס ל-<strong style="color:var(--accent-cyan);">לוח הבקרה → תוספים</strong> ← מצא את "ConversaPay Chat" ← לחץ <strong style="color:var(--accent-green);">"הפעל"</strong></p>
+                    <div class="alert alert-success">🎉 זהו! הצ'אטבוט יופיע אוטומטית בכל דפי האתר שלך.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="step-num">4</div>
+                    <h3>בדוק שהכל עובד</h3>
+                </div>
+                <div class="card-body">
+                    <p>פתח את האתר שלך בדפדפן — אמור להופיע כפתור צ'אט בפינה הימנית התחתונה.</p>
+                    <div class="alert alert-warning">⚠️ אם הצ'אטבוט לא מופיע — נסה לנקות את ה-Cache של וורדפרס (אם יש לך תוסף Cache כמו WP Rocket).</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HTML Tab -->
+        <div id="tab-html" class="tab-content">
+            <div class="alert alert-info">💡 מתאים לכל אתר — Wix, Shopify, Squarespace, HTML רגיל, ועוד</div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="step-num">1</div>
+                    <h3>העתק את קוד ההטמעה</h3>
+                </div>
+                <div class="card-body">
+                    <p>העתק את הקוד הבא והדבק אותו לפני תגית <code style="color:var(--accent-cyan);">&lt;/body&gt;</code> בכל דף שבו תרצה שהצ'אטבוט יופיע:</p>
+                    <div class="code-block" id="embedCodeBlock"><!-- ConversaPay AI Chatbot -->
+<script>
+  window.ConversaPayWidgetConfig = { business_id: "LOADING..." };
+</script>
+<script src="ORIGIN/frontend/js/widget.js" defer></script><button class="copy-btn" onclick="copyCode('embedCodeBlock')">העתק</button></div>
+                    <button class="btn btn-success" onclick="copyEmbedCodeFull()" style="margin-top:8px;">📋 העתק קוד</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="step-num">2</div>
+                    <h3>Wix</h3>
+                </div>
+                <div class="card-body">
+                    <p>ב-Wix Editor: לחץ על <strong style="color:var(--accent-cyan);">+ הוסף → Embed → Custom Code</strong></p>
+                    <p>הדבק את הקוד ← בחר "Body - end" ← לחץ "Apply"</p>
+                    <div class="alert alert-info">💡 ב-Wix Premium בלבד ניתן להוסיף Custom Code.</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="step-num">2</div>
+                    <h3>Shopify</h3>
+                </div>
+                <div class="card-body">
+                    <p>כנס ל-<strong style="color:var(--accent-cyan);">Online Store → Themes → Edit Code</strong></p>
+                    <p>פתח את <code style="color:var(--accent-cyan);">theme.liquid</code> ← מצא את <code style="color:var(--accent-cyan);">&lt;/body&gt;</code> ← הדבק את הקוד לפניו ← שמור</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="step-num">2</div>
+                    <h3>HTML רגיל</h3>
+                </div>
+                <div class="card-body">
+                    <p>פתח את קובץ ה-HTML שלך ← מצא את <code style="color:var(--accent-cyan);">&lt;/body&gt;</code> ← הדבק את הקוד ישירות לפניו:</p>
+                    <div class="code-block">    ...תוכן האתר...
+
+    <!-- ConversaPay AI Chatbot -->
+    &lt;script&gt;
+      window.ConversaPayWidgetConfig = { business_id: "YOUR_ID" };
+    &lt;/script&gt;
+    &lt;script src="ORIGIN/frontend/js/widget.js" defer&gt;&lt;/script&gt;
+
+&lt;/body&gt;</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="step-num">3</div>
+                    <h3>בדוק שהכל עובד</h3>
+                </div>
+                <div class="card-body">
+                    <p>פתח את האתר שלך — אמור להופיע כפתור צ'אט בפינה הימנית התחתונה.</p>
+                    <div class="alert alert-success">🎉 הצ'אטבוט מוכן! לקוחות יכולים עכשיו לשוחח ולרכוש ישירות מהאתר שלך.</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align:center;margin-top:32px;">
+            <a href="/frontend/html/dashboard.html" class="btn btn-outline" style="font-size:1rem;padding:12px 28px;">← חזור לדאשבורד</a>
+        </div>
+    </div>
+
+    <script src="/frontend/js/auth.js"></script>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const businessId = params.get('business_id') || '';
+        const tab = params.get('tab') || 'wordpress';
+        const origin = window.location.origin;
+
+        // Show business ID
+        document.getElementById('displayBusinessId').textContent = businessId || 'לא נמצא';
+
+        // Fetch user name and personalize
+        const token = ConversaPayAuth.getToken();
+        if (token) {
+            fetch('/api/v1/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(r => r.ok ? r.json() : null)
+                .then(data => {
+                    const name = data?.profile?.full_name || data?.email || '';
+                    if (name) {
+                        document.getElementById('personalGreeting').textContent = `היי ${name} 👋, הנה המדריך שלך:`;
+                        document.getElementById('personalGreeting').style.display = 'block';
+                    }
+                })
+                .catch(() => {});
+        }
+
+        // Set embed code
+        const embedCode = `<!-- ConversaPay AI Chatbot -->\n<script>\n  window.ConversaPayWidgetConfig = { business_id: "${businessId}" };\n<\/script>\n<script src="${origin}/frontend/js/widget.js" defer><\/script>`;
+        const codeBlock = document.getElementById('embedCodeBlock');
+        // Set text content (before the copy button)
+        codeBlock.childNodes[0].textContent = embedCode;
+
+        // Switch to correct tab
+        if (tab === 'html') switchTab('html');
+
+        function switchTab(name) {
+            document.querySelectorAll('.tab-btn').forEach((b, i) => {
+                b.classList.toggle('active', (i === 0 && name === 'wordpress') || (i === 1 && name === 'html'));
+            });
+            document.getElementById('tab-wordpress').classList.toggle('active', name === 'wordpress');
+            document.getElementById('tab-html').classList.toggle('active', name === 'html');
+        }
+
+        function copyEmbedCodeFull() {
+            navigator.clipboard.writeText(embedCode).then(() => {
+                const btn = event.target;
+                btn.textContent = '✓ הועתק!';
+                setTimeout(() => btn.textContent = '📋 העתק קוד', 2000);
+            });
+        }
+
+        // WordPress download
+        document.getElementById('wpDownloadBtn').addEventListener('click', async () => {
+            if (!businessId) { alert('לא נמצא מזהה עסק'); return; }
+            const btn = document.getElementById('wpDownloadBtn');
+            btn.disabled = true;
+            btn.textContent = 'מוריד...';
+            try {
+                const token = ConversaPayAuth.getToken();
+                const response = await fetch(`/api/v1/payments/wordpress-plugin/${businessId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = `conversapay-chat-${businessId}.php`;
+                    document.body.appendChild(a); a.click();
+                    URL.revokeObjectURL(url); document.body.removeChild(a);
+                } else {
+                    alert('שגיאה בהורדת התוסף — נסה שוב');
+                }
+            } catch (e) {
+                alert('שגיאה בתקשורת עם השרת');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '📥 הורד תוסף לוורדפרס';
+            }
+        });
+    </script>
+</body>
+</html>

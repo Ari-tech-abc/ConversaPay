@@ -85,6 +85,10 @@ function initializeEventListeners() {
     // Integrations
     document.getElementById('downloadWordPressPlugin')?.addEventListener('click', downloadWordPressPlugin);
     document.getElementById('copyEmbedCode')?.addEventListener('click', copyEmbedCode);
+    
+    // WhatsApp
+    document.getElementById('whatsappForm')?.addEventListener('submit', handleSaveWhatsApp);
+    document.getElementById('waCopyWebhook')?.addEventListener('click', copyWebhookUrl);
 }
 
 // ============================================
@@ -597,6 +601,18 @@ async function checkProStatusForIntegrations() {
                 applyLockOverlay(cardId, overlayId);
             }
         });
+
+        // WhatsApp section: Premium only
+        const isPremium = (profile?.plan_type || '').toLowerCase() === 'premium';
+        const waSection = document.getElementById('whatsappSection');
+        if (waSection) {
+            if (isPremium) {
+                waSection.classList.remove('d-none');
+                loadWhatsAppSettings(profile);
+            } else {
+                waSection.classList.add('d-none');
+            }
+        }
     } catch (error) {
         console.error('Error checking Pro status for locked cards:', error);
     }
@@ -724,86 +740,14 @@ function updateEmbedCode() {
     }
 }
 
-async function downloadWordPressPlugin() {
-    if (!currentBusiness) {
-        alert('נא ליצור עסק תחילה');
-        return;
-    }
-    
-    const btn = document.getElementById('downloadWordPressPlugin');
-    btn.disabled = true;
-    btn.textContent = 'מוריד...';
-    
-    try {
-        const token = ConversaPayAuth.getToken();
-        const response = await fetch(`${API_BASE_URL}/payments/wordpress-plugin/${currentBusiness.business_id}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        
-        if (response.ok) {
-            // Create download link for PHP file
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `conversapay-chat-${currentBusiness.business_id}.php`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-            
-            // Show instructions after download
-            setTimeout(() => {
-                alert('📥 התוסף הורד בהצלחה!\n\n' +
-                      'הוראות התקנה:\n' +
-                      '1. שמור את הקובץ conversapay-chat.php\n' +
-                      '2. העלה אותו לתיקיית wp-content/plugins/ בשרת ה-WordPress\n' +
-                      '3. הפעל את התוסף בלוח הבקרה של וורדפרס\n' +
-                      '4. עבור להגדרות התוסף והכנס את Business ID: ' + currentBusiness.business_id + '\n\n' +
-'למדריך מלא: https://conversapay.org/docs/wordpress');
-            }, 500);
-        } else {
-            const data = await response.json();
-            alert('שגיאה: ' + (data.detail || 'נסה שוב'));
-        }
-    } catch (error) {
-        console.error('Download plugin error:', error);
-        alert('שגיאה בהורדת התוסף');
-    } finally {
-        btn.disabled = false;
-        btn.textContent = '📥 הורד תוסף לוורדפרס';
-    }
+function downloadWordPressPlugin() {
+    if (!currentBusiness) { alert('נא ליצור עסק תחילה'); return; }
+    window.location.href = `/frontend/html/setup-guide.html?business_id=${currentBusiness.business_id}&tab=wordpress`;
 }
 
-async function copyEmbedCode() {
-    const codeElement = document.getElementById('embedCodeSnippet');
-    if (!codeElement) return;
-    
-    const code = codeElement.textContent;
-    
-    try {
-        await navigator.clipboard.writeText(code);
-        const btn = document.getElementById('copyEmbedCode');
-        const originalText = btn.textContent;
-        btn.textContent = '✓ הועתק!';
-        btn.style.background = '#10b981';
-        
-        setTimeout(() => {
-            btn.textContent = originalText;
-            btn.style.background = '';
-        }, 2000);
-    } catch (error) {
-        console.error('Copy error:', error);
-        // Fallback for older browsers
-        const textarea = document.createElement('textarea');
-        textarea.value = code;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        
-        alert('הקוד הועתק ללוח!');
-    }
+function copyEmbedCode() {
+    if (!currentBusiness) { alert('נא ליצור עסק תחילה'); return; }
+    window.location.href = `/frontend/html/setup-guide.html?business_id=${currentBusiness.business_id}&tab=html`;
 }
 
 async function loadAllData() {
@@ -1686,6 +1630,85 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// ============================================
+// WhatsApp Integration (Premium)
+// ============================================
+
+function loadWhatsAppSettings(profile) {
+    if (!profile) return;
+    const phoneId = document.getElementById('waPhoneNumberId');
+    const token = document.getElementById('waAccessToken');
+    const verify = document.getElementById('waVerifyToken');
+    if (phoneId) phoneId.value = profile.whatsapp_phone_number_id || '';
+    if (token) token.value = profile.whatsapp_access_token || '';
+    if (verify) verify.value = profile.whatsapp_verify_token || '';
+    if (profile.whatsapp_verify_token) showWebhookUrl(profile.whatsapp_verify_token);
+}
+
+function showWebhookUrl(verifyToken) {
+    const urlEl = document.getElementById('waWebhookUrl');
+    const copyBtn = document.getElementById('waCopyWebhook');
+    if (!urlEl) return;
+    const webhookUrl = `${window.location.origin}/api/v1/whatsapp/webhook`;
+    urlEl.textContent = `Webhook URL: ${webhookUrl}`;
+    urlEl.style.display = 'block';
+    if (copyBtn) copyBtn.style.display = 'inline-flex';
+}
+
+async function copyWebhookUrl() {
+    const url = `${window.location.origin}/api/v1/whatsapp/webhook`;
+    await navigator.clipboard.writeText(url).catch(() => {});
+    const btn = document.getElementById('waCopyWebhook');
+    if (btn) { btn.textContent = '✓ הועתק!'; setTimeout(() => btn.textContent = '📋 העתק Webhook URL', 2000); }
+}
+
+async function handleSaveWhatsApp(event) {
+    event.preventDefault();
+    const phoneId = document.getElementById('waPhoneNumberId').value.trim();
+    const accessToken = document.getElementById('waAccessToken').value.trim();
+    const verifyToken = document.getElementById('waVerifyToken').value.trim();
+    const statusEl = document.getElementById('waStatus');
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+
+    if (!phoneId || !accessToken || !verifyToken) {
+        statusEl.style.display = 'block';
+        statusEl.innerHTML = '<span style="color:#EF4444;">⚠️ יש למלא את כל השדות</span>';
+        return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'שומר...';
+
+    try {
+        const token = ConversaPayAuth.getToken();
+        const response = await fetch(`${API_BASE_URL}/auth/whatsapp-settings`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                whatsapp_phone_number_id: phoneId,
+                whatsapp_access_token: accessToken,
+                whatsapp_verify_token: verifyToken
+            })
+        });
+
+        if (response.ok) {
+            statusEl.style.display = 'block';
+            statusEl.innerHTML = '<span style="color:#10B981;">✅ הגדרות WhatsApp נשמרו בהצלחה!</span>';
+            showWebhookUrl(verifyToken);
+        } else {
+            const data = await response.json();
+            statusEl.style.display = 'block';
+            statusEl.innerHTML = `<span style="color:#EF4444;">שגיאה: ${data.detail || 'נסה שוב'}</span>`;
+        }
+    } catch (error) {
+        statusEl.style.display = 'block';
+        statusEl.innerHTML = '<span style="color:#EF4444;">שגיאה בתקשורת עם השרת</span>';
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '💾 שמור הגדרות WhatsApp';
+    }
 }
 
 // ============================================

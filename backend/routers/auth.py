@@ -712,6 +712,31 @@ async def get_current_user_info(current_user: AuthUser = Depends(get_current_use
     )
 
 
+@router.put("/whatsapp-settings", response_model=dict)
+async def update_whatsapp_settings(
+    request: Request,
+    current_user: AuthUser = Depends(get_current_user)
+):
+    """
+    Update WhatsApp Business API settings for Premium users.
+    """
+    body = await request.json()
+    profile = get_user_profile(current_user.user_id)
+    if not profile or profile.get("plan_type") != "premium":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="premium_required")
+
+    result = supabase.table("profiles").update({
+        "whatsapp_phone_number_id": body.get("whatsapp_phone_number_id"),
+        "whatsapp_access_token": body.get("whatsapp_access_token"),
+        "whatsapp_verify_token": body.get("whatsapp_verify_token")
+    }).eq("user_id", current_user.user_id).execute()
+
+    if not result.data:
+        raise HTTPException(status_code=500, detail="Failed to update WhatsApp settings")
+
+    return {"message": "WhatsApp settings updated"}
+
+
 @router.put("/me", response_model=dict)
 async def update_current_user(
     full_name: Optional[str] = None,
