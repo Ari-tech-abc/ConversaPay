@@ -145,6 +145,8 @@ function checkAuthStatus() {
 
 async function checkSubscriptionStatus() {
     console.log('✅ [5] checkSubscriptionStatus() called');
+    // Default to free until proven otherwise
+    window.userSubscriptionStatus = { isPro: false, planType: 'free' };
     try {
         const token = ConversaPayAuth.getToken();
         const response = await fetch(`${API_BASE_URL}/payments/profile`, {
@@ -155,33 +157,16 @@ async function checkSubscriptionStatus() {
         if (response.ok) {
             const profile = await response.json();
             console.log('✅ [7] profile data:', profile);
-            const isPro = profile.is_pro || false;
-            
-            // Always load businesses for all users (free, pro, premium)
-            await loadUserBusinesses();
-            
-            // Store subscription status for later use
+            const isPro = profile.is_pro === true && ['pro', 'premium'].includes((profile.plan_type || '').toLowerCase());
             window.userSubscriptionStatus = {
-                isPro: isPro,
-                planType: profile.plan_type || null
-            };
-        } else {
-            // If profile check fails, still load dashboard as free user
-            await loadUserBusinesses();
-            window.userSubscriptionStatus = {
-                isPro: false,
-                planType: null
+                isPro,
+                planType: profile.plan_type || 'free'
             };
         }
     } catch (error) {
         console.error('🔴 Error checking subscription:', error);
-        // Load dashboard as free user on error
-        await loadUserBusinesses();
-        window.userSubscriptionStatus = {
-            isPro: false,
-            planType: null
-        };
     }
+    await loadUserBusinesses();
 }
 
 function showUpgradeState() {
@@ -317,21 +302,21 @@ async function loadUserBusinesses() {
 }
 
 function showNoBusinessState() {
-    // Hide billing section, show integrations for Pro users
-    document.getElementById('billing-upgrade-section').style.display = 'none';
-    document.getElementById('integrations-setup-section').style.display = 'block';
-    
-    // Hide upgrade state and show no-business state for Pro users
-    document.getElementById('upgradeState').classList.add('d-none');
-    document.getElementById('noBusinessState').classList.remove('d-none');
+    const isPro = window.userSubscriptionStatus?.isPro === true;
+
+    // Integrations (WordPress/embed) only for PRO/PREMIUM
+    document.getElementById('billing-upgrade-section').style.display = isPro ? 'none' : 'block';
+    document.getElementById('integrations-setup-section').style.display = isPro ? 'block' : 'none';
+
+    document.getElementById('upgradeState').classList.toggle('d-none', isPro);
+    document.getElementById('noBusinessState').classList.toggle('d-none', !isPro);
     document.getElementById('createBusinessFormCard').classList.add('d-none');
     document.getElementById('dashboardContent').classList.add('d-none');
-    
-    // Show pro plan banner for Pro users
+
+    // PRO banner only for paid users
     const banner = document.getElementById('proPlanBanner');
-    if (banner) banner.classList.remove('d-none');
-    
-    // Hide loading
+    if (banner) banner.classList.toggle('d-none', !isPro);
+
     hideLoading();
 }
 
