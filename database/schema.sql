@@ -89,8 +89,6 @@ CREATE TABLE profiles (
     is_pro BOOLEAN DEFAULT false,
     plan_type VARCHAR(50) DEFAULT 'free' CHECK (plan_type IN ('free', 'pro', 'premium')),
     subscription_expires_at TIMESTAMP WITH TIME ZONE,
-    stripe_customer_id VARCHAR(255),
-    stripe_subscription_id VARCHAR(255),
     -- WhatsApp Business integration fields for Premium tier
     whatsapp_phone_number_id VARCHAR(255),
     whatsapp_access_token TEXT,
@@ -109,9 +107,6 @@ CREATE INDEX idx_profiles_whatsapp_phone_number_id ON profiles(whatsapp_phone_nu
 CREATE INDEX idx_profiles_plan_type ON profiles(plan_type);
 
 CREATE INDEX idx_profiles_user_id ON profiles(user_id);
-CREATE INDEX idx_profiles_is_pro ON profiles(is_pro);
-CREATE INDEX idx_profiles_stripe_customer_id ON profiles(stripe_customer_id);
-CREATE INDEX idx_profiles_stripe_subscription_id ON profiles(stripe_subscription_id);
 CREATE INDEX idx_profiles_email_verified ON profiles(email_verified);
 CREATE INDEX idx_profiles_email_verification_token ON profiles(email_verification_token);
 
@@ -127,8 +122,6 @@ CREATE TABLE businesses (
     owner_id UUID NOT NULL REFERENCES profiles(user_id) ON DELETE CASCADE,
     subscription_tier VARCHAR(50) DEFAULT 'free' CHECK (subscription_tier IN ('free', 'pro', 'enterprise')),
     subscription_status VARCHAR(50) DEFAULT 'active' CHECK (subscription_status IN ('active', 'canceled', 'past_due')),
-    stripe_customer_id VARCHAR(255),
-    stripe_subscription_id VARCHAR(255),
     settings JSONB DEFAULT '{}',
     bot_name VARCHAR(255) DEFAULT 'AI Assistant',
     greeting_message TEXT DEFAULT 'Hello! How can I help you today?',
@@ -270,8 +263,6 @@ CREATE TABLE payments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     business_id UUID NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
     order_id UUID REFERENCES orders(id) ON DELETE SET NULL,
-    stripe_payment_intent_id VARCHAR(255) UNIQUE,
-    stripe_session_id VARCHAR(255),
     amount DECIMAL(10, 2) NOT NULL,
     currency VARCHAR(3) DEFAULT 'ILS',
     status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'succeeded', 'failed', 'canceled', 'refunded')),
@@ -286,7 +277,6 @@ CREATE TABLE payments (
 
 CREATE INDEX idx_payments_business_id ON payments(business_id);
 CREATE INDEX idx_payments_order_id ON payments(order_id);
-CREATE INDEX idx_payments_stripe_payment_intent_id ON payments(stripe_payment_intent_id);
 CREATE INDEX idx_payments_status ON payments(status);
 CREATE INDEX idx_payments_created_at ON payments(created_at);
 
@@ -297,8 +287,6 @@ CREATE INDEX idx_payments_created_at ON payments(created_at);
 CREATE TABLE subscriptions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     business_id UUID NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
-    stripe_subscription_id VARCHAR(255) UNIQUE,
-    stripe_price_id VARCHAR(255),
     tier VARCHAR(50) NOT NULL CHECK (tier IN ('free', 'pro', 'enterprise')),
     status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'canceled', 'past_due', 'incomplete', 'incomplete_expired', 'trialing', 'unpaid')),
     current_period_start TIMESTAMP WITH TIME ZONE,
@@ -311,7 +299,6 @@ CREATE TABLE subscriptions (
 );
 
 CREATE INDEX idx_subscriptions_business_id ON subscriptions(business_id);
-CREATE INDEX idx_subscriptions_stripe_subscription_id ON subscriptions(stripe_subscription_id);
 CREATE INDEX idx_subscriptions_status ON subscriptions(status);
 
 -- ============================================
@@ -444,11 +431,8 @@ CREATE OR REPLACE FUNCTION prevent_subscription_field_updates()
 RETURNS TRIGGER AS $$
 BEGIN
     -- Check if any subscription-related fields are being updated
-    IF (NEW.is_pro IS DISTINCT FROM OLD.is_pro) OR
-       (NEW.plan_type IS DISTINCT FROM OLD.plan_type) OR
-       (NEW.subscription_expires_at IS DISTINCT FROM OLD.subscription_expires_at) OR
-       (NEW.stripe_customer_id IS DISTINCT FROM OLD.stripe_customer_id) OR
-       (NEW.stripe_subscription_id IS DISTINCT FROM OLD.stripe_subscription_id) THEN
+    IF (NEW.plan_type IS DISTINCT FROM OLD.plan_type) OR
+       (NEW.subscription_expires_at IS DISTINCT FROM OLD.subscription_expires_at) THEN
         
         -- Only allow updates from service_role (backend with admin privileges)
         -- auth.role() returns 'service_role' for backend operations using SUPABASE_SERVICE_ROLE_KEY

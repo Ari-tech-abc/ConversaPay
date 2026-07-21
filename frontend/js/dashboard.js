@@ -124,7 +124,14 @@ function checkAuthStatus() {
             console.log('✅ [4] /auth/me data:', data);
             if (data) {
                 currentUser = data;
-                // Check subscription status first
+                // Check email verification before anything else
+                const profile = data.profile || {};
+                if (profile.email_verified === false) {
+                    hideLoading();
+                    const wall = document.getElementById('emailVerificationWall');
+                    if (wall) wall.classList.remove('d-none');
+                    return;
+                }
                 checkSubscriptionStatus();
             }
         })

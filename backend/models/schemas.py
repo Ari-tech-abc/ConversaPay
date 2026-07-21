@@ -102,8 +102,6 @@ class BusinessResponse(BusinessBase):
     owner_id: str
     subscription_tier: SubscriptionTier
     subscription_status: SubscriptionStatus
-    stripe_customer_id: Optional[str] = None
-    stripe_subscription_id: Optional[str] = None
     settings: Dict[str, Any] = {}
     is_active: bool
     created_at: datetime
@@ -358,8 +356,6 @@ class PaymentCreate(PaymentBase):
     """Schema for creating a payment."""
     business_id: str
     order_id: Optional[str] = None
-    stripe_payment_intent_id: Optional[str] = None
-    stripe_session_id: Optional[str] = None
 
 
 class PaymentResponse(PaymentBase):
@@ -369,8 +365,6 @@ class PaymentResponse(PaymentBase):
     id: str
     business_id: str
     order_id: Optional[str] = None
-    stripe_payment_intent_id: Optional[str] = None
-    stripe_session_id: Optional[str] = None
     paid_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
@@ -426,8 +420,6 @@ class ProfileUpdate(BaseModel):
     full_name: Optional[str] = None
     plan_type: Optional[str] = None
     subscription_expires_at: Optional[datetime] = None
-    stripe_customer_id: Optional[str] = None
-    stripe_subscription_id: Optional[str] = None
     whatsapp_phone_number_id: Optional[str] = None
     whatsapp_access_token: Optional[str] = None
     whatsapp_verify_token: Optional[str] = None
@@ -441,8 +433,6 @@ class ProfileResponse(ProfileBase):
     user_id: str
     plan_type: str = "free"
     subscription_expires_at: Optional[datetime] = None
-    stripe_customer_id: Optional[str] = None
-    stripe_subscription_id: Optional[str] = None
     whatsapp_phone_number_id: Optional[str] = None
     whatsapp_access_token: Optional[str] = None
     whatsapp_verify_token: Optional[str] = None

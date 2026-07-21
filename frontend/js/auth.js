@@ -70,7 +70,7 @@
             
             const data = await response.json();
             
-if (response.ok) {
+            if (response.ok) {
                 // Save token
                 const token = data.access_token;
                 const user = {
@@ -88,24 +88,19 @@ if (response.ok) {
                 
                 // Check if plan=pro parameter is present
                 if (getUrlParam('plan') === 'pro') {
-                    // Redirect to Pro checkout
-                    setTimeout(() => {
-                        redirectToProCheckout();
-                    }, 1000);
+                    setTimeout(() => { redirectToProCheckout(); }, 1000);
                 } else {
-                    // Show success message
                     successDiv.textContent = 'התחברת בהצלחה! מעביר לדשבורד...';
                     successDiv.classList.add('show');
-                    
-                    // Redirect to dashboard
-                    setTimeout(() => {
-                        window.location.href = '/dashboard.html';
-                    }, 1000);
+                    setTimeout(() => { window.location.href = '/dashboard.html'; }, 1000);
                 }
                 
             } else {
-                // Show error
-                errorDiv.textContent = data.detail || 'שגיאה בהתחברות. אנא נסה שוב.';
+                if (data.detail === 'email_not_verified') {
+                    errorDiv.innerHTML = '📧 עליך לאמת את כתובת האימייל שלך לפני הכניסה.<br><small>בדוק את תיבת הדואר שלך ולחץ על קישור האימות.</small>';
+                } else {
+                    errorDiv.textContent = data.detail || 'שגיאה בהתחברות. אנא נסה שוב.';
+                }
                 errorDiv.classList.add('show');
                 loginBtn.disabled = false;
                 loginBtn.textContent = 'התחבר';

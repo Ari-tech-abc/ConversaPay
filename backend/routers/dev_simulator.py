@@ -34,13 +34,13 @@ async def dev_mark_order_paid(
     """
     DEVELOPMENT ONLY - Simulates payment by marking an order as paid.
     THIS ENDPOINT IS NEVER AVAILABLE IN PRODUCTION.
-    Use Stripe webhooks for payment verification in production.
+    Use PayMe webhooks for payment verification in production.
     """
     # SECURITY: Double-check we are NOT in production
     if settings.is_production:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="This endpoint is disabled in production. Use Stripe webhooks for payment verification."
+            detail="This endpoint is disabled in production. Use PayMe webhooks for payment verification."
         )
 
     try:

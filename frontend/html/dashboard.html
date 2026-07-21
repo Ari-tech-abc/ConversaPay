@@ -596,6 +596,29 @@
     <div id="loadingOverlay" class="loading-overlay">
         <div class="loading-spinner"></div>
     </div>
+
+    <!-- Email Verification Wall -->
+    <div id="emailVerificationWall" class="d-none" style="
+        position:fixed;top:0;left:0;right:0;bottom:0;
+        background:rgba(11,15,25,0.97);
+        backdrop-filter:blur(20px);
+        z-index:999;
+        display:flex;align-items:center;justify-content:center;
+    ">
+        <div style="text-align:center;padding:40px;max-width:480px;">
+            <div style="font-size:5rem;margin-bottom:24px;">📧</div>
+            <h2 style="font-size:1.8rem;font-weight:800;margin-bottom:16px;color:#F9FAFB;">אמת את האימייל שלך קודם</h2>
+            <p style="color:#9CA3AF;font-size:1rem;margin-bottom:32px;line-height:1.6;">
+                שלחנו לך אימייל אימות. לחץ על הקישור באימייל כדי להפעיל את החשבון שלך.
+            </p>
+            <div style="background:rgba(168,85,247,0.1);border:1px solid rgba(168,85,247,0.3);border-radius:12px;padding:20px;margin-bottom:24px;">
+                <p style="color:#A855F7;font-size:0.9rem;margin:0;">💡 לא קיבלת? בדוק את תיקיית הספאם</p>
+            </div>
+            <button onclick="ConversaPayAuth.logout()" class="btn btn-outline" style="color:white;border-color:rgba(255,255,255,0.3);">
+                חזור להתחברות
+            </button>
+        </div>
+    </div>
     
     <nav class="navbar">
         <div class="navbar-brand">📊 ConversaPay Dashboard</div>

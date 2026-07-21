@@ -209,20 +209,17 @@ def save_verification_token(user_id: str, token: str) -> bool:
 async def signup(request: UserRegister):
     """
     Register a new user with email and password.
-    Only performs Supabase Auth sign_up - does NOT create profile or business yet.
-    Profile and business will be created on first login after email confirmation.
-    
-    Returns a success response indicating that a confirmation email has been sent.
+    Creates profile and sends verification email via Resend.
     """
     try:
-        # Register user with Supabase Auth (with email confirmation enabled)
+        # Register user with Supabase Auth
         auth_response = supabase.auth.sign_up({
             "email": request.email,
             "password": request.password,
             "options": {
                 "data": {
                     "full_name": request.full_name,
-                    "business_name": request.business_name  # Store for later use
+                    "business_name": request.business_name
                 }
             }
         })
@@ -235,54 +232,44 @@ async def signup(request: UserRegister):
         
         user = auth_response.user
         
-        logger.info(f"User registered successfully: {user.email}")
+        # Create profile immediately
+        profile = create_user_profile(user.id, request.email, request.full_name)
         
-        # Return response indicating email verification is required
-        return {
-            "message": "Confirmation email sent. Please check your inbox."
-        }
+        # Generate and save verification token
+        token = generate_verification_token()
+        save_verification_token(user.id, token)
+        
+        # Send verification email via Resend
+        email_sent = email_service.send_verification_email(
+            to_email=request.email,
+            token=token,
+            user_name=request.full_name
+        )
+        
+        if not email_sent:
+            logger.error(f"Failed to send verification email to {request.email}")
+        else:
+            logger.info(f"Verification email sent to {request.email}")
+        
+        logger.info(f"User registered: {user.email}")
+        return {"message": "Confirmation email sent. Please check your inbox."}
     
     except HTTPException:
         raise
     except AuthApiError as e:
         error_message = str(e)
         logger.error(f"Registration error (AuthApiError): {error_message}")
-        
-        # Handle duplicate user registration
         if "already registered" in error_message.lower() or "already exists" in error_message.lower() or "duplicate" in error_message.lower():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User already registered"
-            )
-        
-        # Handle other auth API errors
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already registered")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         error_message = str(e)
         logger.error(f"Registration error: {error_message}", exc_info=True)
-        
-        # Handle specific errors with friendly error codes
         if "already exists" in error_message.lower() or "duplicate" in error_message.lower():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="email_exists"
-            )
-        
-        # Handle rate limiting
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="email_exists")
         if "rate limit" in error_message.lower() or "429" in error_message:
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="rate_limit"
-            )
-        
-        # Generic error
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="server_error"
-        )
+            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="rate_limit")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="server_error")
 
 
 # Keep the old /register endpoint for backward compatibility
@@ -317,12 +304,18 @@ async def login(request: UserLogin):
         user = auth_response.user
         session = auth_response.session
         
-        # Initialize user workspace on first login (if not already done)
-        # Get user metadata to retrieve business_name if available
+        # Check email verification status
+        profile = get_user_profile(user.id)
+        if profile and not profile.get("email_verified", False):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="email_not_verified"
+            )
+        
+        # Initialize user workspace on first login
         business_name = user.user_metadata.get("business_name", "My Business") if user.user_metadata else "My Business"
         full_name = user.user_metadata.get("full_name", "") if user.user_metadata else ""
         
-        # Initialize user workspace (profile + business) on first login
         workspace_result = await initialize_user_workspace(
             user_id=user.id,
             email=user.email or request.email,
