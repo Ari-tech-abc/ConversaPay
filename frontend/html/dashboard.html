@@ -632,8 +632,8 @@
         <div id="proPlanBanner" class="card d-none" style="border-right:4px solid var(--accent-green);">
             <div class="card-body d-flex justify-between align-center">
                 <div>
-                    <strong style="color:var(--accent-green);font-size:1.1rem;">✓ תוכנית Pro פעילה!</strong>
-                    <p style="margin:4px 0 0;color:var(--text-secondary);">הבוט שלך פעיל ומוכן לשירות לקוחות 24/7</p>
+                    <strong style="color:var(--accent-green);font-size:1.1rem;">✓ תוכנית פעילה!</strong>
+                    <p style="margin:4px 0 0;color:var(--text-secondary);" id="planSubtitle">הבוט שלך פעיל ומוכן לשירות לקוחות 24/7</p>
                 </div>
                 <span class="badge badge-success" style="font-size:1rem;padding:6px 20px;">PRO</span>
             </div>
@@ -652,13 +652,15 @@
                 <!-- Pro Plan Card -->
                 <div class="feature" style="background:rgba(255,255,255,0.05);padding:32px;border-radius:16px;border:2px solid var(--accent-cyan);backdrop-filter:blur(10px);">
                     <div class="emoji" style="font-size:3rem;margin-bottom:16px;">⭐</div>
-                    <h3 style="font-size:1.5rem;font-weight:700;margin-bottom:12px;color:var(--accent-cyan);">Pro Plan</h3>
-                    <div style="font-size:2.5rem;font-weight:800;margin-bottom:16px;color:white;">200 ₪<span style="font-size:1rem;opacity:0.7;">/חודש</span></div>
+                    <h3 style="font-size:1.5rem;font-weight:700;margin-bottom:4px;color:var(--accent-cyan);">PRO</h3>
+                    <p style="color:#9CA3AF;font-size:0.85rem;margin-bottom:12px;">לעסקים קטנים — מספרה, מאמן, קייטרינג</p>
+                    <div style="font-size:2.5rem;font-weight:800;margin-bottom:8px;color:white;">200 ₪<span style="font-size:1rem;opacity:0.7;">/חודש</span></div>
+                    <p style="color:var(--accent-cyan);font-size:0.9rem;font-weight:600;margin-bottom:16px;">💙 סליקה ישירה דרך Bit</p>
                     <ul style="list-style:none;padding:0;margin-bottom:24px;text-align:right;">
-                        <li style="padding:8px 0;color:var(--text-secondary);">✓ בוט צ'אט AI חכם</li>
-                        <li style="padding:8px 0;color:var(--text-secondary);">✓ סליקה מאובטחת בצ'אט</li>
-                        <li style="padding:8px 0;color:var(--text-secondary);">✓ פאנל ניהול הזמנות</li>
-                        <li style="padding:8px 0;color:var(--text-secondary);">✓ אנליטיקות בסיסיות</li>
+                        <li style="padding:6px 0;color:var(--text-secondary);">✓ בוט צ'אט AI חכם</li>
+                        <li style="padding:6px 0;color:var(--text-secondary);">✓ סליקה בצ'אט דרך Bit</li>
+                        <li style="padding:6px 0;color:var(--text-secondary);">✓ פאנל ניהול הזמנות</li>
+                        <li style="padding:6px 0;color:var(--text-secondary);">✓ הגדרה תוך 5 דקות</li>
                     </ul>
                     <button id="upgradeToProBtn" class="btn btn-upgrade" style="width:100%;background:linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 100%);color:white;padding:14px 24px;font-size:1.1rem;font-weight:700;border-radius:12px;box-shadow:0 4px 14px rgba(0,217,255,0.4);border:none;cursor:pointer;">
                         💳 שדרג ל-Pro - 200 ₪
@@ -668,13 +670,15 @@
                 <!-- Premium Plan Card -->
                 <div class="feature" style="background:rgba(255,255,255,0.05);padding:32px;border-radius:16px;border:2px solid var(--accent-purple);backdrop-filter:blur(10px);">
                     <div class="emoji" style="font-size:3rem;margin-bottom:16px;">👑</div>
-                    <h3 style="font-size:1.5rem;font-weight:700;margin-bottom:12px;color:var(--accent-purple);">Premium Plan</h3>
-                    <div style="font-size:2.5rem;font-weight:800;margin-bottom:16px;color:white;">350 ₪<span style="font-size:1rem;opacity:0.7;">/חודש</span></div>
+                    <h3 style="font-size:1.5rem;font-weight:700;margin-bottom:4px;color:var(--accent-purple);">PREMIUM</h3>
+                    <p style="color:#9CA3AF;font-size:0.85rem;margin-bottom:12px;">לעסקים גדולים — חנויות, מסעדות, שירותים מקצועיים</p>
+                    <div style="font-size:2.5rem;font-weight:800;margin-bottom:8px;color:white;">350 ₪<span style="font-size:1rem;opacity:0.7;">/חודש</span></div>
+                    <p style="color:var(--accent-purple);font-size:0.9rem;font-weight:600;margin-bottom:16px;">💳 סליקה מקצועית דרך PayMe</p>
                     <ul style="list-style:none;padding:0;margin-bottom:24px;text-align:right;">
-                        <li style="padding:8px 0;color:var(--text-secondary);">✓ כל תכונות Pro</li>
-                        <li style="padding:8px 0;color:var(--text-secondary);">✓ נפח שיחות גבוה יותר</li>
-                        <li style="padding:8px 0;color:var(--text-secondary);">✓ אנליטיקות מתקדמות</li>
-                        <li style="padding:8px 0;color:var(--text-secondary);">✓ תמיכה מועדפת</li>
+                        <li style="padding:6px 0;color:var(--text-secondary);">✓ כל תכונות PRO</li>
+                        <li style="padding:6px 0;color:var(--text-secondary);">✓ סליקה מקצועית דרך PayMe</li>
+                        <li style="padding:6px 0;color:var(--text-secondary);">✓ חיבור WhatsApp Business</li>
+                        <li style="padding:6px 0;color:var(--text-secondary);">✓ תמיכה מועדפת</li>
                     </ul>
                     <button id="upgradeToPremiumBtn" class="btn" style="width:100%;background:linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-blue) 100%);color:white;padding:14px 24px;font-size:1.1rem;font-weight:700;border-radius:12px;box-shadow:0 4px 14px rgba(168,85,247,0.4);border:none;cursor:pointer;">
                         💳 שדרג ל-Premium - 350 ₪
@@ -1011,6 +1015,8 @@
             </div>
             </div>
         </div>
+
+    </div><!-- /container -->
 
     <script src="/frontend/js/auth.js"></script>
     <script src="/frontend/js/dashboard.js"></script>

@@ -94,7 +94,7 @@ class DualCORSMiddleware(BaseHTTPMiddleware):
         is_public_endpoint = (
             path.startswith(f"{settings.API_PREFIX}/chat")
             or path.startswith(f"{settings.API_PREFIX}/orders/pay")
-            or path.startswith(f"{settings.API_PREFIX}/orders/") and ("/summary" in path or "/status" in path)
+            or (path.startswith(f"{settings.API_PREFIX}/orders/") and ("/summary" in path or "/status" in path or "/public" in path))
             or path.startswith(f"{settings.API_PREFIX}/payments/checkout-session")
             or path.startswith(f"{settings.API_PREFIX}/payments/webhook")
             or path.startswith(f"{settings.API_PREFIX}/webhooks/payme") # PayMe webhook is public
@@ -249,6 +249,12 @@ async def register():
 async def demo():
     """Widget demo test page."""
     return FileResponse(_html("demo.html"))
+
+@app.get("/pay")
+@app.get("/pay.html")
+async def pay():
+    """Payment page."""
+    return FileResponse(_html("pay.html"))
 
 
 # ============================================

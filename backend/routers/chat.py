@@ -147,33 +147,19 @@ async def chat(request: ChatRequest, request_obj: Request):
         # ============================================
         # PLAN-BASED RESTRICTION ENFORCEMENT
         # ============================================
-        if not is_pro or plan_type not in ['pro', 'premium']:
-            # Free users get limited AI response
-            ai_response = await gemini_service.chat(
-                business_id=business['id'],
-                session_id=session_id,
-                message=request.message,
-                business_data=business,
-                products=products,                    # Still pass products
-                customer_context=customer_context,
-                conversation_history=conversation_history
-            )
-            
-            # Force upgrade message for free users on checkout
-            if ai_response.get('intent') == 'checkout':
-                ai_response['response'] = "מערכת הרכישה המלאה זמינה רק למשתמשי PRO. שדרג כדי למכור בצ'אט!"
-                ai_response['intent'] = 'upgrade_required'
-        else:
-            # PRO/PREMIUM - Full AI access
-            ai_response = await gemini_service.chat(
-                business_id=business['id'],
-                session_id=session_id,
-                message=request.message,
-                business_data=business,
-                products=products,
-                customer_context=customer_context,
-                conversation_history=conversation_history
-            )
+        ai_response = await gemini_service.chat(
+            business_id=business['id'],
+            session_id=session_id,
+            message=request.message,
+            business_data=business,
+            products=products,
+            customer_context=customer_context,
+            conversation_history=conversation_history
+        )
+        
+        if not is_pro and ai_response.get('intent') == 'checkout':
+            ai_response['response'] = "מערכת הרכישה המלאה זמינה רק למשתמשי PRO. שדרג כדי למכור בצ'אט!"
+            ai_response['intent'] = 'upgrade_required'
         
         # Save assistant message
         await session_service.add_message(
