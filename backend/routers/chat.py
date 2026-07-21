@@ -195,57 +195,65 @@ async def chat(request: ChatRequest, request_obj: Request):
         if ai_response.get('intent') == 'checkout' and ai_response.get('action_data') and is_pro:
             action_data = ai_response['action_data']
             
-            try:
-                order_number = f"ORD-{datetime.utcnow().strftime('%Y%m%d')}-{datetime.utcnow().strftime('%H%M%S')}"
-                
-                customer_id = None
-                if request.customer_info:
-                    customer = await session_service.get_or_create_customer(
-                        business_id=business['id'],
-                        email=request.customer_info.get('email'),
-                        phone=request.customer_info.get('phone'),
-                        name=request.customer_info.get('name')
-                    )
-                    if customer:
-                        customer_id = customer['id']
-                
-                order_data = {
-                    "business_id": business['id'],
-                    "customer_id": customer_id,
-                    "conversation_id": conversation_id,
-                    "order_number": order_number,
-                    "status": "pending",
-                    "payment_status": "pending",
-                    "subtotal": action_data['total'],
-                    "tax": 0,
-                    "total": action_data['total'],
-                    "currency": action_data.get('currency', 'ILS'),
-                    "items": [{
-                        "product_id": action_data['product_id'],
-                        "item_key": action_data['item_key'],
-                        "name": action_data['product_name'],
-                        "quantity": action_data['quantity'],
-                        "price": action_data['total'] / action_data['quantity']
-                    }],
-                    "customer_info": request.customer_info or {},
-                    "created_at": datetime.utcnow().isoformat()
-                }
-                
-                order_result = supabase.table("orders")\
-                    .insert(order_data)\
-                    .execute()
-                
-                if order_result.data:
-                    order = order_result.data[0]
-                    action_data['order_id'] = order['id']
-                    action_data['order_number'] = order['order_number']
-                    response.payment_url = f"/pay.html?biz={request.business_id}&order={order['id']}"
+            # If product has a payment_link, send it directly — no order creation needed
+            matched_product = next(
+                (p for p in products if p['item_key'] == action_data.get('item_key')), None
+            )
+            if matched_product and matched_product.get('payment_link'):
+                response.payment_url = matched_product['payment_link']
+                response.action_data = action_data
+            else:
+                try:
+                    order_number = f"ORD-{datetime.utcnow().strftime('%Y%m%d')}-{datetime.utcnow().strftime('%H%M%S')}"
                     
-            except Exception as e:
-                logger.error(f"Error creating order: {str(e)}")
-                action_data['error'] = str(e)
-            
-            response.action_data = action_data
+                    customer_id = None
+                    if request.customer_info:
+                        customer = await session_service.get_or_create_customer(
+                            business_id=business['id'],
+                            email=request.customer_info.get('email'),
+                            phone=request.customer_info.get('phone'),
+                            name=request.customer_info.get('name')
+                        )
+                        if customer:
+                            customer_id = customer['id']
+                    
+                    order_data = {
+                        "business_id": business['id'],
+                        "customer_id": customer_id,
+                        "conversation_id": conversation_id,
+                        "order_number": order_number,
+                        "status": "pending",
+                        "payment_status": "pending",
+                        "subtotal": action_data['total'],
+                        "tax": 0,
+                        "total": action_data['total'],
+                        "currency": action_data.get('currency', 'ILS'),
+                        "items": [{
+                            "product_id": action_data['product_id'],
+                            "item_key": action_data['item_key'],
+                            "name": action_data['product_name'],
+                            "quantity": action_data['quantity'],
+                            "price": action_data['total'] / action_data['quantity']
+                        }],
+                        "customer_info": request.customer_info or {},
+                        "created_at": datetime.utcnow().isoformat()
+                    }
+                    
+                    order_result = supabase.table("orders")\
+                        .insert(order_data)\
+                        .execute()
+                    
+                    if order_result.data:
+                        order = order_result.data[0]
+                        action_data['order_id'] = order['id']
+                        action_data['order_number'] = order['order_number']
+                        response.payment_url = f"/pay.html?biz={request.business_id}&order={order['id']}"
+                        
+                except Exception as e:
+                    logger.error(f"Error creating order: {str(e)}")
+                    action_data['error'] = str(e)
+                
+                response.action_data = action_data
         
         logger.info(f"Chat response for business {request.business_id}, session {session_id}")
         return response

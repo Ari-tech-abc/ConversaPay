@@ -1478,7 +1478,8 @@ async function handleSaveProduct(event) {
             description: description || null,
             price: price,
             image_url: imageUrl || null,
-            is_active: isActive
+            is_active: isActive,
+            payment_link: document.getElementById('productPaymentLink').value.trim() || null
         };
         
         const method = productId ? 'PUT' : 'POST';
@@ -1582,6 +1583,7 @@ async function editProduct(productId) {
             document.getElementById('productDescription').value = product.description || '';
             document.getElementById('productPrice').value = product.price;
             document.getElementById('productImageUrl').value = product.image_url || '';
+            document.getElementById('productPaymentLink').value = product.payment_link || '';
             document.getElementById('productIsActive').checked = product.is_active;
             
             document.getElementById('productFormTitle').textContent = 'ערוך מוצר';

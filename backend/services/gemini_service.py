@@ -27,6 +27,7 @@ class GeminiService:
         catalog = "\n".join(
             f"- {p['name']} | קוד: {p['item_key']} | מחיר: ₪{p['price']}"
             + (f" | {p['description']}" if p.get('description') else "")
+            + (f" | לינק תשלום: {p['payment_link']}" if p.get('payment_link') else "")
             for p in products
         ) or "אין מוצרים בקטלוג כרגע"
 
@@ -43,7 +44,8 @@ class GeminiService:
 
 כללים:
 - ענה רק על מוצרים שמופיעים ברשימה
-- כשלקוח רוצה לקנות, ציין את שם המוצר, הקוד והמחיר בפורמט: [CHECKOUT: שם_מוצר | קוד | מחיר]
+- כשלקוח רוצה לקנות מוצר שיש לו לינק תשלום, שלח את הלינק ישירות בצ'אט
+- כשלמוצר אין לו לינק, ציין את שם המוצר, הקוד והמחיר בפורמט: [CHECKOUT: שם_מוצר | קוד | מחיר]
 - תשובות קצרות וברורות בעברית
 
 {f"היסטוריית שיחה:{chr(10)}{history}{chr(10)}" if history else ""}לקוח: {message}
