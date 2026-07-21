@@ -535,14 +535,18 @@ async def verify_email(token: str = Query(..., description="Email verification t
             """)
         
         # Mark email as verified
-        supabase.table("profiles")\
+        update_result = supabase.table("profiles")\
             .update({
                 "email_verified": True,
                 "email_verification_token": None,
                 "email_verification_expires_at": None
             })\
-            .eq("id", profile["id"])\
+            .eq("user_id", profile["user_id"])\
             .execute()
+        
+        if not update_result.data:
+            logger.error(f"Failed to mark email as verified for user_id: {profile['user_id']}")
+            raise HTTPException(status_code=500, detail="Failed to verify email")
         
         logger.info(f"Email verified for user: {profile['email']}")
         
