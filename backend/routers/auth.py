@@ -67,8 +67,8 @@ def get_user_profile(user_id: str) -> Optional[dict]:
     return None
 
 
-def create_user_profile(user_id: str, email: str, full_name: str) -> dict:
-    """Create user profile in database."""
+def create_user_profile(user_id: str, email: str, full_name: str, token: str, expires_at: str) -> dict:
+    """Create user profile with verification token in one insert."""
     try:
         result = supabase.table("profiles").insert({
             "user_id": user_id,
@@ -76,6 +76,8 @@ def create_user_profile(user_id: str, email: str, full_name: str) -> dict:
             "full_name": full_name,
             "plan_type": "free",
             "email_verified": False,
+            "email_verification_token": token,
+            "email_verification_expires_at": expires_at,
             "created_at": datetime.utcnow().isoformat()
         }).execute()
         
@@ -232,17 +234,14 @@ async def signup(request: UserRegister):
         
         user = auth_response.user
         
-        # Create profile immediately
-        profile = create_user_profile(user.id, request.email, request.full_name)
+        # Generate token first
+        token = generate_verification_token()
+        expires_at = (datetime.utcnow() + timedelta(hours=24)).isoformat()
+        
+        # Create profile + token in one insert (avoids RLS blocking a separate UPDATE)
+        profile = create_user_profile(user.id, request.email, request.full_name, token, expires_at)
         if not profile:
             logger.error(f"Failed to create profile for {request.email}")
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="server_error")
-        
-        # Generate, save token, and send email
-        token = generate_verification_token()
-        token_saved = save_verification_token(user.id, token)
-        if not token_saved:
-            logger.error(f"Failed to save verification token for {request.email}")
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="server_error")
         
         # Send verification email via Resend
