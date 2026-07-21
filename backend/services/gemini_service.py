@@ -65,12 +65,12 @@ class GeminiService:
             )
         )
         
-        self.tools = types.Tool(
+        self.tools = [types.Tool(
             function_declarations=[
                 self.search_products_function,
                 self.create_order_function
             ]
-        )
+        )]
     
     def _build_system_instruction(
         self,
