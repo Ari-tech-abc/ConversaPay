@@ -232,11 +232,13 @@ async def dashboard():
     """Dashboard page."""
     return FileResponse(_html("dashboard.html"))
 
+@app.get("/login")
 @app.get("/login.html")
 async def login():
     """Login page."""
     return FileResponse(_html("login.html"))
 
+@app.get("/register")
 @app.get("/register.html")
 async def register():
     """Register page."""
