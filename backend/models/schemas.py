@@ -378,13 +378,13 @@ class PaymentResponse(PaymentBase):
 # ============================================
 # Chat Models
 # ============================================
-
+    
 class ChatRequest(BaseModel):
     """Schema for chat request."""
-    message: str = Field(..., min_length=1)
-    business_id: str
-    session_id: Optional[str] = None
-    customer_info: Optional[Dict[str, Any]] = None
+    message: str = Field(..., min_length=1, description="User message")
+    business_id: str = Field(..., description="Business identifier")
+    session_id: Optional[str] = Field(None, description="Session ID for conversation continuity")
+    customer_info: Optional[Dict[str, Any]] = Field(None, description="Optional customer information")
 
 
 class ChatResponse(BaseModel):
