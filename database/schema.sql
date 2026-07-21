@@ -1,20 +1,84 @@
 -- ============================================
 -- ConversaPay Multi-Tenant SaaS Database Schema
 -- Complete Unified Schema for Supabase
--- ============================================
--- This file contains the ENTIRE database architecture
--- Run this in Supabase Dashboard > SQL Editor
+-- Safe to re-run: uses DROP IF EXISTS + CREATE IF NOT EXISTS patterns
 -- ============================================
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ============================================
+-- DROP TRIGGERS FIRST (before dropping tables)
+-- ============================================
+DO $$ BEGIN
+  -- profiles
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'profiles') THEN
+    DROP TRIGGER IF EXISTS prevent_profiles_subscription_updates ON profiles;
+    DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;
+  END IF;
+  -- businesses
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'businesses') THEN
+    DROP TRIGGER IF EXISTS update_businesses_updated_at ON businesses;
+  END IF;
+  -- products
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'products') THEN
+    DROP TRIGGER IF EXISTS update_products_updated_at ON products;
+  END IF;
+  -- customers
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'customers') THEN
+    DROP TRIGGER IF EXISTS update_customers_updated_at ON customers;
+  END IF;
+  -- conversations
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'conversations') THEN
+    DROP TRIGGER IF EXISTS update_conversations_updated_at ON conversations;
+  END IF;
+  -- orders
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'orders') THEN
+    DROP TRIGGER IF EXISTS update_orders_updated_at ON orders;
+  END IF;
+  -- payments
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'payments') THEN
+    DROP TRIGGER IF EXISTS update_payments_updated_at ON payments;
+  END IF;
+  -- subscriptions
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'subscriptions') THEN
+    DROP TRIGGER IF EXISTS update_subscriptions_updated_at ON subscriptions;
+  END IF;
+  -- webhooks
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'webhooks') THEN
+    DROP TRIGGER IF EXISTS update_webhooks_updated_at ON webhooks;
+  END IF;
+  -- email_templates
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'email_templates') THEN
+    DROP TRIGGER IF EXISTS update_email_templates_updated_at ON email_templates;
+  END IF;
+END $$;
+
+-- DROP FUNCTIONS
+DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
+DROP FUNCTION IF EXISTS prevent_subscription_field_updates() CASCADE;
+DROP FUNCTION IF EXISTS generate_order_number() CASCADE;
+
+-- ============================================
+-- DROP TABLES (in reverse dependency order)
+-- ============================================
+DROP TABLE IF EXISTS email_templates CASCADE;
+DROP TABLE IF EXISTS logs CASCADE;
+DROP TABLE IF EXISTS webhooks CASCADE;
+DROP TABLE IF EXISTS api_keys CASCADE;
+DROP TABLE IF EXISTS subscriptions CASCADE;
+DROP TABLE IF EXISTS payments CASCADE;
+DROP TABLE IF EXISTS orders CASCADE;
+DROP TABLE IF EXISTS messages CASCADE;
+DROP TABLE IF EXISTS conversations CASCADE;
+DROP TABLE IF EXISTS customers CASCADE;
+DROP TABLE IF EXISTS products CASCADE;
+DROP TABLE IF EXISTS businesses CASCADE;
+DROP TABLE IF EXISTS profiles CASCADE;
+
+-- ============================================
 -- 1. PROFILES (User Subscription Status)
 -- ============================================
--- Must be created BEFORE businesses since businesses reference profiles
-
-DROP TABLE IF EXISTS profiles CASCADE;
 
 CREATE TABLE profiles (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -55,8 +119,6 @@ CREATE INDEX idx_profiles_email_verification_token ON profiles(email_verificatio
 -- 2. BUSINESSES (Tenant Root Table)
 -- ============================================
 
-DROP TABLE IF EXISTS businesses CASCADE;
-
 CREATE TABLE businesses (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     business_id VARCHAR(50) UNIQUE NOT NULL,
@@ -85,8 +147,6 @@ CREATE INDEX idx_businesses_subscription_tier ON businesses(subscription_tier);
 -- 3. PRODUCTS
 -- ============================================
 
-DROP TABLE IF EXISTS products CASCADE;
-
 CREATE TABLE products (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     business_id UUID NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
@@ -112,8 +172,6 @@ CREATE INDEX idx_products_is_active ON products(is_active);
 -- 4. CUSTOMERS
 -- ============================================
 
-DROP TABLE IF EXISTS customers CASCADE;
-
 CREATE TABLE customers (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     business_id UUID NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
@@ -135,8 +193,6 @@ CREATE INDEX idx_customers_phone ON customers(phone);
 -- ============================================
 -- 5. CONVERSATIONS
 -- ============================================
-
-DROP TABLE IF EXISTS conversations CASCADE;
 
 CREATE TABLE conversations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -161,8 +217,6 @@ CREATE INDEX idx_conversations_status ON conversations(status);
 -- 6. MESSAGES
 -- ============================================
 
-DROP TABLE IF EXISTS messages CASCADE;
-
 CREATE TABLE messages (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
@@ -180,8 +234,6 @@ CREATE INDEX idx_messages_role ON messages(role);
 -- ============================================
 -- 7. ORDERS
 -- ============================================
-
-DROP TABLE IF EXISTS orders CASCADE;
 
 CREATE TABLE orders (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -214,8 +266,6 @@ CREATE INDEX idx_orders_created_at ON orders(created_at);
 -- 8. PAYMENTS
 -- ============================================
 
-DROP TABLE IF EXISTS payments CASCADE;
-
 CREATE TABLE payments (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     business_id UUID NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
@@ -244,8 +294,6 @@ CREATE INDEX idx_payments_created_at ON payments(created_at);
 -- 9. SUBSCRIPTIONS
 -- ============================================
 
-DROP TABLE IF EXISTS subscriptions CASCADE;
-
 CREATE TABLE subscriptions (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     business_id UUID NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
@@ -270,8 +318,6 @@ CREATE INDEX idx_subscriptions_status ON subscriptions(status);
 -- 10. API_KEYS
 -- ============================================
 
-DROP TABLE IF EXISTS api_keys CASCADE;
-
 CREATE TABLE api_keys (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     business_id UUID NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
@@ -293,8 +339,6 @@ CREATE INDEX idx_api_keys_is_active ON api_keys(is_active);
 -- 11. WEBHOOKS
 -- ============================================
 
-DROP TABLE IF EXISTS webhooks CASCADE;
-
 CREATE TABLE webhooks (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     business_id UUID NOT NULL REFERENCES businesses(id) ON DELETE CASCADE,
@@ -314,8 +358,6 @@ CREATE INDEX idx_webhooks_is_active ON webhooks(is_active);
 -- ============================================
 -- 12. LOGS
 -- ============================================
-
-DROP TABLE IF EXISTS logs CASCADE;
 
 CREATE TABLE logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -337,8 +379,6 @@ CREATE INDEX idx_logs_created_at ON logs(created_at);
 -- ============================================
 -- 13. EMAIL_TEMPLATES
 -- ============================================
-
-DROP TABLE IF EXISTS email_templates CASCADE;
 
 CREATE TABLE email_templates (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

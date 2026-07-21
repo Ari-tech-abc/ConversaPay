@@ -76,6 +76,7 @@ def create_user_profile(user_id: str, email: str, full_name: str) -> dict:
             "full_name": full_name,
             "is_pro": False,
             "plan_type": "free",
+            "email_verified": False,
             "created_at": datetime.utcnow().isoformat()
         }).execute()
         

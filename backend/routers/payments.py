@@ -155,7 +155,8 @@ async def get_profile(
             profile_data = {
                 "user_id": current_user.user_id,
                 "email": current_user.email,
-                "is_pro": False
+                "is_pro": False,
+                "plan_type": "free"
             }
             result = supabase.table("profiles")\
                 .insert(profile_data)\
