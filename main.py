@@ -204,75 +204,43 @@ if not settings.is_production and dev_simulator_router is not None:
 # Get current directory for static files
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
-# Mount static files directory
-# Mount /static to serve from backend/static (for widget.js, etc.)
-static_dir = os.path.join(current_dir, "backend", "static")
+# ── Directory helpers ────────────────────────────────────────────────────────
+static_dir   = os.path.join(current_dir, "backend", "static")
+frontend_dir = os.path.join(current_dir, "frontend")
+html_dir     = os.path.join(frontend_dir, "html")
+
+def _html(name: str) -> str:
+    """Return the absolute path to an HTML file inside frontend/html/."""
+    return os.path.join(html_dir, name)
+
+# Mount /static  → backend/static  (widget.js, robots.txt, sitemap.xml)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
-# Mount /frontend for HTML files in frontend directory
-frontend_dir = os.path.join(current_dir, "frontend")
+# Mount /frontend → frontend/  (js/, html/ — lets the browser load JS assets)
 app.mount("/frontend", StaticFiles(directory=frontend_dir), name="frontend")
 
-# Serve static HTML pages from root
+# ── HTML page routes ─────────────────────────────────────────────────────────
+
 @app.get("/")
 async def root_index():
-    """
-    Serve the official public marketing Landing Page (home.html).
-    This is the main entry point for visitors - fully localized in Hebrew.
-    """
-    return FileResponse("home.html")
+    """Marketing landing page."""
+    return FileResponse(_html("home.html"))
 
 @app.get("/dashboard")
-async def dashboard():
-    """
-    Serve dashboard page.
-    """
-    return FileResponse("dashboard.html")
-
-@app.get("/pay")
-async def pay():
-    """
-    Serve payment page.
-    """
-    return FileResponse("pay.html")
-
-# Keep .html routes for backward compatibility
 @app.get("/dashboard.html")
-async def dashboard_html():
-    """
-    Serve dashboard page (legacy).
-    """
-    return FileResponse("dashboard.html")
-
-@app.get("/index.html")
-async def index_html():
-    """
-    Serve the standalone internal sandbox chat preview (index.html at root).
-    NOTE: This is a developer/sandbox preview page for testing the chat interface,
-    NOT the marketing homepage. The official landing page is served at / (home.html).
-    """
-    return FileResponse("index.html")
-
-@app.get("/pay.html")
-async def pay_html():
-    """
-    Serve payment page (legacy).
-    """
-    return FileResponse("pay.html")
+async def dashboard():
+    """Dashboard page."""
+    return FileResponse(_html("dashboard.html"))
 
 @app.get("/login.html")
 async def login():
-    """
-    Serve login page.
-    """
-    return FileResponse("login.html")
+    """Login page."""
+    return FileResponse(_html("login.html"))
 
 @app.get("/register.html")
 async def register():
-    """
-    Serve register page.
-    """
-    return FileResponse("register.html")
+    """Register page."""
+    return FileResponse(_html("register.html"))
 
 
 # ============================================
@@ -281,17 +249,15 @@ async def register():
 
 @app.get("/robots.txt")
 async def robots_txt():
-    """
-    Serve robots.txt for SEO.
-    """
-    return FileResponse("backend/static/robots.txt", media_type="text/plain")
+    return FileResponse(
+        os.path.join(static_dir, "robots.txt"), media_type="text/plain"
+    )
 
 @app.get("/sitemap.xml", include_in_schema=False)
 async def sitemap_xml():
-    """
-    Serve sitemap.xml for SEO.
-    """
-    return FileResponse("backend/static/sitemap.xml", media_type="application/xml")
+    return FileResponse(
+        os.path.join(static_dir, "sitemap.xml"), media_type="application/xml"
+    )
 
 
 # ============================================
