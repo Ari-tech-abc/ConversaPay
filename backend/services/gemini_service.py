@@ -23,7 +23,7 @@ class GeminiService:
     def __init__(self):
         """Initialize Gemini client."""
         self.client = genai.Client(api_key=settings.GEMINI_API_KEY)
-        self.model_name = "gemini-2.5-flash"
+        self.model_name = "gemini-1.5-flash"
         
         # Define function declarations for Gemini
         self.search_products_function = types.FunctionDeclaration(
@@ -321,7 +321,6 @@ class GeminiService:
             # Check if model wants to call a function
             action_data = None
             intent = "chat"
-            bot_text = response.text
             
             # Handle function calls
             if response.function_calls:
@@ -333,14 +332,12 @@ class GeminiService:
                     
                     if function_name == "search_products":
                         result = self._handle_search_products(business_id, args.get("query", ""))
-                        # Send function result back to model
                         response = chat.send_message(
                             types.Part.from_function_response(
                                 name=function_name,
                                 response={"result": result}
                             )
                         )
-                        bot_text = response.text
                     
                     elif function_name == "create_order":
                         result = self._handle_create_order(
@@ -351,7 +348,6 @@ class GeminiService:
                         )
                         
                         if result["success"]:
-                            # Set action data for order creation
                             action_data = {
                                 "action": "show_checkout",
                                 "product_id": result["product"]["id"],
@@ -362,24 +358,33 @@ class GeminiService:
                                 "currency": result["currency"]
                             }
                             intent = "checkout"
-                            
-                            # Send function result back to model
                             response = chat.send_message(
                                 types.Part.from_function_response(
                                     name=function_name,
                                     response={"success": True, "order_created": True}
                                 )
                             )
-                            bot_text = response.text
                         else:
-                            # Send error back to model
                             response = chat.send_message(
                                 types.Part.from_function_response(
                                     name=function_name,
                                     response={"success": False, "error": result["error"]}
                                 )
                             )
-                            bot_text = response.text
+            
+            # Safely extract text — response.text can be None if the model
+            # returned only a function call with no accompanying text part.
+            bot_text = ""
+            try:
+                bot_text = response.text or ""
+            except Exception:
+                # Fallback: concatenate all text parts manually
+                for part in (response.candidates[0].content.parts if response.candidates else []):
+                    if hasattr(part, "text") and part.text:
+                        bot_text += part.text
+            
+            if not bot_text:
+                bot_text = "הבנתי! איך אוכל לעזור לך עוד?"
             
             logger.info(f"AI response generated for business {business_id}, session {session_id}")
             
@@ -390,7 +395,7 @@ class GeminiService:
             }
         
         except Exception as e:
-            logger.error(f"Gemini API error: {str(e)}", exc_info=True)
+            logger.error(f"Gemini API error: {type(e).__name__}: {str(e)}", exc_info=True)
             return {
                 "response": "מצטער, אירעה שגיאה במערכת. אנא נסה שוב מאוחר יותר.",
                 "intent": "error",
