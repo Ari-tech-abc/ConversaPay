@@ -29,7 +29,7 @@ supabase: Client = create_client(
 
 
 @router.post("", response_model=ChatResponse)
-async def chat(request: ChatRequest, request_obj: Request = Depends()):
+async def chat(request: ChatRequest, request_obj: Request):
     """
     Send a message to the AI assistant.
     Public endpoint - no authentication required.

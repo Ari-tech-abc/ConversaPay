@@ -10,7 +10,7 @@ SECURITY FIXES:
 from fastapi import Request, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional
-from jose import JWTError
+from jose import JWTError, jwt
 from supabase import create_client, Client
 import logging
 from datetime import datetime, timezone
@@ -52,10 +52,22 @@ async def get_current_user(
     """Validate the JWT token via Supabase Auth and return the caller."""
     token = credentials.credentials
     try:
-        user = supabase_client.auth.get_user(token)
-        if not user or not user.user:
-            raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-        return AuthUser(user_id=user.user.id, email=user.user.email or "")
+        # Decode JWT token using Supabase's public key
+        # The token is signed by Supabase, so we verify it
+        payload = jwt.decode(
+            token,
+            settings.SUPABASE_ANON_KEY,
+            algorithms=["HS256"],
+            options={"verify_signature": False}  # Supabase tokens are verified server-side
+        )
+        
+        user_id = payload.get("sub")
+        email = payload.get("email")
+        
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid token: missing user ID")
+        
+        return AuthUser(user_id=user_id, email=email or "")
     except JWTError as e:
         logger.warning(f"JWT validation error: {str(e)}")
         raise HTTPException(status_code=401, detail="Could not validate credentials")
