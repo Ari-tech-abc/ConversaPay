@@ -561,6 +561,24 @@
     // Public API
     // ============================================
 
+    // Session management
+    let currentSessionId = null;
+
+    function getOrCreateSessionId() {
+        // Try to get from localStorage
+        const stored = localStorage.getItem(`conversapay_session_${CONFIG.BUSINESS_ID}`);
+        if (stored) {
+            return stored;
+        }
+        // Generate new session ID
+        const newSessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem(`conversapay_session_${CONFIG.BUSINESS_ID}`, newSessionId);
+        return newSessionId;
+    }
+
+    // Initialize session ID
+    currentSessionId = getOrCreateSessionId();
+
     window.ConversaPayWidget = {
         open: function() {
             const chatWindow = document.getElementById(CONFIG.IFRAME_ID);
@@ -583,6 +601,13 @@
             const message = input.value.trim();
             if (!message) return;
 
+            // Validate business_id exists
+            if (!CONFIG.BUSINESS_ID) {
+                console.error('ConversaPay Widget: Cannot send message - no business_id configured');
+                appendMessage('שגיאה: תצורת הוידג\'ט לא הוגדרה כראוי.', 'bot');
+                return;
+            }
+
             // Append user message
             appendMessage(message, 'user');
             input.value = '';
@@ -590,35 +615,83 @@
             // Show typing indicator
             showTypingIndicator();
 
+            // Prepare request payload
+            const payload = {
+                message: message,
+                business_id: String(CONFIG.BUSINESS_ID),
+                session_id: currentSessionId,
+                customer_info: null
+            };
+
             // Send to backend
             fetch(`${CONFIG.API_BASE_URL}/api/v1/chat`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    message: message,
-                    business_id: String(CONFIG.BUSINESS_ID),
-                    session_id: null,
-                    customer_info: null
-                })
+                body: JSON.stringify(payload)
             })
-            .then(response => response.json())
-            .then(data => {
+            .then(async response => {
                 hideTypingIndicator();
                 
+                // Handle HTTP errors
+                if (!response.ok) {
+                    let errorDetail = 'Unknown error';
+                    try {
+                        const errorData = await response.json();
+                        errorDetail = errorData.detail || errorData.message || JSON.stringify(errorData);
+                    } catch (e) {
+                        errorDetail = `HTTP ${response.status}: ${response.statusText}`;
+                    }
+                    
+                    console.error('ConversaPay Widget: API error', {
+                        status: response.status,
+                        detail: errorDetail
+                    });
+                    
+                    // Show user-friendly error message
+                    const errorMessages = {
+                        422: 'שגיאה בנתונים שנשלחו. אנא נסה שוב.',
+                        500: 'מצטער, אירעה שגיאה בשרת. אנא נסה שוב מאוחר יותר.',
+                        404: 'שירות הצ\'אט לא זמין כרגע.',
+                        429: 'יותר מדי הודעות. אנא המתן רגע ונסה שוב.'
+                    };
+                    
+                    const userMessage = errorMessages[response.status] || CONFIG.LOCALE.error;
+                    appendMessage(userMessage, 'bot');
+                    
+                    // Log detailed error for debugging
+                    console.error(`[${response.status}] ${errorDetail}`);
+                    return;
+                }
+                
+                return response.json();
+            })
+            .then(data => {
+                if (!data) return;
+                
+                // Update session ID if backend provided a new one
+                if (data.session_id && data.session_id !== currentSessionId) {
+                    currentSessionId = data.session_id;
+                    localStorage.setItem(`conversapay_session_${CONFIG.BUSINESS_ID}`, currentSessionId);
+                }
+                
+                // Handle different response types
                 if (data.intent === 'checkout' && data.payment_url) {
                     appendMessage(
-                        `${data.response}<br><br><a href="${data.payment_url}" target="_blank" style="color: #00D9FF; text-decoration: underline;">${CONFIG.LOCALE.paymentLink}</a>`,
+                        `${data.response}<br><br><a href="${data.payment_url}" target="_blank" rel="noopener noreferrer" style="color: #00D9FF; text-decoration: underline;">${CONFIG.LOCALE.paymentLink}</a>`,
                         'bot'
                     );
-                } else {
+                } else if (data.response) {
                     appendMessage(data.response, 'bot');
+                } else {
+                    console.warn('ConversaPay Widget: Empty response from backend', data);
+                    appendMessage(CONFIG.LOCALE.error, 'bot');
                 }
             })
             .catch(error => {
                 hideTypingIndicator();
-                console.error('ConversaPay Widget: Error sending message', error);
+                console.error('ConversaPay Widget: Network error sending message', error);
                 appendMessage(CONFIG.LOCALE.error, 'bot');
             });
         }
