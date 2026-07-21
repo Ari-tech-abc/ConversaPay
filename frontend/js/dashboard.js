@@ -157,7 +157,7 @@ async function checkSubscriptionStatus() {
         if (response.ok) {
             const profile = await response.json();
             console.log('✅ [7] profile data:', profile);
-            const isPro = profile.is_pro === true && ['pro', 'premium'].includes((profile.plan_type || '').toLowerCase());
+            const isPro = ['pro', 'premium'].includes((profile.plan_type || '').toLowerCase());
             window.userSubscriptionStatus = {
                 isPro,
                 planType: profile.plan_type || 'free'
@@ -570,7 +570,7 @@ async function checkProStatusForIntegrations() {
         let isPro = false;
         if (response.ok) {
             const profile = await response.json();
-            isPro = profile.is_pro === true || ['pro', 'premium'].includes((profile.plan_type || '').toLowerCase());
+            isPro = profile.plan_type === 'pro' || profile.plan_type === 'premium';
             // Keep window.userSubscriptionStatus in sync
             window.userSubscriptionStatus = {
                 isPro,

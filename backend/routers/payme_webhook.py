@@ -143,7 +143,6 @@ async def _activate_subscription(
         safe_plan = plan_type if plan_type in ("pro", "premium") else "pro"
 
         profile_data = {
-            "is_pro": True,
             "plan_type": safe_plan,
             # H5: store a one-way hash of the card token, never the raw value.
             "payme_card_token": _hash_card_token(card_token) if card_token else None,
@@ -183,7 +182,6 @@ async def _deactivate_subscription(user_id: Optional[str], sale_id: str):
     try:
         supabase.table("profiles") \
             .update({
-                "is_pro": False,
                 "plan_type": "free",
                 "payme_card_token": None,
                 "subscription_cancelled_at": datetime.utcnow().isoformat(),

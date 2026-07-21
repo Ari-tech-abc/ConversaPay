@@ -48,7 +48,7 @@ async def get_business_plan_info(business_id: str, supabase_client) -> dict:
         
         profile = profile_result.data
         plan_type = profile.get('plan_type', 'free')
-        is_pro = profile.get('is_pro', False)
+        is_pro = plan_type in ('pro', 'premium')
         expires_at = profile.get('subscription_expires_at')
         
         # Free tier is always active (no expiry) - Widget works for everyone

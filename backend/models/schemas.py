@@ -424,12 +424,10 @@ class ProfileCreate(ProfileBase):
 class ProfileUpdate(BaseModel):
     """Schema for updating a profile."""
     full_name: Optional[str] = None
-    is_pro: Optional[bool] = None
     plan_type: Optional[str] = None
     subscription_expires_at: Optional[datetime] = None
     stripe_customer_id: Optional[str] = None
     stripe_subscription_id: Optional[str] = None
-    # WhatsApp Business integration fields for Premium tier
     whatsapp_phone_number_id: Optional[str] = None
     whatsapp_access_token: Optional[str] = None
     whatsapp_verify_token: Optional[str] = None
@@ -441,17 +439,19 @@ class ProfileResponse(ProfileBase):
     
     id: str
     user_id: str
-    is_pro: bool
-    plan_type: Optional[str] = None
+    plan_type: str = "free"
     subscription_expires_at: Optional[datetime] = None
     stripe_customer_id: Optional[str] = None
     stripe_subscription_id: Optional[str] = None
-    # WhatsApp Business integration fields for Premium tier
     whatsapp_phone_number_id: Optional[str] = None
     whatsapp_access_token: Optional[str] = None
     whatsapp_verify_token: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+
+    @property
+    def is_pro(self) -> bool:
+        return self.plan_type in ('pro', 'premium')
 
 
 # ============================================

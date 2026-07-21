@@ -46,17 +46,14 @@ async def create_business(
         
         # Pro Subscription Gate: Check if user has Pro or Premium status
         profile = supabase.table("profiles")\
-            .select("is_pro, plan_type, subscription_expires_at")\
+            .select("plan_type, subscription_expires_at")\
             .eq("user_id", current_user.user_id)\
             .execute()
         
         is_pro = False
         if profile.data:
-            is_pro = profile.data[0].get('is_pro', False)
             plan_type = profile.data[0].get('plan_type', 'free')
-            # Support both 'pro' and 'premium' as valid paid tiers
-            if plan_type not in ['pro', 'premium']:
-                is_pro = False
+            is_pro = plan_type in ['pro', 'premium']
             # Check if subscription is still valid
             expires_at = profile.data[0].get('subscription_expires_at')
             if expires_at:
