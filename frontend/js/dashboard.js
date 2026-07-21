@@ -575,10 +575,24 @@ function removeLockOverlay(overlayId) {
 
 async function checkProStatusForIntegrations() {
     try {
-        const isPro = window.userSubscriptionStatus?.isPro || false;
+        // Re-fetch profile directly to get the authoritative subscription status.
+        // window.userSubscriptionStatus may not yet be set when this runs.
+        const token = ConversaPayAuth.getToken();
+        const response = await fetch(`${API_BASE_URL}/payments/profile`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
 
-        // Cards that should be locked for free-tier users, exactly like the
-        // WordPress / HTML embed integration card.
+        let isPro = false;
+        if (response.ok) {
+            const profile = await response.json();
+            isPro = profile.is_pro === true || ['pro', 'premium'].includes((profile.plan_type || '').toLowerCase());
+            // Keep window.userSubscriptionStatus in sync
+            window.userSubscriptionStatus = {
+                isPro,
+                planType: profile.plan_type || null
+            };
+        }
+
         const lockedCards = [
             { cardId: 'integrationsCard', overlayId: 'integrationLockOverlay' },
             { cardId: 'ordersCard', overlayId: 'ordersLockOverlay' },
@@ -596,22 +610,8 @@ async function checkProStatusForIntegrations() {
     }
 }
 async function checkUserPlan() {
-    try {
-        const res = await fetch('/api/v1/payments/profile', {
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-        });
-        const profile = await res.json();
-        
-        const isPro = profile.is_pro === true || ['pro', 'premium'].includes(profile.plan_type);
-        
-        // Free users see widget + basic dashboard
-        document.getElementById('upgradeState').classList.toggle('d-none', isPro);
-        document.getElementById('dashboardContent').classList.toggle('d-none', !isPro);
-        
-        if (isPro) {
-            loadBusinessData();
-        }
-    } catch(e) {}
+    // No-op: subscription status is handled by checkSubscriptionStatus() in the main auth flow.
+    // This function is kept to avoid breaking the window.onload call in dashboard.html.
 }
 
 async function checkWebsiteStatus() {

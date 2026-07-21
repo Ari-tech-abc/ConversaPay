@@ -800,79 +800,7 @@
                 </div>
             </div>
 
-            <!-- Orders Table -->
-            <div class="card" id="ordersCard">
-                <div class="card-header">
-                    <h3 class="card-title">📋 הזמנות אחרונות</h3>
-                    <div class="d-flex gap-2">
-                        <select id="statusFilter" style="width:auto;padding:6px 12px;font-size:0.85rem;background:rgba(0,0,0,0.2);border:1px solid var(--border-color);color:var(--text-primary);border-radius:8px;" onchange="loadOrders()">
-                            <option value="">כל הסטטוסים</option>
-                            <option value="pending">ממתין</option>
-                            <option value="paid">שולם</option>
-                            <option value="processing">בטיפול</option>
-                            <option value="shipped">נשלח</option>
-                            <option value="delivered">נמסר</option>
-                            <option value="canceled">בוטל</option>
-                            <option value="refunded">הוחזר</option>
-                        </select>
-                        <button class="btn btn-sm btn-outline" onclick="loadOrders()">🔄 רענן</button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div id="noOrders" class="empty-state" style="padding:40px 20px;">
-                        <div class="icon" style="font-size:3rem;">📭</div>
-                        <p>אין הזמנות עדיין</p>
-                        <p style="font-size:0.9rem;">הזמנות יופיעו כאן לאחר שהלקוחות ישלמו דרך ה-AI Widget</p>
-                    </div>
-                    <div id="ordersTableContainer" class="table-container d-none">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>מספר הזמנה</th>
-                                    <th>לקוח</th>
-                                    <th>פריטים</th>
-                                    <th>סכום</th>
-                                    <th>סטטוס תשלום</th>
-                                    <th>תאריך</th>
-                                    <th>פעולות</th>
-                                </tr>
-                            </thead>
-                            <tbody id="ordersTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Top Products Section -->
-            <div class="card" id="topProductsCard">
-                <div class="card-header">
-                    <h3 class="card-title">🏆 המוצרים הנמכרים ביותר</h3>
-                </div>
-                <div class="card-body">
-                    <div id="noProductsData" class="empty-state" style="padding:40px 20px;">
-                        <div class="icon" style="font-size:3rem;">📊</div>
-                        <p>אין נתוני מכירות עדיין</p>
-                        <p style="font-size:0.9rem;">המוצרים הנמכרים יופיעו כאן לאחר ביצוע הזמנות</p>
-                    </div>
-                    <div id="topProductsTableContainer" class="table-container d-none">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>שם המוצר</th>
-                                    <th>קוד מוצר</th>
-                                    <th>כמות שנמכרה</th>
-                                    <th>מספר הזמנות</th>
-                                </tr>
-                            </thead>
-                            <tbody id="topProductsTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Products Section -->
+            <!-- Products Section (FREE - always visible) -->
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">📦 ניהול מוצרים</h3>
@@ -920,9 +848,83 @@
                      <div id="productsGrid" class="d-none"></div>
                 </div>
             </div>
+
+            <!-- PRO/PREMIUM LOCKED SECTION -->
+
+            <!-- Orders Table (PRO+) -->
+            <div class="card" id="ordersCard">
+                <div class="card-header">
+                    <h3 class="card-title">📋 הזמנות אחרונות</h3>
+                    <div class="d-flex gap-2">
+                        <select id="statusFilter" style="width:auto;padding:6px 12px;font-size:0.85rem;background:rgba(0,0,0,0.2);border:1px solid var(--border-color);color:var(--text-primary);border-radius:8px;" onchange="loadOrders()">
+                            <option value="">כל הסטטוסים</option>
+                            <option value="pending">ממתין</option>
+                            <option value="paid">שולם</option>
+                            <option value="processing">בטיפול</option>
+                            <option value="shipped">נשלח</option>
+                            <option value="delivered">נמסר</option>
+                            <option value="canceled">בוטל</option>
+                            <option value="refunded">הוחזר</option>
+                        </select>
+                        <button class="btn btn-sm btn-outline" onclick="loadOrders()">🔄 רענן</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="noOrders" class="empty-state" style="padding:40px 20px;">
+                        <div class="icon" style="font-size:3rem;">📭</div>
+                        <p>אין הזמנות עדיין</p>
+                        <p style="font-size:0.9rem;">הזמנות יופיעו כאן לאחר שהלקוחות ישלמו דרך ה-AI Widget</p>
+                    </div>
+                    <div id="ordersTableContainer" class="table-container d-none">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>מספר הזמנה</th>
+                                    <th>לקוח</th>
+                                    <th>פריטים</th>
+                                    <th>סכום</th>
+                                    <th>סטטוס תשלום</th>
+                                    <th>תאריך</th>
+                                    <th>פעולות</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ordersTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Products Section (PRO+) -->
+            <div class="card" id="topProductsCard">
+                <div class="card-header">
+                    <h3 class="card-title">🏆 המוצרים הנמכרים ביותר</h3>
+                </div>
+                <div class="card-body">
+                    <div id="noProductsData" class="empty-state" style="padding:40px 20px;">
+                        <div class="icon" style="font-size:3rem;">📊</div>
+                        <p>אין נתוני מכירות עדיין</p>
+                        <p style="font-size:0.9rem;">המוצרים הנמכרים יופיעו כאן לאחר ביצוע הזמנות</p>
+                    </div>
+                    <div id="topProductsTableContainer" class="table-container d-none">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>שם המוצר</th>
+                                    <th>קוד מוצר</th>
+                                    <th>כמות שנמכרה</th>
+                                    <th>מספר הזמנות</th>
+                                </tr>
+                            </thead>
+                            <tbody id="topProductsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- Integrations Section -->
+        <!-- Integrations Section (PRO+) -->
         <div id="integrations-setup-section">
             <div class="card" id="integrationsCard">
                 <div class="card-header">
