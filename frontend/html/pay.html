@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConversaPay - תשלום</title>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Heebo', sans-serif; }
+        body { background: #0B0F19; color: #F9FAFB; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+        .card {
+            background: rgba(17,24,39,0.9);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+        }
+        .logo { font-size: 3rem; margin-bottom: 16px; }
+        h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
+        .sub { color: #9CA3AF; font-size: 0.95rem; margin-bottom: 32px; }
+        .order-box {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 28px;
+            text-align: right;
+        }
+        .order-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.95rem; }
+        .order-row .label { color: #9CA3AF; }
+        .order-row .value { font-weight: 600; }
+        .order-row.total { border-top: 1px solid rgba(255,255,255,0.1); margin-top: 8px; padding-top: 12px; }
+        .order-row.total .value { font-size: 1.3rem; color: #A855F7; }
+        .btn-pay {
+            width: 100%;
+            background: linear-gradient(135deg, #10B981, #059669);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: block;
+        }
+        .btn-pay:hover { opacity: 0.9; transform: translateY(-1px); }
+        .secure { color: #6B7280; font-size: 0.8rem; margin-top: 16px; }
+        .loading { color: #9CA3AF; }
+        .error { color: #EF4444; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <div class="logo">💳</div>
+    <h1>סיום הזמנה</h1>
+    <p class="sub" id="subtitle">טוען פרטי הזמנה...</p>
+
+    <div id="orderDetails" class="order-box" style="display:none;"></div>
+
+    <a id="payBtn" class="btn-pay" style="display:none;">💳 עבור לתשלום</a>
+    <div id="statusMsg"></div>
+    <p class="secure">🔒 תשלום מאובטח</p>
+</div>
+
+<script>
+const API = window.location.origin + '/api/v1';
+const params = new URLSearchParams(window.location.search);
+const orderId = params.get('order');
+const bizId = params.get('biz');
+
+async function loadOrder() {
+    if (!orderId) {
+        document.getElementById('subtitle').textContent = 'לא נמצאו פרטי הזמנה';
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API}/orders/${orderId}/public`);
+        if (!res.ok) throw new Error('not found');
+        const order = await res.json();
+
+        document.getElementById('subtitle').textContent = `הזמנה #${order.order_number}`;
+
+        const items = (order.items || []).map(i =>
+            `<div class="order-row"><span class="label">${i.name} × ${i.quantity}</span><span class="value">₪${(i.price * i.quantity).toFixed(2)}</span></div>`
+        ).join('');
+
+        document.getElementById('orderDetails').innerHTML = `
+            ${items}
+            <div class="order-row total">
+                <span class="label">סה"כ לתשלום</span>
+                <span class="value">₪${parseFloat(order.total).toFixed(2)}</span>
+            </div>
+        `;
+        document.getElementById('orderDetails').style.display = 'block';
+
+        if (order.payment_link) {
+            const btn = document.getElementById('payBtn');
+            btn.href = order.payment_link;
+            btn.target = '_blank';
+            btn.style.display = 'block';
+        } else {
+            document.getElementById('statusMsg').innerHTML = '<p style="color:#F59E0B;margin-top:16px;">⚠️ לינק תשלום לא הוגדר עדיין</p>';
+        }
+
+    } catch (e) {
+        document.getElementById('subtitle').textContent = '';
+        document.getElementById('statusMsg').innerHTML = '<p class="error">שגיאה בטעינת פרטי ההזמנה</p>';
+    }
+}
+
+loadOrder();
+</script>
+</body>
+</html>

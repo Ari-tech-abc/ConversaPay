@@ -37,7 +37,7 @@ async def get_business_plan_info(business_id: str, supabase_client) -> dict:
         
         # Check the user's profile for subscription plan
         profile_result = supabase_client.table('profiles')\
-            .select('plan_type, is_pro, subscription_expires_at')\
+            .select('plan_type, subscription_expires_at')\
             .eq('user_id', user_id)\
             .single()\
             .execute()

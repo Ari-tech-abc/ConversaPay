@@ -44,6 +44,48 @@ def _new_order_number() -> str:
 # Public endpoints (customer-facing, no auth)
 # ============================================
 
+@router.get("/{order_id}/public", response_model=dict)
+async def get_order_public(order_id: str):
+    """Public endpoint for pay.html — returns order details including payment_link."""
+    try:
+        order = supabase.table("orders") \
+            .select("*, businesses!inner(business_name)") \
+            .eq("id", order_id) \
+            .execute()
+
+        if not order.data:
+            raise HTTPException(status_code=404, detail="Order not found")
+
+        d = order.data[0]
+        # Get payment_link from the first item's product
+        payment_link = None
+        items = d.get("items", [])
+        if items:
+            item_key = items[0].get("item_key")
+            if item_key:
+                prod = supabase.table("products") \
+                    .select("payment_link") \
+                    .eq("business_id", d["business_id"]) \
+                    .eq("item_key", item_key) \
+                    .execute()
+                if prod.data:
+                    payment_link = prod.data[0].get("payment_link")
+
+        return {
+            "order_number": d["order_number"],
+            "items": items,
+            "total": d["total"],
+            "currency": d["currency"],
+            "status": d["status"],
+            "payment_link": payment_link
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching public order: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to fetch order")
+
+
 @router.get("/{order_id}/summary", response_model=dict)
 async def get_order_summary_public(order_id: str):
     """
