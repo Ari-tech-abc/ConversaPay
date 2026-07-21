@@ -121,6 +121,7 @@ class ProductBase(BaseModel):
     price: float = Field(..., ge=0)
     currency: str = Field(default="ILS", min_length=3, max_length=3)
     image_url: Optional[str] = None
+    payment_link: Optional[str] = None
     is_active: bool = True
     inventory_count: int = -1  # -1 means unlimited
     metadata: Dict[str, Any] = {}
@@ -139,6 +140,7 @@ class ProductUpdate(BaseModel):
     price: Optional[float] = Field(None, ge=0)
     currency: Optional[str] = Field(None, min_length=3, max_length=3)
     image_url: Optional[str] = None
+    payment_link: Optional[str] = None
     is_active: Optional[bool] = None
     inventory_count: Optional[int] = None
     metadata: Optional[Dict[str, Any]] = None

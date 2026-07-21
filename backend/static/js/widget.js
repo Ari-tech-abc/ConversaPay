@@ -655,48 +655,43 @@
 
     function addCheckoutCard(message, actionData, paymentUrl) {
         const messagesContainer = document.getElementById('cp-messages');
-        
-        // Create checkout card element
         const cardDiv = document.createElement('div');
         cardDiv.className = 'cp-checkout-card';
-        cardDiv.id = `checkout-card-${actionData.order_id}`;
-        
         const currencySymbol = actionData.currency === 'ILS' ? '₪' : '$';
-        
+        const isExternal = paymentUrl && !paymentUrl.startsWith('/');
+
         cardDiv.innerHTML = `
             <div class="cp-checkout-card-header">
                 <div class="cp-checkout-icon">🛒</div>
                 <div class="cp-checkout-title">הזמנה חדשה</div>
             </div>
             <div class="cp-checkout-card-body">
-                <div class="cp-checkout-message">${escapeHtml(message)}</div>
+                <div class="cp-checkout-message">${escapeHtml(message.replace(/\[CHECKOUT:[^\]]*\]/g, '').trim())}</div>
                 <div class="cp-checkout-product">
                     <div class="cp-checkout-product-name">${escapeHtml(actionData.product_name)}</div>
                     <div class="cp-checkout-product-details">
                         <span class="cp-checkout-quantity">כמות: ${actionData.quantity}</span>
-                        <span class="cp-checkout-price">${currencySymbol}${actionData.total.toFixed(2)}</span>
+                        <span class="cp-checkout-price">${currencySymbol}${parseFloat(actionData.total).toFixed(2)}</span>
                     </div>
                 </div>
             </div>
             <div class="cp-checkout-card-footer">
-                <button class="cp-checkout-pay-btn" id="pay-btn-${actionData.order_id}" onclick="startPaymentPolling('${actionData.order_id}', '${paymentUrl}')">
-                    <span class="cp-checkout-btn-icon">💳</span>
-                    <span class="cp-checkout-btn-text">לתשלום מאובטח</span>
-                </button>
+                ${isExternal
+                    ? `<a href="${paymentUrl}" target="_blank" class="cp-checkout-pay-btn" style="text-decoration:none;">
+                           <span class="cp-checkout-btn-icon">💳</span>
+                           <span class="cp-checkout-btn-text">לתשלום מאובטח</span>
+                       </a>`
+                    : `<button class="cp-checkout-pay-btn" onclick="window.open('${paymentUrl}','_blank')">
+                           <span class="cp-checkout-btn-icon">💳</span>
+                           <span class="cp-checkout-btn-text">לתשלום מאובטח</span>
+                       </button>`
+                }
             </div>
         `;
-        
+
         messagesContainer.appendChild(cardDiv);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        
-        // Store in state
-        state.messages.push({ 
-            content: message, 
-            role: 'assistant', 
-            actionData: actionData,
-            paymentUrl: paymentUrl,
-            type: 'checkout'
-        });
+        state.messages.push({ content: message, role: 'assistant', actionData, paymentUrl, type: 'checkout' });
     }
 
     // Global function to start payment polling
@@ -762,17 +757,11 @@
      */
     function isValidPaymentUrl(url) {
         if (!url) return false;
-        // Allow relative paths
         if (url.startsWith('/')) return true;
         try {
             const parsed = new URL(url);
-            const allowedOrigins = [
-                window.location.origin,
-                'https://conversapay.org',
-                'http://localhost:8000',
-                'http://localhost:3000'
-            ];
-            return allowedOrigins.some(origin => parsed.origin === origin);
+            // Allow https only (blocks javascript: etc)
+            return parsed.protocol === 'https:' || parsed.protocol === 'http:';
         } catch {
             return false;
         }
