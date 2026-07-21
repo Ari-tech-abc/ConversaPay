@@ -382,137 +382,14 @@ async def payment_canceled():
 
 
 # ============================================
-# PayMe Webhook Handler
+# NOTE: The PayMe webhook handler used to live here too (duplicate of
+# backend/routers/payme_webhook.py, registered separately in main.py at
+# /api/v1/webhooks/payme). Both were live at the same time, doing the exact
+# same thing under two different URLs. Removed here to avoid the duplication —
+# payme_webhook.py is now the single source of truth for PayMe webhook events.
+# Make sure the Webhook/Notify URL configured in the PayMe merchant panel
+# points to: {BASE_URL}/api/v1/webhooks/payme
 # ============================================
-
-@router.post("/webhook")
-async def payme_webhook(request: Request):
-    """
-    PayMe webhook endpoint.
-    Handles payment events from PayMe payment gateway.
-    Listens for:
-    - sale.completed (for successful payments)
-    - sale.failed (for failed payments)
-    - sale.canceled (for canceled payments)
-    """
-    try:
-        # Get raw body
-        payload = await request.json()
-        
-        logger.info(f"Received PayMe webhook: {payload}")
-        
-        # Extract key fields
-        sale_id = payload.get("sale_id")
-        status_value = payload.get("status")
-        amount = payload.get("amount")
-        user_id = payload.get("extra1")
-        plan_type = payload.get("extra2")
-        
-        if not sale_id:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Missing sale_id in webhook payload"
-            )
-        
-        # Check if this is a successful payment
-        is_success = status_value == "success" or str(status_value) == "0"
-        
-        if is_success:
-            # Successful payment - activate subscription
-            await _handle_subscription_activated(user_id, plan_type, sale_id)
-        else:
-            # Failed/cancelled payment - deactivate subscription
-            await _handle_subscription_deactivated(user_id, sale_id)
-        
-        return {"status": "success", "processed": True}
-    
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Webhook processing failed"
-        )
-
-
-async def _handle_subscription_activated(
-    user_id: Optional[str],
-    plan_type: Optional[str],
-    sale_id: str
-) -> dict:
-    """
-    Handle successful subscription payment.
-    Updates user profile with Pro status.
-    """
-    try:
-        if not user_id:
-            logger.warning(f"No user_id in successful PayMe payment: {sale_id}")
-            return {"status": "error", "message": "No user_id in metadata"}
-        
-        # Update or create profile
-        existing_profile = supabase.table("profiles")\
-            .select("*")\
-            .eq("user_id", user_id)\
-            .execute()
-        
-        profile_data = {
-            "is_pro": True,
-            "plan_type": plan_type or "pro",
-            "payme_sale_id": sale_id,
-            "subscription_activated_at": datetime.utcnow().isoformat(),
-            "updated_at": datetime.utcnow().isoformat()
-        }
-        
-        if existing_profile.data:
-            supabase.table("profiles")\
-                .update(profile_data)\
-                .eq("user_id", user_id)\
-                .execute()
-            logger.info(f"Updated profile for user {user_id} to Pro status")
-        else:
-            profile_data["user_id"] = user_id
-            supabase.table("profiles")\
-                .insert(profile_data)\
-                .execute()
-            logger.info(f"Created Pro profile for user {user_id}")
-        
-        return {"status": "success", "event": "subscription_activated", "processed": True}
-    
-    except Exception as e:
-        logger.error(f"Error processing subscription activation: {str(e)}", exc_info=True)
-        return {"status": "error", "message": str(e), "event": "subscription_activated"}
-
-
-async def _handle_subscription_deactivated(user_id: Optional[str], sale_id: str) -> dict:
-    """
-    Handle failed/cancelled subscription payment.
-    Revokes Pro status from user.
-    """
-    try:
-        if not user_id:
-            logger.warning(f"No user_id in failed PayMe payment: {sale_id}")
-            return {"status": "error", "message": "No user_id in metadata"}
-        
-        # Update user profile to deactivate subscription
-        supabase.table("profiles")\
-            .update({
-                "is_pro": False,
-                "plan_type": None,
-                "payme_sale_id": None,
-                "subscription_cancelled_at": datetime.utcnow().isoformat(),
-                "updated_at": datetime.utcnow().isoformat()
-            })\
-            .eq("user_id", user_id)\
-            .execute()
-        
-        logger.info(f"Deactivated subscription for user {user_id}")
-        
-        return {"status": "success", "event": "subscription_deactivated", "processed": True}
-    
-    except Exception as e:
-        logger.error(f"Error processing subscription deactivation: {str(e)}", exc_info=True)
-        return {"status": "error", "message": str(e), "event": "subscription_deactivated"}
 
 
 # ============================================

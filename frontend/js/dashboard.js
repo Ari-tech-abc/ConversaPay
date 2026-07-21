@@ -200,14 +200,19 @@ function showUpgradeState() {
     hideLoading();
 }
 
-async function handleUpgradeToPlan(planType) {
-    const btnId = planType === 'pro' ? 'upgradeToProBtn' : 'upgradeToPremiumBtn';
-    const btn = document.getElementById(btnId);
+async function handleUpgradeToPlan(planType, buttonEl) {
+    // Accept an explicit button element (used by the lock-overlay buttons, which
+    // don't have the fixed IDs below). Fall back to the fixed IDs for the main
+    // billing/upgrade screen buttons that don't pass one.
+    const btn = buttonEl || document.getElementById(planType === 'pro' ? 'upgradeToProBtn' : 'upgradeToPremiumBtn');
     const planName = planType === 'pro' ? 'Pro' : 'Premium';
     const planPrice = planType === 'pro' ? '200 ₪' : '350 ₪';
+    const originalText = btn ? btn.textContent : '';
     
-    btn.disabled = true;
-    btn.textContent = 'מפנה לתשלום...';
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'מפנה לתשלום...';
+    }
     
     try {
         const token = ConversaPayAuth.getToken();
@@ -241,8 +246,12 @@ async function handleUpgradeToPlan(planType) {
         console.error('Upgrade error:', error);
         alert('שגיאה בתקשורת עם השרת');
     } finally {
-        btn.disabled = false;
-        btn.textContent = `💳 שדרג ל-${planName} - ${planPrice}`;
+        if (btn) {
+            btn.disabled = false;
+            // Overlay buttons have their own short label; restore that instead of
+            // the "💳 שדרג ל-X - Y ₪" format used only by the main billing screen buttons.
+            btn.textContent = buttonEl ? originalText : `💳 שדרג ל-${planName} - ${planPrice}`;
+        }
     }
 }
 
@@ -519,19 +528,34 @@ function applyLockOverlay(cardElementId, overlayId) {
         <p style="color: rgba(255,255,255,0.9); margin-bottom: 24px; font-size: 1rem; direction: rtl; max-width: 400px;">
             ותקבל את האופציות האלו
         </p>
-        <button onclick="handleUpgradeToPlan('pro')" class="btn" style="
-            background: linear-gradient(135deg, #00D9FF 0%, #3B82F6 100%);
-            color: white;
-            padding: 14px 28px;
-            font-weight: 700;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-            direction: rtl;
-        ">
-            💳 שדרג עכשיו
-        </button>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+            <button onclick="handleUpgradeToPlan('pro', this)" class="btn" style="
+                background: linear-gradient(135deg, #00D9FF 0%, #3B82F6 100%);
+                color: white;
+                padding: 14px 24px;
+                font-weight: 700;
+                border-radius: 8px;
+                border: none;
+                cursor: pointer;
+                font-size: 1rem;
+                direction: rtl;
+            ">
+                💳 שדרג ל-Pro
+            </button>
+            <button onclick="handleUpgradeToPlan('premium', this)" class="btn" style="
+                background: linear-gradient(135deg, #A855F7 0%, #C084FC 100%);
+                color: white;
+                padding: 14px 24px;
+                font-weight: 700;
+                border-radius: 8px;
+                border: none;
+                cursor: pointer;
+                font-size: 1rem;
+                direction: rtl;
+            ">
+                👑 שדרג ל-Premium
+            </button>
+        </div>
     `;
 
     // Ensure the card can host an absolutely-positioned overlay, and that
@@ -629,7 +653,7 @@ function showOrdersSection() {
                     <p style="color:var(--text-secondary);margin-bottom:32px;max-width:600px;margin-left:auto;margin-right:auto;">
                         גישה להזמנות ולתשלומים דורשת תוכנית Pro או Premium
                     </p>
-                    <button onclick="handleUpgradeToPlan('pro')" class="btn" style="background:linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 100%);color:white;padding:12px 20px;font-weight:700;border-radius:8px;border:none;cursor:pointer;">
+                    <button onclick="handleUpgradeToPlan('pro', this)" class="btn" style="background:linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 100%);color:white;padding:12px 20px;font-weight:700;border-radius:8px;border:none;cursor:pointer;">
                         💳 שדרג ל-Pro - 200 ₪/חודש
                     </button>
                 </div>

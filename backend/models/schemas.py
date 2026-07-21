@@ -326,6 +326,7 @@ class SubscriptionCreate(BaseModel):
     user_id: str
     email: EmailStr
     full_name: Optional[str] = None
+    plan_type: str = "pro"  # "pro" (200 ₪) or "premium" (350 ₪)
 
 
 class SubscriptionResponse(BaseModel):
