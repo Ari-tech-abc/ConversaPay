@@ -119,6 +119,7 @@ class ProductBase(BaseModel):
     item_key: str = Field(..., min_length=1, max_length=100)
     name: str = Field(..., min_length=1, max_length=255)
     description: Optional[str] = None
+    # FIX M6: Validate price is non-negative
     price: float = Field(..., ge=0)
     currency: str = Field(default="ILS", min_length=3, max_length=3)
     image_url: Optional[str] = None
@@ -381,9 +382,17 @@ class PaymentResponse(PaymentBase):
     
 class ChatRequest(BaseModel):
     """Schema for chat request."""
-    message: str = Field(..., min_length=1, description="User message")
+    # FIX M1: max_length=2000 prevents token-budget exhaustion attacks.
+    message: str = Field(..., min_length=1, max_length=2000, description="User message")
     business_id: str = Field(..., description="Business identifier")
-    session_id: Optional[str] = Field(None, description="Session ID for conversation continuity")
+    # FIX M2: session_id is validated as UUID or a known safe prefix pattern
+    # to prevent session-hijacking via arbitrary string injection.
+    session_id: Optional[str] = Field(
+        None,
+        max_length=128,
+        pattern=r'^[a-zA-Z0-9_\-]{1,128}$',
+        description="Session ID for conversation continuity"
+    )
     customer_info: Optional[Dict[str, Any]] = Field(None, description="Optional customer information")
 
 

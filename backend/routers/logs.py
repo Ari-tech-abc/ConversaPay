@@ -89,10 +89,13 @@ async def get_logs(
 
 
 @router.post("", response_model=LogResponse, status_code=status.HTTP_201_CREATED)
-async def create_log(request: LogCreate):
+async def create_log(
+    request: LogCreate,
+    current_user: AuthUser = Depends(require_auth)  # FIX H2: was completely unauthenticated
+):
     """
     Create a log entry.
-    Internal endpoint - should be called by backend services.
+    FIX H2: Requires authentication to prevent anonymous log poisoning.
     """
     try:
         log_data = {

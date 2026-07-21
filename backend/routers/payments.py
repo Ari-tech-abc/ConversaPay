@@ -330,50 +330,19 @@ async def create_checkout_session(
 @router.get("/success")
 async def payment_success(sale_id: str):
     """
-    Payment success page.
-    Verifies the payment and updates order status.
+    FIX C3: This redirect page must NOT mark orders as paid.
+    Payment confirmation is authoritative ONLY from the PayMe IPN webhook
+    (POST /api/v1/webhooks/payme), which verifies the HMAC signature.
+
+    This endpoint simply acknowledges the redirect and tells the frontend
+    to poll the order status endpoint until the webhook has processed.
     """
-    try:
-        # Get payment record from database
-        payment = supabase.table("payments")\
-            .select("*")\
-            .eq("payme_sale_id", sale_id)\
-            .execute()
-        
-        if payment.data:
-            payment_id = payment.data[0]['id']
-            order_id = payment.data[0]['order_id']
-            business_id = payment.data[0]['business_id']
-            
-            # Update payment
-            supabase.table("payments")\
-                .update({
-                    "status": PaymentStatus.SUCCEEDED.value,
-                    "paid_at": datetime.utcnow().isoformat(),
-                    "metadata": {
-                        **payment.data[0].get('metadata', {}),
-                        "payme_status": "success"
-                    }
-                })\
-                .eq("id", payment_id)\
-                .execute()
-            
-            # Update order status
-            supabase.table("orders")\
-                .update({"status": "paid"})\
-                .eq("id", order_id)\
-                .execute()
-            
-            logger.info(f"Payment succeeded for sale {sale_id}")
-        
-        return {"status": "success", "message": "Payment completed successfully"}
-    
-    except Exception as e:
-        logger.error(f"Error processing payment success: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to process payment"
-        )
+    logger.info(f"Payment success redirect received for sale_id={sale_id} — awaiting IPN webhook")
+    return {
+        "status": "pending_confirmation",
+        "message": "Payment received. Awaiting confirmation from payment provider.",
+        "sale_id": sale_id,
+    }
 
 
 @router.get("/canceled")

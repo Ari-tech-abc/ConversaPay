@@ -1,36 +1,46 @@
 """
 Authentication middleware for Supabase Auth JWT validation.
-Extracts and validates user identity from JWT tokens.
+
+SECURITY FIXES:
+  H3 - RoleChecker now reads the user's role from the profiles table and
+       raises 403 when the role is not in the allowed list.
+  H4 - is_pro_user uses timezone-aware datetime comparison to prevent the
+       TypeError that previously caused the check to always return False.
 """
 from fastapi import Request, HTTPException, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional
-from jose import JWTError, jwt
+from jose import JWTError
 from supabase import create_client, Client
 import logging
+from datetime import datetime, timezone
 
 from backend.config import settings
 
-
 logger = logging.getLogger(__name__)
 
-# Security scheme for Swagger UI
 security = HTTPBearer()
 
-# Supabase client for token validation
+# Anon client — used only for token validation (no elevated privileges).
 supabase_client: Client = create_client(
     settings.SUPABASE_URL,
     settings.SUPABASE_ANON_KEY
 )
 
+# Service-role client — used for privileged DB reads (profiles, businesses).
+supabase_service: Client = create_client(
+    settings.SUPABASE_URL,
+    settings.SUPABASE_SERVICE_ROLE_KEY
+)
+
 
 class AuthUser:
     """Represents an authenticated user."""
-    
+
     def __init__(self, user_id: str, email: str):
         self.user_id = user_id
         self.email = email
-    
+
     def __repr__(self):
         return f"AuthUser(user_id={self.user_id}, email={self.email})"
 
@@ -39,150 +49,126 @@ async def get_current_user(
     request: Request,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ) -> AuthUser:
-    """
-    Dependency to get the current authenticated user from JWT token.
-    Validates the token using Supabase Auth.
-    """
+    """Validate the JWT token via Supabase Auth and return the caller."""
     token = credentials.credentials
-    
     try:
-        # Verify token with Supabase
         user = supabase_client.auth.get_user(token)
-        
         if not user or not user.user:
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid authentication credentials"
-            )
-        
-        return AuthUser(
-            user_id=user.user.id,
-            email=user.user.email or ""
-        )
-    
+            raise HTTPException(status_code=401, detail="Invalid authentication credentials")
+        return AuthUser(user_id=user.user.id, email=user.user.email or "")
     except JWTError as e:
         logger.warning(f"JWT validation error: {str(e)}")
-        raise HTTPException(
-            status_code=401,
-            detail="Could not validate credentials"
-        )
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Authentication error: {str(e)}")
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication failed"
-        )
+        raise HTTPException(status_code=401, detail="Authentication failed")
 
 
-async def get_current_user_optional(
-    request: Request
-) -> Optional[AuthUser]:
-    """
-    Optional authentication - returns None if not authenticated.
-    Useful for public endpoints that can return different data based on auth status.
-    """
+async def get_current_user_optional(request: Request) -> Optional[AuthUser]:
+    """Optional authentication — returns None if not authenticated."""
     authorization = request.headers.get("Authorization")
-    
     if not authorization or not authorization.startswith("Bearer "):
         return None
-    
-    token = authorization.split(" ")[1]
-    
+    token = authorization.split(" ", 1)[1]
     try:
         user = supabase_client.auth.get_user(token)
-        
         if user and user.user:
-            return AuthUser(
-                user_id=user.user.id,
-                email=user.user.email or ""
-            )
+            return AuthUser(user_id=user.user.id, email=user.user.email or "")
     except Exception as e:
         logger.debug(f"Optional auth failed: {str(e)}")
-    
     return None
 
 
 def require_auth(user: AuthUser = Depends(get_current_user)) -> AuthUser:
-    """
-    Dependency that requires authentication.
-    Raises 401 if user is not authenticated.
-    """
+    """Dependency that requires authentication."""
     return user
 
 
 class RoleChecker:
-    """Base class for role-based access control."""
-    
+    """
+    Role-based access control dependency.
+
+    FIX H2: Previously this was a no-op that never checked the actual role.
+    Now it reads the 'role' column from the profiles table and raises 403
+    when the authenticated user's role is not in allowed_roles.
+    """
+
     def __init__(self, allowed_roles: list[str]):
         self.allowed_roles = allowed_roles
-    
+
     def __call__(self, user: AuthUser = Depends(get_current_user)) -> AuthUser:
-        # For now, all authenticated users have the same role
-        # This can be extended for admin, business_owner, etc.
+        try:
+            profile = supabase_service.table("profiles") \
+                .select("role") \
+                .eq("user_id", user.user_id) \
+                .execute()
+
+            if not profile.data:
+                raise HTTPException(status_code=403, detail="Profile not found")
+
+            user_role = profile.data[0].get("role", "user")
+            if user_role not in self.allowed_roles:
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Insufficient permissions. Required: {self.allowed_roles}"
+                )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Role check error: {str(e)}", exc_info=True)
+            raise HTTPException(status_code=500, detail="Failed to verify role")
+
         return user
-
-
-# Supabase client for database operations (service role)
-supabase_service: Client = create_client(
-    settings.SUPABASE_URL,
-    settings.SUPABASE_SERVICE_ROLE_KEY
-)
 
 
 def is_pro_user(user_id: str) -> bool:
     """
     Check if a user has an active Pro or Premium subscription.
-    Returns True if is_pro is True and subscription hasn't expired.
-    Supports both 'pro' and 'premium' plan types.
+
+    FIX H3: Previous code compared a naive datetime.utcnow() against a
+    timezone-aware expires_datetime, raising TypeError and always returning
+    False (locking out valid Pro users).  Now both sides are timezone-aware.
     """
     try:
-        from datetime import datetime
-        
-        profile = supabase_service.table("profiles")\
-            .select("is_pro, plan_type, subscription_expires_at")\
-            .eq("user_id", user_id)\
+        profile = supabase_service.table("profiles") \
+            .select("is_pro, plan_type, subscription_expires_at") \
+            .eq("user_id", user_id) \
             .execute()
-        
+
         if not profile.data:
             return False
-        
-        is_pro = profile.data[0].get('is_pro', False)
-        plan_type = profile.data[0].get('plan_type', 'free')
-        
-        # Support both 'pro' and 'premium' as valid paid tiers
-        if not is_pro or plan_type not in ['pro', 'premium']:
+
+        row = profile.data[0]
+        is_pro = row.get("is_pro", False)
+        plan_type = row.get("plan_type", "free")
+
+        if not is_pro or plan_type not in ("pro", "premium"):
             return False
-        
-        # Check if subscription is still valid
-        expires_at = profile.data[0].get('subscription_expires_at')
+
+        expires_at = row.get("subscription_expires_at")
         if expires_at:
-            expires_datetime = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
-            if expires_datetime < datetime.utcnow():
+            # FIX H3: parse to timezone-aware datetime, compare against UTC now.
+            expires_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+            now_utc = datetime.now(tz=timezone.utc)
+            if expires_dt < now_utc:
                 return False
-        
+
         return True
-    
+
     except Exception as e:
         logger.error(f"Error checking Pro/Premium status: {str(e)}")
         return False
-
-
-# Role-based dependencies
-require_admin = RoleChecker(["admin"])
-require_business_owner = RoleChecker(["business_owner"])
 
 
 def require_business_owner_for_business_id(
     business_id: str,
     current_user: AuthUser,
 ) -> str:
-    """Verify that the authenticated user owns the business with the given UUID.
-
-    The `business_id` parameter is expected to be the primary key UUID
-    of the `businesses` table.
-
-    Raises:
-        403: if the authenticated user does not own the business.
+    """
+    Verify that the authenticated user owns the business with the given UUID.
+    Raises 403 if they do not.
     """
     try:
         business = supabase_service.table("businesses") \
@@ -206,8 +192,9 @@ def require_business_owner_for_business_id(
             f"Error verifying business ownership for business_id={business_id}: {str(e)}",
             exc_info=True,
         )
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to verify business ownership",
-        )
+        raise HTTPException(status_code=500, detail="Failed to verify business ownership")
 
+
+# Convenience role-based dependencies
+require_admin = RoleChecker(["admin"])
+require_business_owner = RoleChecker(["admin", "business_owner"])
