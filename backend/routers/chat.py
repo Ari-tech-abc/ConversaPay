@@ -67,17 +67,16 @@ async def chat(request: ChatRequest, request_obj: Request):
         # Get merchant profile to check subscription tier
         owner_id = business.get('owner_id')
         profile_result = supabase.table("profiles")\
-            .select("is_pro, plan_type")\
+            .select("plan_type")\
             .eq("user_id", owner_id)\
             .execute()
         
-        is_pro = False
         plan_type = 'free'
         
         if profile_result.data:
-            profile = profile_result.data[0]
-            is_pro = profile.get('is_pro', False)
-            plan_type = profile.get('plan_type', 'free')
+            plan_type = profile_result.data[0].get('plan_type', 'free')
+        
+        is_pro = plan_type in ('pro', 'premium')
         
         # Get or create conversation
         conversation = await session_service.get_or_create_conversation(
