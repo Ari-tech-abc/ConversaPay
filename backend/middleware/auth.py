@@ -131,14 +131,15 @@ supabase_service: Client = create_client(
 
 def is_pro_user(user_id: str) -> bool:
     """
-    Check if a user has an active Pro subscription.
+    Check if a user has an active Pro or Premium subscription.
     Returns True if is_pro is True and subscription hasn't expired.
+    Supports both 'pro' and 'premium' plan types.
     """
     try:
         from datetime import datetime
         
         profile = supabase_service.table("profiles")\
-            .select("is_pro, subscription_expires_at")\
+            .select("is_pro, plan_type, subscription_expires_at")\
             .eq("user_id", user_id)\
             .execute()
         
@@ -146,7 +147,10 @@ def is_pro_user(user_id: str) -> bool:
             return False
         
         is_pro = profile.data[0].get('is_pro', False)
-        if not is_pro:
+        plan_type = profile.data[0].get('plan_type', 'free')
+        
+        # Support both 'pro' and 'premium' as valid paid tiers
+        if not is_pro or plan_type not in ['pro', 'premium']:
             return False
         
         # Check if subscription is still valid
@@ -159,7 +163,7 @@ def is_pro_user(user_id: str) -> bool:
         return True
     
     except Exception as e:
-        logger.error(f"Error checking Pro status: {str(e)}")
+        logger.error(f"Error checking Pro/Premium status: {str(e)}")
         return False
 
 

@@ -210,26 +210,18 @@ async def get_widget_config(business_id: str, request: Request):
                 detail=f"Your {plan_type.capitalize()} subscription has expired. Renew to continue using the widget."
             )
             
-        elif plan_type == 'pro':
-            # Pro tier on external domain
+        elif plan_type in ('pro', 'premium'):
+            # Pro/Premium tier on external domain
             if allowed_domains and requesting_domain not in allowed_domains:
-                logger.warning(f"BLOCKED: Pro widget access from unauthorized domain {requesting_domain} for business {business_id}")
+                plan_name = plan_type.capitalize()
+                logger.warning(f"BLOCKED: {plan_name} widget access from unauthorized domain {requesting_domain} for business {business_id}")
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Domain not authorized for your Pro plan. Configure your allowed domain in settings."
+                    detail=f"Domain not authorized for your {plan_name} plan. Configure your allowed domain in settings."
                 )
-            # If no allowed_domains configured, Pro gets one free domain slot
+            # If no allowed_domains configured, Pro/Premium gets one free domain slot
             if not allowed_domains:
-                logger.info(f"Pro plan: No allowed_domains configured, defaulting to allow {requesting_domain}")
-            
-        elif plan_type == 'premium':
-            # Premium tier on external domain - must be in allowed_domains list
-            if not allowed_domains or requesting_domain not in allowed_domains:
-                logger.warning(f"BLOCKED: Premium widget access from unauthorized domain {requesting_domain} for business {business_id}")
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Domain not authorized for your Premium plan. Configure your allowed domains in settings."
-                )
+                logger.info(f"{plan_type.capitalize()} plan: No allowed_domains configured, defaulting to allow {requesting_domain}")
         
         # Build response with plan info and actual data from database
         config = {

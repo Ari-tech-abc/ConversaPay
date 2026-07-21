@@ -106,6 +106,9 @@ async def _activate_subscription(
             "subscription_activated_at": datetime.utcnow().isoformat(),
             "updated_at": datetime.utcnow().isoformat()
         }
+        # Ensure plan_type is valid
+        if profile_data["plan_type"] not in ['pro', 'premium']:
+            profile_data["plan_type"] = 'pro'
         
         # Check if profile exists
         existing = supabase.table("profiles")\
@@ -145,7 +148,7 @@ async def _deactivate_subscription(user_id: Optional[str], sale_id: str):
         supabase.table("profiles")\
             .update({
                 "is_pro": False,
-                "plan_type": None,
+                "plan_type": "free",
                 "payme_card_token": None,
                 "subscription_cancelled_at": datetime.utcnow().isoformat(),
                 "updated_at": datetime.utcnow().isoformat()

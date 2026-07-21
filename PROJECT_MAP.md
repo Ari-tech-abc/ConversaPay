@@ -3,19 +3,25 @@
 ## 📌 Project Overview
 
 **ConversaPay** is a multi-tenant SaaS platform that transforms websites into AI-powered sales machines. The platform combines:
-- **AI Chatbot**: Gemini-powered conversational agent that sells products
-- **Payment Processing**: Stripe integration for secure checkout
-- **Analytics Dashboard**: Real-time business intelligence
-- **Website Builder**: AI-generated landing pages
-- **WordPress Plugin**: Easy embedding for non-technical users
+- **AI Chatbot:** Gemini-powered conversational agent that sells products
+- **Payment Processing:** PayMe (Israeli) + Stripe (legacy) for secure checkout
+- **Analytics Dashboard:** Real-time business intelligence
+- **Multi-Channel Support:** Web chat + WhatsApp (Premium tier)
+- **Website Builder:** AI-generated landing pages
+- **WordPress Plugin:** Easy embedding for non-technical users
 
 **Tech Stack:**
 - Backend: FastAPI (Python)
 - Frontend: Vanilla JavaScript, HTML/CSS
-- Database: Supabase (PostgreSQL)
+- Database: Supabase (PostgreSQL with RLS)
 - AI: Google Gemini API
-- Payments: Stripe
+- Payments: PayMe (primary) + Stripe (legacy)
 - Email: Resend
+- WhatsApp: Meta WhatsApp Cloud API
+
+**Version:** 2.0.0  
+**Last Updated:** 2026-07-21  
+**Status:** Production Ready ✅
 
 ---
 
@@ -26,41 +32,47 @@ conversapay-project/
 │
 ├── main.py                          # FastAPI application entry point
 ├── requirements.txt                 # Python dependencies
-├── .env.example                     # Environment variables template
+├── .env                             # Environment variables (not in git)
 ├── .gitignore                       # Git ignore rules
+├── Dockerfile                       # Docker configuration
 │
 ├── backend/                         # Core backend package
 │   ├── __init__.py
-│   ├── config.py                    # Configuration settings (Supabase, API keys)
+│   ├── config.py                    # Configuration settings (Supabase, API keys, PayMe)
 │   │
-│   ├── routers/                     # API route handlers
+│   ├── routers/                     # API route handlers (14 routers)
 │   │   ├── __init__.py
-│   │   ├── auth.py                  # Authentication (login, register, JWT)
+│   │   ├── auth.py                  # Authentication (register, login, verify email)
 │   │   ├── businesses.py            # Business CRUD operations
 │   │   ├── products.py              # Product management
 │   │   ├── chat.py                  # AI chat endpoint (Gemini integration)
 │   │   ├── orders.py                # Order management & tracking
-│   │   ├── payments.py              # Stripe payment processing
+│   │   ├── payments.py              # Payment processing (Stripe legacy)
+│   │   ├── payme_webhook.py         # PayMe webhook handler (NEW - primary payment)
+│   │   ├── whatsapp.py              # WhatsApp webhook handler (NEW - Premium tier)
 │   │   ├── analytics.py             # Business analytics & metrics
 │   │   ├── logs.py                  # Activity logging
-│   │   ├── webhooks.py              # Stripe webhook handlers
+│   │   ├── webhooks.py              # Generic webhook handlers
 │   │   ├── widget.py                # Public widget config endpoint
-│   │   └── generator.py             # AI website builder (conversapay-site-builder)
+│   │   └── dev_simulator.py         # Dev-only payment simulator (never in production)
 │   │
-│   ├── services/                    # Business logic layer
+│   ├── services/                    # Business logic layer (6 services)
 │   │   ├── __init__.py
 │   │   ├── gemini_service.py        # Gemini AI integration
-│   │   ├── payment_service.py       # Stripe payment logic
-│   │   ├── session_service.py       # Session management
+│   │   ├── payme_service.py         # PayMe payment logic (NEW - primary)
 │   │   ├── email_service.py         # Email notifications (Resend)
+│   │   ├── session_service.py       # Session & conversation management (NEW)
+│   │   ├── product_service.py       # Product search & matching (NEW)
 │   │   └── monitoring_service.py    # Application monitoring
 │   │
 │   ├── middleware/                  # Custom middleware
 │   │   ├── __init__.py
-│   │   └── auth.py                  # JWT verification middleware
+│   │   ├── auth.py                  # JWT verification middleware
+│   │   └── rate_limiter.py          # Rate limiting for public endpoints (NEW)
 │   │
-│   ├── models/                      # Database models (if using ORM)
-│   │   └── __init__.py
+│   ├── models/                      # Pydantic models/schemas
+│   │   ├── __init__.py
+│   │   └── schemas.py               # Request/response validation models
 │   │
 │   ├── static/                      # Static assets
 │   │   ├── robots.txt               # SEO robots file
@@ -68,31 +80,26 @@ conversapay-project/
 │   │   └── js/
 │   │       └── widget.js            # Production widget (served from here)
 │   │
-│   └── templates/                   # Server-side templates (if needed)
-│       └── __init__.py
+│   └── scripts/                     # Database migration scripts
+│       ├── apply_migration.sql
+│       ├── migrate_email_verification.py
+│       └── run_migration.py
 │
 ├── frontend/                        # Frontend assets
-│   ├── index.html                   # Premium landing page (Linear/Stripe design)
-│   ├── css/
-│   │   └── main.css                 # Legacy styles (being phased out)
 │   └── js/
 │       ├── auth.js                  # Authentication logic (login/register)
 │       ├── dashboard.js             # Dashboard functionality
 │       └── widget.js                # Embeddable chat widget (source)
 │
 ├── database/                        # Database schemas
-│   ├── schema.sql                   # Complete database schema
-│   └── rls_policies.sql             # Row Level Security policies
-│
-├── wordpress-plugin/                # WordPress integration
-│   ├── conversapay-chat.php         # Main plugin file
-│   └── README.md                    # Plugin documentation
+│   ├── schema.sql                   # Complete database schema (13 tables)
+│   └── supabase_migration.sql       # Migration helper
 │
 ├── conversapay-site-builder/        # AI Website Builder (separate service)
 │   ├── backend/
 │   │   ├── __init__.py
 │   │   ├── config.py                # Site builder configuration
-│   │   ├── main.py                  # FastAPI app for site builder
+│   │   ├── main.py                  # FastAPI app (port 8001)
 │   │   └── routers/
 │   │       ├── __init__.py
 │   │       └── generator.py         # AI site generation endpoint
@@ -102,13 +109,20 @@ conversapay-project/
 │   ├── .env.example
 │   └── README.md
 │
-├── home.html                        # Landing page (served at root)
+├── wordpress-plugin/                # WordPress integration
+│   ├── conversapay-chat.php         # Main plugin file
+│   └── README.md                    # Plugin documentation
+│
+├── home.html                        # Landing page (served at /)
 ├── dashboard.html                   # Main dashboard (analytics, orders, products)
 ├── login.html                       # Login page (premium dark theme)
 ├── register.html                    # Registration page (premium dark theme)
-├── pay.html                         # Stripe payment page
+├── pay.html                         # Payment simulator page
+├── index.html                       # Sandbox chat preview
 │
-└── PROJECT_MAP.md                   # This file - complete architecture guide
+├── ARCHITECTURE.md                  # Production architecture overview
+├── PROJECT_MAP.md                   # This file - complete architecture guide
+└── README.md                        # Project readme
 ```
 
 ---
@@ -118,11 +132,15 @@ conversapay-project/
 ### 1. **Request Flow: Multi-Tenant SaaS**
 
 ```
-User Request
+Client Request
     ↓
 main.py (FastAPI App)
     ↓
-DualCORSMiddleware (CORS validation)
+DualCORSMiddleware (CORS validation - widget vs dashboard)
+    ↓
+RateLimiter (for public endpoints like chat)
+    ↓
+Auth Middleware (JWT validation for protected routes)
     ↓
 Router (auth/businesses/chat/etc.)
     ↓
@@ -138,7 +156,7 @@ Response
 ```
 1. User submits login/register form
    ↓
-2. Frontend (auth.js) → POST /api/v1/auth/login
+2. Frontend (auth.js) → POST /api/v1/auth/login or /register
    ↓
 3. Backend validates credentials via Supabase Auth
    ↓
@@ -151,7 +169,7 @@ Response
 7. Middleware (auth.py) validates JWT on each request
 ```
 
-### 3. **AI Chat Flow**
+### 3. **AI Chat Flow (Web Widget)**
 
 ```
 1. Customer visits website with embedded widget
@@ -164,37 +182,94 @@ Response
    ↓
 5. chat.py router receives request
    ↓
-6. gemini_service.py processes with Gemini AI
+6. RateLimiter checks IP (10 requests/minute)
    ↓
-7. AI determines intent (product inquiry, checkout, etc.)
+7. session_service.get_or_create_conversation() - database-backed
    ↓
-8. If checkout: Returns payment_url from Stripe
+8. gemini_service.chat() processes with Gemini AI
    ↓
-9. Widget displays response with payment button
+9. AI determines intent (product inquiry, checkout, etc.)
    ↓
-10. Customer completes payment
-    ↓
-11. Webhook updates order status
+10. product_service.search_products() if product inquiry
+   ↓
+11. If checkout intent: Returns payment_url from PayMe/Stripe
+   ↓
+12. Widget displays response with payment button
+   ↓
+13. Customer completes payment
+   ↓
+14. Webhook (payme_webhook.py or payments.py) updates order status
 ```
 
-### 4. **Dashboard Analytics Flow**
+### 4. **WhatsApp Chat Flow (Premium Tier)**
+
+```
+1. Customer sends WhatsApp message to business number
+   ↓
+2. Meta WhatsApp Cloud API → POST /api/v1/webhooks/whatsapp
+   ↓
+3. whatsapp.py router receives webhook
+   ↓
+4. Validates phone_number_id and Premium tier status
+   ↓
+5. session_service.get_or_create_conversation() with channel="whatsapp"
+   ↓
+6. session_service.get_or_create_customer() with phone identifier
+   ↓
+7. gemini_service.chat() processes with business context
+   ↓
+8. AI response saved to database
+   ↓
+9. send_whatsapp_message() sends response via Meta Graph API
+   ↓
+10. Returns 200 OK to Meta (retry loop satisfied)
+```
+
+### 5. **Payment Flow (PayMe - Primary)**
+
+```
+1. User selects Pro (₪200) or Premium (₪350) plan
+   ↓
+2. POST /api/v1/payments/create-checkout-session
+   ↓
+3. payme_service.create_hosted_setup_session() creates PayMe sale
+   ↓
+4. Returns sale_url (hosted payment page)
+   ↓
+5. User redirected to PayMe hosted page
+   ↓
+6. User completes payment on PayMe
+   ↓
+7. PayMe sends IPN to /api/v1/webhooks/payme
+   ↓
+8. payme_webhook.py processes webhook
+   ↓
+9. _activate_subscription() updates profile:
+   - is_pro = true
+   - plan_type = "pro" or "premium"
+   - payme_card_token stored for recurring billing
+   ↓
+10. User can now access Pro/Premium features
+```
+
+### 6. **Dashboard Analytics Flow**
 
 ```
 1. User logs in → dashboard.html loads
-    ↓
+   ↓
 2. dashboard.js checks business.website_url
-    ↓
+   ↓
 3a. IF no website → Show onboarding card → Link to site builder
 3b. IF has website → Show standard dashboard
-    ↓
+   ↓
 4. Load analytics: GET /api/v1/analytics/businesses/{id}/analytics
-    ↓
+   ↓
 5. Load orders: GET /api/v1/orders?business_id={id}
-    ↓
+   ↓
 6. Load products: GET /api/v1/products?business_id={id}
-    ↓
+   ↓
 7. Render charts (Chart.js) and tables
-    ↓
+   ↓
 8. Auto-refresh every 30 seconds
 ```
 
@@ -206,30 +281,31 @@ Response
 
 #### `main.py`
 **Purpose:** Application entry point and configuration
-- Initializes FastAPI app
-- Configures dual-tier CORS middleware
-- Registers all routers
-- Serves static HTML pages
-- Handles errors
+- Initializes FastAPI app with lifespan events
+- Configures DualCORSMiddleware for dual-tier CORS
+- Registers all 14 routers
+- Serves static HTML pages (home, dashboard, login, register, pay)
+- Handles errors (404, 500)
+- Dynamic port binding for Render deployment
 - **Key Sections:**
-  - `lifespan()`: Startup/shutdown events
-  - `DualCORSMiddleware`: Widget vs Dashboard CORS
+  - `lifespan()`: Startup/shutdown events with configuration validation
+  - `DualCORSMiddleware`: Widget vs Dashboard CORS policies
   - Router registration: All API endpoints
   - Static file mounting: `/static` and `/frontend`
 
 #### `requirements.txt`
 **Purpose:** Python dependencies
-- FastAPI, uvicorn, pydantic
+- FastAPI, uvicorn, pydantic-settings
 - Supabase client
 - Google Generative AI
-- Stripe SDK
 - Resend (email)
+- httpx (HTTP client for PayMe/WhatsApp)
 - python-dotenv
 
-#### `.env.example`
-**Purpose:** Environment variables template
+#### `.env`
+**Purpose:** Environment variables (not in git)
 - Supabase credentials
-- API keys (Gemini, Stripe, Resend)
+- API keys (Gemini, PayMe, Stripe, Resend)
 - CORS origins
 - Environment flags
 
@@ -239,18 +315,28 @@ Response
 
 #### `backend/config.py`
 **Purpose:** Centralized configuration
-- Loads environment variables
-- Provides settings object
+- Loads environment variables with Pydantic Settings
+- Provides settings object with type safety
 - API keys, database URLs, CORS origins
 - Environment detection (dev/prod)
+- **PayMe Configuration:**
+  - `PAYME_PAY_KEY`, `PAYME_SELLER_KEY`, `PAYME_SELLER_ID`
+  - `PAYME_BUSINESS_ID`, `PAYME_API_URL`, `PAYME_SANDBOX_URL`
+- **WhatsApp Configuration:** (stored in profiles table)
+- **Properties:**
+  - `cors_origins_list`: Parsed CORS origins
+  - `is_production`: Environment check
+  - `is_development`: Environment check
 
 #### `backend/routers/auth.py`
 **Purpose:** Authentication endpoints
-- `POST /api/v1/auth/register`: User registration
+- `POST /api/v1/auth/register`: User registration with email verification
 - `POST /api/v1/auth/login`: User login (returns JWT)
 - `POST /api/v1/auth/logout`: Session invalidation
 - `GET /api/v1/auth/me`: Get current user
+- `GET /api/v1/auth/verify`: Email verification handler
 - Uses Supabase Auth for JWT management
+- Generates secure verification tokens with `secrets.token_urlsafe(32)`
 
 #### `backend/routers/businesses.py`
 **Purpose:** Business management
@@ -260,6 +346,7 @@ Response
 - `PUT /api/v1/businesses/{id}`: Update business
 - `DELETE /api/v1/businesses/{id}`: Delete business
 - Multi-tenant: Each user can have multiple businesses
+- Enforces Pro subscription for business creation
 
 #### `backend/routers/products.py`
 **Purpose:** Product catalog management
@@ -267,16 +354,18 @@ Response
 - `POST /api/v1/products`: Create product
 - `PUT /api/v1/products/{id}`: Update product
 - `DELETE /api/v1/products/{id}`: Delete product
-- Fields: name, price, description, image_url, is_active
+- Fields: name, price, description, image_url, is_active, item_key
+- Uses product_service for search and matching
 
 #### `backend/routers/chat.py`
 **Purpose:** AI chat endpoint
-- `POST /api/v1/chat`: Send message to AI
-- Integrates with Gemini API
+- `POST /api/v1/chat`: Send message to AI (Gemini)
+- Rate limited (10 requests/minute per IP)
+- Integrates with Gemini API via gemini_service
 - Determines user intent (product inquiry, checkout, etc.)
-- Returns AI response + optional payment_url
-- Creates/updates chat sessions
+- Creates/updates chat sessions in database
 - Logs conversations for analytics
+- Returns AI response + optional payment_url
 
 #### `backend/routers/orders.py`
 **Purpose:** Order management
@@ -286,14 +375,35 @@ Response
 - `PUT /api/v1/orders/{id}/status`: Update status
 - `GET /api/v1/orders/summary`: Analytics summary
 - Statuses: pending, paid, processing, shipped, delivered, canceled, refunded
+- Creates unique order numbers with `generate_order_number()`
 
 #### `backend/routers/payments.py`
-**Purpose:** Payment processing
+**Purpose:** Payment processing (Stripe legacy)
 - `POST /api/v1/payments/create-checkout-session`: Create Stripe session
 - `POST /api/v1/payments/webhook`: Stripe webhook handler
 - `GET /api/v1/payments/profile`: Get subscription status
 - `GET /api/v1/payments/wordpress-plugin/{business_id}`: Download WP plugin
-- Handles Pro subscription ($29/month)
+- Handles Pro subscription ($29/month) - being replaced by PayMe
+
+#### `backend/routers/payme_webhook.py` ⭐ NEW
+**Purpose:** PayMe webhook handler (primary payment gateway)
+- `POST /api/v1/webhooks/payme`: Instant Payment Notifications (IPN)
+- Processes successful payments to activate subscriptions
+- Handles failures/cancellations to deactivate subscriptions
+- Stores PayMe card tokens for recurring billing (הוראת קבע)
+- Updates profile: `is_pro`, `plan_type`, `payme_card_token`, `payme_sale_id`
+- 2-tier pricing: Pro (₪200/month) and Premium (₪350/month)
+
+#### `backend/routers/whatsapp.py` ⭐ NEW
+**Purpose:** WhatsApp webhook handler (Premium tier only)
+- `GET /api/v1/webhooks/whatsapp`: Meta webhook verification
+- `POST /api/v1/webhooks/whatsapp`: WhatsApp message handler
+- Validates merchant has Premium tier (`is_pro=true`, `plan_type="premium"`)
+- Looks up merchant by `whatsapp_phone_number_id`
+- Creates conversations with channel="whatsapp"
+- Processes messages through Gemini AI (same as web chat)
+- Sends responses via Meta Graph API
+- Returns 200 OK to satisfy Meta's retry loop
 
 #### `backend/routers/analytics.py`
 **Purpose:** Business analytics
@@ -302,6 +412,19 @@ Response
 - `GET /api/v1/analytics/businesses/{id}/orders`: Order analytics
 - Metrics: total_revenue, conversion_rate, average_order_value, unique_sessions
 
+#### `backend/routers/logs.py`
+**Purpose:** Activity logging
+- `GET /api/v1/logs`: List logs (with filters)
+- `POST /api/v1/logs`: Create log entry
+- Levels: debug, info, warning, error, critical
+- Sources: api, ai, payment, webhook, system
+
+#### `backend/routers/webhooks.py`
+**Purpose:** Generic webhook handlers
+- Configurable webhook endpoints for businesses
+- Event types: order.created, payment.succeeded, etc.
+- Retry logic and failure tracking
+
 #### `backend/routers/widget.py`
 **Purpose:** Public widget configuration
 - `GET /api/v1/widget/config/{business_id}`: Get bot config
@@ -309,55 +432,115 @@ Response
 - Returns: bot_name, greeting, theme_colors, features
 - No sensitive data exposed
 
-#### `backend/routers/generator.py`
-**Purpose:** AI website builder (conversapay-site-builder)
-- `POST /api/v1/builder/generate`: Generate website with AI
-- Uses Gemini to create JSON config
-- Renders HTML from config
-- Returns complete landing page
+#### `backend/routers/dev_simulator.py` ⚠️ DEV ONLY
+**Purpose:** Development payment simulator
+- Simulates PayMe/Stripe webhooks for local testing
+- **NEVER loaded in production** (guarded by `settings.is_production`)
+- Helps test payment flows without real payment gateway
+
+---
+
+### **Services Layer**
 
 #### `backend/services/gemini_service.py`
 **Purpose:** Gemini AI integration
 - Sends prompts to Gemini API
 - Parses AI responses
-- Determines user intent
+- Determines user intent (chat, checkout, error)
 - Extracts product recommendations
 - Handles checkout intents
+- Maintains conversation context
 
-#### `backend/services/payment_service.py`
-**Purpose:** Stripe payment logic
-- Creates checkout sessions
-- Handles webhooks
-- Manages subscriptions
-- Processes refunds
+#### `backend/services/payme_service.py` ⭐ NEW
+**Purpose:** PayMe payment logic (primary gateway)
+- Creates hosted payment page sessions
+- Supports 2-tier pricing: Pro (₪200) and Premium (₪350)
+- Handles recurring billing setup (הוראת קבע)
+- Uses PayMe's `/generate-sale` endpoint
+- Returns `sale_url` for redirect
+- Verifies webhook signatures (basic validation)
 
 #### `backend/services/email_service.py`
-**Purpose:** Email notifications
+**Purpose:** Email notifications (Resend)
 - Sends order confirmations
 - Sends payment receipts
 - Sends admin notifications
-- Uses Resend API
+- Sends email verification links
+- Professional HTML templates with ConversaPay branding
+
+#### `backend/services/session_service.py` ⭐ NEW
+**Purpose:** Session & conversation management
+- Database-backed sessions (replaced in-memory storage)
+- `get_or_create_conversation()`: Manages chat sessions
+- `get_conversation_history()`: Retrieves message history
+- `add_message()`: Saves messages to database
+- `close_conversation()`: Marks conversations as closed
+- `get_or_create_customer()`: Manages customer records
+- `get_conversation_stats()`: Analytics on conversations
+- Supports multiple channels: web, whatsapp, telegram, api
+
+#### `backend/services/product_service.py` ⭐ NEW
+**Purpose:** Product search and matching
+- `search_products()`: Semantic and keyword matching
+- `get_product_by_item_key()`: Lookup by item key
+- `get_product_by_id()`: Lookup by UUID
+- `get_all_products()`: List all products for business
+- `format_product_for_ai()`: Formats product info for Gemini (Hebrew)
+- Scoring algorithm: exact match (100), contains (50), word match (15)
+
+#### `backend/services/monitoring_service.py`
+**Purpose:** Application monitoring
+- Tracks application health
+- External service status (PayMe, Gemini, Resend)
+- Database connection health
+- Rate limiter statistics
+
+---
+
+### **Middleware**
 
 #### `backend/middleware/auth.py`
 **Purpose:** JWT authentication middleware
-- Verifies JWT tokens
-- Extracts user info
+- Verifies JWT tokens from Supabase Auth
+- Extracts user info from token
 - Attaches user to request state
 - Returns 401 if invalid
+- Auto-logout on 401 responses
+
+#### `backend/middleware/rate_limiter.py` ⭐ NEW
+**Purpose:** Rate limiting for public endpoints
+- Token bucket algorithm
+- Limits requests per IP address
+- Default: 10 requests/minute for chat endpoint
+- `get_client_ip()`: Handles proxies and load balancers
+- `check_rate_limit()`: Dependency for FastAPI endpoints
+- Returns 429 with Retry-After header when exceeded
+
+---
+
+### **Models**
+
+#### `backend/models/schemas.py`
+**Purpose:** Pydantic models for request/response validation
+- **Enums:** SubscriptionTier, SubscriptionStatus, ChannelType, OrderStatus, PaymentStatus, etc.
+- **Business Models:** BusinessBase, BusinessCreate, BusinessUpdate, BusinessResponse
+- **Product Models:** ProductBase, ProductCreate, ProductUpdate, ProductResponse
+- **Customer Models:** CustomerBase, CustomerCreate, CustomerUpdate, CustomerResponse
+- **Conversation Models:** ConversationBase, ConversationCreate, ConversationUpdate, ConversationResponse
+- **Message Models:** MessageBase, MessageCreate, MessageResponse
+- **Order Models:** OrderItem, OrderBase, OrderCreate, OrderUpdate, OrderResponse
+- **Subscription Models:** SubscriptionCreate, SubscriptionResponse
+- **Payment Models:** PaymentBase, PaymentCreate, PaymentResponse
+- **Profile Models:** ProfileBase, ProfileCreate, ProfileUpdate, ProfileResponse (includes WhatsApp fields)
+- **Auth Models:** UserRegister, UserLogin, TokenResponse, PasswordResetRequest, PasswordReset
+- **Log Models:** LogCreate, LogResponse
+- **API Key Models:** ApiKeyBase, ApiKeyCreate, ApiKeyResponse, ApiKeyWithSecret
+- **Webhook Models:** WebhookBase, WebhookCreate, WebhookUpdate, WebhookResponse
+- **Analytics Models:** AnalyticsOverviewResponse, DashboardStats, RevenueStats, OrderStats
 
 ---
 
 ### **Frontend Files**
-
-#### `frontend/index.html`
-**Purpose:** Premium landing page
-- Linear/Stripe dark aesthetic (#0B0F19)
-- Hero section with gradient text
-- Features grid with hover animations
-- Pricing section (Free Sandbox vs Pro)
-- How It Works section
-- Fully self-contained (inline styles)
-- Navigation to login/register
 
 #### `frontend/js/auth.js`
 **Purpose:** Authentication logic
@@ -434,6 +617,7 @@ Response
 - Password strength indicator
 - Business info box
 - Gradient submit button
+- Email verification requirement
 
 ---
 
@@ -458,26 +642,27 @@ Response
 ### **Database Schema**
 
 #### `database/schema.sql`
-**Purpose:** Complete database structure
+**Purpose:** Complete database structure (13 tables)
 - **Tables:**
-  - `users`: User accounts (Supabase Auth)
-  - `businesses`: Business profiles
+  - `profiles`: User accounts and subscription status
+  - `businesses`: Business profiles (tenant root)
   - `products`: Product catalog
+  - `customers`: Customer database
+  - `conversations`: Chat session tracking
+  - `messages`: Message history
   - `orders`: Order records
-  - `order_items`: Line items
-  - `chat_sessions`: Conversation tracking
-  - `chat_messages`: Message history
-  - `payments`: Payment records
-  - `subscriptions`: Pro plan management
-  - `allowed_domains`: Widget security
+  - `payments`: Payment transactions
+  - `subscriptions`: Subscription management
+  - `api_keys`: API key management
+  - `webhooks`: Webhook configuration
+  - `logs`: Application logging
+  - `email_templates`: Customizable email templates
 
-#### `database/rls_policies.sql`
-**Purpose:** Row Level Security
-- Multi-tenant data isolation
-- Users can only access their own businesses
-- Business owners can manage their products/orders
-- Public read access for widget config
-- Admin override capabilities
+- **Security:**
+  - Row Level Security (RLS) on all tables
+  - Multi-tenant data isolation
+  - Subscription field protection triggers
+  - Updated_at triggers on all tables
 
 ---
 
@@ -488,11 +673,13 @@ Response
 - Middleware validates on every request
 - Tokens stored in localStorage
 - Auto-logout on 401
+- Email verification required for registration
 
 ### **Authorization**
 - Row Level Security (RLS) in database
 - Business ownership validation
-- Role-based access (owner, admin, viewer)
+- Role-based access (admin, user, viewer)
+- Subscription field protection (database trigger)
 
 ### **Widget Security**
 - Domain whitelist validation
@@ -500,10 +687,16 @@ Response
 - 403 Forbidden for unauthorized domains
 - No private keys in public responses
 
+### **Rate Limiting**
+- Token bucket algorithm
+- 10 requests/minute for chat endpoint
+- IP-based tracking (handles proxies)
+- Returns 429 with Retry-After header
+
 ### **CORS Policy**
-- **Widget endpoints:** `*` (any origin)
-- **Dashboard endpoints:** Configured origins only
-- Credentials only for trusted origins
+- **Widget endpoints:** `*` (any origin, no credentials)
+- **Dashboard endpoints:** Configured origins only, credentials allowed
+- **Webhooks:** `*` (any origin, no credentials)
 
 ---
 
@@ -542,48 +735,79 @@ Response
 1. User registers (register.html)
    ↓
 2. POST /api/v1/auth/register
+   - Creates Supabase Auth user
+   - Creates profile in database
+   - Generates email verification token
+   - Saves token (24h expiration)
+   - Sends email via Resend
    ↓
-3. User logs in (login.html)
+3. User verifies email (GET /api/v1/auth/verify?token=xxx)
    ↓
-4. POST /api/v1/auth/login → JWT token
+4. User logs in (login.html)
    ↓
-5. Dashboard loads (dashboard.html)
+5. POST /api/v1/auth/login → JWT token
    ↓
-6. No business → Show "Create Business" form
+6. Dashboard loads (dashboard.html)
    ↓
-7. POST /api/v1/businesses
+7. No business → Show "Create Business" form
    ↓
-8. No website → Show AI Site Builder onboarding
+8. POST /api/v1/businesses
    ↓
-9. User generates site (site-builder)
+9. No website → Show AI Site Builder onboarding
    ↓
-10. Business now has website_url
+10. User generates site (site-builder)
     ↓
-11. Dashboard shows analytics
+11. Business now has website_url
     ↓
-12. User adds products (dashboard.html)
+12. Dashboard shows analytics
     ↓
-13. POST /api/v1/products
+13. User adds products (dashboard.html)
     ↓
-14. Customer visits website
+14. POST /api/v1/products
     ↓
-15. Widget loads (widget.js)
+15. Customer visits website
     ↓
-16. Customer chats → POST /api/v1/chat
+16. Widget loads (widget.js)
     ↓
-17. AI suggests products
+17. Customer chats → POST /api/v1/chat
     ↓
-18. Customer clicks buy
+18. AI suggests products (gemini_service + product_service)
     ↓
-19. POST /api/v1/orders
+19. Customer clicks buy
     ↓
-20. Stripe checkout session created
+20. POST /api/v1/orders
     ↓
-21. Customer pays
+21. PayMe checkout session created
     ↓
-22. Webhook updates order status
+22. Customer pays on PayMe hosted page
     ↓
-23. Dashboard shows new order + revenue
+23. PayMe webhook updates order status
+    ↓
+24. Dashboard shows new order + revenue
+```
+
+### **WhatsApp Message Flow (Premium)**
+
+```
+1. Customer sends WhatsApp message
+   ↓
+2. Meta Cloud API → POST /api/v1/webhooks/whatsapp
+   ↓
+3. Validate Premium tier status
+   ↓
+4. Get/create conversation (channel="whatsapp")
+   ↓
+5. Get/create customer (phone identifier)
+   ↓
+6. Load conversation history
+   ↓
+7. Process with Gemini AI
+   ↓
+8. Save user + assistant messages
+   ↓
+9. Send response via WhatsApp
+   ↓
+10. Return 200 OK to Meta
 ```
 
 ---
@@ -599,7 +823,7 @@ Response
 │  ┌──────────────┐  ┌─────────────┐ │
 │  │   FastAPI    │  │   Static    │ │
 │  │   Backend    │  │   Files     │ │
-│  │   (Port 8000)│  │  (HTML/JS)  │ │
+│  │  (Port 8000)│  │  (HTML/JS)  │ │
 │  └──────────────┘  └─────────────┘ │
 │         ↓                    ↓      │
 │  ┌─────────────────────────────┐   │
@@ -608,155 +832,278 @@ Response
 │  └─────────────────────────────┘   │
 │                                     │
 └─────────────────────────────────────┘
-         ↓                    ↓
-   ┌──────────┐      ┌──────────────┐
-   │  Gemini  │      │    Stripe    │
-   │   API    │      │     API      │
-   └──────────┘      └──────────────┘
+          ↓                    ↓
+    ┌──────────┐      ┌──────────────┐
+    │  Gemini  │      │    PayMe     │
+    │   API    │      │     API      │
+    └──────────┘      └──────────────┐
+          ↓                    ↓
+    ┌──────────────┐      ┌──────────────┐
+    │   Resend     │      │   WhatsApp   │
+    │ Email Service│      │  Cloud API   │
+    └──────────────┘      └──────────────┘
+```
+
+### **Site Builder (Separate Service)**
+```
+┌─────────────────────────────────────┐
+│   conversapay-site-builder          │
+│   (Port 8001)                       │
+│   ┌─────────────────────────────┐   │
+│   │   FastAPI App               │   │
+│   │   - /api/v1/builder/generate│   │
+│   └─────────────────────────────┘   │
+└─────────────────────────────────────┘
+          ↓
+    ┌──────────┐
+    │  Gemini  │
+    │   API    │
+    └──────────┘
 ```
 
 ### **Environment Variables**
 ```env
-# Database
+# Application
+SECRET_KEY=<generate-secure-32-char-key>
+ENVIRONMENT=production
+DEBUG=false
+API_PREFIX=/api/v1
+
+# Supabase
 SUPABASE_URL=https://xxx.supabase.co
 SUPABASE_ANON_KEY=eyJxxx...
+SUPABASE_SERVICE_ROLE_KEY=eyJxxx...
 
 # AI
 GEMINI_API_KEY=AIzaSy...
 
-# Payments
-STRIPE_API_KEY=sk_live_...
+# PayMe (Primary Payment Gateway)
+PAYME_PAY_KEY=xxx
+PAYME_SELLER_KEY=xxx
+PAYME_SELLER_ID=xxx
+PAYME_BUSINESS_ID=xxx
+PAYME_API_URL=https://live.payme.io/api
+PAYME_SANDBOX_URL=https://sandbox.payme.io/api
+
+# Stripe (Legacy - being replaced)
+STRIPE_API_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 
-# Email
+# Email (Resend)
 RESEND_API_KEY=re_...
+EMAIL_FROM_ADDRESS=no-reply@conversapay.org
+EMAIL_FROM_NAME=ConversaPay
 
-# App
-ENVIRONMENT=production
-DEBUG=false
-API_PREFIX=/api/v1
-CORS_ORIGINS=https://conversapay.org,https://app.conversapay.org
+# CORS
+CORS_ORIGINS=https://conversapay.org,https://www.conversapay.org
+
+# URLs
+FRONTEND_URL=http://localhost:8000
+BACKEND_URL=http://localhost:8000
+BASE_URL=http://localhost:8000
+
+# Monitoring (Optional)
+SENTRY_DSN=...
+UPTIMEROBOT_API_KEY=...
 ```
 
 ---
 
 ## 📊 Database Schema Overview
 
-### **Core Tables**
+### **Core Tables (13 tables)**
 
-#### `users` (Supabase Auth)
-- id (UUID)
-- email
-- encrypted_password
-- email_confirmed_at
-- last_sign_in_at
+#### `profiles`
+- id (UUID, PK)
+- user_id (UUID, unique, FK to Supabase Auth)
+- email, full_name, role (admin/user/viewer)
+- is_pro (boolean), plan_type (free/pro/premium)
+- subscription_expires_at
+- stripe_customer_id, stripe_subscription_id
+- **WhatsApp Premium fields:** whatsapp_phone_number_id, whatsapp_access_token, whatsapp_verify_token
+- **Email verification fields:** email_verified, email_verification_token, email_verification_expires_at
+- created_at, updated_at
 
 #### `businesses`
-- id (UUID)
-- user_id (FK to users)
+- id (UUID, PK)
 - business_id (string, unique)
-- business_name (string)
-- description (text)
-- website_url (string, nullable)
-- allowed_domains (text[])
-- bot_name (string)
-- greeting_message (text)
-- theme_colors (jsonb)
-- is_pro (boolean)
-- created_at
-- updated_at
+- business_name, description
+- owner_id (UUID, FK to profiles)
+- subscription_tier, subscription_status
+- stripe_customer_id, stripe_subscription_id
+- settings (JSONB), bot_name, greeting_message, theme_colors
+- is_active (boolean)
+- created_at, updated_at
 
 #### `products`
-- id (UUID)
-- business_id (FK to businesses)
-- item_key (string)
-- name (string)
-- description (text)
-- price (decimal)
-- image_url (string)
-- is_active (boolean)
+- id (UUID, PK)
+- business_id (UUID, FK)
+- item_key (string, unique per business)
+- name, description, price, currency (default ILS)
+- image_url, is_active, inventory_count (-1 = unlimited)
+- metadata (JSONB)
+- created_at, updated_at
+
+#### `customers`
+- id (UUID, PK)
+- business_id (UUID, FK)
+- email, phone, name
+- total_purchases, purchase_count, last_purchase_at
+- metadata (JSONB)
+- created_at, updated_at
+
+#### `conversations`
+- id (UUID, PK)
+- business_id (UUID, FK)
+- customer_id (UUID, FK, nullable)
+- session_id (string, unique)
+- channel (web/whatsapp/telegram/api)
+- status (active/closed/archived)
+- started_at, ended_at
+- metadata (JSONB)
+- created_at, updated_at
+
+#### `messages`
+- id (UUID, PK)
+- conversation_id (UUID, FK)
+- role (user/assistant/system)
+- content (text)
+- intent (string)
+- metadata (JSONB)
 - created_at
-- updated_at
 
 #### `orders`
-- id (UUID)
-- business_id (FK to businesses)
+- id (UUID, PK)
+- business_id (UUID, FK)
+- customer_id (UUID, FK, nullable)
+- conversation_id (UUID, FK, nullable)
 - order_number (string, unique)
-- customer_info (jsonb)
-- items (jsonb)
-- total (decimal)
-- status (enum: pending, paid, processing, shipped, delivered, canceled, refunded)
-- stripe_session_id (string)
-- created_at
-- updated_at
+- status, payment_status
+- subtotal, tax, total, currency (default ILS)
+- items (JSONB array)
+- customer_info, shipping_address (JSONB)
+- notes (text)
+- created_at, updated_at
 
-#### `chat_sessions`
-- id (UUID)
-- business_id (FK to businesses)
-- session_id (string, unique)
-- customer_info (jsonb)
-- started_at
-- last_activity
+#### `payments`
+- id (UUID, PK)
+- business_id (UUID, FK)
+- order_id (UUID, FK, nullable)
+- stripe_payment_intent_id, stripe_session_id
+- amount, currency, status, payment_method
+- customer_email, customer_name
+- metadata (JSONB)
+- paid_at
+- created_at, updated_at
 
-#### `chat_messages`
-- id (UUID)
-- session_id (FK to chat_sessions)
-- sender (enum: user, bot)
-- message (text)
-- intent (string)
-- metadata (jsonb)
+#### `subscriptions`
+- id (UUID, PK)
+- business_id (UUID, FK)
+- stripe_subscription_id, stripe_price_id
+- tier (free/pro/enterprise), status
+- current_period_start, current_period_end
+- cancel_at_period_end, canceled_at
+- metadata (JSONB)
+- created_at, updated_at
+
+#### `api_keys`
+- id (UUID, PK)
+- business_id (UUID, FK)
+- name, key_hash, key_prefix
+- permissions (JSONB array)
+- last_used_at, expires_at, is_active
 - created_at
+
+#### `webhooks`
+- id (UUID, PK)
+- business_id (UUID, FK)
+- url, events (JSONB array)
+- secret, is_active
+- last_triggered_at, failure_count
+- created_at, updated_at
+
+#### `logs`
+- id (UUID, PK)
+- business_id (UUID, FK, nullable)
+- level, source, message
+- details (JSONB)
+- user_agent, ip_address (INET)
+- created_at
+
+#### `email_templates`
+- id (UUID, PK)
+- business_id (UUID, FK, nullable)
+- template_type (welcome/receipt/password_reset/order_confirmation)
+- subject, body_html, body_text
+- is_active
+- created_at, updated_at
 
 ---
 
 ## 🔌 API Endpoints Reference
 
-### **Authentication**
-- `POST /api/v1/auth/register` - Register user
-- `POST /api/v1/auth/login` - Login user
-- `POST /api/v1/auth/logout` - Logout user
-- `GET /api/v1/auth/me` - Get current user
+### **Authentication** (`/api/v1/auth`)
+- `POST /register` - Register user with email verification
+- `POST /login` - Login user
+- `POST /logout` - Logout user
+- `GET /me` - Get current user
+- `GET /verify` - Email verification
 
-### **Businesses**
-- `GET /api/v1/businesses` - List businesses
-- `POST /api/v1/businesses` - Create business
-- `GET /api/v1/businesses/{id}` - Get business
-- `PUT /api/v1/businesses/{id}` - Update business
-- `DELETE /api/v1/businesses/{id}` - Delete business
+### **Businesses** (`/api/v1/businesses`)
+- `GET /` - List businesses
+- `POST /` - Create business
+- `GET /{id}` - Get business
+- `PUT /{id}` - Update business
+- `DELETE /{id}` - Delete business
 
-### **Products**
-- `GET /api/v1/products` - List products
-- `POST /api/v1/products` - Create product
-- `PUT /api/v1/products/{id}` - Update product
-- `DELETE /api/v1/products/{id}` - Delete product
+### **Products** (`/api/v1/products`)
+- `GET /` - List products
+- `POST /` - Create product
+- `PUT /{id}` - Update product
+- `DELETE /{id}` - Delete product
 
-### **Chat**
-- `POST /api/v1/chat` - Send message to AI
-- `GET /api/v1/chat/sessions` - List chat sessions
-- `GET /api/v1/chat/sessions/{id}/messages` - Get messages
+### **Chat** (`/api/v1/chat`)
+- `POST /` - Send message to AI (rate limited)
+- `GET /sessions` - List chat sessions
+- `GET /sessions/{id}/messages` - Get messages
 
-### **Orders**
-- `GET /api/v1/orders` - List orders
-- `GET /api/v1/orders/{id}` - Get order details
-- `POST /api/v1/orders` - Create order
-- `PUT /api/v1/orders/{id}/status` - Update status
+### **Orders** (`/api/v1/orders`)
+- `GET /` - List orders
+- `GET /{id}` - Get order details
+- `POST /` - Create order
+- `PUT /{id}/status` - Update status
+- `GET /summary` - Analytics summary
 
-### **Payments**
-- `POST /api/v1/payments/create-checkout-session` - Create Stripe session
-- `POST /api/v1/payments/webhook` - Stripe webhook
-- `GET /api/v1/payments/profile` - Get subscription status
-- `GET /api/v1/payments/wordpress-plugin/{business_id}` - Download WP plugin
+### **Payments** (`/api/v1/payments`)
+- `POST /create-checkout-session` - Create Stripe session (legacy)
+- `POST /webhook` - Stripe webhook
+- `GET /profile` - Get subscription status
+- `GET /wordpress-plugin/{business_id}` - Download WP plugin
 
-### **Analytics**
-- `GET /api/v1/analytics/businesses/{id}/analytics` - Get KPIs
-- `GET /api/v1/analytics/businesses/{id}/revenue` - Revenue data
-- `GET /api/v1/analytics/businesses/{id}/orders` - Order analytics
+### **PayMe Webhooks** (`/api/v1/webhooks/payme`)
+- `POST /` - PayMe IPN handler (primary payment webhook)
 
-### **Widget (Public)**
-- `GET /api/v1/widget/config/{business_id}` - Get widget config
+### **WhatsApp Webhooks** (`/api/v1/webhooks/whatsapp`)
+- `GET /` - Meta webhook verification
+- `POST /` - WhatsApp message handler (Premium only)
 
-### **Website Builder**
-- `POST /api/v1/builder/generate` - Generate website with AI
+### **Analytics** (`/api/v1/analytics`)
+- `GET /businesses/{id}/analytics` - Get KPIs
+- `GET /businesses/{id}/revenue` - Revenue data
+- `GET /businesses/{id}/orders` - Order analytics
+
+### **Widget (Public)** (`/api/v1/widget`)
+- `GET /config/{business_id}` - Get widget config (domain-validated)
+
+### **Website Builder** (`/api/v1/builder`)
+- `POST /generate` - Generate website with AI
+
+### **Logs** (`/api/v1/logs`)
+- `GET /` - List logs
+- `POST /` - Create log entry
+
+### **Health Check**
+- `GET /health` - Application health status
 
 ---
 
@@ -765,18 +1112,20 @@ CORS_ORIGINS=https://conversapay.org,https://app.conversapay.org
 ### **Unit Tests**
 - Router tests (each endpoint)
 - Service tests (business logic)
-- Middleware tests (auth, CORS)
+- Middleware tests (auth, CORS, rate limiting)
 - Utility function tests
 
 ### **Integration Tests**
 - Full chat flow (message → AI → response)
-- Payment flow (checkout → webhook → order update)
-- Authentication flow (register → login → protected route)
+- Payment flow (PayMe checkout → webhook → order update)
+- Authentication flow (register → verify email → login → protected route)
 - Widget embedding (domain validation)
+- WhatsApp flow (webhook → AI → response)
 
 ### **E2E Tests**
 - User registration → business creation → product addition → customer chat → purchase
 - WordPress plugin installation → widget appearance → chat → payment
+- WhatsApp integration → message → AI response → payment
 
 ---
 
@@ -787,14 +1136,16 @@ CORS_ORIGINS=https://conversapay.org,https://app.conversapay.org
 - Supabase for database (managed PostgreSQL)
 - Stateless API (can scale horizontally)
 - Static files served by FastAPI (can move to CDN)
+- In-memory rate limiter (can move to Redis)
 
 ### **Future Scaling**
 1. **Load Balancer:** Multiple FastAPI instances behind Nginx
 2. **CDN:** Cloudflare for static assets
-3. **Redis:** Session caching, rate limiting
+3. **Redis:** Session caching, rate limiting, distributed locks
 4. **Queue:** Celery for async tasks (emails, webhooks)
 5. **Monitoring:** Prometheus + Grafana
 6. **Logging:** Structured logging to ELK stack
+7. **Caching:** Redis for widget config and session data
 
 ---
 
@@ -808,26 +1159,26 @@ cd conversapay-project
 
 # 2. Create virtual environment
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+venv\Scripts\activate  # Windows
+# source venv/bin/activate  # Mac/Linux
 
 # 3. Install dependencies
 pip install -r requirements.txt
 
 # 4. Configure environment
-cp .env.example .env
-# Edit .env with your credentials
+# Edit .env with your Supabase, PayMe, and API credentials
 
 # 5. Run database migrations
-# (Supabase SQL editor or psql)
+# Execute database/schema.sql in Supabase Dashboard
 
-# 6. Start server
+# 6. Start main server
 python main.py
-# OR
-uvicorn main:app --reload --port 8000
+# Access: http://localhost:8000
 
-# 7. Access application
-# Frontend: http://localhost:8000
-# API Docs: http://localhost:8000/docs
+# 7. Start site builder (optional, in separate terminal)
+cd conversapay-site-builder
+python backend/main.py
+# Access: http://localhost:8001
 ```
 
 ### **Site Builder Development**
@@ -851,6 +1202,7 @@ python backend/main.py
 - Pydantic models for validation
 - Async/await for all I/O
 - Logging instead of print
+- Service layer pattern for business logic
 
 ### **JavaScript**
 - ES6+ syntax
@@ -864,6 +1216,7 @@ python backend/main.py
 - Mobile-first responsive design
 - BEM-like naming for classes
 - Inline styles for dynamic values
+- Glass morphism effects
 
 ---
 
@@ -871,11 +1224,13 @@ python backend/main.py
 
 ### **For New Developers**
 1. Read `PROJECT_MAP.md` (this file)
-2. Set up `.env` with Supabase credentials
-3. Run database migrations from `database/schema.sql`
-4. Start server with `python main.py`
-5. Explore API at `/docs`
-6. Test chat flow with widget.js
+2. Read `ARCHITECTURE.md` for production overview
+3. Set up `.env` with Supabase and PayMe credentials
+4. Run database migrations from `database/schema.sql`
+5. Start server with `python main.py`
+6. Explore API at `/docs`
+7. Test chat flow with widget.js
+8. Test WhatsApp integration (requires Premium tier and Meta Business API)
 
 ### **For AI Tools**
 This file serves as the complete context for:
@@ -897,6 +1252,58 @@ This file serves as the complete context for:
 
 ---
 
-**Last Updated:** 2026-07-18
-**Version:** 2.0.0
+## 🎯 Subscription Tiers
+
+### **Free Tier**
+- Basic AI chatbot
+- 1 business
+- 10 products max
+- Web chat only
+- Basic analytics
+
+### **Pro Tier (₪200/month)**
+- Unlimited products
+- Advanced analytics
+- WordPress plugin
+- Custom branding
+- Priority support
+- PayMe recurring billing
+
+### **Premium Tier (₪350/month)**
+- All Pro features
+- WhatsApp Business integration
+- Multi-channel support (web + WhatsApp)
+- Advanced AI training
+- Dedicated support
+- PayMe recurring billing
+
+---
+
+## 🔄 Recent Changes (2026-07-21)
+
+### **Major Updates**
+- ✅ **PayMe Integration:** Primary Israeli payment gateway with recurring billing
+- ✅ **WhatsApp Webhook:** Premium tier WhatsApp Business integration
+- ✅ **Rate Limiting:** Protection for public chat endpoints
+- ✅ **Session Service:** Database-backed conversation management
+- ✅ **Product Service:** Intelligent product search and matching
+- ✅ **Email Verification:** User registration with email confirmation
+- ✅ **Dual CORS Middleware:** Separate policies for widget vs dashboard
+- ✅ **WhatsApp Support:** Full WhatsApp Business API integration
+
+### **Architecture Evolution**
+- Migrated from Stripe-only to PayMe (primary) + Stripe (legacy)
+- Added WhatsApp as premium channel alongside web chat
+- Implemented database-backed sessions (replaced in-memory storage)
+- Added rate limiting for public API endpoints
+- Enhanced security with subscription field protection triggers
+- Added product service for intelligent search
+- Added session service for conversation management
+
+---
+
+**Last Updated:** 2026-07-21  
+**Version:** 2.0.0  
 **Status:** Production Ready ✅
+
+**Platform:** Render + Supabase + PayMe + Gemini + Resend + WhatsApp

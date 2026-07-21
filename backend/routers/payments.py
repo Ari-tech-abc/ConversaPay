@@ -61,7 +61,10 @@ async def create_subscription_checkout_session(
         
         # Step 1: Call PayMe's generate-sale endpoint
         # Use dynamic plan_type from request (pro=200₪, premium=350₪)
-        plan_type = request.plan_type or "pro"
+        # SECURITY: Default to 'free' for invalid/missing plans, never default to paid tiers
+        plan_type = (request.plan_type or "free").lower()
+        if plan_type not in ['free', 'pro', 'premium']:
+            plan_type = 'free'
         try:
             payme_result = await payme_service.create_hosted_setup_session(
                 user_id=request.user_id,

@@ -194,7 +194,8 @@ async def chat(request: ChatRequest, request_obj: Request = Depends()):
         # PLAN-BASED RESTRICTION ENFORCEMENT
         # ============================================
         # Free/Trial users: No AI access, no payments, FAQ only
-        if not is_pro or plan_type == 'free':
+        # Support both 'pro' and 'premium' as valid paid tiers
+        if not is_pro or plan_type not in ['pro', 'premium']:
             # Check if message matches FAQ
             faq_answer = _check_free_tier_faq(request.message)
             

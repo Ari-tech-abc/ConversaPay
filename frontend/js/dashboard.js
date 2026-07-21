@@ -628,8 +628,10 @@ async function checkWebsiteStatus() {
 function getSubscriptionTier() {
     const status = window.userSubscriptionStatus;
     if (!status) return 'free';
-    if (status.planType === 'premium') return 'premium';
-    if (status.isPro) return 'pro';
+    // Support both 'pro' and 'premium' plan types
+    const planType = (status.planType || '').toLowerCase();
+    if (planType === 'premium') return 'premium';
+    if (planType === 'pro' || status.isPro) return 'pro';
     return 'free';
 }
 
