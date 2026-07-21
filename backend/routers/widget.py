@@ -22,8 +22,6 @@ async def get_business_plan_info(business_id: str, supabase_client) -> dict:
     - free:  Dashboard access + AI agent ONLY on conversapay.org
     - pro:   Full features + widget on 1 custom external domain
     - premium: Full features + widget on multiple custom external domains
-    
-    Uses service role client to bypass RLS for the profiles table.
     """
     try:
         # Get the business record to find the owner
@@ -35,12 +33,12 @@ async def get_business_plan_info(business_id: str, supabase_client) -> dict:
         
         if not biz_result.data:
             logger.warning(f"Business not found for plan check: {business_id}")
-            return {'plan_type': 'free', 'is_active': False}
+            return {'plan_type': 'free', 'is_active': True}  # Widget always works
         
         user_id = biz_result.data.get('owner_id')
         if not user_id:
             logger.warning(f"Business {business_id} has no owner_id")
-            return {'plan_type': 'free', 'is_active': False}
+            return {'plan_type': 'free', 'is_active': True}
         
         # Use service role client to bypass RLS on profiles table
         from backend.config import settings as app_settings
@@ -51,21 +49,23 @@ async def get_business_plan_info(business_id: str, supabase_client) -> dict:
         
         # Check the user's profile for subscription plan
         profile_result = service_role_client.table('profiles')\
-            .select('plan_type, subscription_expires_at')\
+            .select('plan_type, is_pro, subscription_expires_at')\
             .eq('user_id', user_id)\
             .single()\
             .execute()
         
         if not profile_result.data:
             logger.warning(f"No profile found for user {user_id}")
-            return {'plan_type': 'free', 'is_active': False}
-        
-        plan_type = profile_result.data.get('plan_type', 'free')
-        expires_at = profile_result.data.get('subscription_expires_at')
-        
-        # Free tier is always active (no expiry)
-        if plan_type == 'free':
             return {'plan_type': 'free', 'is_active': True}
+        
+        profile = profile_result.data
+        plan_type = profile.get('plan_type', 'free')
+        is_pro = profile.get('is_pro', False)
+        expires_at = profile.get('subscription_expires_at')
+        
+        # Free tier is always active (no expiry) - Widget works for everyone
+        if plan_type == 'free':
+            return {'plan_type': 'free', 'is_active': True, 'is_pro': False}
         
         # Check if paid subscription has expired
         is_active = True
@@ -80,11 +80,15 @@ async def get_business_plan_info(business_id: str, supabase_client) -> dict:
                 pass
         
         logger.info(f"User {user_id} plan: {plan_type}, active: {is_active} (business {business_id})")
-        return {'plan_type': plan_type, 'is_active': is_active}
+        return {
+            'plan_type': plan_type, 
+            'is_active': is_active,
+            'is_pro': True
+        }
         
     except Exception as e:
         logger.error(f"Error checking plan for business {business_id}: {str(e)}", exc_info=True)
-        return {'plan_type': 'free', 'is_active': False}
+        return {'plan_type': 'free', 'is_active': True, 'is_pro': False}
 
 
 @router.get("/config/{business_id}")
@@ -185,7 +189,7 @@ async def get_widget_config(business_id: str, request: Request):
         logger.info(f"Widget config - domain: {requesting_domain}, is_own_domain: {is_conversapay_domain}, plan: {plan_type}, plan_active: {is_plan_active}, allowed_domains: {allowed_domains}")
         
         # 3-Tier Access Control:
-        # Tier 1 - conversapay.org (internal): ALL tiers allowed (Free, Pro, Premium)
+        # Tier 1 - conversapay.org (internal): ALL tiers allowed (Free users get AI agent here)
         # Tier 2 - External domain, Free tier: BLOCKED
         # Tier 3 - External domain, Pro tier: ALLOWED if no allowed_domains configured (uses default 1), or domain is in list
         # Tier 4 - External domain, Premium tier: ALLOWED if domain is in allowed_domains list (supports multiple)

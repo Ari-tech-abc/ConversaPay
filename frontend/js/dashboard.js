@@ -595,6 +595,24 @@ async function checkProStatusForIntegrations() {
         console.error('Error checking Pro status for locked cards:', error);
     }
 }
+async function checkUserPlan() {
+    try {
+        const res = await fetch('/api/v1/payments/profile', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const profile = await res.json();
+        
+        const isPro = profile.is_pro === true || ['pro', 'premium'].includes(profile.plan_type);
+        
+        // Free users see widget + basic dashboard
+        document.getElementById('upgradeState').classList.toggle('d-none', isPro);
+        document.getElementById('dashboardContent').classList.toggle('d-none', !isPro);
+        
+        if (isPro) {
+            loadBusinessData();
+        }
+    } catch(e) {}
+}
 
 async function checkWebsiteStatus() {
     try {
