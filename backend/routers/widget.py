@@ -35,15 +35,8 @@ async def get_business_plan_info(business_id: str, supabase_client) -> dict:
             logger.warning(f"Business {business_id} has no owner_id")
             return {'plan_type': 'free', 'is_active': True}
         
-        # Use service role client to bypass RLS on profiles table
-        from backend.config import settings as app_settings
-        service_role_client = create_client(
-            app_settings.SUPABASE_URL,
-            app_settings.SUPABASE_SERVICE_ROLE_KEY
-        )
-        
         # Check the user's profile for subscription plan
-        profile_result = service_role_client.table('profiles')\
+        profile_result = supabase_client.table('profiles')\
             .select('plan_type, is_pro, subscription_expires_at')\
             .eq('user_id', user_id)\
             .single()\
@@ -112,7 +105,7 @@ async def get_widget_config(business_id: str, request: Request):
         from backend.config import settings as app_settings
         supabase = create_client(
             app_settings.SUPABASE_URL,
-            app_settings.SUPABASE_ANON_KEY
+            app_settings.SUPABASE_SERVICE_ROLE_KEY
         )
         
         if is_demo_bot:
