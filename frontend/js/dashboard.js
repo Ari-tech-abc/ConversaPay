@@ -1539,7 +1539,7 @@ async function handleSaveProduct(event) {
     
     try {
         const productData = {
-            business_id: currentBusiness.business_id,
+            business_id: currentBusiness.id,
             item_key: itemKey, name,
             description: description || null,
             price: price,
