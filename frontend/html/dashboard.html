@@ -1,4 +1,727 @@
-<!doctype html><html lang="he" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="ConversaPay dashboard"><title>ConversaPay - Dashboard</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"><style>:root{--bg:#f5f4ee;--ink:#17202d;--muted:#637084;--paper:#fffef8;--line:#d9d8cf;--accent:#635bff;--green:#12805c;--amber:#a76000;--shadow:0 18px 50px #20233b12}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 90% 0,#dedcff,transparent 28%),var(--bg);color:var(--ink);font:16px 'DM Sans',system-ui}h1,h2,h3{font-family:'Space Grotesk';letter-spacing:-.04em}a{color:inherit}.app{max-width:1400px;margin:auto;padding:24px}.top{display:flex;justify-content:space-between;align-items:center;gap:18px;margin-bottom:28px}.brand{font:700 1.2rem 'Space Grotesk';text-decoration:none}.profile{display:flex;align-items:center;gap:12px}.avatar{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:#fff;font-weight:800}.plan{padding:7px 12px;border-radius:99px;background:#dedcff;color:#4038a8;font-weight:700;font-size:.82rem;text-transform:uppercase}.layout{display:grid;grid-template-columns:220px 1fr;gap:28px}.side{border-right:1px solid var(--line);padding-right:20px}.side a,.side button{display:flex;width:100%;padding:12px 10px;margin:3px 0;border:0;background:transparent;text-decoration:none;border-radius:10px;cursor:pointer;text-align:right;font:inherit;color:var(--muted)}.side a:hover,.side button:hover{background:#fff;color:var(--ink)}.side .upgrade{background:var(--ink);color:#fff;justify-content:center;margin-top:18px}.main{min-width:0}.hero{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:26px}.hero h1{font-size:clamp(2rem,4vw,3.6rem);margin:0 0 8px}.muted{color:var(--muted)}.actions{display:flex;gap:10px;flex-wrap:wrap}.btn{border:0;border-radius:999px;padding:12px 18px;background:var(--ink);color:#fff;font-weight:700;cursor:pointer;text-decoration:none}.btn.alt{background:var(--paper);color:var(--ink);border:1px solid var(--line)}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:22px 0}.metric,.section{background:var(--paper);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}.metric{padding:18px}.metric strong{display:block;font:700 2rem 'Space Grotesk';margin-top:8px;font-variant-numeric:tabular-nums}.section{padding:22px;margin-top:18px}.section-head{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:12px}.section h2{margin:0}.table{width:100%;border-collapse:collapse}.table th,.table td{padding:13px 8px;border-bottom:1px solid var(--line);text-align:right}.table th{color:var(--muted);font-size:.83rem}.locked{position:relative;overflow:hidden}.locked .content{opacity:.38;filter:grayscale(.4);pointer-events:none}.overlay{position:absolute;inset:0;background:#fffef8e8;display:grid;place-items:center;text-align:center;padding:24px;z-index:2}.overlay strong{display:block;font-size:1.2rem;margin-bottom:7px}.overlay p{color:var(--muted);max-width:34ch}.overlay .btn{display:inline-block}.key{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}.key code{direction:ltr}.notice{padding:12px;border-radius:10px;background:#12805c18;color:var(--green);margin:10px 0}.error{background:#b4231818;color:#b42318}@media(max-width:900px){.layout{grid-template-columns:1fr}.side{border:0;border-bottom:1px solid var(--line);padding:0 0 12px;display:flex;gap:4px;overflow:auto}.side a,.side button{white-space:nowrap;width:auto}.side .upgrade{margin-top:3px}.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.app{padding:16px}.top,.hero{align-items:flex-start;flex-direction:column}.grid{grid-template-columns:1fr 1fr}.metric strong{font-size:1.55rem}}
-</style></head><body><div class="app"><header class="top"><a class="brand" href="home.html">ConversaPay</a><div class="profile"><div><strong id="email">טוען...</strong><div class="plan" id="plan">FREE</div></div><div class="avatar" id="avatar">א</div></div></header><div class="layout"><nav class="side" aria-label="ניווט"><a href="#overview">סקירה</a><a href="#orders">הזמנות</a><a href="#products">מוצרים</a><a href="#domains">דומיינים</a><a href="setup-guide.html">הטמעה</a><a href="profile.html">פרופיל</a><a href="settings.html">הגדרות</a><a href="upgrade.html" class="upgrade">שדרוג התוכנית</a><button id="logout">התנתקות</button></nav><main class="main"><section class="hero" id="overview"><div><p class="muted">מרכז השליטה שלך</p><h1>העסק שלך, בלי רעש.</h1><p class="muted">ניהול מוצרים, שיחות ומכירות במקום אחד.</p></div><div class="actions"><a class="btn" href="upgrade.html">שדרוג התוכנית</a><button class="btn alt" id="builder" hidden>פתח את בונה האתרים</button></div></section><div id="notice" class="notice" hidden></div><section class="grid" aria-label="מדדים"><article class="metric"><span class="muted">הכנסות</span><strong id="revenue">₪0</strong></article><article class="metric"><span class="muted">עסקאות</span><strong id="deals">0</strong></article><article class="metric"><span class="muted">שיחות</span><strong id="conversations">0</strong></article><article class="metric"><span class="muted">מגבלת API keys</span><strong id="keyLimit">0</strong></article></section><section class="section" id="orders"><div class="section-head"><h2>הזמנות ומכירות</h2><a class="btn alt" href="pay.html">צור תשלום</a></div><div class="content" id="ordersContent"><table class="table"><thead><tr><th>הזמנה</th><th>סטטוס</th><th>סכום</th><th>תאריך</th></tr></thead><tbody id="ordersBody"><tr><td colspan="4" class="muted">טוען...</td></tr></tbody></table></div><div class="overlay" id="ordersOverlay" hidden><div><strong>ניהול הזמנות נעול</strong><p>הזמנות, מכירות וייצוא זמינים ב-PRO וב-PREMIUM.</p><a class="btn" href="upgrade.html">שדרג עכשיו</a></div></div></section><section class="section" id="products"><div class="section-head"><h2>מוצרים</h2><a class="btn alt" href="setup-guide.html">איך מתחילים</a></div><div id="productsBody" class="content muted">טוען...</div></section><section class="section locked" id="domains"><div class="section-head"><h2>דומיינים ווידג׳ט</h2><a class="btn alt" href="setup-guide.html">מדריך הטמעה</a></div><div class="content"><p class="muted">נהל איפה הווידג׳ט שלך פועל, והשבת אותו בכל עת.</p><div class="key"><span>דומיינים פעילים</span><strong id="domainLimit">0</strong></div><div class="key"><span>מצב ווידג׳ט</span><strong>מנוהל לפי התוכנית</strong></div></div><div class="overlay" id="domainsOverlay"><div><strong>ניהול דומיינים זמין ב-PRO</strong><p>הטמע את הווידג׳ט באתרים חיצוניים והשבת אותו בלחיצה.</p><a class="btn" href="upgrade.html">שדרג ל-PRO</a></div></div></section><section class="section locked" id="embed"><div class="section-head"><h2>WordPress ו-HTML embed</h2><a class="btn alt" href="setup-guide.html">צפה בקוד</a></div><div class="content"><p class="muted">קבל קוד הטמעה ו-plugin לאתר שלך.</p></div><div class="overlay" id="embedOverlay"><div><strong>הטמעה זמינה ב-PRO</strong><p>הסר את המנעול וחבר את הווידג׳ט לאתר שלך.</p><a class="btn" href="upgrade.html">שדרג ל-PRO</a></div></div></section><section class="section locked" id="builderSection"><div class="section-head"><h2>בונה אתרים</h2><a class="btn alt" id="builderLink" href="/site-builder">פתח בונה</a></div><div class="content"><p class="muted">בונה אתרים AI חד-פעמי, זמין ל-PREMIUM.</p></div><div class="overlay" id="builderOverlay"><div><strong>בונה האתרים זמין ב-PREMIUM</strong><p>צור דף נחיתה מלא עם token חד-פעמי.</p><a class="btn" href="upgrade.html">שדרג ל-PREMIUM</a></div></div></section><section class="section locked" id="whatsapp"><div class="section-head"><h2>WhatsApp</h2><a class="btn alt" href="settings.html">הגדר חיבור</a></div><div class="content"><p class="muted">שיחות AI ישירות ב-WhatsApp Business.</p></div><div class="overlay" id="whatsappOverlay"><div><strong>WhatsApp זמין ב-PREMIUM</strong><p>חבר את WhatsApp Business והפעל את הראוטר המאובטח.</p><a class="btn" href="upgrade.html">שדרג ל-PREMIUM</a></div></div></section><section class="section" id="keys"><div class="section-head"><h2>API keys לווידג׳ט</h2><button class="btn" id="newKey">צור key</button></div><p class="muted">PRO: עד 3 keys. PREMIUM: עד 10. המפתח מוצג פעם אחת בלבד.</p><div id="keysBody" class="muted">טוען...</div></section></main></div></div><script>
-const API='/api/v1',token=localStorage.getItem('access_token');if(!token)location.href='login.html';const $=id=>document.getElementById(id),headers={Authorization:`Bearer ${token}`},note=(t,e=false)=>{$('notice').textContent=t;$('notice').className=e?'notice error':'notice';$('notice').hidden=false};let businessId=null,plan='free';function hide(id,yes){$(id).hidden=yes}async function load(){try{const [me,features,analytics,biz]=await Promise.all([fetch(`${API}/auth/me`,{headers}),fetch(`${API}/dashboard/features`,{headers}),fetch(`${API}/analytics/overview`,{headers}),fetch(`${API}/businesses`,{headers})]);const u=await me.json(),f=await features.json(),a=await analytics.json(),bs=await biz.json();plan=(u.profile||{}).plan_type||f.plan_type||'free';businessId=bs[0]?.id||bs[0]?.business_id||null;$('email').textContent=u.email||'';$('plan').textContent=plan.toUpperCase();$('avatar').textContent=(u.profile?.full_name||u.email||'א').charAt(0).toUpperCase();$('revenue').textContent='₪'+Number(a.total_revenue||0).toLocaleString('he-IL');$('deals').textContent=a.closed_deals_count??a.closed_deals??0;$('conversations').textContent=a.total_conversations??0;$('keyLimit').textContent=f.api_key_limit??0;$('domainLimit').textContent=f.domain_limit??0;hide('ordersOverlay',f.orders);hide('domainsOverlay',f.domains);hide('embedOverlay',f.html_embed);hide('builderOverlay',f.site_builder);hide('whatsappOverlay',f.whatsapp);if(f.site_builder){$('builder').hidden=false;$('builder').onclick=async()=>{const r=await fetch(`${API}/site-builder/access`,{method:'POST',headers});const d=await r.json();if(!r.ok)return note(d.detail,true);location.href=d.url}}await loadOrders();await loadProducts();await loadKeys()}catch(e){note('שגיאה בטעינת הדשבורד',true)}}async function loadOrders(){const r=await fetch(`${API}/dashboard/orders`,{headers});const d=await r.json();$('ordersBody').innerHTML=(d.orders||[]).map(o=>`<tr><td>${o.order_number||o.id}</td><td>${o.status}</td><td>₪${Number(o.total||0).toFixed(2)}</td><td>${o.created_at?new Date(o.created_at).toLocaleDateString('he-IL'):''}</td></tr>`).join('')||'<tr><td colspan="4" class="muted">אין הזמנות</td></tr>'}async function loadProducts(){const r=await fetch(`${API}/dashboard/products`,{headers});const d=await r.json();$('productsBody').innerHTML=(d.products||[]).map(p=>`<div class="key"><span>${p.name}</span><strong>₪${Number(p.price||0).toFixed(2)} · מלאי ${p.stock<0?'∞':p.stock}</strong></div>`).join('')||'אין מוצרים'}async function loadKeys(){if(!businessId)return;const r=await fetch(`${API}/api-keys?business_id=${encodeURIComponent(businessId)}`,{headers});const d=await r.json();$('keysBody').innerHTML=(d.keys||[]).map(k=>`<div class="key"><span>${k.name} <code>${k.key_prefix}…</code></span><button class="btn alt" onclick="revoke('${k.id}')">השבת</button></div>`).join('')||'אין keys פעילים'}async function revoke(id){await fetch(`${API}/api-keys/${id}`,{method:'DELETE',headers});loadKeys()}$('newKey').onclick=async()=>{if(!businessId)return note('לא נמצא עסק',true);const name=prompt('שם למפתח');if(!name)return;const r=await fetch(`${API}/api-keys`,{method:'POST',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({name,business_id:businessId})});const d=await r.json();if(!r.ok)return note(d.detail,true);note(`שמור את המפתח עכשיו: ${d.key}`);loadKeys()};$('logout').onclick=()=>{localStorage.clear();location.href='login.html'};load();
-</script></body></html>
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ConversaPay dashboard">
+  <title>ConversaPay - Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f5f4ee;
+      --ink: #17202d;
+      --muted: #637084;
+      --paper: #fffef8;
+      --line: #d9d8cf;
+      --accent: #635bff;
+      --green: #12805c;
+      --amber: #a76000;
+      --shadow: 0 18px 50px #20233b12;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at 90% 0, #dedcff, transparent 28%), var(--bg);
+      color: var(--ink);
+      font: 16px 'DM Sans', system-ui;
+    }
+
+    h1, h2, h3 {
+      font-family: 'Space Grotesk';
+      letter-spacing: -0.04em;
+    }
+
+    a { color: inherit; }
+
+    .app {
+      max-width: 1400px;
+      margin: auto;
+      padding: 24px;
+    }
+
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    .brand {
+      font: 700 1.2rem 'Space Grotesk';
+      text-decoration: none;
+    }
+
+    .profile {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: var(--ink);
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .plan {
+      padding: 7px 12px;
+      border-radius: 99px;
+      background: #dedcff;
+      color: #4038a8;
+      font-weight: 700;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 28px;
+    }
+
+    .side {
+      border-right: 1px solid var(--line);
+      padding-right: 20px;
+    }
+
+    .side a,
+    .side button {
+      display: flex;
+      width: 100%;
+      padding: 12px 10px;
+      margin: 3px 0;
+      border: 0;
+      background: transparent;
+      text-decoration: none;
+      border-radius: 10px;
+      cursor: pointer;
+      text-align: right;
+      font: inherit;
+      color: var(--muted);
+    }
+
+    .side a:hover,
+    .side button:hover {
+      background: #fff;
+      color: var(--ink);
+    }
+
+    .side .upgrade {
+      background: var(--ink);
+      color: #fff;
+      justify-content: center;
+      margin-top: 18px;
+    }
+
+    .main { min-width: 0; }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 20px;
+      margin-bottom: 26px;
+    }
+
+    .hero h1 {
+      font-size: clamp(2rem, 4vw, 3.6rem);
+      margin: 0 0 8px;
+    }
+
+    .muted { color: var(--muted); }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      background: var(--ink);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn.alt {
+      background: var(--paper);
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      margin: 22px 0;
+    }
+
+    .metric,
+    .section {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .metric { padding: 18px; }
+
+    .metric strong {
+      display: block;
+      font: 700 2rem 'Space Grotesk';
+      margin-top: 8px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .section {
+      padding: 22px;
+      margin-top: 18px;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+
+    .section h2 { margin: 0; }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .table th,
+    .table td {
+      padding: 13px 8px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+    }
+
+    .table th {
+      color: var(--muted);
+      font-size: 0.83rem;
+    }
+
+    .locked {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .locked .content {
+      opacity: 0.38;
+      filter: grayscale(0.4);
+      pointer-events: none;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: #fffef8e8;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 24px;
+      z-index: 2;
+    }
+
+    .overlay strong {
+      display: block;
+      font-size: 1.2rem;
+      margin-bottom: 7px;
+    }
+
+    .overlay p {
+      color: var(--muted);
+      max-width: 34ch;
+    }
+
+    .overlay .btn {
+      display: inline-block;
+    }
+
+    .feature-list {
+      display: grid;
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .field-lock {
+      position: relative;
+      overflow: hidden;
+      border: 1px dashed var(--line);
+      border-radius: 16px;
+      background: #f9f8f2;
+      min-height: 132px;
+    }
+
+    .field-lock .content {
+      padding: 0 18px;
+      opacity: 1;
+      filter: none;
+      pointer-events: auto;
+    }
+
+    .field-lock .overlay {
+      background: #fffef8ee;
+      backdrop-filter: blur(4px);
+    }
+
+    .key {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .key:last-child {
+      border-bottom: 0;
+    }
+
+    .key code { direction: ltr; }
+
+    .notice {
+      padding: 12px;
+      border-radius: 10px;
+      background: #12805c18;
+      color: var(--green);
+      margin: 10px 0;
+    }
+
+    .error {
+      background: #b4231818;
+      color: #b42318;
+    }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+
+      .side {
+        border: 0;
+        border-bottom: 1px solid var(--line);
+        padding: 0 0 12px;
+        display: flex;
+        gap: 4px;
+        overflow: auto;
+      }
+
+      .side a,
+      .side button {
+        white-space: nowrap;
+        width: auto;
+      }
+
+      .side .upgrade { margin-top: 3px; }
+      .grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 560px) {
+      .app { padding: 16px; }
+
+      .top,
+      .hero {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .grid { grid-template-columns: 1fr 1fr; }
+      .metric strong { font-size: 1.55rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <a class="brand" href="home.html">ConversaPay</a>
+      <div class="profile">
+        <div>
+          <strong id="email">טוען...</strong>
+          <div class="plan" id="plan">FREE</div>
+        </div>
+        <div class="avatar" id="avatar">א</div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav class="side" aria-label="ניווט">
+        <a href="#overview">סקירה</a>
+        <a href="#orders">הזמנות</a>
+        <a href="#products">מוצרים</a>
+        <a href="#domains">דומיינים</a>
+        <a href="setup-guide.html">הטמעה</a>
+        <a href="profile.html">פרופיל</a>
+        <a href="settings.html">הגדרות</a>
+        <a href="upgrade.html" class="upgrade">שדרוג התוכנית</a>
+        <button id="logout">התנתקות</button>
+      </nav>
+
+      <main class="main">
+        <section class="hero" id="overview">
+          <div>
+            <p class="muted">מרכז השליטה שלך</p>
+            <h1>העסק שלך, בלי רעש.</h1>
+            <p class="muted">ניהול מוצרים, שיחות ומכירות במקום אחד.</p>
+          </div>
+          <div class="actions">
+            <a class="btn" href="upgrade.html">שדרוג התוכנית</a>
+            <button class="btn alt" id="builder" hidden>פתח את בונה האתרים</button>
+          </div>
+        </section>
+
+        <div id="notice" class="notice" hidden></div>
+
+        <section class="grid" aria-label="מדדים">
+          <article class="metric">
+            <span class="muted">הכנסות</span>
+            <strong id="revenue">₪0</strong>
+          </article>
+          <article class="metric">
+            <span class="muted">עסקאות</span>
+            <strong id="deals">0</strong>
+          </article>
+          <article class="metric">
+            <span class="muted">שיחות</span>
+            <strong id="conversations">0</strong>
+          </article>
+          <article class="metric">
+            <span class="muted">מגבלת API keys</span>
+            <strong id="keyLimit">0</strong>
+          </article>
+        </section>
+
+        <section class="section" id="orders">
+          <div class="section-head">
+            <h2>הזמנות ומכירות</h2>
+            <a class="btn alt" href="pay.html">צור תשלום</a>
+          </div>
+          <div class="content" id="ordersContent">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>הזמנה</th>
+                  <th>סטטוס</th>
+                  <th>סכום</th>
+                  <th>תאריך</th>
+                </tr>
+              </thead>
+              <tbody id="ordersBody">
+                <tr>
+                  <td colspan="4" class="muted">טוען...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="overlay" id="ordersOverlay" hidden>
+            <div>
+              <strong>ניהול הזמנות נעול</strong>
+              <p>הזמנות, מכירות וייצוא זמינים ב-PRO וב-PREMIUM.</p>
+              <a class="btn" href="upgrade.html">שדרג עכשיו</a>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="products">
+          <div class="section-head">
+            <h2>מוצרים</h2>
+            <a class="btn alt" href="setup-guide.html">איך מתחילים</a>
+          </div>
+          <div id="productsBody" class="content muted">טוען...</div>
+        </section>
+
+        <section class="section" id="domains">
+          <div class="section-head">
+            <h2>דומיינים ווידג׳ט</h2>
+            <a class="btn alt" href="setup-guide.html">מדריך הטמעה</a>
+          </div>
+          <p class="muted">תוכן ההסבר נשאר גלוי. רק שדות הניהול עצמם ננעלים לפי התוכנית.</p>
+          <div class="feature-list">
+            <div class="key">
+              <span>גישה למדריך ההטמעה</span>
+              <strong>זמין עכשיו</strong>
+            </div>
+            <div class="field-lock">
+              <div class="content">
+                <div class="key">
+                  <span>דומיינים פעילים</span>
+                  <strong id="domainLimit">0</strong>
+                </div>
+                <div class="key">
+                  <span>מצב ווידג׳ט חיצוני</span>
+                  <strong>מנוהל לפי התוכנית</strong>
+                </div>
+              </div>
+              <div class="overlay" id="domainsOverlay">
+                <div>
+                  <strong>ניהול דומיינים זמין ב-PRO</strong>
+                  <p>הטמע את הווידג׳ט באתרים חיצוניים והשבת אותו בלחיצה.</p>
+                  <a class="btn" href="upgrade.html">שדרג ל-PRO</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="embed">
+          <div class="section-head">
+            <h2>WordPress ו-HTML embed</h2>
+            <a class="btn alt" href="setup-guide.html">צפה במדריך</a>
+          </div>
+          <p class="muted">הדף כבר לא נחסם כולו. ההסבר פתוח, ורק אזור קוד ההטמעה נשאר נעול.</p>
+          <div class="feature-list">
+            <div class="key">
+              <span>מסמכי התקנה</span>
+              <strong>זמינים לכל התוכניות</strong>
+            </div>
+            <div class="field-lock">
+              <div class="content">
+                <div class="key">
+                  <span>HTML embed</span>
+                  <strong>קוד מוכן להעתקה</strong>
+                </div>
+                <div class="key">
+                  <span>WordPress plugin</span>
+                  <strong>הורדה ישירה</strong>
+                </div>
+              </div>
+              <div class="overlay" id="embedOverlay">
+                <div>
+                  <strong>הטמעה זמינה ב-PRO</strong>
+                  <p>הסר את המנעול וקבל קוד הטמעה ו-plugin לאתר שלך.</p>
+                  <a class="btn" href="upgrade.html">שדרג ל-PRO</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="builderSection">
+          <div class="section-head">
+            <h2>בונה אתרים</h2>
+          </div>
+          <p class="muted">הסבר היכולות נשאר פתוח. רק הגישה להפעלה עצמה ננעלת ל-PREMIUM.</p>
+          <div class="feature-list">
+            <div class="key">
+              <span>מה תקבל</span>
+              <strong>דף נחיתה AI מלא</strong>
+            </div>
+            <div class="field-lock">
+              <div class="content">
+                <div class="key">
+                  <span>גישה לבונה</span>
+                  <a class="btn alt" id="builderLink" href="/site-builder">פתח בונה</a>
+                </div>
+                <div class="key">
+                  <span>token חד-פעמי</span>
+                  <strong>נוצר אוטומטית</strong>
+                </div>
+              </div>
+              <div class="overlay" id="builderOverlay">
+                <div>
+                  <strong>בונה האתרים זמין ב-PREMIUM</strong>
+                  <p>צור דף נחיתה מלא עם token חד-פעמי.</p>
+                  <a class="btn" href="upgrade.html">שדרג ל-PREMIUM</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="whatsapp">
+          <div class="section-head">
+            <h2>WhatsApp</h2>
+            <a class="btn alt" href="settings.html">הגדר חיבור</a>
+          </div>
+          <p class="muted">אפשר להבין מה החיבור כולל כבר עכשיו. רק אזור ההפעלה נשאר נעול ל-PREMIUM.</p>
+          <div class="feature-list">
+            <div class="key">
+              <span>עמוד ההגדרות</span>
+              <strong>זמין עכשיו</strong>
+            </div>
+            <div class="field-lock">
+              <div class="content">
+                <div class="key">
+                  <span>WhatsApp Business</span>
+                  <strong>חיבור מאובטח</strong>
+                </div>
+                <div class="key">
+                  <span>AI router</span>
+                  <strong>תשובות אוטומטיות</strong>
+                </div>
+              </div>
+              <div class="overlay" id="whatsappOverlay">
+                <div>
+                  <strong>WhatsApp זמין ב-PREMIUM</strong>
+                  <p>חבר את WhatsApp Business והפעל את הראוטר המאובטח.</p>
+                  <a class="btn" href="upgrade.html">שדרג ל-PREMIUM</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section" id="keys">
+          <div class="section-head">
+            <h2>API keys לווידג׳ט</h2>
+            <button class="btn" id="newKey">צור key</button>
+          </div>
+          <p class="muted">PRO: עד 3 keys. PREMIUM: עד 10. המפתח מוצג פעם אחת בלבד.</p>
+          <div id="keysBody" class="muted">טוען...</div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const API = '/api/v1';
+    const token = localStorage.getItem('access_token');
+    if (!token) location.href = 'login.html';
+
+    const $ = (id) => document.getElementById(id);
+    const headers = { Authorization: `Bearer ${token}` };
+    const note = (t, e = false) => {
+      $('notice').textContent = t;
+      $('notice').className = e ? 'notice error' : 'notice';
+      $('notice').hidden = false;
+    };
+
+    let businessId = null;
+    let plan = 'free';
+
+    function hide(id, yes) {
+      $(id).hidden = yes;
+    }
+
+    async function load() {
+      try {
+        const [me, features, analytics, biz] = await Promise.all([
+          fetch(`${API}/auth/me`, { headers }),
+          fetch(`${API}/dashboard/features`, { headers }),
+          fetch(`${API}/analytics/overview`, { headers }),
+          fetch(`${API}/businesses`, { headers })
+        ]);
+
+        const u = await me.json();
+        const f = await features.json();
+        const a = await analytics.json();
+        const bs = await biz.json();
+
+        plan = (u.profile || {}).plan_type || f.plan_type || 'free';
+        businessId = bs[0]?.id || bs[0]?.business_id || null;
+
+        $('email').textContent = u.email || '';
+        $('plan').textContent = plan.toUpperCase();
+        $('avatar').textContent = (u.profile?.full_name || u.email || 'א').charAt(0).toUpperCase();
+        $('revenue').textContent = '₪' + Number(a.total_revenue || 0).toLocaleString('he-IL');
+        $('deals').textContent = a.closed_deals_count ?? a.closed_deals ?? 0;
+        $('conversations').textContent = a.total_conversations ?? 0;
+        $('keyLimit').textContent = f.api_key_limit ?? 0;
+        $('domainLimit').textContent = f.domain_limit ?? 0;
+
+        hide('ordersOverlay', f.orders);
+        hide('domainsOverlay', f.domains);
+        hide('embedOverlay', f.html_embed);
+        hide('builderOverlay', f.site_builder);
+        hide('whatsappOverlay', f.whatsapp);
+
+        if (f.site_builder) {
+          $('builder').hidden = false;
+          $('builder').onclick = async () => {
+            const r = await fetch(`${API}/site-builder/access`, { method: 'POST', headers });
+            const d = await r.json();
+            if (!r.ok) return note(d.detail, true);
+            location.href = d.url;
+          };
+        }
+
+        await loadOrders();
+        await loadProducts();
+        await loadKeys();
+      } catch (e) {
+        note('שגיאה בטעינת הדשבורד', true);
+      }
+    }
+
+    async function loadOrders() {
+      const r = await fetch(`${API}/dashboard/orders`, { headers });
+      const d = await r.json();
+      $('ordersBody').innerHTML = (d.orders || []).map((o) => `
+        <tr>
+          <td>${o.order_number || o.id}</td>
+          <td>${o.status}</td>
+          <td>₪${Number(o.total || 0).toFixed(2)}</td>
+          <td>${o.created_at ? new Date(o.created_at).toLocaleDateString('he-IL') : ''}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="4" class="muted">אין הזמנות</td></tr>';
+    }
+
+    async function loadProducts() {
+      const r = await fetch(`${API}/dashboard/products`, { headers });
+      const d = await r.json();
+      $('productsBody').innerHTML = (d.products || []).map((p) => `
+        <div class="key">
+          <span>${p.name}</span>
+          <strong>₪${Number(p.price || 0).toFixed(2)} · מלאי ${p.stock < 0 ? '∞' : p.stock}</strong>
+        </div>
+      `).join('') || 'אין מוצרים';
+    }
+
+    async function loadKeys() {
+      if (!businessId) return;
+      const r = await fetch(`${API}/api-keys?business_id=${encodeURIComponent(businessId)}`, { headers });
+      const d = await r.json();
+      $('keysBody').innerHTML = (d.keys || []).map((k) => `
+        <div class="key">
+          <span>${k.name} <code>${k.key_prefix}…</code></span>
+          <button class="btn alt" onclick="revoke('${k.id}')">השבת</button>
+        </div>
+      `).join('') || 'אין keys פעילים';
+    }
+
+    async function revoke(id) {
+      await fetch(`${API}/api-keys/${id}`, { method: 'DELETE', headers });
+      loadKeys();
+    }
+
+    $('newKey').onclick = async () => {
+      if (!businessId) return note('לא נמצא עסק', true);
+      const name = prompt('שם למפתח');
+      if (!name) return;
+
+      const r = await fetch(`${API}/api-keys`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, business_id: businessId })
+      });
+      const d = await r.json();
+      if (!r.ok) return note(d.detail, true);
+      note(`שמור את המפתח עכשיו: ${d.key}`);
+      loadKeys();
+    };
+
+    $('logout').onclick = () => {
+      localStorage.clear();
+      location.href = 'login.html';
+    };
+
+    load();
+  </script>
+</body>
+</html>
