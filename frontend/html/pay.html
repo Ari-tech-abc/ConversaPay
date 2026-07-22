@@ -3,117 +3,1589 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ConversaPay - תשלום</title>
-    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <title>ConversaPay - סיכום הזמנה</title>
+    <meta name="description" content="שלם בבטחה עם תשלום מוגן SSL 256-bit ותואם PCI DSS. עיבוד תשלומים מאובטח ומהיר ב-ConversaPay.">
+    <link rel="canonical" href="https://www.conversapay.com/pay">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Invoice",
+        "name": "חשבונית לשירותים דיגיטליים",
+        "description": "חשבונית עבור הזמנה ב-ConversaPay",
+        "url": "https://www.conversapay.com/pay",
+        "provider": {
+            "@type": "Organization",
+            "name": "ConversaPay",
+            "url": "https://www.conversapay.com"
+        },
+        "orderNumber": "12345",
+        "paymentMethod": "BIT",
+        "dateIssued": "2026-07-22",
+        "totalPaymentDue": {
+            "@type": "PriceSpecification",
+            "price": 99.99,
+            "priceCurrency": "ILS"
+        }
+    }
+    </script>
+    
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Heebo', sans-serif; }
-        body { background: #0B0F19; color: #F9FAFB; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
-        .card {
-            background: rgba(17,24,39,0.9);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 24px;
-            padding: 40px;
-            max-width: 480px;
-            width: 100%;
-            text-align: center;
+        :root {
+            --bg-primary: #0F1419;
+            --bg-secondary: #1A1F2E;
+            --bg-card: rgba(26, 31, 46, 0.6);
+            --text-primary: #F5F7FA;
+            --text-secondary: #A0AEC0;
+            --accent-primary: #818CF8;
+            --accent-secondary: #A78BFA;
+            --accent-success: #10B981;
+            --accent-error: #EF4444;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+            --radius-sm: 12px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
         }
-        .logo { font-size: 3rem; margin-bottom: 16px; }
-        h1 { font-size: 1.6rem; font-weight: 800; margin-bottom: 8px; }
-        .sub { color: #9CA3AF; font-size: 0.95rem; margin-bottom: 32px; }
-        .order-box {
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 12px;
+        
+        * {
+            font-family: 'Rubik', sans-serif;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: var(--accent-primary);
+            color: white;
+            padding: 10px 20px;
+            z-index: 100;
+            text-decoration: none;
+            border-radius: 0 0 0 8px;
+            transition: top 0.2s ease;
+        }
+        
+        .skip-link:focus {
+            top: 0;
+            outline: 2px solid var(--text-primary);
+            outline-offset: 2px;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1f2e 50%, #0f1419 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow-x: hidden;
             padding: 20px;
-            margin-bottom: 28px;
-            text-align: right;
         }
-        .order-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.95rem; }
-        .order-row .label { color: #9CA3AF; }
-        .order-row .value { font-weight: 600; }
-        .order-row.total { border-top: 1px solid rgba(255,255,255,0.1); margin-top: 8px; padding-top: 12px; }
-        .order-row.total .value { font-size: 1.3rem; color: #A855F7; }
-        .btn-pay {
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(129, 140, 248, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(167, 139, 250, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        main.pay-container {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: 48px;
+            max-width: 520px;
             width: 100%;
-            background: linear-gradient(135deg, #10B981, #059669);
+            box-shadow: var(--shadow-md);
+            position: relative;
+            z-index: 1;
+            min-height: 520px;
+            overflow: hidden;
+        }
+        
+        main.pay-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(129, 140, 248, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        
+        .pay-header {
+            text-align: center;
+            margin-bottom: 32px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .pay-header h1 {
+            color: var(--text-primary);
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 0 0 8px 0;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .pay-header .order-meta {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+        
+        .stepper {
+            margin-bottom: 32px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .stepper-list {
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            counter-reset: step;
+            position: relative;
+        }
+        
+        .stepper-list::before {
+            content: '';
+            position: absolute;
+            top: 16px;
+            right: 24px;
+            left: 24px;
+            height: 2px;
+            background: var(--border-color);
+            z-index: 0;
+        }
+        
+        .stepper-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+        }
+        
+        .stepper-marker {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+        }
+        
+        .stepper-item.completed .stepper-marker {
+            background: var(--accent-success);
+            border-color: var(--accent-success);
+            color: white;
+        }
+        
+        .stepper-item.active .stepper-marker {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            border-color: var(--accent-primary);
+            color: white;
+            box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.2);
+        }
+        
+        .stepper-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-align: center;
+            white-space: nowrap;
+        }
+        
+        .stepper-item.active .stepper-label {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        .step-section {
+            display: none;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .step-section.active {
+            display: block;
+            animation: fadeInUp 0.3s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .payment-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .payment-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .payment-methods h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .method-option {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+            pointer-events: none;
+        }
+        
+        .method-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 18px 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+            min-height: 64px;
+        }
+        
+        .method-card:hover {
+            border-color: rgba(129, 140, 248, 0.4);
+            background: rgba(129, 140, 248, 0.06);
+            color: var(--text-primary);
+        }
+        
+        .method-option:checked + .method-card {
+            border-color: var(--accent-primary);
+            background: rgba(129, 140, 248, 0.1);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15);
+        }
+        
+        .method-option:focus-visible + .method-card {
+            outline: 2px solid var(--accent-primary);
+            outline-offset: 2px;
+        }
+        
+        .method-icon {
+            font-size: 1.75rem;
+            width: 40px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        
+        .method-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+        }
+        
+        .method-name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .method-desc {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+        
+        .method-check {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            color: transparent;
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+        }
+        
+        .method-option:checked + .method-card .method-check {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+        
+        .card-form {
+            margin-top: 4px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .form-group label {
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        
+        .form-group input {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 14px 16px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            min-height: 48px;
+            transition: all 0.2s ease;
+            font-family: 'Rubik', sans-serif;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15);
+        }
+        
+        .form-group input.invalid {
+            border-color: var(--accent-error);
+        }
+        
+        .form-group input.valid {
+            border-color: var(--accent-success);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .field-error {
+            font-size: 0.8rem;
+            color: var(--accent-error);
+            min-height: 18px;
+        }
+        
+        .card-type {
+            font-size: 0.8rem;
+            color: var(--accent-primary);
+            min-height: 18px;
+        }
+        
+        .order-summary {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        
+        .order-item:hover {
+            background: rgba(255, 255, 255, 0.01);
+        }
+        
+        .order-item:last-of-type {
+            border-bottom: none;
+        }
+        
+        .item-name {
+            font-weight: 500;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+        
+        .item-price {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+        
+        .item-details {
+            padding: 8px 0 12px 0;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .item-total {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 4px;
+        }
+        
+        .order-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-top: 2px solid var(--border-color);
+            margin-top: 8px;
+        }
+        
+        .total-label {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .total-amount {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .order-summary-actions {
+            margin-top: 8px;
+        }
+        
+        .btn {
+            min-height: 56px;
+            padding: 14px 24px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            border-radius: var(--radius-sm);
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: 'Rubik', sans-serif;
+            width: 100%;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            color: white;
+            box-shadow: 0 8px 16px rgba(129, 140, 248, 0.3);
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(129, 140, 248, 0.4);
+        }
+        
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn-secondary:hover {
+            border-color: rgba(129, 140, 248, 0.4);
+            background: rgba(129, 140, 248, 0.08);
+        }
+        
+        .btn-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 8px;
+        }
+        
+        .btn-row .btn {
+            flex: 1;
+        }
+        
+        .security-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 16px;
+        }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 999px;
+        }
+        
+        .success-state {
+            display: none;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .success-state.active {
+            display: block;
+            animation: fadeInUp 0.4s ease;
+        }
+        
+        .success-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-success), #059669);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 2rem;
+            color: white;
+            font-weight: 800;
+        }
+        
+        .receipt {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 24px;
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        
+        .receipt-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+            border-bottom: 1px dashed var(--border-color);
+            padding-bottom: 12px;
+        }
+        
+        .receipt-header h2 {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+        }
+        
+        .receipt-header time {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-align: left;
+            direction: ltr;
+        }
+        
+        .receipt-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+        
+        .receipt-table th {
+            text-align: right;
+            color: var(--text-secondary);
+            font-weight: 500;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .receipt-table td {
+            padding: 10px 0;
+            color: var(--text-primary);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        
+        .receipt-table tfoot td {
+            font-weight: 700;
+            border-top: 2px solid var(--border-color);
+            border-bottom: none;
+            padding-top: 12px;
+        }
+        
+        .receipt-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 12px;
+            direction: ltr;
+            text-align: left;
+        }
+        
+        .redirect-countdown {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 12px;
+            direction: ltr;
+        }
+        
+        .processing-skeleton {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 25%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0.03) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s ease-in-out infinite;
+            border-radius: 8px;
+        }
+        
+        .skeleton-header {
+            height: 120px;
+            border-radius: var(--radius-md);
+        }
+        
+        .skeleton-line {
+            height: 16px;
+            border-radius: 6px;
+        }
+        
+        .skeleton-short { width: 40%; }
+        .skeleton-medium { width: 70%; }
+        .skeleton-long { width: 100%; }
+        .skeleton-button {
+            height: 56px;
+            border-radius: var(--radius-sm);
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .loading-text {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(129, 140, 248, 0.3);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error-banner {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            color: var(--accent-error);
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        
+        .error-banner button {
+            white-space: nowrap;
+            min-height: 40px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: var(--accent-error);
             color: white;
             border: none;
-            padding: 16px;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: block;
+            font-family: 'Rubik', sans-serif;
+            font-size: 0.9rem;
         }
-        .btn-pay:hover { opacity: 0.9; transform: translateY(-1px); }
-        .secure { color: #6B7280; font-size: 0.8rem; margin-top: 16px; }
-        .loading { color: #9CA3AF; }
-        .error { color: #EF4444; }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .pay-footer {
+            margin-top: 20px;
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+        
+        .pay-footer .security-badges {
+            justify-content: center;
+            margin-top: 0;
+        }
+        
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        :focus-visible {
+            outline: 2px solid var(--accent-primary);
+            outline-offset: 2px;
+        }
+        
+        @media (max-width: 480px) {
+            .pay-container {
+                padding: 28px 20px;
+            }
+            
+            .stepper-label {
+                font-size: 0.7rem;
+            }
+            
+            .stepper-marker {
+                width: 28px;
+                height: 28px;
+                font-size: 0.75rem;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .receipt-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+            
+            .receipt-header time {
+                text-align: right;
+            }
+        }
     </style>
 </head>
 <body>
-<div class="card">
-    <div class="logo">💳</div>
-    <h1>סיום הזמנה</h1>
-    <p class="sub" id="subtitle">טוען פרטי הזמנה...</p>
-
-    <div id="orderDetails" class="order-box" style="display:none;"></div>
-
-    <a id="payBtn" class="btn-pay" style="display:none;">💳 עבור לתשלום</a>
-    <div id="statusMsg"></div>
-    <p class="secure">🔒 תשלום מאובטח</p>
-</div>
-
-<script>
-const API = window.location.origin + '/api/v1';
-const params = new URLSearchParams(window.location.search);
-const orderId = params.get('order');
-const bizId = params.get('biz');
-
-async function loadOrder() {
-    if (!orderId) {
-        document.getElementById('subtitle').textContent = 'לא נמצאו פרטי הזמנה';
-        return;
-    }
-
-    try {
-        const res = await fetch(`${API}/orders/${orderId}/public`);
-        if (!res.ok) throw new Error('not found');
-        const order = await res.json();
-
-        document.getElementById('subtitle').textContent = `הזמנה #${order.order_number}`;
-
-        const items = (order.items || []).map(i =>
-            `<div class="order-row"><span class="label">${i.name} × ${i.quantity}</span><span class="value">₪${(i.price * i.quantity).toFixed(2)}</span></div>`
-        ).join('');
-
-        document.getElementById('orderDetails').innerHTML = `
-            ${items}
-            <div class="order-row total">
-                <span class="label">סה"כ לתשלום</span>
-                <span class="value">₪${parseFloat(order.total).toFixed(2)}</span>
+    <a href="#main-content" class="skip-link">דלג לתוכן הראשי</a>
+    
+    <main class="pay-container" id="main-content" role="main">
+        <header class="pay-header">
+            <h1>סיכום הזמנה</h1>
+            <p class="order-meta" id="orderMeta">הזמנה #12345 · 22 ביולי 2026</p>
+        </header>
+        
+        <nav class="stepper" aria-label="שלבי תשלום">
+            <ol class="stepper-list" role="list">
+                <li class="stepper-item active" id="stepper1" aria-current="step">
+                    <span class="stepper-marker" aria-hidden="true">1</span>
+                    <span class="stepper-label">בחר שיטה</span>
+                </li>
+                <li class="stepper-item" id="stepper2">
+                    <span class="stepper-marker" aria-hidden="true">2</span>
+                    <span class="stepper-label">סקור פרטים</span>
+                </li>
+                <li class="stepper-item" id="stepper3">
+                    <span class="stepper-marker" aria-hidden="true">3</span>
+                    <span class="stepper-label">בצע תשלום</span>
+                </li>
+                <li class="stepper-item" id="stepper4">
+                    <span class="stepper-marker" aria-hidden="true">4</span>
+                    <span class="stepper-label">הושלם</span>
+                </li>
+            </ol>
+        </nav>
+        
+        <form id="paymentForm" novalidate>
+            <div id="errorBanner" class="error-banner" role="alert" aria-live="assertive" hidden>
+                <span id="errorMessage">שגיאה בעיבוד התשלום. אנא נסה שוב.</span>
+                <button type="button" onclick="retryPayment()" aria-label="נסה תשלום שוב">נסה שוב</button>
             </div>
-        `;
-        document.getElementById('orderDetails').style.display = 'block';
+            
+            <section id="stepMethod" class="step-section active" data-step="1" aria-labelledby="stepMethodHeading">
+                <h2 id="stepMethodHeading" class="sr-only">בחר שיטת תשלום</h2>
+                
+                <div class="payment-methods" role="radiogroup" aria-label="בחר שיטת תשלום">
+                    <input type="radio" name="paymentMethod" id="methodBit" value="bit" class="method-option" checked>
+                    <label for="methodBit" class="method-card">
+                        <div class="method-icon" aria-hidden="true">💳</div>
+                        <div class="method-info">
+                            <span class="method-name">ביט</span>
+                            <span class="method-desc">תשלום מהיר ומוגן</span>
+                        </div>
+                        <div class="method-check" aria-hidden="true">✓</div>
+                    </label>
+                    
+                    <input type="radio" name="paymentMethod" id="methodPayme" value="payme" class="method-option">
+                    <label for="methodPayme" class="method-card">
+                        <div class="method-icon" aria-hidden="true">📱</div>
+                        <div class="method-info">
+                            <span class="method-name">PayMe</span>
+                            <span class="method-desc">שלח בקשת תשלום</span>
+                        </div>
+                        <div class="method-check" aria-hidden="true">✓</div>
+                    </label>
+                    
+                    <input type="radio" name="paymentMethod" id="methodCard" value="card" class="method-option">
+                    <label for="methodCard" class="method-card">
+                        <div class="method-icon" aria-hidden="true">🏦</div>
+                        <div class="method-info">
+                            <span class="method-name">כרטיס אשראי</span>
+                            <span class="method-desc">ויזה, מאסטרקארד, אמריקן אקספרס</span>
+                        </div>
+                        <div class="method-check" aria-hidden="true">✓</div>
+                    </label>
+                </div>
+                
+                <div id="cardFormSection" class="card-form" hidden>
+                    <div class="form-group">
+                        <label for="cardNumber">מספר כרטיס</label>
+                        <input type="text" id="cardNumber" inputmode="numeric" autocomplete="cc-number" aria-describedby="cardNumberError cardType" maxlength="19" placeholder="1234 5678 9012 3456">
+                        <div id="cardNumberError" class="field-error" aria-live="polite"></div>
+                        <div id="cardType" class="card-type" aria-live="polite"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="cardExpiry">תוקף (MM/YY)</label>
+                            <input type="text" id="cardExpiry" inputmode="numeric" autocomplete="cc-expiry" aria-describedby="cardExpiryError" maxlength="5" placeholder="MM/YY">
+                            <div id="cardExpiryError" class="field-error" aria-live="polite"></div>
+                        </div>
+                        <div class="form-group">
+                            <label for="cardCvv">CVV</label>
+                            <input type="text" id="cardCvv" inputmode="numeric" autocomplete="cc-csc" aria-describedby="cardCvvError" maxlength="4" placeholder="123">
+                            <div id="cardCvvError" class="field-error" aria-live="polite"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="actions">
+                    <button type="button" class="btn btn-primary" onclick="goToReview()" id="toReviewBtn">המשך לסקירת פרטים</button>
+                </div>
+            </section>
+            
+            <section id="stepReview" class="step-section" data-step="2" aria-labelledby="stepReviewHeading">
+                <h2 id="stepReviewHeading" class="sr-only">סקירת פרטי ההזמנה</h2>
+                
+                <article class="order-summary" aria-label="פרטי הזמנה">
+                    <details class="order-item" open>
+                        <summary class="item-name">
+                            מוצר דיגיטלי
+                            <span class="item-price" style="margin-inline-start: 8px;">1 × ₪99.99</span>
+                        </summary>
+                        <div class="item-details">
+                            <span>מק"ט: DIG-001</span>
+                            <span>קטגוריה: תוכן דיגיטלי</span>
+                        </div>
+                        <div class="item-total">₪99.99</div>
+                    </details>
+                    <div id="planFeatures" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--border-color);"></div>
+                </article>
+                    
+                    <details class="order-item">
+                        <summary class="item-name">
+                            דמי משלוח
+                            <span class="item-price" style="margin-inline-start: 8px;">משלוח רגיל</span>
+                        </summary>
+                        <div class="item-details">
+                            <span>שיטת משלוח: משלוח רגיל</span>
+                            <span> זמן אספקה: 3-5 ימי עסקים</span>
+                        </div>
+                        <div class="item-total">₪0.00</div>
+                    </details>
+                    
+                    <div class="order-total">
+                        <span class="total-label">סך הכל</span>
+                        <span class="total-amount">₪99.99</span>
+                    </div>
+                </article>
+                
+                <div class="security-badges" aria-label="אבטחה ופרטיות">
+                    <div class="badge">
+                        <span aria-hidden="true">🔒</span>
+                        <span>SSL 256-bit</span>
+                    </div>
+                    <div class="badge">
+                        <span aria-hidden="true">🛡️</span>
+                        <span>PCI DSS</span>
+                    </div>
+                    <div class="badge">
+                        <span aria-hidden="true">✅</span>
+                        <span>תשלום מאובטח</span>
+                    </div>
+                </div>
+                
+                <div class="actions">
+                    <button type="button" class="btn btn-primary" onclick="confirmAndPay()" id="confirmPayBtn">אשר תשלום</button>
+                    <button type="button" class="btn btn-secondary" onclick="goToStep(1)">חזור</button>
+                </div>
+            </section>
+            
+            <section id="stepProcessing" class="step-section" data-step="3" aria-labelledby="stepProcessingHeading">
+                <h2 id="stepProcessingHeading" class="sr-only">מעבד תשלום</h2>
+                <div class="processing-skeleton">
+                    <div class="skeleton skeleton-header" aria-hidden="true"></div>
+                    <div class="skeleton skeleton-line skeleton-short" aria-hidden="true"></div>
+                    <div class="skeleton skeleton-line skeleton-medium" aria-hidden="true"></div>
+                    <div class="skeleton skeleton-line skeleton-long" aria-hidden="true"></div>
+                    <div class="skeleton skeleton-button" aria-hidden="true"></div>
+                </div>
+                <div class="loading-text" role="status" aria-live="polite">
+                    <span class="spinner" aria-hidden="true"></span>
+                    <span>מעבד תשלום... נא להמתין</span>
+                </div>
+            </section>
+        </form>
+        
+        <section id="stepDone" class="step-section" data-step="4" aria-labelledby="stepDoneHeading">
+            <h2 id="stepDoneHeading">התשלום בוצע בהצלחה!</h2>
+            
+            <div class="receipt" aria-label="קבלה">
+                <div class="receipt-header">
+                    <h3>קובלנס #12345</h3>
+                    <time datetime="2026-07-22T11:00:00+03:00">22 ביולי 2026, 11:00</time>
+                </div>
+                <table class="receipt-table">
+                    <thead>
+                        <tr>
+                            <th>פריט</th>
+                            <th style="text-align:center;">כמות</th>
+                            <th style="text-align:left;">מחיר</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>מוצר דיגיטלי</td>
+                            <td style="text-align:center;">1</td>
+                            <td style="text-align:left;">₪99.99</td>
+                        </tr>
+                        <tr>
+                            <td>דמי משלוח</td>
+                            <td style="text-align:center;">-</td>
+                            <td style="text-align:left;">₪0.00</td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="2">סך הכל</td>
+                            <td style="text-align:left;">₪99.99</td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <div class="receipt-footer">
+                    <span>אמצעי תשלום: <strong id="receiptMethod">ביט</strong></span>
+                    <span>מס' אישור: <strong>6789</strong></span>
+                </div>
+            </div>
+            
+            <p class="redirect-countdown" id="countdown" aria-live="polite"></p>
+            
+            <div class="actions btn-row">
+                <button type="button" class="btn btn-primary" onclick="cancelRedirect()" id="homeBtn">חזור לעמוד הבית</button>
+                <button type="button" class="btn btn-secondary" onclick="downloadReceipt()" aria-label="הורד קבלה">הורד קבלה</button>
+            </div>
+        </section>
+        
+        <footer class="pay-footer">
+            <nav class="security-badges" aria-label="אבטחה">
+                <div class="badge">
+                    <span aria-hidden="true">🔒</span>
+                    <span>SSL 256-bit</span>
+                </div>
+                <div class="badge">
+                    <span aria-hidden="true">🛡️</span>
+                    <span>PCI DSS</span>
+                </div>
+            </nav>
+        </footer>
+    </main>
+    
+    <script>
+        const API_BASE_URL = '/api/v1';
+        let currentOrder = null;
+        let selectedMethod = 'bit';
+        let currentStep = 1;
+        let countdownInterval = null;
+        let timeLeft = 10;
+        let currentPlan = null;
 
-        if (order.payment_link) {
-            const btn = document.getElementById('payBtn');
-            btn.href = order.payment_link;
-            btn.target = '_blank';
-            btn.style.display = 'block';
-        } else {
-            document.getElementById('statusMsg').innerHTML = '<p style="color:#F59E0B;margin-top:16px;">⚠️ לינק תשלום לא הוגדר עדיין</p>';
+        async function loadOrder() {
+            const params = new URLSearchParams(window.location.search);
+            const orderId = params.get('order_id') || params.get('id');
+            const plan = params.get('plan');
+            
+            if (plan) {
+                currentPlan = plan;
+                await loadSubscriptionPlan(plan);
+                return;
+            }
+            
+            if (!orderId) {
+                showError('מספר הזמנה לא נמצא בכתובת.');
+                return;
+            }
+            
+            try {
+                const res = await fetch(`${API_BASE_URL}/orders/${orderId}/summary`);
+                if (!res.ok) {
+                    if (res.status === 404) {
+                        showError('הזמנה לא נמצאה.');
+                    } else {
+                        showError('שגיאה בטעינת פרטי ההזמנה.');
+                    }
+                    return;
+                }
+                currentOrder = await res.json();
+                renderOrder(currentOrder);
+            } catch (e) {
+                console.error(e);
+                showError('שגיאה בחיבור לשרת.');
+            }
         }
 
-    } catch (e) {
-        document.getElementById('subtitle').textContent = '';
-        document.getElementById('statusMsg').innerHTML = '<p class="error">שגיאה בטעינת פרטי ההזמנה</p>';
-    }
-}
+        async function loadSubscriptionPlan(plan) {
+            const planNames = {
+                'pro': 'תכנית PRO',
+                'premium': 'תכנית PREMIUM'
+            };
+            const planPrices = {
+                'pro': 19.99,
+                'premium': 49.99
+            };
+            const planFeatures = {
+                'pro': ['ניהול הזמנות מלא', 'ווידג'טים ללא הגבלה', 'לוח ניתוח'],
+                'premium': ['כל תכונות PRO', 'אינטגרציית WhatsApp', 'ניתוח מתקדם']
+            };
+            
+            const planName = planNames[plan] || 'תכנית';
+            const planPrice = planPrices[plan] || 0;
+            
+            currentOrder = {
+                order_number: 'UPGRADE',
+                business_name: 'ConversaPay',
+                items: [
+                    { name: planName, quantity: 1, price: planPrice }
+                ],
+                total: planPrice,
+                plan_type: plan
+            };
+            
+            renderOrder(currentOrder);
+            renderPlanFeatures(planFeatures[plan] || []);
+        }
 
-loadOrder();
-</script>
+        function renderPlanFeatures(features) {
+            const featuresContainer = document.getElementById('planFeatures');
+            if (!featuresContainer) return;
+            
+            featuresContainer.innerHTML = features.map(f => `
+                <div class="benefit-item" style="padding: 8px 0;">
+                    <span class="benefit-icon" aria-hidden="true" style="color: var(--accent-success);">✓</span>
+                    <span style="color: var(--text-secondary); font-size: 0.9rem;">${f}</span>
+                </div>
+            `).join('');
+            featuresContainer.style.display = 'block';
+        }
+
+        function renderOrder(order) {
+            const itemsHtml = (order.items || []).map(item => `
+                <div class="order-item">
+                    <div>
+                        <div class="item-name">${item.name || 'מוצר'}</div>
+                        <div class="item-price">${item.quantity || 1} × ₪${(item.price || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="item-price">₪${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</div>
+                </div>
+            `).join('');
+            const orderSummary = document.getElementById('orderSummary');
+            if (orderSummary) {
+                orderSummary.innerHTML = `
+                    ${itemsHtml}
+                    <div class="order-total">
+                        <div class="total-label">סך הכל</div>
+                        <div class="total-amount">₪${(order.total || 0).toFixed(2)}</div>
+                    </div>
+                `;
+            }
+            document.getElementById('orderMeta').textContent = `${order.business_name || 'ConversaPay'} · ${order.plan_type ? 'שדרוג' : 'הזמנה'}`;
+            document.title = `ConversaPay - סיכום ${order.plan_type ? 'שדרוג' : 'הזמנה'}`;
+        }
+        
+        const methodLabels = {
+            bit: 'ביט',
+            payme: 'PayMe',
+            card: 'כרטיס אשראי'
+        };
+        
+        document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                selectedMethod = e.target.value;
+                updateCardFormVisibility();
+            });
+        });
+        
+        function updateCardFormVisibility() {
+            const cardForm = document.getElementById('cardFormSection');
+            if (selectedMethod === 'card') {
+                cardForm.hidden = false;
+            } else {
+                cardForm.hidden = true;
+                clearCardErrors();
+            }
+        }
+        
+        function clearCardErrors() {
+            ['cardNumber', 'cardExpiry', 'cardCvv'].forEach(id => {
+                document.getElementById(id).classList.remove('invalid', 'valid');
+            });
+            document.getElementById('cardNumberError').textContent = '';
+            document.getElementById('cardExpiryError').textContent = '';
+            document.getElementById('cardCvvError').textContent = '';
+            document.getElementById('cardType').textContent = '';
+        }
+        
+        function goToStep(step) {
+            if (step < 1 || step > 4) return;
+            
+            document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
+            document.getElementById('step' + getStepName(step)).classList.add('active');
+            
+            document.querySelectorAll('.stepper-item').forEach((item, idx) => {
+                const stepNum = idx + 1;
+                if (stepNum < step) {
+                    item.classList.add('completed');
+                    item.classList.remove('active');
+                    item.removeAttribute('aria-current');
+                } else if (stepNum === step) {
+                    item.classList.add('active');
+                    item.classList.remove('completed');
+                    item.setAttribute('aria-current', 'step');
+                } else {
+                    item.classList.remove('active', 'completed');
+                    item.removeAttribute('aria-current');
+                }
+            });
+            
+            currentStep = step;
+            
+            if (step === 4) {
+                startRedirectCountdown();
+                const methodName = methodLabels[selectedMethod] || selectedMethod;
+                document.getElementById('receiptMethod').textContent = methodName;
+            } else {
+                clearInterval(countdownInterval);
+            }
+        }
+        
+        function getStepName(step) {
+            const map = { 1: 'Method', 2: 'Review', 3: 'Processing', 4: 'Done' };
+            return map[step] || 'Method';
+        }
+        
+        function goToReview() {
+            if (selectedMethod === 'card' && !validateCard(true)) return;
+            hideError();
+            goToStep(2);
+            document.getElementById('stepReview').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        async function confirmAndPay() {
+            if (!currentOrder) {
+                showError('פרטי ההזמנה אינם זמינים.');
+                goToStep(1);
+                return;
+            }
+
+            goToStep(3);
+
+            const token = localStorage.getItem('access_token');
+            
+            if (currentPlan) {
+                try {
+                    const userResponse = await fetch(`${API_BASE_URL}/auth/me`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (!userResponse.ok) {
+                        throw new Error('Failed to verify user');
+                    }
+                    
+                    const userData = await userResponse.json();
+                    const userId = userData.user_id;
+                    
+                    const res = await fetch(`${API_BASE_URL}/payments/create-checkout-session`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            user_id: userId,
+                            plan_type: currentPlan
+                        })
+                    });
+
+                    const data = await res.json();
+                    if (!res.ok) {
+                        throw new Error(data.detail || 'שגיאה ביצוע תשלום');
+                    }
+
+                    if (data.url) {
+                        window.location.href = data.url;
+                    } else {
+                        goToStep(4);
+                    }
+                } catch (error) {
+                    console.error('Payment error:', error);
+                    showError(error.message || 'שגיאה בעיבוד התשלום. אנא נסה שוב.');
+                    goToStep(2);
+                }
+                return;
+            }
+
+            try {
+                const customerEmail = localStorage.getItem('email') || '';
+                const body = {
+                    business_id: currentOrder.business_id || new URLSearchParams(window.location.search).get('business_id'),
+                    order_id: currentOrder.order_id,
+                    customer_email: customerEmail,
+                    customer_name: ''
+                };
+
+                const res = await fetch(`${API_BASE_URL}/payments/checkout-session`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(body)
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.detail || 'שגיאה ביצירת תשלום');
+                }
+
+                if (selectedMethod === 'card') {
+                    goToStep(4);
+                } else if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    goToStep(4);
+                }
+            } catch (error) {
+                console.error('Payment error:', error);
+                showError(error.message || 'שגיאה בעיבוד התשלום. אנא נסה שוב.');
+                goToStep(2);
+            }
+        }
+        
+        function simulatePayment() {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    if (Math.random() > 0.1) {
+                        resolve();
+                    } else {
+                        reject(new Error('Payment failed'));
+                    }
+                }, 2000);
+            });
+        }
+        
+        function retryPayment() {
+            hideError();
+            goToStep(1);
+        }
+        
+        function showError(message) {
+            const banner = document.getElementById('errorBanner');
+            document.getElementById('errorMessage').textContent = message || 'שגיאה בעיבוד התשלום. אנא נסה שוב.';
+            banner.hidden = false;
+        }
+        
+        function hideError() {
+            document.getElementById('errorBanner').hidden = true;
+        }
+        
+        function startRedirectCountdown() {
+            timeLeft = 10;
+            const el = document.getElementById('countdown');
+            el.textContent = 'מעבר לעמוד הבית בעוד ' + timeLeft + ' שניות';
+            
+            countdownInterval = setInterval(() => {
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    el.textContent = 'מעבר...';
+                } else {
+                    el.textContent = 'מעבר לעמוד הבית בעוד ' + timeLeft + ' שניות';
+                }
+            }, 1000);
+        }
+        
+        function cancelRedirect() {
+            clearInterval(countdownInterval);
+            document.getElementById('countdown').textContent = 'מעבר בוטל';
+        }
+        
+        function downloadReceipt() {
+            const order = currentOrder || {};
+            const orderId = order.order_number || '12345';
+            const dateStr = order.created_at ? new Date(order.created_at).toLocaleString('he-IL') : '22 ביולי 2026';
+            const total = (order.total || 0).toFixed(2);
+            const methodName = methodLabels[selectedMethod] || selectedMethod;
+            const items = (order.items || [
+                { name: 'מוצר דיגיטלי', quantity: 1, price: 99.99 },
+                { name: 'דמי משלוח', quantity: '-', price: 0.00 }
+            ]);
+
+            let receipt = '';
+            receipt += 'ConversaPay - קבלה\n';
+            receipt += '='.repeat(40) + '\n';
+            receipt += 'מספר הזמנה: ' + orderId + '\n';
+            receipt += 'תאריך: ' + dateStr + '\n';
+            receipt += 'אמצעי תשלום: ' + methodName + '\n';
+            receipt += '='.repeat(40) + '\n';
+            items.forEach(item => {
+                const qty = item.quantity || 1;
+                const price = (item.price || 0).toFixed(2);
+                receipt += (item.name || 'מוצר') + ' x' + qty + ' ... ₪' + price + '\n';
+            });
+            receipt += '='.repeat(40) + '\n';
+            receipt += 'סך הכל: ₪' + total + '\n';
+            receipt += '='.repeat(40) + '\n';
+            receipt += 'תודה על הרכישה!\n';
+
+            const blob = new Blob([receipt], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'receipt-' + orderId + '.txt';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        function formatCardNumber(value) {
+            const v = value.replace(/\s+/g, '').replace(/[^0-9]/g, '');
+            const matches = v.match(/\d{4,16}/g);
+            const match = matches && matches[0] || '';
+            const parts = [];
+            for (let i = 0, len = match.length; i < len; i += 4) {
+                parts.push(match.substring(i, i + 4));
+            }
+            return parts.length ? parts.join(' ') : v;
+        }
+        
+        function detectCardType(number) {
+            const n = number.replace(/\s/g, '');
+            if (/^4/.test(n)) return 'Visa';
+            if (/^5[1-5]/.test(n)) return 'Mastercard';
+            if (/^3[47]/.test(n)) return 'American Express';
+            return '';
+        }
+        
+        function luhnCheck(cardNumber) {
+            const digits = cardNumber.replace(/\s/g, '');
+            if (!/^\d+$/.test(digits) || digits.length < 13 || digits.length > 19) return false;
+            let sum = 0;
+            let isEven = false;
+            for (let i = digits.length - 1; i >= 0; i--) {
+                let digit = parseInt(digits[i], 10);
+                if (isEven) {
+                    digit *= 2;
+                    if (digit > 9) digit -= 9;
+                }
+                sum += digit;
+                isEven = !isEven;
+            }
+            return sum % 10 === 0;
+        }
+        
+        function validateCard(silent = false) {
+            let valid = true;
+            const numInput = document.getElementById('cardNumber');
+            const expiryInput = document.getElementById('cardExpiry');
+            const cvvInput = document.getElementById('cardCvv');
+            const numError = document.getElementById('cardNumberError');
+            const expiryError = document.getElementById('cardExpiryError');
+            const cvvError = document.getElementById('cardCvvError');
+            
+            const rawNum = numInput.value.replace(/\s/g, '');
+            const rawExpiry = expiryInput.value.replace(/\D/g, '');
+            const rawCvv = cvvInput.value.replace(/\D/g, '');
+            
+            numInput.classList.remove('invalid', 'valid');
+            expiryInput.classList.remove('invalid', 'valid');
+            cvvInput.classList.remove('invalid', 'valid');
+            numError.textContent = '';
+            expiryError.textContent = '';
+            cvvError.textContent = '';
+            
+            if (!rawNum) {
+                numInput.classList.add('invalid');
+                numError.textContent = 'נא להזין מספר כרטיס';
+                valid = false;
+            } else if (!luhnCheck(rawNum)) {
+                numInput.classList.add('invalid');
+                numError.textContent = 'מספר כרטיס לא תקין';
+                valid = false;
+            } else if (!/^\d{13,19}$/.test(rawNum)) {
+                numInput.classList.add('invalid');
+                numError.textContent = 'מספר כרטיס חייב להיות בין 13 ל-19 ספרות';
+                valid = false;
+            } else {
+                numInput.classList.add('valid');
+            }
+            
+            if (!rawExpiry) {
+                expiryInput.classList.add('invalid');
+                expiryError.textContent = 'נא להזין תאריך תקף';
+                valid = false;
+            } else {
+                const month = parseInt(rawExpiry.substring(0, 2), 10);
+                const year = parseInt('20' + rawExpiry.substring(2, 4), 10);
+                const now = new Date();
+                const currentMonth = now.getMonth() + 1;
+                const currentYear = now.getFullYear();
+                
+                if (month < 1 || month > 12) {
+                    expiryInput.classList.add('invalid');
+                    expiryError.textContent = 'חודש לא תקין';
+                    valid = false;
+                } else if (year < currentYear || (year === currentYear && month < currentMonth)) {
+                    expiryInput.classList.add('invalid');
+                    expiryError.textContent = 'הכרטיס לא בתוקף';
+                    valid = false;
+                } else {
+                    expiryInput.classList.add('valid');
+                }
+            }
+            
+            if (!rawCvv) {
+                cvvInput.classList.add('invalid');
+                cvvError.textContent = 'נא להזין CVV';
+                valid = false;
+            } else if (!/^\d{3,4}$/.test(rawCvv)) {
+                cvvInput.classList.add('invalid');
+                cvvError.textContent = 'CVV חייב להיות 3 או 4 ספרות';
+                valid = false;
+            } else {
+                cvvInput.classList.add('valid');
+            }
+            
+            return valid;
+        }
+        
+        document.getElementById('cardNumber').addEventListener('input', (e) => {
+            const cursorPos = e.target.selectionStart;
+            const oldLength = e.target.value.length;
+            e.target.value = formatCardNumber(e.target.value);
+            const newLength = e.target.value.length;
+            const cardType = detectCardType(e.target.value);
+            document.getElementById('cardType').textContent = cardType ? 'סוג כרטיס: ' + cardType : '';
+            
+            const rawNum = e.target.value.replace(/\s/g, '');
+            if (!rawNum) {
+                e.target.classList.remove('valid', 'invalid');
+                document.getElementById('cardNumberError').textContent = '';
+            } else if (/^\d{13,19}$/.test(rawNum)) {
+                if (luhnCheck(rawNum)) {
+                    e.target.classList.add('valid');
+                    e.target.classList.remove('invalid');
+                    document.getElementById('cardNumberError').textContent = '';
+                } else {
+                    e.target.classList.add('invalid');
+                    e.target.classList.remove('valid');
+                }
+            }
+            if (!luhnCheck(rawNum) && rawNum.length >= 13) {
+                document.getElementById('cardNumberError').textContent = 'מספר כרטיס לא תקין';
+            }
+        });
+        
+        document.getElementById('cardExpiry').addEventListener('input', (e) => {
+            let v = e.target.value.replace(/\D/g, '');
+            if (v.length >= 2) {
+                v = v.substring(0, 2) + '/' + v.substring(2, 4);
+            }
+            e.target.value = v;
+        });
+        
+        document.getElementById('cardCvv').addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/\D/g, '').substring(0, 4);
+        });
+        
+        [document.getElementById('cardNumber'), document.getElementById('cardExpiry'), document.getElementById('cardCvv')].forEach(input => {
+            input.addEventListener('blur', () => {
+                if (input.value.trim()) validateCard(true);
+            });
+        });
+        
+        updateCardFormVisibility();
+        loadOrder();
+    </script>
 </body>
 </html>

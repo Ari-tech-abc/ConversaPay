@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 # Import routers and services
 from backend.config import settings
-from backend.routers import auth, businesses, products, chat, orders, payments, logs, webhooks, analytics, widget
+from backend.routers import auth, businesses, products, chat, orders, payments, logs, webhooks, analytics, widget, admin, dashboard
 from backend.routers.payme_webhook import router as payme_webhook_router
 from backend.routers.whatsapp import router as whatsapp_webhook_router
 from backend.services.monitoring_service import monitoring_service
@@ -170,6 +170,22 @@ async def health_check():
     }
 
 
+@app.get(f"{settings.API_PREFIX}/config/public")
+async def public_config():
+    """
+    Public, non-secret configuration values needed by the frontend.
+
+    The Supabase anon key is safe to expose to the browser by design —
+    it is protected by Row Level Security, exactly like a Firebase web
+    config. This lets the frontend talk to Supabase Auth directly
+    (needed for a working Google OAuth / PKCE flow — see auth.py).
+    """
+    return {
+        "supabase_url": settings.SUPABASE_URL,
+        "supabase_anon_key": settings.SUPABASE_ANON_KEY,
+    }
+
+
 # ============================================
 # API Routes
 # ============================================
@@ -185,6 +201,8 @@ app.include_router(logs.router, prefix=f"{settings.API_PREFIX}", tags=["logs"])
 app.include_router(webhooks.router, prefix=f"{settings.API_PREFIX}", tags=["webhooks"])
 app.include_router(analytics.router, prefix=f"{settings.API_PREFIX}", tags=["analytics"])
 app.include_router(widget.router, prefix=f"{settings.API_PREFIX}/widget", tags=["widget"])
+app.include_router(dashboard.router, prefix=f"{settings.API_PREFIX}/dashboard", tags=["dashboard"])
+app.include_router(admin.router, prefix=f"{settings.API_PREFIX}/admin", tags=["admin"])
 
 # Register PayMe webhook router
 app.include_router(payme_webhook_router, prefix=f"{settings.API_PREFIX}", tags=["payme-webhook"])
@@ -255,6 +273,29 @@ async def demo():
 async def pay():
     """Payment page."""
     return FileResponse(_html("pay.html"))
+
+@app.get("/admin")
+@app.get("/admin.html")
+async def admin_dashboard():
+    """Admin dashboard page."""
+    return FileResponse(_html("admin-dashboard.html"))
+
+@app.get("/admin/login")
+@app.get("/admin-login.html")
+async def admin_login_page():
+    """Admin login page."""
+    return FileResponse(_html("admin-login.html"))
+
+@app.get("/setup-guide")
+@app.get("/setup-guide.html")
+async def setup_guide():
+    """Setup guide page."""
+    return FileResponse(_html("setup-guide.html"))
+
+@app.get("/auth/callback")
+async def auth_callback():
+    """OAuth callback page."""
+    return FileResponse(_html("auth-callback.html"))
 
 
 # ============================================

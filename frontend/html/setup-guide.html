@@ -3,368 +3,1327 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="מדריך התקנה מפורט ל-ConversaPay - הטמיע את ווידג'ט התשלומים באתר שלך תוך דקות ספורות. מדריך צעד אחר צעד עם וידאו, דוגמאות קוד ותמיכה 24/7.">
     <title>ConversaPay - מדריך התקנה</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "דף הבית",
+                "item": "https://conversapay.com/"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "מדריך התקנה"
+            }
+        ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "HowTo",
+        "name": "הטמעת ConversaPay באתר שלך",
+        "description": "מדריך צעד אחר צעד להטמעת ווידג'ט התשלומים של ConversaPay",
+        "totalTime": "PT10M",
+        "step": [
+            {
+                "@type": "HowToStep",
+                "position": 1,
+                "name": "קבל קוד API",
+                "text": "מצא את קוד ה-API הייחודי שלך בהגדרות החשבון"
+            },
+            {
+                "@type": "HowToStep",
+                "position": 2,
+                "name": "בחר שיטת הטמעה",
+                "text": "בחר בין WordPress, HTML או שיטה מותאמת אישית"
+            },
+            {
+                "@type": "HowToStep",
+                "position": 3,
+                "name": "בדוק את ההטמעה",
+                "text": "וודא שהווידג'ט מופיע ופועל"
+            }
+        ]
+    }
+    </script>
+
     <style>
         :root {
-            --bg-primary: #0B0F19;
-            --bg-secondary: #111827;
-            --text-primary: #F9FAFB;
-            --text-secondary: #9CA3AF;
-            --accent-purple: #A855F7;
-            --accent-cyan: #00D9FF;
-            --accent-blue: #3B82F6;
-            --accent-green: #10B981;
-            --border-color: rgba(255,255,255,0.1);
+            --bg-primary: #0F1419;
+            --bg-secondary: #1A1F2E;
+            --bg-card: rgba(26, 31, 46, 0.6);
+            --text-primary: #F5F7FA;
+            --text-secondary: #A0AEC0;
+            --accent-primary: #6366F1;
+            --accent-secondary: #8B5CF6;
+            --accent-success: #10B981;
+            --accent-warning: #FBBF24;
+            --accent-info: #60A5FA;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+            --radius: 16px;
         }
-        * { font-family: 'Plus Jakarta Sans', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; direction: rtl; }
+
+        * {
+            font-family: 'Rubik', sans-serif;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1f2e 50%, #0f1419 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
         body::before {
             content: '';
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle at 50% 20%, rgba(168,85,247,0.08) 0%, transparent 60%);
-            pointer-events: none; z-index: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
         }
-        .navbar {
-            background: rgba(11,15,25,0.85);
+
+        :focus-visible {
+            outline: 2px solid var(--accent-primary);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        nav[aria-label] {
+            background: var(--bg-card);
             backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border-color);
-            padding: 0 30px; height: 64px;
-            display: flex; align-items: center; justify-content: space-between;
-            position: sticky; top: 0; z-index: 100;
+            padding: 0 30px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-md);
         }
-        .navbar-brand {
-            font-size: 1.2rem; font-weight: 800;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-        }
-        .btn {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 8px 16px; border: none; border-radius: 8px;
-            font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+
+        [aria-label] a {
+            color: var(--text-secondary);
             text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
         }
-        .btn-outline { background: transparent; color: var(--text-primary); border: 1px solid var(--border-color); }
-        .btn-outline:hover { background: rgba(255,255,255,0.05); border-color: var(--accent-purple); }
-        .btn-primary { background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue)); color: white; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(168,85,247,0.3); }
-        .btn-success { background: linear-gradient(135deg, #10b981, #059669); color: white; }
-        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(16,185,129,0.3); }
-        .container { max-width: 900px; margin: 0 auto; padding: 40px 20px; position: relative; z-index: 1; }
-        .page-header { text-align: center; margin-bottom: 40px; }
-        .page-header h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 12px; }
-        .page-header p { color: var(--text-secondary); font-size: 1.05rem; }
-        /* Tabs */
-        .tabs { display: flex; gap: 0; margin-bottom: 32px; background: rgba(255,255,255,0.04); border-radius: 12px; padding: 4px; border: 1px solid var(--border-color); }
-        .tab-btn {
-            flex: 1; padding: 12px 20px; border: none; border-radius: 9px;
-            background: transparent; color: var(--text-secondary);
-            font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
-            display: flex; align-items: center; justify-content: center; gap: 8px;
+
+        [aria-label] a:hover {
+            color: var(--accent-primary);
         }
-        .tab-btn.active { background: rgba(168,85,247,0.2); color: var(--text-primary); border: 1px solid rgba(168,85,247,0.4); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        /* Cards */
-        .card {
-            background: rgba(17,24,39,0.7); backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color); border-radius: 20px;
-            margin-bottom: 20px; overflow: hidden;
+
+        .navbar-brand {
+            font-size: 1.3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: var(--accent-primary);
+            white-space: nowrap;
         }
-        .card-header { padding: 18px 24px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 12px; }
-        .step-num {
-            width: 32px; height: 32px; border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 800; font-size: 0.9rem; flex-shrink: 0;
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
         }
-        .card-header h3 { font-size: 1rem; font-weight: 700; }
-        .card-body { padding: 24px; }
-        .card-body p { color: var(--text-secondary); line-height: 1.7; margin-bottom: 16px; }
-        .card-body p:last-child { margin-bottom: 0; }
-        /* Code block */
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 24px;
+        }
+
+        .stepper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 50px;
+            position: relative;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .stepper::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            left: 30px;
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            z-index: 0;
+        }
+
+        .stepper-progress {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            height: 4px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 2px;
+            z-index: 1;
+            transition: width 0.4s ease;
+            width: 0%;
+        }
+
+        .step-badge {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+            min-width: 44px;
+        }
+
+        .step-badge::before {
+            content: '';
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            border: 3px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .step-badge.completed::before {
+            background: var(--accent-success);
+            border-color: var(--accent-success);
+        }
+
+        .step-badge.active::before {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+        }
+
+        .step-badge__icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            font-weight: 700;
+        }
+
+        .step-badge.completed .step-badge__icon {
+            color: white;
+        }
+
+        .step-badge__label {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            display: none;
+        }
+
+        @media (min-width: 640px) {
+            .step-badge__label {
+                display: block;
+            }
+        }
+
+        .step {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: var(--shadow-md);
+            transition: border-color 0.3s;
+            position: relative;
+            z-index: 1;
+        }
+
+        .step.completed {
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            cursor: pointer;
+            min-height: 44px;
+        }
+
+        .step-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            color: white;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+
+        .step.completed .step-number {
+            background: var(--accent-success);
+        }
+
+        .step h2 {
+            font-size: 1.4rem;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        .step__toggle {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            transition: transform 0.3s;
+            flex-shrink: 0;
+        }
+
+        .step__toggle::after {
+            content: '▼';
+            font-size: 0.7rem;
+        }
+
+        .step.collapsed .step__toggle::after {
+            transform: rotate(180deg);
+        }
+
+        .step-content {
+            overflow: hidden;
+            transition: max-height 0.4s ease, opacity 0.3s ease;
+            max-height: 2000px;
+            opacity: 1;
+        }
+
+        .step.collapsed .step-content {
+            max-height: 0;
+            opacity: 0;
+        }
+
+        .step p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+
+        details.tab-details {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        details.tab-details summary {
+            font-weight: 600;
+            color: var(--accent-info);
+            cursor: pointer;
+            padding: 8px 0;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            list-style: none;
+        }
+
+        details.tab-details summary::-webkit-details-marker {
+            display: none;
+        }
+
+        details.tab-details summary::before {
+            content: '▶';
+            font-size: 0.7rem;
+            transition: transform 0.3s;
+        }
+
+        details[open].tab-details summary::before {
+            transform: rotate(90deg);
+        }
+
+        details.tab-details[open] summary {
+            margin-bottom: 12px;
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            border-bottom: 1px solid var(--border-color);
+            role: tablist;
+        }
+
+        .tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        [role="tablist"] {
+            display: flex;
+            flex-wrap: nowrap;
+            gap: 8px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 4px;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        [role="tab"] {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 12px 18px;
+            min-height: 44px;
+            cursor: pointer;
+            font-weight: 600;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+            border-radius: 8px 8px 0 0;
+        }
+
+        [role="tab"]:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        [role="tab"][aria-selected="true"] {
+            color: var(--accent-primary);
+            border-bottom-color: var(--accent-primary);
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        [role="tabpanel"] {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        [role="tabpanel"].active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .code-block {
-            background: rgba(0,0,0,0.4); border: 1px solid var(--border-color);
-            border-radius: 10px; padding: 16px; margin: 16px 0;
-            direction: ltr; text-align: left; font-family: 'Courier New', monospace;
-            font-size: 0.85rem; color: var(--accent-cyan); overflow-x: auto;
-            white-space: pre; position: relative;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            position: relative;
         }
+
+        .code-block pre {
+            padding: 18px;
+            margin: 0;
+            overflow-x: auto;
+        }
+
+        .code-block code {
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.85rem;
+            color: #E9D5FF;
+            line-height: 1.7;
+            display: block;
+            white-space: pre;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .code-block .kw { color: #C084FC; }
+        .code-block .str { color: #86EFAC; }
+        .code-block .cm { color: #64748B; font-style: italic; }
+        .code-block .tag { color: #F472B6; }
+        .code-block .attr { color: #60A5FA; }
+        .code-block .num { color: #FBBF24; }
+
+        .code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--border-color);
+            min-height: 44px;
+        }
+
+        .code-lang {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
         .copy-btn {
-            position: absolute; top: 10px; left: 10px;
-            background: rgba(168,85,247,0.2); border: 1px solid rgba(168,85,247,0.4);
-            color: white; padding: 4px 10px; border-radius: 6px;
-            font-size: 0.75rem; cursor: pointer; font-family: inherit;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: var(--accent-primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            min-height: 44px;
+            min-width: 44px;
+            transition: all 0.2s;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
-        .copy-btn:hover { background: rgba(168,85,247,0.4); }
-        /* Alert */
-        .alert {
-            padding: 14px 18px; border-radius: 10px; margin-bottom: 16px;
-            font-size: 0.9rem; line-height: 1.6;
+
+        .copy-btn:hover {
+            background: rgba(99, 102, 241, 0.25);
+            border-color: var(--accent-primary);
         }
-        .alert-info { background: rgba(0,217,255,0.08); border: 1px solid rgba(0,217,255,0.25); color: var(--accent-cyan); }
-        .alert-success { background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); color: var(--accent-green); }
-        .alert-warning { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25); color: #F59E0B; }
-        /* Download area */
-        .download-area {
-            background: linear-gradient(135deg, rgba(168,85,247,0.12), rgba(59,130,246,0.12));
-            border: 2px dashed rgba(168,85,247,0.4); border-radius: 14px;
-            padding: 32px; text-align: center; margin: 20px 0;
+
+        .copy-btn.copied {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: var(--accent-success);
+            color: var(--accent-success);
         }
-        .download-area .icon { font-size: 3.5rem; margin-bottom: 16px; }
-        .download-area h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 8px; }
-        .download-area p { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px; }
-        /* Business ID badge */
-        .business-id-badge {
-            display: inline-block; background: rgba(0,217,255,0.1);
-            border: 1px solid rgba(0,217,255,0.3); border-radius: 8px;
-            padding: 6px 14px; font-family: monospace; font-size: 0.95rem;
-            color: var(--accent-cyan); margin: 8px 0;
+
+        .copy-btn::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            top: -36px;
+            right: 50%;
+            transform: translateX(50%) translateY(4px);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s;
+            border: 1px solid var(--border-color);
         }
-        /* Back link */
-        .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--text-secondary); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
-        .back-link:hover { color: var(--text-primary); }
+
+        .toast {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--accent-success);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 10;
+        }
+
+        .copy-btn:hover::after {
+            opacity: 1;
+            transform: translateX(50%) translateY(0);
+        }
+
+        .copy-check {
+            display: none;
+            width: 16px;
+            height: 16px;
+            color: var(--accent-success);
+        }
+
+        .copy-btn.copied .copy-check {
+            display: inline;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-top: 15px;
+        }
+
+        .feature-list li {
+            padding: 10px 0;
+            padding-right: 32px;
+            position: relative;
+            color: var(--text-secondary);
+        }
+
+        .feature-list li::before {
+            content: '✓';
+            position: absolute;
+            right: 0;
+            color: var(--accent-success);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .warning-box, .success-box, .info-box {
+            border-radius: 12px;
+            padding: 18px;
+            margin-top: 15px;
+            font-size: 0.95rem;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            line-height: 1.7;
+        }
+
+        .warning-box {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            color: #FDE68A;
+        }
+
+        .success-box {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #A7F3D0;
+        }
+
+        .info-box {
+            background: rgba(96, 165, 250, 0.1);
+            border: 1px solid rgba(96, 165, 250, 0.3);
+            color: #BFDBFE;
+        }
+
+        .box-icon {
+            font-size: 1.4rem;
+            line-height: 1;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .video-placeholder {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .video-placeholder:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(99, 102, 241, 0.15);
+        }
+
+        .play-btn {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+
+        .play-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .play-btn::after {
+            content: '';
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 14px 0 14px 24px;
+            border-color: transparent transparent transparent white;
+            margin-right: 4px;
+        }
+
+        .video-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .terminal {
+            background: #0a0d12;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .terminal-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .terminal-dot.red { background: #EF4444; }
+        .terminal-dot.yellow { background: #FBBF24; }
+        .terminal-dot.green { background: #10B981; }
+
+        .terminal-body {
+            padding: 18px;
+            overflow-x: auto;
+            min-height: 80px;
+        }
+
+        .terminal-body pre {
+            margin: 0;
+        }
+
+        .terminal-body code {
+            font-family: 'Courier Prime', monospace;
+            font-size: 0.85rem;
+            color: #A0E7E5;
+            line-height: 1.6;
+            white-space: pre;
+            direction: ltr;
+            text-align: left;
+        }
+
+        .terminal-prompt::before {
+            content: '$ ';
+            color: #C084FC;
+            font-weight: 700;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 60px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 24px 16px;
+            }
+
+            header h1 {
+                font-size: 2rem;
+            }
+
+            .step {
+                padding: 20px;
+                border-radius: 12px;
+            }
+
+            .step h2 {
+                font-size: 1.2rem;
+            }
+
+            .stepper::before {
+                right: 20px;
+                left: 20px;
+            }
+
+            .stepper-progress {
+                right: 20px;
+            }
+
+            .step-badge::before {
+                width: 32px;
+                height: 32px;
+            }
+
+            .code-block pre,
+            .terminal-body {
+                padding: 12px;
+            }
+
+            .code-block code,
+            .terminal-body code {
+                font-size: 0.78rem;
+            }
+        }
+
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+            }
+
+            nav, .stepper, .video-placeholder, .tabs, .copy-btn,
+            .code-header, .step__toggle {
+                display: none !important;
+            }
+
+            .step {
+                border: 1px solid #ccc;
+                background: white !important;
+                box-shadow: none !important;
+                page-break-inside: avoid;
+                margin-bottom: 20px;
+            }
+
+            .step-content {
+                max-height: none !important;
+                opacity: 1 !important;
+            }
+
+            .code-block, .terminal {
+                border: 1px solid #ccc;
+                background: #f9f9f9 !important;
+            }
+
+            header h1 {
+                color: black !important;
+            }
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="navbar-brand">📋 מדריך התקנה - ConversaPay</div>
-        <a href="/frontend/html/dashboard.html" class="btn btn-outline">← חזור לדאשבורד</a>
+    <nav aria-label="ניווט ראשי">
+        <a href="#" class="navbar-brand" aria-label="ConversaPay - דף הבית">ConversaPay</a>
+        <a href="https://conversapay.com/help" aria-label="מרכז עזרה">עזרה</a>
     </nav>
 
-    <div class="container">
-        <div class="page-header">
-            <h1>🚀 חיבור הצ'אטבוט לאתר שלך</h1>
-            <p id="personalGreeting" style="display:none;color:var(--accent-cyan);font-size:1.1rem;font-weight:600;margin-bottom:8px;"></p>
-            <p>בחר את שיטת ההתקנה המתאימה לפלטפורמה שלך</p>
-            <div style="margin-top:16px;">
-                <span style="color:var(--text-secondary);font-size:0.9rem;">מזהה העסק שלך: </span>
-                <span class="business-id-badge" id="displayBusinessId">טוען...</span>
-            </div>
-        </div>
+    <main class="container">
+        <header>
+            <h1>התחל עכשיו</h1>
+            <p>הטמע את ConversaPay באתר שלך בדקות ספורות</p>
 
-        <!-- Tabs -->
-        <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('wordpress')">🌐 וורדפרס</button>
-            <button class="tab-btn" onclick="switchTab('html')">💻 HTML / Wix / Shopify</button>
-        </div>
-
-        <!-- WordPress Tab -->
-        <div id="tab-wordpress" class="tab-content active">
-            <div class="alert alert-success">✅ הדרך הקלה ביותר — תוסף מוכן להתקנה עם Business ID שלך מוכנה מראש</div>
-
-            <div class="card">
-                <div class="card-header">
-                    <div class="step-num">1</div>
-                    <h3>הורד את התוסף</h3>
+            <div class="stepper" aria-label="מדריך התקנה - 7 שלבים" role="progressbar" aria-valuemin="0" aria-valuemax="7" aria-valuenow="0" id="stepper">
+                <div class="stepper-progress" id="stepperProgress"></div>
+                <div class="step-badge active" data-step="1">
+                    <span class="step-badge__icon" id="badge1">1</span>
                 </div>
-                <div class="card-body">
-                    <p>לחץ על הכפתור להורדת קובץ ה-PHP של התוסף. הקובץ כבר מכיל את מזהה העסק שלך.</p>
-                    <div class="download-area">
-                        <div class="icon">📦</div>
-                        <h3>conversapay-chat.php</h3>
-                        <p>תוסף וורדפרס מותאם אישית עם Business ID שלך</p>
-                        <button id="wpDownloadBtn" class="btn btn-primary" style="font-size:1rem;padding:12px 28px;">
-                            📥 הורד תוסף לוורדפרס
-                        </button>
+                <div class="step-badge" data-step="2">
+                    <span class="step-badge__icon" id="badge2">2</span>
+                </div>
+                <div class="step-badge" data-step="3">
+                    <span class="step-badge__icon" id="badge3">3</span>
+                </div>
+                <div class="step-badge" data-step="4">
+                    <span class="step-badge__icon" id="badge4">4</span>
+                </div>
+                <div class="step-badge" data-step="5">
+                    <span class="step-badge__icon" id="badge5">5</span>
+                </div>
+                <div class="step-badge" data-step="6">
+                    <span class="step-badge__icon" id="badge6">6</span>
+                </div>
+                <div class="step-badge" data-step="7">
+                    <span class="step-badge__icon" id="badge7">7</span>
+                </div>
+            </div>
+        </header>
+
+        <section aria-labelledby="step1-heading">
+            <article class="step" id="step1" data-step="1">
+                <div class="step-header" onclick="toggleStep('step1')" role="button" tabindex="0" aria-expanded="true" aria-controls="step1-content">
+                    <div class="step-number" aria-hidden="true">1</div>
+                    <h2 id="step1-heading">קבל את קוד ה-API שלך</h2>
+                    <div class="step__toggle" aria-hidden="true"></div>
+                </div>
+                <div class="step-content" id="step1-content">
+                    <p>כל משתמש PRO ו-PREMIUM מקבל קוד API ייחודי. תוכל למצוא אותו בהגדרות החשבון שלך.</p>
+                    <div class="terminal">
+                        <div class="terminal-header" aria-hidden="true">
+                            <span class="terminal-dot red"></span>
+                            <span class="terminal-dot yellow"></span>
+                            <span class="terminal-dot green"></span>
+                        </div>
+                        <div class="terminal-body">
+                            <code class="terminal-prompt">API Credentials</code><br>
+                            <span class="kw">API_KEY</span>=sk_live_1234567890abcdef<br>
+                            <span class="kw">API_SECRET</span>=sk_secret_1234567890abcdef
+                        </div>
+                    </div>
+                    <div class="warning-box" role="alert">
+                        <span class="box-icon" aria-hidden="true">⚠️</span>
+                        <span>שמור את קוד ה-API שלך בסוד. אל תשתף אותו עם אף אחד!</span>
                     </div>
                 </div>
-            </div>
+            </article>
+        </section>
 
-            <div class="card">
-                <div class="card-header">
-                    <div class="step-num">2</div>
-                    <h3>העלה את התוסף לוורדפרס</h3>
+        <section aria-labelledby="step2-heading">
+            <article class="step" id="step2" data-step="2">
+                <div class="step-header" onclick="toggleStep('step2')" role="button" tabindex="0" aria-expanded="true" aria-controls="step2-content">
+                    <div class="step-number" aria-hidden="true">2</div>
+                    <h2 id="step2-heading">בחר את שיטת ההטמעה</h2>
+                    <div class="step__toggle" aria-hidden="true"></div>
                 </div>
-                <div class="card-body">
-                    <p>יש שתי דרכים להעלות את התוסף:</p>
-                    <p><strong style="color:var(--text-primary);">דרך א׳ — דרך לוח הבקרה (קל יותר):</strong></p>
-                    <p>כנס ל-<strong style="color:var(--accent-cyan);">לוח הבקרה → תוספים → הוסף חדש → העלה תוסף</strong> ← בחר את הקובץ שהורדת ← לחץ "התקן עכשיו"</p>
-                    <p><strong style="color:var(--text-primary);">דרך ב׳ — דרך FTP:</strong></p>
-                    <p>העלה את הקובץ לתיקייה: <code style="color:var(--accent-cyan);background:rgba(0,0,0,0.3);padding:2px 8px;border-radius:4px;">/wp-content/plugins/</code></p>
-                </div>
-            </div>
+                <div class="step-content" id="step2-content">
+                    <p>בחר את השיטה המתאימה לאתר שלך:</p>
 
-            <div class="card">
-                <div class="card-header">
-                    <div class="step-num">3</div>
-                    <h3>הפעל את התוסף</h3>
-                </div>
-                <div class="card-body">
-                    <p>לאחר ההעלאה, כנס ל-<strong style="color:var(--accent-cyan);">לוח הבקרה → תוספים</strong> ← מצא את "ConversaPay Chat" ← לחץ <strong style="color:var(--accent-green);">"הפעל"</strong></p>
-                    <div class="alert alert-success">🎉 זהו! הצ'אטבוט יופיע אוטומטית בכל דפי האתר שלך.</div>
-                </div>
-            </div>
+                    <div role="tablist" aria-label="שיטות הטמעה" id="methodTabs">
+                        <button role="tab" aria-selected="true" aria-controls="wordpress-panel" id="tab-wordpress" class="tab-btn active" onclick="switchTab('wordpress')" onkeydown="handleTabKey(event)" tabindex="0">WordPress</button>
+                        <button role="tab" aria-selected="false" aria-controls="html-panel" id="tab-html" class="tab-btn" onclick="switchTab('html')" onkeydown="handleTabKey(event)" tabindex="-1">HTML</button>
+                        <button role="tab" aria-selected="false" aria-controls="custom-panel" id="tab-custom" class="tab-btn" onclick="switchTab('custom')" onkeydown="handleTabKey(event)" tabindex="-1">Custom</button>
+                    </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <div class="step-num">4</div>
-                    <h3>בדוק שהכל עובד</h3>
-                </div>
-                <div class="card-body">
-                    <p>פתח את האתר שלך בדפדפן — אמור להופיע כפתור צ'אט בפינה הימנית התחתונה.</p>
-                    <div class="alert alert-warning">⚠️ אם הצ'אטבוט לא מופיע — נסה לנקות את ה-Cache של וורדפרס (אם יש לך תוסף Cache כמו WP Rocket).</div>
-                </div>
-            </div>
-        </div>
+                    <div role="tabpanel" id="wordpress-panel" aria-labelledby="tab-wordpress" class="tab-content active">
+                        <h3>התקנה ב-WordPress</h3>
+                        <p>אם אתה משתמש ב-WordPress, זה הכי קל:</p>
+                        <ul class="feature-list" aria-label="הוראות התקנה ב-WordPress">
+                            <li>עבור לתוסף שלך (Plugins)</li>
+                            <li>חפש "ConversaPay"</li>
+                            <li>התקן והפעל את התוסף</li>
+                            <li>הכנס את קוד ה-API שלך בהגדרות</li>
+                            <li>בחר את הדפים שבהם תרצה להציג את הווידג'ט</li>
+                        </ul>
+                        <div class="success-box">
+                            <span class="box-icon" aria-hidden="true">✓</span>
+                            <span>זהו! הווידג'ט שלך פעיל כעת בכל הדפים שבחרת.</span>
+                        </div>
+                    </div>
 
-        <!-- HTML Tab -->
-        <div id="tab-html" class="tab-content">
-            <div class="alert alert-info">💡 מתאים לכל אתר — Wix, Shopify, Squarespace, HTML רגיל, ועוד</div>
+                    <div role="tabpanel" id="html-panel" aria-labelledby="tab-html" class="tab-content">
+                        <h3>התקנה ב-HTML</h3>
+                        <p>אם אתה משתמש בקוד HTML ישיר, הוסף את השורות הבאות לפני סגירת ה-<code>&lt;/body&gt;</code>:</p>
+                        <div class="code-block" data-code="&lt;!-- ConversaPay Widget --&gt;&#10;&lt;script src=&quot;https://cdn.conversapay.com/widget.js&quot;&gt;&lt;/script&gt;&#10;&lt;script&gt;&#10;  ConversaPay.init({&#10;    apiKey: &quot;sk_live_1234567890abcdef&quot;,&#10;    position: &quot;bottom-right&quot;&#10;  });&#10;&lt;/script&gt;">
+                            <div class="code-header">
+                                <span class="code-lang">HTML</span>
+                                <button class="copy-btn" onclick="copyCode(this)" data-tooltip="העתק">
+                                    <svg class="copy-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                    <span class="copy-text">העתק</span>
+                                </button>
+                                <button class="copy-btn" onclick="downloadCode(this)" data-tooltip="הורד קוד">
+                                    <span class="copy-text">הורד קוד</span>
+                                </button>
+                            </div>
+                            <pre><code><span class="cm">&lt;!-- ConversaPay Widget --&gt;</span>
+<span class="tag">&lt;script</span> <span class="attr">src</span>=<span class="str">"https://cdn.conversapay.com/widget.js"</span><span class="tag">&gt;&lt;/script&gt;</span>
+<span class="tag">&lt;script&gt;</span>
+  <span class="kw">ConversaPay</span>.init({
+    <span class="attr">apiKey</span>: <span class="str">'sk_live_1234567890abcdef'</span>,
+    <span class="attr">position</span>: <span class="str">'bottom-right'</span>
+  });
+<span class="tag">&lt;/script&gt;</span></code></pre>
+                        </div>
+                    </div>
 
-            <div class="card">
-                <div class="card-header">
-                    <div class="step-num">1</div>
-                    <h3>העתק את קוד ההטמעה</h3>
+                    <div role="tabpanel" id="custom-panel" aria-labelledby="tab-custom" class="tab-content">
+                        <h3>התקנה Custom</h3>
+                        <p>אם אתה משתמש בפלטפורמה אחרת, אנחנו יכולים לעזור:</p>
+                        <ul class="feature-list">
+                            <li>Shopify - יש לנו אפליקציה ב-App Store</li>
+                            <li>WooCommerce - תוסף זמין</li>
+                            <li>Webflow - קוד embed</li>
+                            <li>Wix - אפליקציה ב-App Market</li>
+                        </ul>
+                        <div class="info-box">
+                            <span class="box-icon" aria-hidden="true">ℹ️</span>
+                            <span>אם הפלטפורמה שלך לא רשומה, <a href="#">צור קשר עם התמיכה שלנו</a>.</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <p>העתק את הקוד הבא והדבק אותו לפני תגית <code style="color:var(--accent-cyan);">&lt;/body&gt;</code> בכל דף שבו תרצה שהצ'אטבוט יופיע:</p>
-                    <div class="code-block" id="embedCodeBlock"><!-- ConversaPay AI Chatbot -->
-<script>
-  window.ConversaPayWidgetConfig = { business_id: "LOADING..." };
-</script>
-<script src="ORIGIN/frontend/js/widget.js" defer></script><button class="copy-btn" onclick="copyCode('embedCodeBlock')">העתק</button></div>
-                    <button class="btn btn-success" onclick="copyEmbedCodeFull()" style="margin-top:8px;">📋 העתק קוד</button>
-                </div>
-            </div>
+            </article>
+        </section>
 
-            <div class="card">
-                <div class="card-header">
-                    <div class="step-num">2</div>
-                    <h3>Wix</h3>
+        <section aria-labelledby="step3-heading">
+            <article class="step" id="step3" data-step="3">
+                <div class="step-header" onclick="toggleStep('step3')" role="button" tabindex="0" aria-expanded="true" aria-controls="step3-content">
+                    <div class="step-number" aria-hidden="true">3</div>
+                    <h2 id="step3-heading">בדוק את ההטמעה</h2>
+                    <div class="step__toggle" aria-hidden="true"></div>
                 </div>
-                <div class="card-body">
-                    <p>ב-Wix Editor: לחץ על <strong style="color:var(--accent-cyan);">+ הוסף → Embed → Custom Code</strong></p>
-                    <p>הדבק את הקוד ← בחר "Body - end" ← לחץ "Apply"</p>
-                    <div class="alert alert-info">💡 ב-Wix Premium בלבד ניתן להוסיף Custom Code.</div>
+                <div class="step-content" id="step3-content">
+                    <p>לאחר ההטמעה, בדוק שהווידג'ט מופיע בעמוד שלך:</p>
+                    <ul class="feature-list">
+                        <li>רענן את הדף (Ctrl+F5)</li>
+                        <li>חפש את הווידג'ט בפינת הדף</li>
+                        <li>לחץ עליו וודא שהוא עובד</li>
+                        <li>בדוק את הדאשבורד שלך לאישור</li>
+                    </ul>
+                    <details class="tab-details" id="troubleshoot-details">
+                        <summary>בעיות נפוצות</summary>
+                        <div>
+                            <p>אם הווידג'ט לא מופיע:</p>
+                            <ul class="feature-list">
+                                <li>וודא שהקוד הוכנס נכון בתוך <code>&lt;/body&gt;</code></li>
+                                <li>וודא שאין חוסרים באתר שלך</li>
+                                <li>נסה בע Lithuanian מחדש</li>
+                            </ul>
+                        </div>
+                    </details>
                 </div>
-            </div>
+            </article>
+        </section>
 
-            <div class="card">
-                <div class="card-header">
-                    <div class="step-num">2</div>
-                    <h3>Shopify</h3>
+        <section aria-labelledby="step4-heading">
+            <article class="step" id="step4" data-step="4">
+                <div class="step-header" onclick="toggleStep('step4')" role="button" tabindex="0" aria-expanded="true" aria-controls="step4-content">
+                    <div class="step-number" aria-hidden="true">4</div>
+                    <h2 id="step4-heading">הגדר את ההעדפות שלך</h2>
+                    <div class="step__toggle" aria-hidden="true"></div>
                 </div>
-                <div class="card-body">
-                    <p>כנס ל-<strong style="color:var(--accent-cyan);">Online Store → Themes → Edit Code</strong></p>
-                    <p>פתח את <code style="color:var(--accent-cyan);">theme.liquid</code> ← מצא את <code style="color:var(--accent-cyan);">&lt;/body&gt;</code> ← הדבק את הקוד לפניו ← שמור</p>
+                <div class="step-content" id="step4-content">
+                    <p>בדאשבורד שלך, תוכל להגדיר:</p>
+                    <ul class="feature-list">
+                        <li>מיקום הווידג'ט (פינה ימנית/שמאלית)</li>
+                        <li>צבע וסגנון</li>
+                        <li>הודעות ברוכים הבאים</li>
+                        <li>שיטות תשלום מקובלות</li>
+                        <li>דומיינים מורשים</li>
+                    </ul>
                 </div>
-            </div>
+            </article>
+        </section>
 
-            <div class="card">
-                <div class="card-header">
-                    <div class="step-num">2</div>
-                    <h3>HTML רגיל</h3>
+        <section aria-labelledby="step5-heading">
+            <article class="step" id="step5" data-step="5">
+                <div class="step-header" onclick="toggleStep('step5')" role="button" tabindex="0" aria-expanded="true" aria-controls="step5-content">
+                    <div class="step-number" aria-hidden="true">5</div>
+                    <h2 id="step5-heading">ניהול דומיינים</h2>
+                    <div class="step__toggle" aria-hidden="true"></div>
                 </div>
-                <div class="card-body">
-                    <p>פתח את קובץ ה-HTML שלך ← מצא את <code style="color:var(--accent-cyan);">&lt;/body&gt;</code> ← הדבק את הקוד ישירות לפניו:</p>
-                    <div class="code-block">    ...תוכן האתר...
-
-    <!-- ConversaPay AI Chatbot -->
-    &lt;script&gt;
-      window.ConversaPayWidgetConfig = { business_id: "YOUR_ID" };
-    &lt;/script&gt;
-    &lt;script src="ORIGIN/frontend/js/widget.js" defer&gt;&lt;/script&gt;
-
-&lt;/body&gt;</div>
+                <div class="step-content" id="step5-content">
+                    <p>כחלק מהתוכנית שלך, תוכל להטמיע את הווידג'ט בכמה דומיינים:</p>
+                    <ul class="feature-list">
+                        <li><strong>PRO:</strong> עד 3 דומיינים</li>
+                        <li><strong>PREMIUM:</strong> עד 10 דומיינים</li>
+                    </ul>
+                    <p style="margin-top: 15px; color: var(--text-secondary);">כל דומיין מקבל מגבלת קריאות API משלו. אם אתה צריך יותר, שדרג את התוכנית שלך.</p>
                 </div>
-            </div>
+            </article>
+        </section>
 
-            <div class="card">
-                <div class="card-header">
-                    <div class="step-num">3</div>
-                    <h3>בדוק שהכל עובד</h3>
+        <section aria-labelledby="step6-heading">
+            <article class="step" id="step6" data-step="6">
+                <div class="step-header" onclick="toggleStep('step6')" role="button" tabindex="0" aria-expanded="true" aria-controls="step6-content">
+                    <div class="step-number" aria-hidden="true">6</div>
+                    <h2 id="step6-heading">צפה בנתונים שלך</h2>
+                    <div class="step__toggle" aria-hidden="true"></div>
                 </div>
-                <div class="card-body">
-                    <p>פתח את האתר שלך — אמור להופיע כפתור צ'אט בפינה הימנית התחתונה.</p>
-                    <div class="alert alert-success">🎉 הצ'אטבוט מוכן! לקוחות יכולים עכשיו לשוחח ולרכוש ישירות מהאתר שלך.</div>
+                <div class="step-content" id="step6-content">
+                    <p>בדאשבורד שלך תוכל לראות:</p>
+                    <ul class="feature-list">
+                        <li>סך הכנסות מכל דומיין</li>
+                        <li>מספר עסקאות</li>
+                        <li>שיעור המרה</li>
+                        <li>לקוחות חדשים</li>
+                        <li>ניתוח מפורט לפי תקופה</li>
+                    </ul>
+                    <div class="video-placeholder" role="button" tabindex="0" aria-label="צפה בסרטון הדגמה" onclick="alert('סרטון ההדגמה יוצג כאן')">
+                        <div class="play-btn" aria-hidden="true"></div>
+                        <span class="video-label">צפה בסרטון הדגמה</span>
+                    </div>
                 </div>
-            </div>
-        </div>
+            </article>
+        </section>
 
-        <div style="text-align:center;margin-top:32px;">
-            <a href="/frontend/html/dashboard.html" class="btn btn-outline" style="font-size:1rem;padding:12px 28px;">← חזור לדאשבורד</a>
-        </div>
-    </div>
+        <section aria-labelledby="step7-heading">
+            <article class="step" id="step7" data-step="7">
+                <div class="step-header" onclick="toggleStep('step7')" role="button" tabindex="0" aria-expanded="true" aria-controls="step7-content">
+                    <div class="step-number" aria-hidden="true">7</div>
+                    <h2 id="step7-heading">קבל תמיכה</h2>
+                    <div class="step__toggle" aria-hidden="true"></div>
+                </div>
+                <div class="step-content" id="step7-content">
+                    <p>אם יש לך שאלות או בעיות:</p>
+                    <ul class="feature-list">
+                        <li>בדוק את מרכז העזרה שלנו</li>
+                        <li>צור קשר עם התמיכה (24/7)</li>
+                        <li>קרא את התיעוד המלא</li>
+                        <li>הצטרף לקהילה שלנו</li>
+                    </ul>
+                    <button class="btn-primary" onclick="window.location.href='https://conversapay.com/help'">צור קשר עם תמיכה</button>
+                </div>
+            </article>
+        </section>
+    </main>
 
-    <script src="/frontend/js/auth.js"></script>
+    <footer>
+        <p>ConversaPay © 2024 | כל הזכויות שמורות</p>
+    </footer>
+
     <script>
-        const params = new URLSearchParams(window.location.search);
-        const businessId = params.get('business_id') || '';
-        const tab = params.get('tab') || 'wordpress';
-        const origin = window.location.origin;
+        function switchTab(tabName) {
+            const tablist = document.getElementById('methodTabs');
+            const tabs = tablist.querySelectorAll('[role="tab"]');
+            const panels = document.querySelectorAll('[role="tabpanel"]');
 
-        // Show business ID
-        document.getElementById('displayBusinessId').textContent = businessId || 'לא נמצא';
-
-        // Fetch user name and personalize
-        const token = ConversaPayAuth.getToken();
-        if (token) {
-            fetch('/api/v1/auth/me', { headers: { 'Authorization': `Bearer ${token}` } })
-                .then(r => r.ok ? r.json() : null)
-                .then(data => {
-                    const name = data?.profile?.full_name || data?.email || '';
-                    if (name) {
-                        document.getElementById('personalGreeting').textContent = `היי ${name} 👋, הנה המדריך שלך:`;
-                        document.getElementById('personalGreeting').style.display = 'block';
-                    }
-                })
-                .catch(() => {});
-        }
-
-        // Set embed code
-        const embedCode = `<!-- ConversaPay AI Chatbot -->\n<script>\n  window.ConversaPayWidgetConfig = { business_id: "${businessId}" };\n<\/script>\n<script src="${origin}/frontend/js/widget.js" defer><\/script>`;
-        const codeBlock = document.getElementById('embedCodeBlock');
-        // Set text content (before the copy button)
-        codeBlock.childNodes[0].textContent = embedCode;
-
-        // Switch to correct tab
-        if (tab === 'html') switchTab('html');
-
-        function switchTab(name) {
-            document.querySelectorAll('.tab-btn').forEach((b, i) => {
-                b.classList.toggle('active', (i === 0 && name === 'wordpress') || (i === 1 && name === 'html'));
+            tabs.forEach(tab => {
+                const isSelected = tab.id === 'tab-' + tabName;
+                tab.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+                tab.setAttribute('tabindex', isSelected ? '0' : '-1');
+                tab.classList.toggle('active', isSelected);
             });
-            document.getElementById('tab-wordpress').classList.toggle('active', name === 'wordpress');
-            document.getElementById('tab-html').classList.toggle('active', name === 'html');
-        }
 
-        function copyEmbedCodeFull() {
-            navigator.clipboard.writeText(embedCode).then(() => {
-                const btn = event.target;
-                btn.textContent = '✓ הועתק!';
-                setTimeout(() => btn.textContent = '📋 העתק קוד', 2000);
+            panels.forEach(panel => {
+                const isTarget = panel.id === tabName + '-panel';
+                panel.classList.toggle('active', isTarget);
             });
         }
 
-        // WordPress download
-        document.getElementById('wpDownloadBtn').addEventListener('click', async () => {
-            if (!businessId) { alert('לא נמצא מזהה עסק'); return; }
-            const btn = document.getElementById('wpDownloadBtn');
-            btn.disabled = true;
-            btn.textContent = 'מוריד...';
-            try {
-                const token = ConversaPayAuth.getToken();
-                const response = await fetch(`/api/v1/payments/wordpress-plugin/${businessId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url; a.download = `conversapay-chat-${businessId}.php`;
-                    document.body.appendChild(a); a.click();
-                    URL.revokeObjectURL(url); document.body.removeChild(a);
-                } else {
-                    alert('שגיאה בהורדת התוסף — נסה שוב');
-                }
-            } catch (e) {
-                alert('שגיאה בתקשורת עם השרת');
-            } finally {
-                btn.disabled = false;
-                btn.textContent = '📥 הורד תוסף לוורדפרס';
+        function handleTabKey(event) {
+            const tablist = document.getElementById('methodTabs');
+            const tabs = Array.from(tablist.querySelectorAll('[role="tab"]'));
+            const currentIndex = tabs.indexOf(event.target);
+            let newIndex;
+
+            switch (event.key) {
+                case 'ArrowLeft':
+                case 'ArrowRight':
+                    event.preventDefault();
+                    newIndex = event.key === 'ArrowRight'
+                        ? (currentIndex + 1) % tabs.length
+                        : (currentIndex - 1 + tabs.length) % tabs.length;
+                    tabs[newIndex].focus();
+                    break;
+                case 'Home':
+                    event.preventDefault();
+                    tabs[0].focus();
+                    break;
+                case 'End':
+                    event.preventDefault();
+                    tabs[tabs.length - 1].focus();
+                    break;
             }
+        }
+
+        function copyCode(btn) {
+            const codeBlock = btn.closest('.code-block');
+            const code = codeBlock.querySelector('code').textContent;
+
+            navigator.clipboard.writeText(code).then(() => {
+                showCopyToast(btn);
+            }).catch(() => {
+                fallbackCopy(code, btn);
+            });
+        }
+
+        function fallbackCopy(text, btn) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+            showCopyToast(btn);
+        }
+
+        function showCopyToast(btn) {
+            const codeHeader = btn.closest('.code-header');
+            if (!codeHeader) return;
+            codeHeader.style.position = 'relative';
+
+            let toast = codeHeader.querySelector('.toast');
+            if (toast) toast.remove();
+
+            toast = document.createElement('span');
+            toast.className = 'toast';
+            toast.textContent = 'הועתק ללוח!';
+            codeHeader.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.style.opacity = '1';
+            });
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 2000);
+        }
+
+        function downloadCode(btn) {
+            const codeBlock = btn.closest('.code-block');
+            const code = codeBlock.querySelector('code').textContent;
+            const blob = new Blob([code], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'conversapay-install.js';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function toggleStep(stepId) {
+            const step = document.getElementById(stepId);
+            const header = step.querySelector('.step-header');
+            step.classList.toggle('collapsed');
+            const isExpanded = !step.classList.contains('collapsed');
+            header.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+        }
+
+        function updateStepper() {
+            const steps = document.querySelectorAll('.step');
+            const totalSteps = steps.length;
+            let completedCount = 0;
+
+            steps.forEach(step => {
+                if (step.classList.contains('completed')) completedCount++;
+            });
+
+            const stepperProgress = document.getElementById('stepperProgress');
+            const stepper = document.getElementById('stepper');
+            const percentage = (completedCount / totalSteps) * 100;
+            stepperProgress.style.width = 'calc(' + percentage + '% - 0px)';
+
+            stepper.setAttribute('aria-valuenow', completedCount);
+        }
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const step = entry.target;
+                    const stepNum = step.getAttribute('data-step');
+                    step.classList.add('completed');
+                    const badge = document.getElementById('badge' + stepNum);
+                    if (badge) {
+                        badge.textContent = '';
+                        badge.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                    }
+                    updateStepper();
+                }
+            });
+        }, { threshold: 0.6 });
+
+        document.querySelectorAll('.step').forEach(step => {
+            observer.observe(step);
+        });
+
+        document.querySelectorAll('.step-header').forEach(header => {
+            header.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.click();
+                }
+            });
         });
     </script>
 </body>

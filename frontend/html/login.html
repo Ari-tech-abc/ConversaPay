@@ -2,42 +2,89 @@
 <html lang="he" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ConversaPay - התחברות</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="התחברות לחשבון ConversaPay - כניסה מאובטחת לניהול תשלומים, חיובים וחשבוניות.">
+    <meta name="keywords" content="ConversaPay, התחברות, כניסה, תשלומים, חשבוניות">
+    <meta name="author" content="ConversaPay">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#0F1419">
     
-    <!-- Fonts: Plus Jakarta Sans for premium tech aesthetic -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://conversapay.com/login.html">
+    <meta property="og:title" content="ConversaPay - כניסה">
+    <meta property="og:description" content="התחברות לחשבון ConversaPay - כניסה מאובטחת לניהול תשלומים וחשבוניות.">
+    <meta property="og:image" content="https://conversapay.com/og-image.png">
+    <meta property="og:image:alt" content="ConversaPay Logo">
+    <meta property="og:locale" content="he_IL">
+    
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://conversapay.com/login.html">
+    <meta name="twitter:title" content="ConversaPay - כניסה">
+    <meta name="twitter:description" content="התחברות לחשבון ConversaPay - כניסה מאובטחת לניהול תשלומים וחשבוניות.">
+    <meta name="twitter:image" content="https://conversapay.com/twitter-image.png">
+    <meta name="twitter:image:alt" content="ConversaPay Logo">
+    
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "ConversaPay",
+            "url": "https://conversapay.com",
+            "description": "מערכת לניהול תשלומים וחשבוניות",
+            "applicationCategory": "FinanceApplication",
+            "operatingSystem": "All",
+            "inLanguage": "he",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "ILS"
+            }
+        }
+    </script>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg-primary: #0B0F19;
-            --bg-secondary: #111827;
-            --text-primary: #F9FAFB;
-            --text-secondary: #9CA3AF;
-            --accent-purple: #A855F7;
-            --accent-cyan: #00D9FF;
-            --accent-blue: #3B82F6;
-            --border-color: rgba(255, 255, 255, 0.1);
+            --bg-primary: #0F1419;
+            --bg-secondary: #1A1F2E;
+            --bg-card: rgba(26, 31, 46, 0.6);
+            --text-primary: #F5F7FA;
+            --text-secondary: #A0AEC0;
+            --accent-primary: #6366F1;
+            --accent-secondary: #8B5CF6;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.5);
+            --error-color: #EF4444;
+            --success-color: #10B981;
         }
-        
+
         * {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: 'Rubik', sans-serif;
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
-        
+
+        html {
+            scroll-behavior: smooth;
+        }
+
         body {
-            background: var(--bg-primary);
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1f2e 50%, #0f1419 100%);
             color: var(--text-primary);
             min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
             overflow-x: hidden;
+            padding: 16px;
         }
-        
-        /* Ambient Background */
+
         body::before {
             content: '';
             position: fixed;
@@ -45,263 +92,974 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: radial-gradient(circle at 50% 50%, rgba(168, 85, 247, 0.1) 0%, transparent 50%);
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
             pointer-events: none;
             z-index: 0;
         }
-        
-        /* Auth Container - Glass Morphism */
-        .auth-container {
-            background: rgba(17, 24, 39, 0.7);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 48px;
-            max-width: 420px;
-            width: 100%;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            position: relative;
-            z-index: 1;
-            margin: 20px;
-        }
-        
-        .auth-header {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-        
-        .auth-header h1 {
-            color: var(--text-primary);
-            font-size: 2rem;
-            font-weight: 800;
-            margin: 0 0 12px 0;
-            letter-spacing: -0.02em;
-        }
-        
-        .auth-header p {
-            color: var(--text-secondary);
-            margin: 0;
-            font-size: 0.95rem;
-            font-weight: 400;
-        }
-        
-        .form-group {
-            margin-bottom: 24px;
-        }
-        
-        label {
-            display: block;
+
+        .skip-link {
+            position: absolute;
+            top: -100%;
+            left: 0;
+            background: var(--accent-primary);
+            color: #fff;
+            padding: 8px 16px;
+            z-index: 1000;
+            border-radius: 0 0 8px 0;
+            text-decoration: none;
             font-weight: 600;
-            margin-bottom: 10px;
-            color: var(--text-primary);
-            font-size: 0.875rem;
-            letter-spacing: 0.025em;
         }
-        
-        input[type="text"],
-        input[type="email"],
-        input[type="password"] {
-            width: 100%;
-            padding: 14px 16px;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            box-sizing: border-box;
-            font-size: 1rem;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            color: var(--text-primary);
-            transition: all 0.3s ease;
+
+        .skip-link:focus {
+            top: 0;
         }
-        
-        input::placeholder {
-            color: #6B7280;
+
+        header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 24px;
+            z-index: 2;
         }
-        
-        input:focus {
-            outline: none;
-            border-color: rgba(168, 85, 247, 0.5);
-            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
-            background: rgba(0, 0, 0, 0.3);
-        }
-        
-        .checkbox-group {
+
+        .header-brand {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 24px;
+            text-decoration: none;
+            color: var(--text-primary);
         }
-        
-        .checkbox-group input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            accent-color: var(--accent-purple);
+
+        .header-brand svg {
+            width: 32px;
+            height: 32px;
+            fill: var(--accent-primary);
         }
-        
-        .checkbox-group label {
+
+        .header-brand span {
+            font-weight: 800;
+            font-size: 1.25rem;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        main {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        section.login-container {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 40px 32px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+            margin: 24px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        section.login-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 28px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-header h1 {
+            color: var(--text-primary);
+            font-size: clamp(1.75rem, 4vw, 2.2rem);
+            font-weight: 800;
+            margin: 0 0 12px 0;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .login-header p {
+            color: var(--text-secondary);
             margin: 0;
-            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .alert {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #FCA5A5;
+            padding: 14px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            display: none;
+            align-items: flex-start;
+            gap: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .alert.show {
+            display: flex;
+            animation: slideDown 0.3s ease;
+        }
+
+        .alert[role="alert"] {
+            aria-live: polite;
+            aria-atomic: true;
+        }
+
+        .alert-icon,
+.alert-copy-btn {
+            flex-shrink: 0;
+        }
+
+        .alert-copy-btn {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #FCA5A5;
+            padding: 6px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-family: inherit;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .alert-copy-btn:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        .alert-text {
+            flex: 1;
+            word-break: break-word;
+        }
+
+        form {
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input[type="email"],
+        input[type="password"],
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 1rem;
+            color: var(--text-primary);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+            font-family: inherit;
+            min-height: 48px;
+        }
+
+        input::placeholder {
+            color: rgba(160, 174, 192, 0.5);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        input[aria-invalid="true"] {
+            border-color: var(--error-color);
+        }
+
+        input[aria-invalid="true"]:focus {
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.25);
+        }
+
+        .email-feedback {
+            font-size: 0.8rem;
+            margin-top: 6px;
+            min-height: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-secondary);
+        }
+
+        .email-feedback.error {
+            color: var(--error-color);
+        }
+
+        .email-feedback.success {
+            color: var(--success-color);
+        }
+
+        .password-toggle {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            padding: 6px;
             cursor: pointer;
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            border-radius: 6px;
+            transition: color 0.2s, background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 40px;
+            min-height: 40px;
         }
-        
-        /* Primary Button - Gradient Glow */
-        .auth-button {
-            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-blue) 100%);
-            color: white;
+
+        .password-toggle:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .password-toggle:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--accent-primary);
+        }
+
+        .password-toggle svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        input[type="password"].password-visible {
+            padding-left: 52px;
+        }
+
+        .form-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            min-height: 20px;
+            accent-color: var(--accent-primary);
+            cursor: pointer;
+        }
+
+        .checkbox-wrapper label {
+            margin: 0;
+            font-weight: 400;
+            font-size: 0.875rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .forgot-password {
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.875rem;
+            transition: color 0.2s;
+        }
+
+        .forgot-password:hover {
+            color: var(--accent-secondary);
+            text-decoration: underline;
+        }
+
+        .forgot-password:focus {
+            outline: 2px solid var(--accent-primary);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        .login-button {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            color: #fff;
             border: none;
-            padding: 16px;
+            padding: 16px 24px;
             font-size: 1.05rem;
             font-weight: 700;
             border-radius: 12px;
             cursor: pointer;
             width: 100%;
             margin-top: 8px;
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
             position: relative;
-            overflow: hidden;
-            letter-spacing: 0.025em;
+            z-index: 1;
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+            min-height: 52px;
+            font-family: inherit;
         }
-        
-        .auth-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .auth-button:hover::before {
-            opacity: 1;
-        }
-        
-        .auth-button:hover:not(:disabled) {
+
+        .login-button:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 20px 40px rgba(168, 85, 247, 0.4);
+            box-shadow: 0 12px 24px rgba(99, 102, 241, 0.4);
         }
-        
-        .auth-button:disabled {
+
+        .login-button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .login-button:disabled {
             opacity: 0.6;
             cursor: not-allowed;
         }
-        
-        .auth-button:disabled:hover {
-            transform: none;
+
+        .login-button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.4), 0 8px 16px rgba(99, 102, 241, 0.3);
         }
-        
-        .auth-footer {
-            text-align: center;
-            margin-top: 28px;
-            padding-top: 24px;
-            border-top: 1px solid var(--border-color);
+
+        .button-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
-        
-        .auth-footer p {
-            color: var(--text-secondary);
-            margin: 0;
-            font-size: 0.95rem;
-        }
-        
-        .auth-footer a {
-            color: var(--accent-cyan);
-            font-weight: 600;
-            text-decoration: none;
-            transition: color 0.2s ease;
-        }
-        
-        .auth-footer a:hover {
-            color: var(--accent-purple);
-            text-decoration: underline;
-        }
-        
-        .error-message {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #FCA5A5;
-            padding: 14px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            display: none;
-            font-size: 0.9rem;
-        }
-        
-        .error-message.show {
-            display: block;
-        }
-        
-        .success-message {
-            background: rgba(34, 197, 94, 0.1);
-            border: 1px solid rgba(34, 197, 94, 0.3);
-            color: #86EFAC;
-            padding: 14px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            display: none;
-            font-size: 0.9rem;
-        }
-        
-        .success-message.show {
-            display: block;
-        }
-        
-        /* Loading Spinner */
+
         .spinner {
-            display: inline-block;
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-top-color: white;
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
-            margin-right: 8px;
-            vertical-align: middle;
         }
-        
+
+        .loading .spinner {
+            display: inline-block;
+        }
+
+        .loading .button-text {
+            display: none;
+        }
+
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 24px 0;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .social-buttons {
+            display: flex;
+            gap: 12px;
+            position: relative;
+            z-index: 1;
+            margin-bottom: 24px;
+        }
+
+        .social-button {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s, transform 0.2s;
+            font-family: inherit;
+            font-size: 0.9rem;
+            min-height: 48px;
+        }
+
+        .social-button:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .social-button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+        }
+
+        .social-button svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .signup-link {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .signup-link a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .signup-link a:hover {
+            color: var(--accent-secondary);
+            text-decoration: underline;
+        }
+
+        .signup-link a:focus {
+            outline: 2px solid var(--accent-primary);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+
+        .keyboard-hint {
+            text-align: center;
+            margin-top: 12px;
+            color: rgba(160, 174, 192, 0.6);
+            font-size: 0.8rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        kbd {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: inherit;
+            font-size: 0.75rem;
+            margin: 0 2px;
+        }
+
+        footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 24px;
+            text-align: center;
+            color: rgba(160, 174, 192, 0.6);
+            font-size: 0.8rem;
+            z-index: 2;
+        }
+
+        footer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        footer a:hover {
+            color: var(--text-primary);
+            text-decoration: underline;
+        }
+
+        @media (max-width: 480px) {
+            section.login-container {
+                padding: 32px 20px;
+                border-radius: 20px;
+                margin: 16px 0;
+            }
+
+            .form-actions {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .social-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        @media (forced-colors: active) {
+            input, button {
+                border: 2px solid ButtonText;
+            }
+            input:focus, button:focus {
+                outline: 2px solid Highlight;
+                outline-offset: 0;
+            }
+            .login-button {
+                border: 2px solid Highlight;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="auth-container">
-        <div class="auth-header">
-            <h1>התחברות למערכת</h1>
-            <p>ברוכים הבאים ל-ConversaPay</p>
-        </div>
+    <a href="#main" class="skip-link">דלג לתוכן הראשי</a>
+    
+    <header role="banner">
+        <a href="index.html" class="header-brand" aria-label="ConversaPay - דף הבית">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M12 2L2 7v10l10 5 10-5V7L12 2zM12 4.5l7 3.5v7l-7 3.5-7-3.5v-7l7-3.5z"/>
+                <path d="M12 8l-4 2v4l4 2 4-2v-4l-4-2z"/>
+            </svg>
+            <span>ConversaPay</span>
+        </a>
+    </header>
 
-        <div id="errorMessage" class="error-message"></div>
-        <div id="successMessage" class="success-message"></div>
-
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="email">אימייל</label>
-                <input type="email" id="email" required placeholder="your@email.com" autocomplete="email">
+    <main id="main" role="main">
+        <section class="login-container" aria-labelledby="loginHeading">
+            <div class="login-header">
+                <h1 id="loginHeading">ConversaPay</h1>
+                <p>כניסה לחשבונך</p>
             </div>
 
-            <div class="form-group">
-                <label for="password">סיסמה</label>
-                <input type="password" id="password" required placeholder="********" autocomplete="current-password">
+            <div class="alert" id="errorMessage" role="alert" aria-live="assertive" aria-atomic="true" aria-describedby="errorMessageText">
+                <svg class="alert-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" focusable="false">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                <span class="alert-text" id="errorMessageText"></span>
+                <button class="alert-copy-btn" id="copyErrorBtn" type="button" aria-label="העתק הודעת שגיאה ללוח">
+                    העתק
+                </button>
             </div>
 
-            <div class="checkbox-group">
-                <input type="checkbox" id="rememberMe">
-                <label for="rememberMe">זכור אותי</label>
+            <form id="loginForm" novalidate>
+                <div class="form-group">
+                    <label for="email">כתובת דוא"ל <span aria-hidden="true">*</span></label>
+                    <div class="input-wrapper">
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            placeholder="you@example.com" 
+                            autocomplete="email"
+                            aria-required="true"
+                            aria-describedby="emailFeedback"
+                            aria-invalid="false"
+                            required
+                        >
+                    </div>
+                    <div class="email-feedback" id="emailFeedback" aria-live="polite" aria-atomic="true"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">סיסמה <span aria-hidden="true">*</span></label>
+                    <div class="input-wrapper">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            placeholder="••••••••" 
+                            autocomplete="current-password"
+                            aria-required="true"
+                            aria-describedby="passwordHint"
+                            aria-invalid="false"
+                            required
+                        >
+                        <button 
+                            type="button" 
+                            class="password-toggle" 
+                            id="togglePassword" 
+                            aria-label="הצג סיסמה" 
+                            aria-pressed="false"
+                        >
+                            <svg id="eyeOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.88 9.88 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 01-4.24-4.24"/>
+                                <line x1="1" y1="1" x2="23" y2="23"/>
+                            </svg>
+                            <svg id="eyeOn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none;">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <small id="passwordHint" class="email-feedback" aria-hidden="true"></small>
+                </div>
+
+                <div class="form-actions">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="rememberMe" name="rememberMe">
+                        <label for="rememberMe">זכור אותי</label>
+                    </div>
+                    <a href="forgot-password.html" class="forgot-password">שכחת סיסמה?</a>
+                </div>
+
+                <button type="submit" class="login-button" id="loginBtn" aria-describedby="loginBtnHint">
+                    <span class="button-content">
+                        <span class="spinner" aria-hidden="true"></span>
+                        <span class="button-text">כניסה</span>
+                    </span>
+                </button>
+                <div id="loadingText" class="loading" aria-live="polite" aria-atomic="true">
+                    מתחבר...
+                </div>
+                <span id="loginBtnHint" style="display:none">מתחבר לחשבון, נסה מאוחר יותר אם לוקח זמן רב</span>
+
+                <div class="keyboard-hint" aria-hidden="true">
+                    <kbd>Enter</kbd> לשליחה
+                </div>
+            </form>
+
+            <div class="divider" role="separator" aria-label="או היכנס עם">או</div>
+
+            <div class="social-buttons" role="group" aria-label="התחברות עם חשבונות">
+                <button type="button" class="social-button" id="googleLoginBtn" aria-label="התחבר עם Google">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.67 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.84z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.67 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Google
+                </button>
+                
+                <button type="button" class="social-button" aria-label="התחבר עם Apple" disabled>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path fill="#F5F5F7" d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.08zM12.03 7.25c-.16-2.45 2.01-4.58 4.45-4.68.32 2.64-2.27 5.04-4.45 4.68z"/>
+                    </svg>
+                    Apple
+                </button>
+                
+                <button type="button" class="social-button" aria-label="התחבר עם Facebook" disabled>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path fill="#1877F2" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                    </svg>
+                    Facebook
+                </button>
             </div>
 
-            <button type="submit" class="auth-button" id="loginBtn">התחבר</button>
-        </form>
+            <div class="signup-link">
+                אין לך חשבון? <a href="register.html">הרשם כאן</a>
+            </div>
+        </section>
+    </main>
 
-        <div class="auth-footer">
-            <p>אין לך חשבון? <a href="register.html">הירשם כאן</a></p>
-        </div>
-    </div>
+    <footer role="contentinfo">
+        <p>ConversaPay | <a href="privacy.html">מדיניות פרטיות</a> | <a href="terms.html">תנאי שימוש</a></p>
+    </footer>
 
-    <script src="/frontend/js/auth.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script>
+        /* SECURITY NOTE:
+         * Tokens and identifiers stored in localStorage persist across sessions and are accessible to any script running on the same origin.
+         * Ensure HTTPS is enforced in production and consider httpOnly cookies for token storage when possible.
+         * Web Storage is susceptible to XSS attacks.
+         */
+        // Relative base URL to avoid CORS issues
+        const API_BASE_URL = '/api/v1';
+
+        // Google OAuth needs a real Supabase client running in the browser
+        // (see backend/routers/auth.py for why: PKCE requires the same
+        // browser session to start and finish the handshake). We fetch the
+        // public, non-secret Supabase config from our own backend so the
+        // anon key never needs to be hardcoded/duplicated across pages.
+        let supabaseClient = null;
+        async function getSupabaseClient() {
+            if (supabaseClient) return supabaseClient;
+            const res = await fetch(`${API_BASE_URL}/config/public`);
+            if (!res.ok) throw new Error('Failed to load auth configuration');
+            const cfg = await res.json();
+            supabaseClient = window.supabase.createClient(cfg.supabase_url, cfg.supabase_anon_key);
+            return supabaseClient;
+        }
+        
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const loginForm = document.getElementById('loginForm');
+        const errorMsg = document.getElementById('errorMessage');
+        const errorMsgText = document.getElementById('errorMessageText');
+        const copyErrorBtn = document.getElementById('copyErrorBtn');
+        const loginBtn = document.getElementById('loginBtn');
+        const loadingText = document.getElementById('loadingText');
+        const togglePassword = document.getElementById('togglePassword');
+        const emailFeedback = document.getElementById('emailFeedback');
+        const rememberMe = document.getElementById('rememberMe');
+        const loginBtnHint = document.getElementById('loginBtnHint');
+
+        function showError(message, duration) {
+            const d = duration !== undefined ? duration : 0;
+            errorMsgText.textContent = message;
+            errorMsg.classList.add('show');
+            errorMsg.setAttribute('role', 'alert');
+            if (d > 0) {
+                setTimeout(() => {
+                    errorMsg.classList.remove('show');
+                }, d);
+            }
+        }
+
+        function hideError() {
+            errorMsg.classList.remove('show');
+            errorMsg.removeAttribute('role');
+        }
+
+        function validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
+        }
+
+        function setEmailFeedback(type, message) {
+            emailFeedback.textContent = message;
+            emailFeedback.className = 'email-feedback ' + type;
+            emailInput.setAttribute('aria-invalid', type === 'error' ? 'true' : 'false');
+        }
+
+        function clearEmailFeedback() {
+            emailFeedback.textContent = '';
+            emailFeedback.className = 'email-feedback';
+            emailInput.setAttribute('aria-invalid', 'false');
+        }
+
+        function setLoading(isLoading) {
+            if (isLoading) {
+                loginBtn.disabled = true;
+                loginBtn.classList.add('loading');
+                loginBtn.setAttribute('aria-busy', 'true');
+                loadingText.style.display = 'block';
+                loadingText.textContent = 'מתחבר...';
+                loginBtnHint.style.display = 'none';
+            } else {
+                loginBtn.disabled = false;
+                loginBtn.classList.remove('loading');
+                loginBtn.removeAttribute('aria-busy');
+                loadingText.style.display = 'none';
+                loginBtnHint.style.display = 'none';
+            }
+        }
+
+        function togglePasswordVisibility() {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            document.getElementById('eyeOff').style.display = isPassword ? 'none' : 'block';
+            document.getElementById('eyeOn').style.display = isPassword ? 'block' : 'none';
+            togglePassword.setAttribute('aria-label', isPassword ? 'הסתר סיסמה' : 'הצג סיסמה');
+            togglePassword.setAttribute('aria-pressed', isPassword ? 'true' : 'false');
+        }
+
+        emailInput.addEventListener('input', function(e) {
+            const val = e.target.value.trim();
+            if (!val) {
+                clearEmailFeedback();
+                return;
+            }
+            if (validateEmail(val)) {
+                setEmailFeedback('success', 'כתובת דוא"ל תקינה');
+            } else {
+                setEmailFeedback('error', 'כתובת דוא"ל לא תקינה');
+            }
+        });
+
+        emailInput.addEventListener('blur', function(e) {
+            const val = e.target.value.trim();
+            if (!val) {
+                clearEmailFeedback();
+                return;
+            }
+            if (!validateEmail(val)) {
+                setEmailFeedback('error', 'נא להזין כתובת דוא"ל תקינה');
+            } else {
+                clearEmailFeedback();
+            }
+        });
+
+        passwordInput.addEventListener('input', function() {
+            passwordInput.setAttribute('aria-invalid', 'false');
+        });
+
+        togglePassword.addEventListener('click', function() {
+            togglePasswordVisibility();
+            passwordInput.focus();
+        });
+
+        copyErrorBtn.addEventListener('click', async function() {
+            const text = errorMsgText.textContent;
+            if (!text) return;
+            try {
+                await navigator.clipboard.writeText(text);
+                const original = copyErrorBtn.textContent;
+                copyErrorBtn.textContent = 'הועתק';
+                setTimeout(() => {
+                    copyErrorBtn.textContent = original;
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy:', err);
+            }
+        });
+
+        loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            hideError();
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!email || !password) {
+                showError('אנא מלא את כל השדות', 5000);
+                if (!email) emailInput.focus();
+                else passwordInput.focus();
+                return;
+            }
+
+            if (!validateEmail(email)) {
+                showError('נא להזין כתובת דוא"ל תקינה', 5000);
+                emailInput.focus();
+                return;
+            }
+
+            setLoading(true);
+            loginBtnHint.style.display = 'block';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password,
+                        remember_me: rememberMe.checked
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const storage = rememberMe.checked ? localStorage : sessionStorage;
+                    storage.setItem('access_token', data.access_token);
+                    storage.setItem('user_id', data.user_id);
+                    storage.setItem('email', data.email);
+
+                    setLoading(true);
+                    loadingText.textContent = '';
+
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 2000);
+                } else {
+                    if (data.detail === 'email_not_verified') {
+                        showError('אנא אמת את כתובת הדוא"ל שלך לפני הכניסה', 8000);
+                    } else if (data.detail === 'Invalid email or password') {
+                        showError('כתובת דוא"ל או סיסמה שגויה', 5000);
+                    } else {
+                        showError(data.detail || 'שגיאה בכניסה. אנא נסה שוב.', 5000);
+                    }
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('שגיאה בחיבור לשרת. אנא נסה שוב.', 6000);
+            } finally {
+                setLoading(false);
+            }
+        });
+
+        emailInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && document.activeElement !== loginBtn) {
+                passwordInput.focus();
+            }
+        });
+
+        // Google OAuth — runs entirely in the browser via Supabase so the
+        // PKCE code_verifier survives the round-trip to Google and back.
+        document.getElementById('googleLoginBtn').addEventListener('click', async function() {
+            setLoading(true);
+            try {
+                const sb = await getSupabaseClient();
+                const { error } = await sb.auth.signInWithOAuth({
+                    provider: 'google',
+                    options: {
+                        redirectTo: window.location.origin + '/auth/callback'
+                    }
+                });
+                if (error) {
+                    console.error('Google OAuth error:', error);
+                    showError('שגיאה בהתחברות עם Google', 5000);
+                    setLoading(false);
+                }
+                // On success, Supabase redirects the browser to Google itself —
+                // nothing else to do here.
+            } catch (error) {
+                console.error('Google OAuth error:', error);
+                showError('שגיאה בהתחברות עם Google', 5000);
+                setLoading(false);
+            }
+        });
+    </script>
 </body>
 </html>

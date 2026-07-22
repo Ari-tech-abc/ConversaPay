@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="מדיניות הפרטיות של ConversaPay">
+    <title>ConversaPay - מדיניות פרטיות</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-primary:#0F1419; --bg-secondary:#1A1F2E; --bg-card:rgba(26,31,46,0.7); --text-primary:#F5F7FA; --text-secondary:#A0AEC0; --accent-primary:#6366F1; --accent-secondary:#8B5CF6; --border-color:rgba(255,255,255,0.08); --shadow-lg:0 20px 48px rgba(0,0,0,0.5); --radius-md:12px; --font-display:'Rubik',sans-serif; --space-md:20px; --space-lg:30px; --space-xl:40px; --space-2xl:60px; }
+        * { font-family: var(--font-display); box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body { background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1f2e 50%, #0f1419 100%); color: var(--text-primary); min-height: 100vh; line-height: 1.7; }
+        body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(circle at 20% 30%, rgba(99,102,241,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(139,92,246,0.08) 0%, transparent 50%); pointer-events: none; z-index: 0; }
+        :focus-visible { outline: 3px solid var(--accent-primary); outline-offset: 3px; border-radius: 4px; }
+        a { color: var(--accent-secondary); text-decoration: none; transition: color 0.2s; }
+        a:hover { color: var(--accent-primary); }
+        header { background: var(--bg-card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-color); padding: 0 var(--space-lg); height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-lg); }
+        .navbar-brand { font-size: 1.25rem; font-weight: 800; background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; }
+        .nav-button { background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: transform 0.2s, box-shadow 0.2s; min-height: 44px; display: inline-flex; align-items: center; text-decoration: none; font-family: inherit; }
+        .nav-button:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(99,102,241,0.3); color: #fff; }
+        .legal-page { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: var(--space-2xl) var(--space-md); }
+        .legal-page h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 800; margin-bottom: var(--space-md); background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-secondary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.3; }
+        .legal-page .last-updated { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: var(--space-xl); padding-bottom: var(--space-lg); border-bottom: 1px solid var(--border-color); }
+        .legal-page h2 { font-size: 1.4rem; font-weight: 700; margin-top: var(--space-xl); margin-bottom: var(--space-md); color: var(--text-primary); scroll-margin-top: 80px; }
+        .legal-page h3 { font-size: 1.1rem; font-weight: 600; margin-top: var(--space-lg); margin-bottom: var(--space-sm); color: var(--text-primary); }
+        .legal-page p { margin-bottom: var(--space-md); color: var(--text-secondary); }
+        .legal-page ul { list-style: disc; padding-right: var(--space-lg); margin-bottom: var(--space-md); color: var(--text-secondary); }
+        .legal-page ul li { margin-bottom: 0.5em; }
+        .legal-page ol { padding-right: var(--space-lg); margin-bottom: var(--space-md); color: var(--text-secondary); }
+        .legal-page ol li { margin-bottom: 0.5em; }
+        .legal-page .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-lg); margin-top: var(--space-lg); margin-bottom: var(--space-lg); }
+        .legal-page .card p { margin-bottom: 0.7em; color: var(--text-secondary); }
+        .legal-page .card p:last-child { margin-bottom: 0; }
+        .highlight { color: var(--text-primary); font-weight: 600; }
+        footer { background: var(--bg-card); border-top: 1px solid var(--border-color); padding: var(--space-lg); text-align: center; }
+        footer p { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.4em; }
+        footer a { color: var(--text-secondary); }
+        footer a:hover { color: var(--text-primary); }
+        @media (max-width: 600px) { .legal-page { padding: var(--space-lg) var(--space-md); } header { padding: 0 var(--space-md); } .legal-page ul { padding-right: var(--space-md); } }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="home.html" class="navbar-brand" aria-label="ConversaPay - דף הבית">ConversaPay</a>
+        <a href="home.html" class="nav-button">דף הבית</a>
+    </header>
+    
+    <main class="legal-page" role="main">
+        <h1>מדיניות פרטיות</h1>
+        <p class="last-updated">עדכנו לאחרונה: 22 ביולי 2026</p>
+        <p>מדיניות פרטיות זו מתארת את האופן שבו <strong>ConversaPay</strong> (&quot;החברה&quot;, &quot;אנו&quot; או &quot;שלנו&quot;) אוספת, משתמשת, שומרת ומגנה על הנתונים האישיים שלך (&quot;נתונים אישיים&quot;) כאשר אתה משתמש באתר conversapay.com, בשירותי הפלטפורמה ובכל המוצרים הנלווים (יחד &quot;השירות&quot;).</p>
+        <p>אנו מתחייבים להגן על פרטיותך בכפוף לחוק הגנת הפרטיות, התשמ&quot;א-1981 (&quot;חוק הגנת הפרטיות&quot;) ולכל דרישות רגולטוריות הרלוונטיות בישראל. מדיניות פרטיות זו חלה על כל המשתמשים בשירות.</p>
+        <h2>1. מידע שאנו אוספים</h2>
+        <p>אנו עשויים לאיסוף קטגוריות מידע שונות בהתאם לאופן שימשתך:</p>
+        <h3>1.1 מידע שסיפקת מרצונך</h3>
+        <ul>
+            <li><strong>פרטי חשבון:</strong> שם מלא, דוא&quot;ל, סיסמה, שם תאגיד או שם עסק, מספר עוסק/ח.פ., כתובת</li>
+            <li><strong>פרטי תשלום:</strong> מספר כרטיס אשראי (אמצעי תשלום), תוקף כרטיס, קוד אבטחה - אנו לא שומרים מספרי כרטיס מלאים; אנו עושים שימוש בספקי תשלום מורשים המפעילים אמצעי תשלום מאובטחים</li>
+            <li><strong>פרטי לקוח:</strong> שמות, דוא&quot;ל, טלפון, כתובת - כאשר הלקוחות שלך משלמים דרכך</li>
+            <li><strong>תוכן פניות:</strong> תוכן הודעות, פניות לשירות, תגובות לסקרים</li>
+        </ul>
+        <h3>1.2 מידע הנאסף באופן אוטומטי</h3>
+        <ul>
+            <li><strong>מידע טכני:</strong> כתובת IP, סוג דפדפן, מערכת הפעלה, הגדרות מסך, תאריך ושעה של גישה, זיהוי מכשיר</li>
+            <li><strong>מידע שימוש:</strong> דפים שצפית בהם, כפתורים שבחרת, מחרוזות חיפוש, זמן שהייה באתר</li>
+            <li><strong>עוגיות וטכנולוגיות דומות:</strong> עוגיות חתימה, עוגיות סשן, מקורות חיבור, אחסון מקומי</li>
+            <li><strong>לוגים ושגיאות:</strong> מידע רלוונטי לתפעול השירות, זיהוי בעיות ושיפורים</li>
+        </ul>
+        <h3>1.3 מידע ממקורות צדדים שלישיים</h3>
+        <ul>
+            <li>ספקי תשלום החולקים עלינו מידע סטטוס תשלום בכפוף להסכמים</li>
+            <li>שירותי ניתוח (כולל Google Analytics) החולקים מידע אנונימי על התנהגות</li>
+            <li>שירותי אבטחה וזיהוי הונאה</li>
+        </ul>
+        <h2>2. מטרות האיסוף והשימוש בנתונים</h2>
+        <p>אנו משתמשים בנתונים האישיים שלך למטרות מגוונות בכפוף לצורך ההולכת:</p>
+        <ul>
+            <li><strong>אספקת השירות:</strong> ניהול החשבון, ביצוע תשלומים, תמיכה טכנית, תקשורת בנוגע לשירות</li>
+            <li><strong>אבטחה:</strong> זיהוי והגנה מפני הונאה, נזקים, פעילויות בלתי חוקיות; אבטחת המערכת</li>
+            <li><strong>שיפורים:</strong> ניתוח שימוש, מחקר פונקציונלי, פיתוח תכונות חדשות</li>
+            <li><strong>תקשורת:</strong> עדכונים לגבי השירות, תמיכה, הודעות טכניות, תוכן שיווקי אם הסכמת (בכפוף לזכות הסירור)</li>
+            <li><strong>עמידה בחובות:</strong> עמידה בדרישות חוקיות, גילוי לצדדים שלישיים כשנדרש</li>
+            <li><strong>מחקרים:</strong> ניתוח אנונימי של נתונים לצורכי מחקר ושיווק</li>
+        </ul>
+        <h2>3. שיתוף מידע עם צדדים שלישיים</h2>
+        <p>אנו לא מוכרים נתונים אישיים. אנו עשויים לחלוק נתונים בנסיבות הבאות:</p>
+        <ul>
+            <li><strong>ספקי שירות:</strong> עיבוד תשלום, אחסון ענן, תמיכה טכנית, אבטחה, אנליטיקס פלטפורמות</li>
+            <li><strong>דרישות חוק:</strong> תגובה להזמנות חוקיות, פקודות בית משפט, בקשות רשותויות הולמות</li>
+            <li><strong>הגנה על זכויות:</strong> הגנה על זכויות, נכסים או בטחון של ConversaPay, לקוחותינו או ציבור</li>
+            <li><strong>בסדר עם הסכמתך:</strong> שיתוף מידע בהסכמה מפורשת לשם שיווק או שיתוף פעולה</li>
+            <li><strong>אינטגרציות עסקיות:</strong> מידע חלקי אנונימי למעקב אחר ביצועי מערכות ושיפורים</li>
+        </ul>
+        <h2>4. אבטחה</h2>
+        <p>אנו מיישמים אמצעי אבטחה טכנולוגיים וארגוניים מתאימים להגן על הנתונים האישיים שלך כגון:</p>
+        <ul>
+            <li>הצפנה מעבר להודעה TLS 1.2+ (HTTPS) לכל התקשורת</li>
+            <li>הצפנת נתונים רגישים at rest</li>
+            <li>בקרת גישה מבוססת תפקידים וזיהוי רב-גורמי (2FA)</li>
+            <li>סינון IP ואשליות, הגנה מפני DDoS</li>
+            <li>סריקות אבטחה נוספות, ניטור ואיתור אירועים חריגים</li>
+            <li>הסככות והסכמי סודיות עם כל עובד</li>
+        </ul>
+        <p>למרות האמצעים, אין מערכת אבטחה חסינה לחלוטין. אנו ממליצים להשתמש בסיסמאות חזקות ולפעול לפי הנחיות אבטחה בסיסיות.</p>
+        <h2>5. עוגיות וטכנולוגיות מעקב</h2>
+        <p>אנו משתמשים בעוגיות ובטכנולוגיות דומות להבנת דפוסי השימוש, שיפור חווית המשתמש, אימות זהויות וסטטיסטיקה. העוגיות בנות:</p>
+        <ul>
+            <li><strong>נדרשות:</strong> עוגיות נדרשות לפעילות השירות (סילאן, אבטחה, תמיכה)</li>
+            <li><strong>פונקציונליות:</strong> עוגיות לשיפור חוויה, שמירת העדפות</li>
+            <li><strong>אנליטיקס:</strong> עוגיות למעקב אחר תנועה ושימוש בשירות (כולל Google Analytics)</li>
+        </ul>
+        <p>ניתן להגדיר או למחוק עוגיות או לבקש ממערכת הדפדפן שלך לחסום עוגיות, אולם פעולה זו עשויה להשפיע על תפקוד השירות.</p>
+        <h2>6. זכויותיך</h2>
+        <p>בכפוף לחוק הגנת הפרטיות, יש לך הזכויות הבאות:</p>
+        <ul>
+            <li><strong>זכות עיון:</strong> לקבל מידע על מריבוי הנתונים שאוספנו</li>
+            <li><strong>זכות תיקון:</strong> לתקן נתונים לא מדויקים</li>
+            <li><strong>זכות מחיקה:</strong> לבקש מחיקת נתונים (&quot;זכות להיות נשכח&quot;)</li>
+            <li><strong>זכות הגבלה:</strong> להגביל את העיבוד במקרים מסוימים</li>
+            <li><strong>זכות התנגדות:</strong> להתנגד לעיבוד לצורכי שיווק</li>
+            <li><strong>זכות העברת נתונים:</strong> לקבל עותק אלקטרוני של נתונים בפורמט סטנדרטי</li>
+        </ul>
+        <p>כדי לממש זכויות, פנה אלינו בכתובת support@conversapay.com. אנו נענה בתוך 30 ימים מספירת הבקשה.</p>
+        <h2>7. שמירת נתונים</h2>
+        <p>אנו שומרים נתונים אישיים כל עוד הדבר נדרש למטרות שבגינם נאספו, בכפוף לדרישות חוק, פיננסיות או税费:</p>
+        <ul>
+            <li>נתוני חשבון פעיל: כל עוד החשבון קיים + 7 שנים</li>
+            <li>נתוני תשלום: 7 שנים (כדרוש לחוקי מיסים וחוק המסחר)</li>
+            <li>נתוני אבטחה והונאה: 3 שנים ממוח תקיפה אחרונה</li>
+            <li>לוגים ונתוני שימוש: 12 חודשים (אלא אם נדרש בחוק)</li>
+        </ul>
+        <p>לאחר תום תקופת שמירה, נתונים ימחקו או יאספו ללא זיהוי.</p>
+        <h2>8. העברות נתונים לישראל</h2>
+        <p>אם אתה גר מחוץ לישראל, עליך להיות מודע לכך ש-ConversaPay מפעילה את שירותיה בישראל והנתונים הנאספים עליך עשויים לעבור לישראל ולעיבוד שם. עליך להסכים להעברות אלה בעת שימוש בשירות.</p>
+        <h2>9. שירותי צדדים שלישיים</h2>
+        <p>השירות עשוי לכלול קישורים או אינטגרציה לשירותי צדדים שלישיים. מדיניות הפרטיות שלנו אינה חלה על שירותים אלה. אנו לא אחראים למדיניות הפרטיות שלהם.</p>
+        <p>בין הספקים העיקריים: ספקי תשלום (כגון PayPal, Stripe, CardGate וכדומה), שירותי אחסון ענן, אבטחה, אנליטיקס, תמיכה טכנית, שירותי אימייל.</p>
+        <h2>10. שינויים במדיניות פרטיות</h2>
+        <p>אנו עשויים לעדכן מדיניות פרטיות זו מעת לעת. נודיע על שינויים מהותיים באמצעות הודעה באתר, או במייל אם הדבר רלוונטי. המשך שימוש בשירות לאחר פרסום שינויים מהווה הסכמה למדיניות המעודכנת.</p>
+        <h2>11. הגיל האחרון</h2>
+        <p>השירות אינו מיועד או מופנה אל קטינים מתחת לגיל 18. אנו לא נאספים בכוונה מידע אישי מקטינים, אם אנו קוראים זאת, אנו נמחה אותו במהירות.</p>
+        <h2>12. יצירת קשר</h2>
+        <p>לכל שאלה, בקשה לידיעת נתונים או ערובה בנוגע למדיניות פרטיות, פנה אלינו:</p>
+        <div class="card">
+            <p><strong>ConversaPay</strong></p>
+            <p>דוא&quot;ל: support@conversapay.com</p>
+            <p>אתר: https://www.conversapay.com</p>
+        </div>
+        <p>אנו פועלים לספק מענה בתוך 30 ימים מספירת הבקשה.</p>
+    </main>
+    
+    <footer role="contentinfo">
+        <p>&copy; 2024-2026 ConversaPay. כל הזכויות שמורות.</p>
+        <p><a href="privacy.html">מדיניות פרטיות</a> | <a href="terms.html">תנאי שימוש</a></p>
+    </footer>
+</body>
+</html>

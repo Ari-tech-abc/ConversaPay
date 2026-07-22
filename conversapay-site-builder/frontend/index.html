@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ConversaPay Site Builder - AI-Powered Website Generator</title>
     <meta name="description" content="Build beautiful, responsive websites with AI. Describe your business and watch the magic happen.">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-lg">Skip to main content</a>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,6 +16,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
@@ -25,17 +27,28 @@
                         secondary: '#8B5CF6',
                         dark: '#0F172A',
                         darker: '#020617',
+                        surface: '#1E293B',
                     },
                     animation: {
                         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                         'glow': 'glow 2s ease-in-out infinite',
+                        'fade-in': 'fadeIn 0.4s ease-in',
+                        'slide-up': 'slideUp 0.3s ease-out',
                     },
                     keyframes: {
                         glow: {
                             '0%, 100%': { boxShadow: '0 0 20px rgba(99, 102, 241, 0.5)' },
                             '50%': { boxShadow: '0 0 40px rgba(99, 102, 241, 0.8)' },
-                        }
-                    }
+                        },
+                        fadeIn: {
+                            from: { opacity: '0', transform: 'translateY(20px)' },
+                            to: { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        slideUp: {
+                            from: { opacity: '0', transform: 'translateY(10px)' },
+                            to: { opacity: '1', transform: 'translateY(0)' },
+                        },
+                    },
                 }
             }
         }
@@ -45,10 +58,26 @@
         :root {
             --bg-primary: #0F172A;
             --bg-secondary: #1E293B;
+            --bg-surface: #1E293B;
             --text-primary: #F8FAFC;
-            --text-secondary: #94A3B8;
+            --text-secondary: #CBD5E1;
+            --text-muted: #94A3B8;
             --accent: #6366F1;
+            --accent-hover: #4F46E5;
             --accent-glow: rgba(99, 102, 241, 0.5);
+            --border: rgba(255, 255, 255, 0.1);
+            --error: #EF4444;
+            --success: #22C55E;
+        }
+        
+        .light-mode {
+            --bg-primary: #F8FAFC;
+            --bg-secondary: #E2E8F0;
+            --bg-surface: #FFFFFF;
+            --text-primary: #0F172A;
+            --text-secondary: #475569;
+            --text-muted: #64748B;
+            --border: rgba(0, 0, 0, 0.1);
         }
         
         * {
@@ -59,6 +88,7 @@
             background: var(--bg-primary);
             color: var(--text-primary);
             overflow-x: hidden;
+            transition: background 0.3s ease, color 0.3s ease;
         }
         
         /* Custom Scrollbar */
@@ -94,6 +124,12 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .light-mode .glass {
+            background: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(0, 0, 0, 0.1);
         }
         
         /* Form Inputs */
@@ -102,6 +138,11 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: var(--text-primary);
             transition: all 0.3s ease;
+        }
+        
+        .light-mode .form-input {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
         }
         
         .form-input:focus {
@@ -116,6 +157,12 @@
             border: 2px solid rgba(255, 255, 255, 0.1);
             transition: all 0.3s ease;
             cursor: pointer;
+            contain: layout paint;
+        }
+        
+        .light-mode .vibe-card {
+            background: var(--bg-surface);
+            border: 2px solid var(--border);
         }
         
         .vibe-card:hover {
@@ -123,10 +170,21 @@
             transform: translateY(-4px);
         }
         
+        .vibe-card:focus-visible {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        
         .vibe-card.selected {
             border-color: var(--accent);
             background: rgba(99, 102, 241, 0.1);
             box-shadow: 0 0 30px var(--accent-glow);
+            aria-pressed: true;
+        }
+        
+        .light-mode .vibe-card.selected {
+            background: rgba(99, 102, 241, 0.15);
         }
         
         /* Generate Button */
@@ -148,13 +206,18 @@
             transition: left 0.5s ease;
         }
         
-        .generate-btn:hover::before {
+        .generate-btn:hover:not(:disabled)::before {
             left: 100%;
         }
         
-        .generate-btn:hover {
+        .generate-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 20px 40px rgba(99, 102, 241, 0.4);
+        }
+        
+        .generate-btn:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5);
         }
         
         .generate-btn:disabled {
@@ -167,11 +230,21 @@
         }
         
         /* Preview Container */
-        .preview-container {
+        .preview-frame {
             background: white;
             border-radius: 12px;
             overflow: hidden;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            contain: content;
+            transition: height 0.3s ease, width 0.3s ease;
+            position: relative;
+        }
+        
+        .preview-iframe {
+            display: block;
+            width: 100%;
+            border: none;
+            background: white;
         }
         
         /* Loading Spinner */
@@ -188,218 +261,488 @@
             to { transform: rotate(360deg); }
         }
         
-        /* Fade In Animation */
-        .fade-in {
-            animation: fadeIn 0.5s ease-in;
+        /* Skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(148, 163, 184, 0.1) 25%, rgba(148, 163, 184, 0.2) 50%, rgba(148, 163, 184, 0.1) 75%);
+            background-size: 100% 100%;
+            animation: skeleton 1.5s ease-in-out infinite;
+            border-radius: 8px;
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .light-mode .skeleton {
+            background: linear-gradient(90deg, rgba(241, 245, 249, 0.8) 25%, rgba(226, 232, 240, 0.8) 50%, rgba(241, 245, 249, 0.8) 75%);
+            background-size: 100% 100%;
         }
         
-        /* Mobile Preview Toggle */
-        .preview-toggle {
+        @keyframes skeleton {
+            0% { background-position: -100% 0; }
+            100% { background-position: 100% 0; }
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            padding: 1rem 1.5rem;
+            border-radius: 0.75rem;
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            z-index: 9999;
+            animation: slideUp 0.3s ease-out;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        .toast.error {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.3);
+            color: #FCA5A5;
+        }
+        
+        .toast.success {
+            background: rgba(34, 197, 94, 0.15);
+            border-color: rgba(34, 197, 94, 0.3);
+            color: #86EFAC;
+        }
+        
+        .toast.hidden {
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+        }
+        
+        .light-mode .toast.error { color: #DC2626; }
+        .light-mode .toast.success { color: #16A34A; }
+        
+        /* History Sidebar */
+        .history-sidebar {
+            transition: transform 0.3s ease, width 0.3s ease;
+            contain: layout paint;
+        }
+        
+        .history-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+            contain: layout paint;
+        }
+        
+        .light-mode .history-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+        }
+        
+        .history-card:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            transform: translateY(-2px);
+        }
+        
+        .history-card:focus-visible {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-glow);
+        }
+        
+        /* Zoom controls */
+        .zoom-btn {
             background: rgba(30, 41, 59, 0.8);
-            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.2s ease;
+        }
+        
+        .zoom-btn:hover {
+            background: rgba(30, 41, 59, 0.95);
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+        
+        .light-mode .zoom-btn {
+            background: var(--bg-surface);
+            color: var(--text-primary);
+        }
+        
+        /* Theme toggle */
+        .theme-toggle {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+        }
+        
+        .theme-toggle:hover {
+            background: rgba(30, 41, 59, 0.95);
+            border-color: rgba(99, 102, 241, 0.5);
+        }
+        
+        .light-mode .theme-toggle {
+            background: var(--bg-surface);
+            color: var(--text-primary);
+        }
+        
+        /* Export dropdown */
+        .export-menu {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(16px);
+            animation: slideUp 0.2s ease-out;
+        }
+        
+        .export-btn {
+            transition: all 0.2s ease;
+        }
+        
+        .export-btn:hover {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--accent);
+        }
+        
+        /* Comparison */
+        .comparison-slider {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--accent);
+            cursor: ew-resize;
+            z-index: 20;
+            contain: layout paint;
+        }
+        
+        .comparison-handle {
+            position: absolute;
+            top: 50%;
+            left: -14px;
+            width: 32px;
+            height: 32px;
+            background: var(--bg-surface);
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: bold;
+            cursor: ew-resize;
+            transform: translateY(-50%);
+        }
+        
+        /* Mobile responsive */
+        @media (max-width: 1023px) {
+            .preview-frame {
+                width: 100% !important;
+                height: auto !important;
+                min-height: 400px;
+            }
+            
+            .vibe-card {
+                width: 100%;
+            }
+        }
+        
+        /* Print */
+        @media print {
+            .no-print {
+                display: none !important;
+            }
         }
     </style>
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
+    
+    <!-- Skip Link -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[9999] focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-lg focus:shadow-lg">Skip to main content</a>
     
     <!-- Header -->
-    <header class="glass fixed top-0 left-0 right-0 z-50">
+    <header class="glass fixed top-0 left-0 right-0 z-50" role="banner">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center space-x-3">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center" aria-hidden="true">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                         </svg>
                     </div>
                     <span class="text-xl font-bold gradient-text">Site Builder</span>
                 </div>
                 
-                <div class="preview-toggle px-4 py-2 rounded-lg flex items-center gap-2">
-                    <span class="text-sm text-gray-300">Preview:</span>
-                    <button id="desktopView" class="px-3 py-1 rounded text-sm bg-primary text-white">Desktop</button>
-                    <button id="mobileView" class="px-3 py-1 rounded text-sm text-gray-300 hover:text-white">Mobile</button>
+                <div class="flex items-center gap-3">
+                    <div class="preview-toggle px-4 py-2 rounded-lg flex items-center gap-2" role="group" aria-label="Preview device selector">
+                        <span class="text-sm text-gray-300 hidden sm:inline">Preview:</span>
+                        <button id="desktopView" class="px-3 py-1 rounded text-sm bg-primary text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" aria-pressed="true">Desktop</button>
+                        <button id="mobileView" class="px-3 py-1 rounded text-sm text-gray-300 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" aria-pressed="false">Mobile</button>
+                    </div>
+                    
+                    <button id="themeToggle" class="theme-toggle p-2 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" aria-label="Toggle dark mode">
+                        <svg id="sunIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                        <svg id="moonIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
     </header>
-
+    
     <!-- Main Content -->
-    <main class="pt-16 min-h-screen">
-        <div class="flex flex-col lg:flex-row h-screen">
+    <main id="main-content" class="pt-16 min-h-screen" role="main">
+        <div class="flex flex-col lg:flex-row h-[calc(100vh-4rem)]">
             
             <!-- Left Panel: Wizard -->
-            <div class="w-full lg:w-1/2 p-8 overflow-y-auto">
+            <div class="w-full lg:w-1/2 p-6 sm:p-8 overflow-y-auto" role="form" aria-labelledby="formTitle">
                 <div class="max-w-2xl mx-auto">
                     <!-- Title -->
                     <div class="mb-8">
-                        <h1 class="text-4xl font-bold mb-4">
+                        <h1 id="formTitle" class="text-3xl sm:text-4xl font-bold mb-4">
                             Build Your <span class="gradient-text">Dream Website</span>
                         </h1>
-                        <p class="text-gray-400 text-lg">
+                        <p class="text-gray-400 text-base sm:text-lg">
                             Describe your business and our AI will create a stunning, production-ready landing page in seconds.
                         </p>
                     </div>
                     
                     <!-- Form -->
-                    <form id="builderForm" class="space-y-6">
-                        <!-- Business Name -->
-                        <div>
-                            <label for="businessName" class="block text-sm font-semibold mb-2 text-gray-200">
-                                Business Name
-                            </label>
-                            <input 
-                                type="text" 
-                                id="businessName" 
-                                name="businessName"
-                                required
-                                placeholder="e.g., Sushi Master Tokyo"
-                                class="form-input w-full px-4 py-3 rounded-lg"
-                            >
-                        </div>
-                        
-                        <!-- Industry -->
-                        <div>
-                            <label for="industry" class="block text-sm font-semibold mb-2 text-gray-200">
-                                Industry
-                            </label>
-                            <select 
-                                id="industry" 
-                                name="industry"
-                                required
-                                class="form-input w-full px-4 py-3 rounded-lg"
-                            >
-                                <option value="">Select your industry</option>
-                                <option value="restaurant">Restaurant & Food</option>
-                                <option value="technology">Technology</option>
-                                <option value="health">Health & Wellness</option>
-                                <option value="finance">Finance & Consulting</option>
-                                <option value="education">Education</option>
-                                <option value="ecommerce">E-Commerce</option>
-                                <option value="creative">Creative & Design</option>
-                                <option value="other">Other</option>
-                            </select>
-                        </div>
-                        
-                        <!-- Description -->
-                        <div>
-                            <label for="description" class="block text-sm font-semibold mb-2 text-gray-200">
-                                Describe Your Business
-                            </label>
-                            <textarea 
-                                id="description" 
-                                name="description"
-                                required
-                                rows="4"
-                                placeholder="Tell us about your business, what makes it special, and what you offer..."
-                                class="form-input w-full px-4 py-3 rounded-lg resize-none"
-                            ></textarea>
-                        </div>
-                        
-                        <!-- Design Vibe -->
-                        <div>
-                            <label class="block text-sm font-semibold mb-3 text-gray-200">
-                                Choose Your Design Vibe
-                            </label>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="vibe-card selected p-4 rounded-xl" data-vibe="minimalist">
-                                    <div class="text-2xl mb-2">✨</div>
-                                    <div class="font-semibold">Minimalist Light</div>
-                                    <div class="text-xs text-gray-400">Clean & elegant</div>
-                                </div>
-                                <div class="vibe-card p-4 rounded-xl" data-vibe="cyber">
-                                    <div class="text-2xl mb-2">🌃</div>
-                                    <div class="font-semibold">Cyber Dark</div>
-                                    <div class="text-xs text-gray-400">Futuristic & bold</div>
-                                </div>
-                                <div class="vibe-card p-4 rounded-xl" data-vibe="luxury">
-                                    <div class="text-2xl mb-2">💎</div>
-                                    <div class="font-semibold">Luxury Gold</div>
-                                    <div class="text-xs text-gray-400">Premium & sophisticated</div>
-                                </div>
-                                <div class="vibe-card p-4 rounded-xl" data-vibe="playful">
-                                    <div class="text-2xl mb-2">🎨</div>
-                                    <div class="font-semibold">Playful</div>
-                                    <div class="text-xs text-gray-400">Fun & energetic</div>
-                                </div>
+                    <form id="builderForm" class="space-y-6" novalidate>
+                        <div aria-live="polite">
+                            <!-- Business Name -->
+                            <div class="mb-5">
+                                <label for="businessName" class="block text-sm font-semibold mb-2 text-gray-200">
+                                    Business Name <span class="text-red-400" aria-label="required">*</span>
+                                </label>
+                                <output id="businessNameCount" class="text-xs text-gray-500 mb-1 block" for="businessName">0/50</output>
+                                <input 
+                                    type="text" 
+                                    id="businessName" 
+                                    name="businessName"
+                                    maxlength="50"
+                                    required
+                                    placeholder="e.g., Sushi Master Tokyo"
+                                    class="form-input w-full px-4 py-3 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                    aria-describedby="businessNameCount"
+                                >
                             </div>
-                        </div>
-                        
-                        <!-- Sections -->
-                        <div>
-                            <label class="block text-sm font-semibold mb-3 text-gray-200">
-                                Sections to Include
-                            </label>
-                            <div class="space-y-2">
-                                <label class="flex items-center gap-3 cursor-pointer">
-                                    <input type="checkbox" checked disabled class="w-4 h-4 rounded">
-                                    <span class="text-sm">Hero Section</span>
+                            
+                            <!-- Industry -->
+                            <div class="mb-5">
+                                <label for="industry" class="block text-sm font-semibold mb-2 text-gray-200">
+                                    Industry <span class="text-red-400" aria-label="required">*</span>
                                 </label>
-                                <label class="flex items-center gap-3 cursor-pointer">
-                                    <input type="checkbox" checked disabled class="w-4 h-4 rounded">
-                                    <span class="text-sm">Features</span>
-                                </label>
-                                <label class="flex items-center gap-3 cursor-pointer">
-                                    <input type="checkbox" checked disabled class="w-4 h-4 rounded">
-                                    <span class="text-sm">Testimonials</span>
-                                </label>
+                                <select 
+                                    id="industry" 
+                                    name="industry"
+                                    required
+                                    class="form-input w-full px-4 py-3 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                >
+                                    <option value="">Select your industry</option>
+                                    <option value="restaurant">Restaurant & Food</option>
+                                    <option value="technology">Technology</option>
+                                    <option value="health">Health & Wellness</option>
+                                    <option value="finance">Finance & Consulting</option>
+                                    <option value="education">Education</option>
+                                    <option value="ecommerce">E-Commerce</option>
+                                    <option value="creative">Creative & Design</option>
+                                    <option value="other">Other</option>
+                                </select>
                             </div>
+                            
+                            <!-- Description -->
+                            <div class="mb-5">
+                                <label for="description" class="block text-sm font-semibold mb-2 text-gray-200">
+                                    Describe Your Business <span class="text-red-400" aria-label="required">*</span>
+                                </label>
+                                <output id="descriptionWordCount" class="text-xs text-gray-500 mb-1 block" for="description">0 words</output>
+                                <textarea 
+                                    id="description" 
+                                    name="description"
+                                    required
+                                    rows="4"
+                                    placeholder="Tell us about your business, what makes it special, and what you offer..."
+                                    class="form-input w-full px-4 py-3 rounded-lg resize-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                                ></textarea>
+                            </div>
+                            
+                            <!-- Design Vibe -->
+                            <fieldset class="mb-5 border-0 p-0">
+                                <legend class="block text-sm font-semibold mb-3 text-gray-200">
+                                    Choose Your Design Vibe <span class="text-red-400" aria-label="required">*</span>
+                                </legend>
+                                <div class="grid grid-cols-2 gap-3 sm:gap-4" role="radiogroup" aria-label="Design vibe options">
+                                    <button type="button" class="vibe-card selected p-4 rounded-xl text-left" data-vibe="minimalist" role="radio" aria-checked="true" aria-pressed="true" tabindex="0">
+                                        <div class="text-2xl mb-2" aria-hidden="true">✨</div>
+                                        <div class="font-semibold">Minimalist Light</div>
+                                        <div class="text-xs text-gray-400">Clean & elegant</div>
+                                    </button>
+                                    <button type="button" class="vibe-card p-4 rounded-xl text-left" data-vibe="cyber" role="radio" aria-checked="false" aria-pressed="false" tabindex="-1">
+                                        <div class="text-2xl mb-2" aria-hidden="true">🌃</div>
+                                        <div class="font-semibold">Cyber Dark</div>
+                                        <div class="text-xs text-gray-400">Futuristic & bold</div>
+                                    </button>
+                                    <button type="button" class="vibe-card p-4 rounded-xl text-left" data-vibe="luxury" role="radio" aria-checked="false" aria-pressed="false" tabindex="-1">
+                                        <div class="text-2xl mb-2" aria-hidden="true">💎</div>
+                                        <div class="font-semibold">Luxury Gold</div>
+                                        <div class="text-xs text-gray-400">Premium & sophisticated</div>
+                                    </button>
+                                    <button type="button" class="vibe-card p-4 rounded-xl text-left" data-vibe="playful" role="radio" aria-checked="false" aria-pressed="false" tabindex="-1">
+                                        <div class="text-2xl mb-2" aria-hidden="true">🎨</div>
+                                        <div class="font-semibold">Playful</div>
+                                        <div class="text-xs text-gray-400">Fun & energetic</div>
+                                    </button>
+                                </div>
+                            </fieldset>
+                            
+                            <!-- Sections -->
+                            <fieldset class="mb-6 border-0 p-0">
+                                <legend class="block text-sm font-semibold mb-3 text-gray-200">
+                                    Sections to Include
+                                </legend>
+                                <div class="space-y-2">
+                                    <label class="flex items-center gap-3 cursor-pointer">
+                                        <input type="checkbox" checked disabled class="w-4 h-4 rounded">
+                                        <span class="text-sm">Hero Section</span>
+                                    </label>
+                                    <label class="flex items-center gap-3 cursor-pointer">
+                                        <input type="checkbox" checked disabled class="w-4 h-4 rounded">
+                                        <span class="text-sm">Features</span>
+                                    </label>
+                                    <label class="flex items-center gap-3 cursor-pointer">
+                                        <input type="checkbox" checked disabled class="w-4 h-4 rounded">
+                                        <span class="text-sm">Testimonials</span>
+                                    </label>
+                                </div>
+                            </fieldset>
+                            
+                            <!-- Generate Button -->
+                            <button 
+                                type="submit" 
+                                id="generateBtn"
+                                class="generate-btn w-full py-4 rounded-lg font-bold text-lg text-white flex items-center justify-center gap-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                            >
+                                <span id="btnText">Generate Site with AI</span>
+                                <div id="btnLoader" class="spinner hidden" aria-label="Loading"></div>
+                            </button>
                         </div>
-                        
-                        <!-- Generate Button -->
-                        <button 
-                            type="submit" 
-                            id="generateBtn"
-                            class="generate-btn w-full py-4 rounded-lg font-bold text-lg text-white flex items-center justify-center gap-2"
-                        >
-                            <span id="btnText">Generate Site with AI</span>
-                            <div id="btnLoader" class="spinner hidden"></div>
-                        </button>
                     </form>
                     
                     <!-- Error Message -->
-                    <div id="errorMessage" class="hidden mt-4 p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400">
-                    </div>
+                    <div id="errorMessage" class="hidden mt-4 p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-400" role="alert" aria-live="assertive"></div>
+                    
+                    <!-- History Sidebar (mobile only) -->
+                    <aside id="mobileHistorySidebar" class="lg:hidden mt-8 border-t border-gray-700 pt-6" aria-label="Generation history">
+                        <h3 class="text-lg font-semibold text-gray-300 mb-4">Recent Generations</h3>
+                        <div id="mobileHistory" class="space-y-3">
+                            <p class="text-sm text-gray-500">No recent generations yet</p>
+                        </div>
+                    </aside>
                 </div>
             </div>
             
             <!-- Right Panel: Preview -->
-            <div class="w-full lg:w-1/2 bg-darker p-8 overflow-y-auto">
+            <div class="w-full lg:w-1/2 bg-darker p-6 sm:p-8 overflow-y-auto" role="region" aria-label="Preview panel">
                 <div class="max-w-5xl mx-auto">
-                    <div class="mb-4 flex items-center justify-between">
+                    <div class="mb-4 flex items-center justify-between flex-wrap gap-2">
                         <h2 class="text-xl font-semibold text-gray-300">Live Preview</h2>
-                        <div id="previewStatus" class="text-sm text-gray-500">
-                            Ready to generate
+                        <div id="previewStatus" role="status" aria-live="polite" class="text-sm text-gray-500 flex items-center gap-2">
+                            <span id="statusText">Ready to generate</span>
+                            <progress id="progressBar" class="hidden w-20 h-1" max="100" value="0"></progress>
+                        </div>
+                    </div>
+                    
+                    <!-- Preview Toolbar -->
+                    <div id="previewToolbar" class="mb-3 flex items-center justify-between flex-wrap gap-2">
+                        <div class="flex items-center gap-2">
+                            <button id="compareToggle" class="hidden px-3 py-1.5 rounded-lg text-sm glass hover:border-primary/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Enable before/after comparison">
+                                Compare
+                            </button>
+                            <button id="exportBtn" class="hidden px-3 py-1.5 rounded-lg text-sm glass hover:border-primary/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Export site">
+                                Export
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="zoomOut" class="zoom-btn p-1.5 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Zoom out">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+                            </button>
+                            <span id="zoomLevel" class="text-sm text-gray-400 min-w-[3rem] text-center">100%</span>
+                            <button id="zoomIn" class="zoom-btn p-1.5 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-primary" aria-label="Zoom in">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            </button>
                         </div>
                     </div>
                     
                     <!-- Preview Container -->
-                    <div id="previewContainer" class="preview-container">
+                    <div id="previewContainer" class="preview-frame mx-auto" style="width: 100%; height: 600px;" aria-label="Generated site preview" role="document">
                         <!-- Empty State -->
-                        <div id="emptyState" class="py-32 px-8 text-center">
-                            <div class="text-6xl mb-4">🚀</div>
-                            <h3 class="text-2xl font-bold text-gray-800 mb-2">Your website will appear here</h3>
-                            <p class="text-gray-600">Fill out the form and click "Generate Site with AI" to see the magic happen</p>
+                        <div id="emptyState" class="h-full flex items-center justify-center p-8 text-center">
+                            <div>
+                                <div class="text-6xl mb-4" aria-hidden="true">🚀</div>
+                                <h3 class="text-2xl font-bold text-gray-800 mb-2">Your website will appear here</h3>
+                                <p class="text-gray-600">Fill out the form and click "Generate Site with AI" to see the magic happen</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Loading Skeleton -->
+                        <div id="loadingSkeleton" class="hidden h-full p-8">
+                            <div class="skeleton w-3/4 h-8 mb-4"></div>
+                            <div class="skeleton w-1/2 h-4 mb-8"></div>
+                            <div class="skeleton w-full h-48 mb-4"></div>
+                            <div class="flex gap-4 mb-8">
+                                <div class="skeleton flex-1 h-32"></div>
+                                <div class="skeleton flex-1 h-32"></div>
+                                <div class="skeleton flex-1 h-32"></div>
+                            </div>
+                            <div class="skeleton w-full h-32"></div>
+                        </div>
+                        
+                        <!-- Error Boundary -->
+                        <div id="errorBoundary" class="hidden h-full flex items-center justify-center p-8">
+                            <div class="text-center">
+                                <div class="text-5xl mb-4">⚠️</div>
+                                <h3 class="text-xl font-bold text-gray-800 mb-2">Generation Failed</h3>
+                                <p class="text-gray-600 mb-4">Something went wrong while generating your site.</p>
+                                <button id="retryBtn" class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary">Try Again</button>
+                            </div>
                         </div>
                         
                         <!-- Generated Site Preview -->
                         <iframe 
                             id="previewFrame" 
-                            class="hidden w-full border-0"
-                            style="height: 800px;"
-                            sandbox="allow-scripts"
+                            class="preview-iframe hidden"
+                            style="height: 100%;"
+                            sandbox="allow-scripts allow-same-origin"
+                            title="Generated site preview"
                         ></iframe>
                     </div>
+                    
+                    <!-- History Sidebar (desktop) -->
+                    <aside id="desktopHistorySidebar" class="hidden lg:block mt-8 border-t border-gray-700 pt-6" aria-label="Generation history">
+                        <h3 class="text-lg font-semibold text-gray-300 mb-4">Recent Generations</h3>
+                        <div id="desktopHistory" class="space-y-3">
+                            <p class="text-sm text-gray-500">No recent generations yet</p>
+                        </div>
+                    </aside>
                 </div>
             </div>
         </div>
     </main>
-
+    
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed bottom-6 right-6 z-[9999] flex flex-col gap-2" aria-live="polite" aria-atomic="true"></div>
+    
+    <!-- Export Menu (hidden by default) -->
+    <div id="exportMenu" class="fixed inset-0 z-[1000] hidden" role="presentation">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="exportMenuOverlay"></div>
+        <div class="export-menu absolute bottom-20 right-6 rounded-xl shadow-2xl p-2 w-64" role="menu" aria-label="Export options">
+            <button id="exportHTML" class="export-btn w-full text-left px-4 py-2.5 rounded-lg text-sm" role="menuitem">
+                Download HTML
+            </button>
+            <button id="exportZIP" class="export-btn w-full text-left px-4 py-2.5 rounded-lg text-sm" role="menuitem">
+                Download ZIP ( Coming Soon )
+            </button>
+        </div>
+    </div>
+    
     <!-- JavaScript -->
     <script>
         // API Configuration
@@ -408,6 +751,23 @@
         // State
         let selectedVibe = 'minimalist';
         let isGenerating = false;
+        let currentTheme = 'dark';
+        let zoomLevel = 100;
+        let generationHistory = [];
+        let previewedHTML = null;
+        
+        // Debounce helper
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
         
         // DOM Elements
         const form = document.getElementById('builderForm');
@@ -417,35 +777,289 @@
         const errorMessage = document.getElementById('errorMessage');
         const previewFrame = document.getElementById('previewFrame');
         const emptyState = document.getElementById('emptyState');
+        const loadingSkeleton = document.getElementById('loadingSkeleton');
+        const errorBoundary = document.getElementById('errorBoundary');
         const previewStatus = document.getElementById('previewStatus');
+        const statusText = document.getElementById('statusText');
+        const progressBar = document.getElementById('progressBar');
         const vibeCards = document.querySelectorAll('.vibe-card');
         const desktopView = document.getElementById('desktopView');
         const mobileView = document.getElementById('mobileView');
+        const previewContainer = document.getElementById('previewContainer');
+        const themeToggle = document.getElementById('themeToggle');
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+        const exportBtn = document.getElementById('exportBtn');
+        const exportMenu = document.getElementById('exportMenu');
+        const exportMenuOverlay = document.getElementById('exportMenuOverlay');
+        const compareToggle = document.getElementById('compareToggle');
+        const zoomIn = document.getElementById('zoomIn');
+        const zoomOut = document.getElementById('zoomOut');
+        const zoomLevelEl = document.getElementById('zoomLevel');
+        const retryBtn = document.getElementById('retryBtn');
+        const businessNameInput = document.getElementById('businessName');
+        const descriptionInput = document.getElementById('description');
+        const businessNameCount = document.getElementById('businessNameCount');
+        const descriptionWordCount = document.getElementById('descriptionWordCount');
+        const toastContainer = document.getElementById('toastContainer');
+        
+        // Toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.setAttribute('role', 'alert');
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('hidden');
+                toast.addEventListener('transitionend', () => toast.remove());
+            }, 4000);
+        }
+        
+        // Word count
+        const updateWordCount = debounce(() => {
+            const text = descriptionInput.value.trim();
+            const words = text ? text.split(/\s+/).filter(w => w.length > 0).length : 0;
+            descriptionWordCount.textContent = `${words} word${words !== 1 ? 's' : ''}`;
+        }, 300);
+        
+        descriptionInput.addEventListener('input', updateWordCount);
+        
+        // Character count for business name
+        const updateBusinessNameCount = () => {
+            const len = businessNameInput.value.length;
+            businessNameCount.textContent = `${len}/50`;
+        };
+        
+        businessNameInput.addEventListener('input', updateBusinessNameCount);
+        updateBusinessNameCount();
+        
+        // Theme toggle
+        function applyTheme(theme) {
+            currentTheme = theme;
+            document.body.classList.toggle('light-mode', theme === 'light');
+            sunIcon.classList.toggle('hidden', theme !== 'light');
+            moonIcon.classList.toggle('hidden', theme !== 'dark');
+            themeToggle.setAttribute('aria-label', theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode');
+            localStorage.setItem('theme', theme);
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            applyTheme(newTheme);
+        });
+        
+        // Initialize theme
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            applyTheme(savedTheme);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+            applyTheme('light');
+        }
         
         // Vibe Selection
         vibeCards.forEach(card => {
             card.addEventListener('click', () => {
-                vibeCards.forEach(c => c.classList.remove('selected'));
+                vibeCards.forEach(c => {
+                    c.classList.remove('selected');
+                    c.setAttribute('role', 'radio');
+                    c.setAttribute('aria-checked', 'false');
+                    c.setAttribute('aria-pressed', 'false');
+                    c.setAttribute('tabindex', '-1');
+                });
                 card.classList.add('selected');
+                card.setAttribute('aria-checked', 'true');
+                card.setAttribute('aria-pressed', 'true');
+                card.setAttribute('tabindex', '0');
                 selectedVibe = card.dataset.vibe;
+            });
+            
+            card.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    card.click();
+                }
+                const cardsArray = Array.from(vibeCards);
+                const currentIndex = cardsArray.indexOf(card);
+                if (e.key === 'ArrowRight') {
+                    const nextIndex = (currentIndex + 1) % cardsArray.length;
+                    cardsArray[nextIndex].click();
+                    cardsArray[nextIndex].focus();
+                } else if (e.key === 'ArrowLeft') {
+                    const prevIndex = (currentIndex - 1 + cardsArray.length) % cardsArray.length;
+                    cardsArray[prevIndex].click();
+                    cardsArray[prevIndex].focus();
+                }
             });
         });
         
         // Preview Toggle
         desktopView.addEventListener('click', () => {
-            previewFrame.style.width = '100%';
+            previewContainer.style.width = '100%';
+            previewContainer.style.height = '600px';
             desktopView.classList.add('bg-primary', 'text-white');
             desktopView.classList.remove('text-gray-300');
             mobileView.classList.remove('bg-primary', 'text-white');
             mobileView.classList.add('text-gray-300');
+            desktopView.setAttribute('aria-pressed', 'true');
+            mobileView.setAttribute('aria-pressed', 'false');
         });
         
         mobileView.addEventListener('click', () => {
-            previewFrame.style.width = '375px';
+            previewContainer.style.width = '375px';
+            previewContainer.style.height = '600px';
+            previewContainer.classList.add('mx-auto');
             mobileView.classList.add('bg-primary', 'text-white');
             mobileView.classList.remove('text-gray-300');
             desktopView.classList.remove('bg-primary', 'text-white');
             desktopView.classList.add('text-gray-300');
+            desktopView.setAttribute('aria-pressed', 'false');
+            mobileView.setAttribute('aria-pressed', 'true');
+        });
+        
+        // Zoom controls
+        function applyZoom() {
+            previewFrame.style.transform = `scale(${zoomLevel / 100})`;
+            previewFrame.style.transformOrigin = 'top left';
+            zoomLevelEl.textContent = `${zoomLevel}%`;
+        }
+        
+        zoomIn.addEventListener('click', () => {
+            if (zoomLevel < 200) {
+                zoomLevel += 10;
+                applyZoom();
+            }
+        });
+        
+        zoomOut.addEventListener('click', () => {
+            if (zoomLevel > 50) {
+                zoomLevel -= 10;
+                applyZoom();
+            }
+        });
+        
+        // Export
+        exportBtn.addEventListener('click', () => {
+            if (!previewedHTML) {
+                showToast('Generate a site first before exporting', 'error');
+                return;
+            }
+            exportMenu.classList.remove('hidden');
+        });
+        
+        const updateExportBtnVisibility = () => {
+            exportBtn.classList.toggle('hidden', !previewedHTML);
+        };
+
+        document.getElementById('exportHTML').addEventListener('click', () => {
+            downloadHistoryItem({ html: previewedHTML });
+            exportMenu.classList.add('hidden');
+            showToast('Site exported successfully!', 'success');
+        });
+        
+        document.getElementById('exportZIP').addEventListener('click', () => {
+            exportMenu.classList.add('hidden');
+            showToast('ZIP export is coming soon!', 'error');
+        });
+        
+        exportMenuOverlay.addEventListener('click', () => {
+            exportMenu.classList.add('hidden');
+        });
+        
+        function downloadHistoryItem(entry) {
+            if (!entry) return;
+            const blob = new Blob([entry.html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'conversapay-site.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+        
+        // Comparison toggle (simplified)
+        let compareMode = false;
+        let previousHTML = null;
+        
+        compareToggle.addEventListener('click', () => {
+            compareMode = !compareMode;
+            compareToggle.setAttribute('aria-pressed', compareMode);
+            if (compareMode) {
+                showToast('Comparison mode enabled. Regenerate to see before/after.', 'success');
+            } else {
+                showToast('Comparison mode disabled', 'success');
+            }
+        });
+        
+        // History management
+        function addToHistory(entry) {
+            generationHistory.unshift(entry);
+            if (generationHistory.length > 3) {
+                generationHistory.pop();
+            }
+            renderHistory();
+        }
+        
+        function renderHistory() {
+            const generateCard = (entry) => `
+                <button class="history-card w-full p-3 rounded-lg text-left focus:outline-none flex items-center justify-between gap-2" data-index="${entry.index}" aria-label="Load generation from ${entry.time}">
+                    <div class="flex-1 min-w-0">
+                        <div class="text-sm font-semibold text-gray-200 truncate">${entry.vibe}</div>
+                        <div class="text-xs text-gray-500">${entry.businessName} - ${entry.time}</div>
+                    </div>
+                    <span class="history-download-btn p-1 rounded hover:bg-white/10 inline-flex cursor-pointer" data-download="${entry.index}" aria-label="Download generation" title="Download">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                        </svg>
+                    </span>
+                </button>
+            `;
+            
+            const htmlContent = generationHistory.length === 0 
+                ? '<p class="text-sm text-gray-500">No recent generations yet</p>'
+                : generationHistory.map(generateCard).join('');
+            
+            document.getElementById('mobileHistory').innerHTML = htmlContent;
+            document.getElementById('desktopHistory').innerHTML = htmlContent;
+            
+            document.querySelectorAll('.history-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('.history-download-btn')) {
+                        const index = parseInt(e.target.closest('.history-download-btn').dataset.download, 10);
+                        const entry = generationHistory.find(item => item.index === index);
+                        if (entry) {
+                            previewedHTML = entry.html;
+                            showPreview(entry.html);
+                            statusText.textContent = `Loaded from ${entry.time}`;
+                            statusText.classList.add('text-green-400');
+                            updateExportBtnVisibility();
+                            downloadHistoryItem(entry);
+                        }
+                        e.stopPropagation();
+                        return;
+                    }
+                    
+                    const index = parseInt(card.dataset.index, 10);
+                    const entry = generationHistory.find(e => e.index === index);
+                    if (entry) {
+                        previewedHTML = entry.html;
+                        showPreview(entry.html);
+                        statusText.textContent = `Loaded from ${entry.time}`;
+                        statusText.classList.add('text-green-400');
+                        updateExportBtnVisibility();
+                    }
+                });
+            });
+        }
+        
+        // Retry
+        retryBtn.addEventListener('click', () => {
+            errorBoundary.classList.add('hidden');
+            emptyState.classList.remove('hidden');
+            form.dispatchEvent(new Event('submit'));
         });
         
         // Form Submission
@@ -454,23 +1068,28 @@
             
             if (isGenerating) return;
             
-            // Get form data
             const businessName = document.getElementById('businessName').value.trim();
             const industry = document.getElementById('industry').value;
             const description = document.getElementById('description').value.trim();
             
-            // Validation
             if (!businessName || !industry || !description) {
-                showError('Please fill in all fields');
+                showError('Please fill in all required fields');
                 return;
             }
             
-            // Set loading state
+            if (previousHTML) {
+                showToast('A new generation will replace the current preview', 'success');
+            }
+            
             setLoading(true);
             hideError();
+            errorBoundary.classList.add('hidden');
             
             try {
-                // Prepare request
+                progressBar.classList.remove('hidden');
+                progressBar.value = 0;
+                statusText.textContent = 'Generating...';
+                
                 const requestData = {
                     prompt: description,
                     business_name: businessName,
@@ -479,7 +1098,6 @@
                     sections: ["hero", "features", "testimonials"]
                 };
                 
-                // Send request
                 const response = await fetch(`${API_BASE_URL}/api/v1/builder/generate`, {
                     method: 'POST',
                     headers: {
@@ -496,10 +1114,26 @@
                 const data = await response.json();
                 
                 if (data.success && data.html) {
-                    // Show preview
+                    previousHTML = previewedHTML;
+                    previewedHTML = data.html;
                     showPreview(data.html);
-                    previewStatus.textContent = 'Generated successfully!';
-                    previewStatus.classList.add('text-green-400');
+                    statusText.textContent = 'Generated successfully!';
+                    statusText.classList.remove('text-red-400');
+                    statusText.classList.add('text-green-400');
+                    
+                    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    addToHistory({
+                        index: Date.now(),
+                        vibe: selectedVibe,
+                        businessName,
+                        time,
+                        html: data.html,
+                    });
+                    
+                    updateExportBtnVisibility();
+                    compareToggle.classList.remove('hidden');
+                    
+                    showToast('Site generated successfully!', 'success');
                 } else {
                     throw new Error(data.error || 'Failed to generate site');
                 }
@@ -507,8 +1141,14 @@
             } catch (error) {
                 console.error('Generation error:', error);
                 showError(error.message || 'Failed to generate site. Please try again.');
-                previewStatus.textContent = 'Generation failed';
-                previewStatus.classList.add('text-red-400');
+                errorBoundary.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                previewFrame.classList.add('hidden');
+                loadingSkeleton.classList.add('hidden');
+                statusText.textContent = 'Generation failed';
+                statusText.classList.remove('text-green-400');
+                statusText.classList.add('text-red-400');
+                showToast(error.message || 'Failed to generate site. Please try again.', 'error');
             } finally {
                 setLoading(false);
             }
@@ -522,9 +1162,16 @@
             if (loading) {
                 btnText.textContent = 'Generating...';
                 btnLoader.classList.remove('hidden');
+                emptyState.classList.add('hidden');
+                loadingSkeleton.classList.remove('hidden');
+                errorBoundary.classList.add('hidden');
+                previewFrame.classList.add('hidden');
+                generateBtn.setAttribute('aria-busy', 'true');
             } else {
                 btnText.textContent = 'Generate Site with AI';
                 btnLoader.classList.add('hidden');
+                loadingSkeleton.classList.add('hidden');
+                generateBtn.setAttribute('aria-busy', 'false');
             }
         }
         
@@ -538,14 +1185,13 @@
         }
         
         function showPreview(html) {
-            // Hide empty state
             emptyState.classList.add('hidden');
+            loadingSkeleton.classList.add('hidden');
+            errorBoundary.classList.add('hidden');
             
-            // Show iframe
             previewFrame.classList.remove('hidden');
             previewFrame.classList.add('fade-in');
             
-            // Inject HTML into iframe
             const iframeDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
             iframeDoc.open();
             iframeDoc.write(html);

@@ -3,890 +3,782 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- SEO Meta Tags -->
-    <title>ConversaPay - הפוך את האתר שלך למכונת מכירות מבוססת AI</title>
-<meta name="description" content="פלטפורמת SaaS להפיכת אתרים למכונות מכירות אוטונומיות. סוכן AI מבוסס Gemini, סליקה ישירה בצ'אט דרך Bit לעסקים קטנים ו-PayMe לעסקים גדולים.">
-<meta name="keywords" content="AI sales chatbot, PayMe payments, multi-tenant SaaS, embeddable widget, WordPress plugin, Gemini AI, business automation, customer support bot">
-    <meta name="author" content="ConversaPay">
-    <meta name="robots" content="index, follow">
-    <link rel="canonical" href="https://conversapay.org/">
-    
-    <!-- Open Graph Tags -->
-    <meta property="og:title" content="ConversaPay - הפוך את האתר שלך למכונת מכירות מבוססת AI">
-    <meta property="og:description" content="פלטפורמת SaaS רב-דיונית עם סוכן AI שמנהל שיחות, מציע מוצרים, ומעבד תשלומים מאובטחים.">
-    <meta property="og:image" content="https://conversapay.org/static/og-image.png">
-    <meta property="og:url" content="https://conversapay.org/">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="ConversaPay - פתרון תשלומי שיחתי המהיר, בטוח וקל לשימוש. הופך תשלומים לצ'אט טבעי לשיפור המרות ופחות ביטולים.">
+    <meta name="theme-color" content="#0F1419">
+    <link rel="canonical" href="https://www.conversapay.com/">
+    <meta property="og:title" content="ConversaPay - פתרון תשלומים שיחתי">
+    <meta property="og:description" content="ConversaPay הופכת את תהליך התשלום לחוויה פשוטה וטבעית. שלם דרך שיחה בצ'אט.">
+    <meta property="og:image" content="https://www.conversapay.com/og-image.png">
+    <meta property="og:url" content="https://www.conversapay.com/">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="ConversaPay">
-    
-    <!-- Twitter Card Tags -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="ConversaPay - מכונות מכירות מבוססות AI">
-    <meta name="twitter:description" content="הפוך את האתר שלך למכונת מכירות אוטונומית עם בוט AI שמבין כוונות לקוחות ומעבד תשלומים.">
-    <meta name="twitter:image" content="https://conversapay.org/static/og-image.png">
+    <meta name="twitter:title" content="ConversaPay - פתרון תשלומים שיחתי">
+    <meta name="twitter:description" content="ConversaPay הופכת את תהליך התשלום לחוויה פשוטה וטבעית.">
+    <meta name="twitter:image" content="https://www.conversapay.com/og-image.png">
+    <title>ConversaPay - פתרון תשלומים שיחתי</title>
     
-    <!-- Fonts: Plus Jakarta Sans for premium tech aesthetic -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Tailwind Config -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        'jakarta': ['Plus Jakarta Sans', 'sans-serif'],
-                    },
-                    colors: {
-                        'midnight': '#0B0F19',
-                        'midnight-light': '#111827',
-                        'cyber-cyan': '#00D9FF',
-                        'neon-purple': '#A855F7',
-                        'royal-blue': '#3B82F6',
-                    },
-                    animation: {
-                        'fade-in': 'fadeIn 0.8s ease-out',
-                        'slide-up': 'slideUp 1s ease-out',
-                        'glow-pulse': 'glowPulse 3s ease-in-out infinite',
-                        'float': 'float 6s ease-in-out infinite',
-                    },
-                    keyframes: {
-                        fadeIn: {
-                            '0%': { opacity: '0' },
-                            '100%': { opacity: '1' },
-                        },
-                        slideUp: {
-                            '0%': { opacity: '0', transform: 'translateY(40px)' },
-                            '100%': { opacity: '1', transform: 'translateY(0)' },
-                        },
-                        glowPulse: {
-                            '0%, 100%': { boxShadow: '0 0 20px rgba(168, 85, 247, 0.4)' },
-                            '50%': { boxShadow: '0 0 40px rgba(168, 85, 247, 0.8)' },
-                        },
-                        float: {
-                            '0%, 100%': { transform: 'translateY(0px)' },
-                            '50%': { transform: 'translateY(-20px)' },
-                        }
-                    }
-                }
-            }
-        }
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "ConversaPay",
+      "url": "https://www.conversapay.com",
+      "description": "פתרון תשלומי שיחתי המהיר, בטוח וקל לשימוש",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "email": "support@conversapay.com",
+        "contactType": "customer support"
+      }
+    }
     </script>
     
-    <!-- Custom CSS Variables & Styles -->
     <style>
         :root {
-            --bg-primary: #0B0F19;
-            --bg-secondary: #111827;
-            --bg-card: rgba(17, 24, 39, 0.7);
-            --text-primary: #F9FAFB;
-            --text-secondary: #9CA3AF;
-            --accent-purple: #A855F7;
-            --accent-cyan: #00D9FF;
-            --accent-blue: #3B82F6;
-            --border-color: rgba(255, 255, 255, 0.1);
+            --bg-primary: #0F1419;
+            --bg-secondary: #1A1F2E;
+            --bg-card: rgba(26, 31, 46, 0.6);
+            --text-primary: #F5F7FA;
+            --text-secondary: #A0AEC0;
+            --accent-primary: #6366F1;
+            --accent-secondary: #8B5CF6;
+            --accent-tertiary: #EC4899;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --font-display: 'Rubik', sans-serif;
+            --space-xs: 8px;
+            --space-sm: 12px;
+            --space-md: 20px;
+            --space-lg: 30px;
+            --space-xl: 40px;
+            --space-2xl: 60px;
+            --space-3xl: 100px;
         }
         
         * {
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: var(--font-display);
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+            scroll-padding-top: 80px;
+        }
+        
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
         }
         
         body {
-            background: var(--bg-primary);
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1f2e 50%, #0f1419 100%);
             color: var(--text-primary);
+            min-height: 100vh;
+            position: relative;
             overflow-x: hidden;
+            line-height: 1.5;
         }
         
-        /* Gradient Text */
-        .gradient-text {
-            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 50%, var(--accent-blue) 100%);
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .skip-link {
+            position: absolute;
+            top: -100px;
+            right: 10px;
+            background: var(--accent-primary);
+            color: #fff;
+            padding: var(--space-sm) var(--space-md);
+            border-radius: var(--radius-sm);
+            z-index: 10000;
+            text-decoration: none;
+            font-weight: 600;
+            transition: top 0.2s;
+        }
+        
+        .skip-link:focus {
+            top: 10px;
+            outline: 3px solid #fff;
+            outline-offset: 2px;
+        }
+        
+        :focus-visible {
+            outline: 3px solid var(--accent-primary);
+            outline-offset: 3px;
+            border-radius: 4px;
+        }
+        
+        header {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 var(--space-lg);
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-md);
+            contain: layout style;
+        }
+        
+        .navbar-brand {
+            font-size: 1.3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            text-decoration: none;
+            display: inline-block;
+            padding: var(--space-xs) 0;
         }
         
-        /* Gradient Backgrounds */
-        .gradient-primary {
-            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-blue) 100%);
+        .navbar-nav {
+            display: flex;
+            list-style: none;
+            gap: var(--space-md);
+            align-items: center;
         }
         
-        .gradient-glow {
-            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(0, 217, 255, 0.2) 100%);
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            transition: color 0.2s, background 0.2s;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
         }
         
-        /* Frosted Glass */
-        .glass {
-            background: rgba(17, 24, 39, 0.7);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
+        .nav-link:hover,
+        .nav-link:focus {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
         }
         
-        .glass-light {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-        }
-        
-        /* Navigation */
-        .nav-blur {
-            backdrop-filter: blur(20px) saturate(180%);
-            background: rgba(11, 15, 25, 0.8);
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        /* Buttons */
-        .btn-primary {
-            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-blue) 100%);
-            color: white;
-            padding: 14px 32px;
-            border-radius: 12px;
+        .nav-button {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
             font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none;
+            font-family: inherit;
+        }
+        
+        .nav-button:hover,
+        .nav-button:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+        }
+        
+        .hamburger {
+            display: none;
+            background: none;
             border: none;
             cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .btn-primary::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .btn-primary:hover::before {
-            opacity: 1;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 20px 40px rgba(168, 85, 247, 0.4);
-        }
-        
-        .btn-secondary {
-            background: transparent;
+            padding: var(--space-sm);
+            min-width: 44px;
+            min-height: 44px;
             color: var(--text-primary);
-            padding: 14px 32px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 1rem;
-            transition: all 0.3s ease;
-            border: 1px solid var(--border-color);
-            cursor: pointer;
         }
         
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: var(--accent-cyan);
-            transform: translateY(-2px);
+        .hamburger span {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: currentColor;
+            margin: 5px 0;
+            transition: transform 0.3s, opacity 0.3s;
+            border-radius: 1px;
         }
         
-        /* Cards */
-        .bento-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 32px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
+        .hamburger[aria-expanded="true"] span:nth-child(1) {
+            transform: translateY(7px) rotate(45deg);
         }
         
-        .bento-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, transparent 100%);
+        .hamburger[aria-expanded="true"] span:nth-child(2) {
             opacity: 0;
-            transition: opacity 0.4s ease;
         }
         
-        .bento-card:hover::before {
-            opacity: 1;
+        .hamburger[aria-expanded="true"] span:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg);
         }
         
-        .bento-card:hover {
-            transform: translateY(-8px);
-            border-color: rgba(168, 85, 247, 0.3);
-            box-shadow: 0 20px 60px rgba(168, 85, 247, 0.2);
-        }
-        
-        /* Terminal Mockup */
-        .terminal {
-            background: #1E1E1E;
-            border-radius: 16px;
-            border: 1px solid #333;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-        }
-        
-        .terminal-header {
-            background: #2D2D2D;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-bottom: 1px solid #333;
-        }
-        
-        .terminal-dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-        }
-        
-        .terminal-body {
-            padding: 24px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-        
-        /* Pricing Card */
-        .pricing-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 40px;
-            transition: all 0.4s ease;
+        main {
             position: relative;
+            z-index: 1;
+            contain: layout style;
         }
         
-        .pricing-card.featured {
-            border-color: var(--accent-purple);
-            box-shadow: 0 0 60px rgba(168, 85, 247, 0.3);
-            transform: scale(1.05);
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--space-2xl) var(--space-md);
         }
         
-        .pricing-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 20px 60px rgba(168, 85, 247, 0.2);
-        }
-        
-        .pricing-card.featured:hover {
-            transform: translateY(-8px) scale(1.07);
-        }
-        
-        /* Glow Effects */
-        .glow-purple {
-            box-shadow: 0 0 60px rgba(168, 85, 247, 0.4);
-        }
-        
-        .glow-cyan {
-            box-shadow: 0 0 60px rgba(0, 217, 255, 0.4);
-        }
-        
-        /* Scroll Animations */
-        .reveal {
+        .hero {
+            text-align: center;
+            margin-bottom: var(--space-3xl);
             opacity: 0;
-            transform: translateY(40px);
-            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
         }
         
-        .reveal.active {
+        .hero.is-visible {
             opacity: 1;
             transform: translateY(0);
         }
         
-        /* Mobile Menu */
-        .mobile-menu {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(11, 15, 25, 0.98);
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 900;
+            margin-bottom: var(--space-md);
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 50%, var(--accent-tertiary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.2;
+            color: transparent;
+        }
+        
+        .hero p {
+            font-size: clamp(1rem, 2.5vw, 1.3rem);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-xl);
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: var(--space-md);
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            color: #fff;
+            border: none;
+            padding: 16px 40px;
+            border-radius: var(--radius-md);
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+            min-height: 52px;
+            font-family: inherit;
+        }
+        
+        .btn-primary:hover,
+        .btn-primary:focus {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--accent-primary);
+            border: 2px solid var(--accent-primary);
+            padding: 14px 38px;
+            border-radius: var(--radius-md);
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: color 0.3s, background 0.3s, transform 0.3s;
+            min-height: 52px;
+            font-family: inherit;
+        }
+        
+        .btn-secondary:hover,
+        .btn-secondary:focus {
+            background: rgba(99, 102, 241, 0.1);
+            transform: translateY(-4px);
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-lg);
+            margin-bottom: var(--space-3xl);
+        }
+        
+        .feature-card {
+            background: var(--bg-card);
             backdrop-filter: blur(20px);
-            z-index: 100;
-            padding: 80px 24px 24px;
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-lg);
+            transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out, box-shadow 0.3s, border-color 0.3s;
+            contain: layout style;
         }
         
-        .mobile-menu.active {
-            display: block;
+        .feature-card.is-visible {
+            opacity: 1;
+            transform: translateY(0);
         }
         
-        /* Grid Background */
-        .grid-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                linear-gradient(rgba(168, 85, 247, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(168, 85, 247, 0.1) 1px, transparent 1px);
-            background-size: 50px 50px;
-            mask-image: radial-gradient(circle at center, black 0%, transparent 70%);
-            -webkit-mask-image: radial-gradient(circle at center, black 0%, transparent 70%);
+        .feature-card:hover {
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 12px 32px rgba(99, 102, 241, 0.15);
+            transform: translateY(-4px);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: var(--space-sm);
+        }
+        
+        .feature-card h3 {
+            font-size: 1.3rem;
+            margin-bottom: var(--space-sm);
+            color: var(--text-primary);
+        }
+        
+        .feature-card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        #features {
+            scroll-margin-top: 80px;
+        }
+        
+        section {
+            contain: layout style;
+        }
+        
+        .benefits-section {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--space-2xl) var(--space-xl);
+            margin-bottom: var(--space-3xl);
+            box-shadow: var(--shadow-md);
+            contain: layout style;
+        }
+        
+        .benefits-section h2 {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            margin-bottom: var(--space-xl);
+            text-align: center;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .benefits-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--space-lg);
+        }
+        
+        .benefit-item {
+            display: flex;
+            gap: var(--space-sm);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+        
+        .benefit-item.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .benefit-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            color: var(--accent-primary);
+        }
+        
+        .benefit-text h3 {
+            font-size: 1.1rem;
+            margin-bottom: var(--space-xs);
+            color: var(--text-primary);
+        }
+        
+        .benefit-text p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        .cta-section {
+            text-align: center;
+            padding: var(--space-2xl) var(--space-xl);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--space-2xl);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        
+        .cta-section.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .cta-section h2 {
+            font-size: clamp(1.6rem, 3.5vw, 2rem);
+            margin-bottom: var(--space-md);
+            color: var(--text-primary);
+        }
+        
+        .cta-section p {
+            font-size: clamp(1rem, 2vw, 1.1rem);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-xl);
+        }
+        
+        footer {
+            text-align: center;
+            padding: var(--space-lg);
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        @media (max-width: 1440px) {
+            .container {
+                max-width: 1100px;
+            }
+        }
+        
+        @media (max-width: 1024px) {
+            .navbar {
+                padding: 0 var(--space-md);
+                height: 60px;
+            }
+            
+            .benefits-section {
+                padding: var(--space-xl) var(--space-md);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .btn-primary,
+            .btn-secondary {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .benefits-section {
+                padding: var(--space-lg) var(--space-md);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            :root {
+                --space-md: 16px;
+                --space-lg: 20px;
+                --space-xl: 30px;
+                --space-2xl: 40px;
+                --space-3xl: 60px;
+            }
+            
+            .navbar {
+                padding: 0 var(--space-sm);
+            }
+            
+            .hero-buttons {
+                gap: var(--space-md);
+            }
         }
     </style>
 </head>
 <body>
+    <a href="#main-content" class="skip-link">דלג לתוכן הראשי</a>
     
-    <!-- Navigation -->
-    <header class="nav-blur fixed top-0 left-0 right-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20">
-                <!-- Logo -->
-                <a href="/" class="flex items-center space-x-3 group">
-                    <div class="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                    </div>
-                    <span class="text-2xl font-bold gradient-text">ConversaPay</span>
-                </a>
-                
-                <!-- Desktop Menu -->
-                <nav class="hidden md:flex items-center gap-6 lg:gap-8">
-                    <a href="#features" class="text-gray-300 hover:text-white transition-colors text-sm font-medium px-2">תכונות</a>
-                    <a href="#how-it-works" class="text-gray-300 hover:text-white transition-colors text-sm font-medium px-2">איך זה עובד</a>
-                    <a href="#pricing" class="text-gray-300 hover:text-white transition-colors text-sm font-medium px-2">מסלולים ומחירים</a>
-                    <a href="/login.html" class="text-gray-300 hover:text-white transition-colors text-sm font-medium px-3 py-2 rounded-lg hover:bg-white/5">התחברות</a>
-                    <a href="/register.html" class="btn-primary text-sm mr-2">כניסה למערכת</a>
-                </nav>
-                
-                <!-- Mobile Menu Button -->
-                <button id="mobileMenuBtn" class="md:hidden text-gray-300 hover:text-white transition">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
+    <header role="banner">
+        <a href="#" class="navbar-brand" aria-label="ConversaPay - דף הבית">ConversaPay</a>
+        <button class="hamburger" id="menu-toggle" aria-expanded="false" aria-controls="primary-nav" aria-label="פתח תפריט">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <nav id="primary-nav" aria-label="ניווט ראשי">
+            <ul class="navbar-nav">
+                <li><a href="#features" class="nav-link" aria-current="page">יתרונות</a></li>
+                <li><a href="#benefits" class="nav-link">למה אנחנו</a></li>
+                <li><a href="login.html" class="nav-button">כניסה</a></li>
+            </ul>
+        </nav>
     </header>
     
-    <!-- Mobile Menu -->
-    <div id="mobileMenu" class="mobile-menu">
-        <div class="flex flex-col space-y-6">
-            <a href="#features" class="text-2xl text-gray-300 hover:text-white transition">תכונות</a>
-            <a href="#how-it-works" class="text-2xl text-gray-300 hover:text-white transition">איך זה עובד</a>
-            <a href="#pricing" class="text-2xl text-gray-300 hover:text-white transition">מסלולים ומחירים</a>
-            <a href="/login.html" class="text-2xl text-gray-300 hover:text-white transition">התחברות</a>
-            <a href="/register.html" class="btn-primary text-center text-lg mt-4">כניסה למערכת</a>
-        </div>
-    </div>
-
-    <!-- Hero Section -->
-    <section class="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
-        <!-- Background Effects -->
-        <div class="grid-bg"></div>
-        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-midnight"></div>
-        
-        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-            <div class="text-center animate-slide-up">
-                <!-- Badge -->
-                <div class="inline-flex items-center px-4 py-2 rounded-full glass-light mb-8">
-                    <span class="w-2 h-2 bg-cyber-cyan rounded-full mr-2 animate-pulse"></span>
-                    <span class="text-sm font-medium text-gray-300">פלטפורמת SaaS מתקדמת למכירות אוטומטיות</span>
-                </div>
-                
-                <!-- Main Headline -->
-                <h1 class="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold mb-8 leading-tight tracking-tight">
-                    <span class="block text-white mb-2">הפוך את האתר שלך</span>
-                    <span class="gradient-text">למכונת מכירות</span>
-                    <span class="block text-white mt-2">מבוססת AI</span>
-                </h1>
-                
-                <!-- Sub-headline -->
-                <p class="text-xl sm:text-2xl text-gray-400 mb-12 max-w-4xl mx-auto leading-relaxed font-light">
-                    סוכן AI חכם שמנהל שיחות עם לקוחות, מציע מוצרים, ומעבד תשלומים מאובטחים
-                    <span class="text-white font-medium">ישירות בתוך הצ'אט</span>.
-                    הטמעה קלה בכל אתר או וורדפרס.
-                </p>
-                
-                <!-- CTA Buttons -->
-                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-                    <a href="/register.html" class="btn-primary text-lg px-10 py-5">
-                        התחל בחינם
-                        <svg class="inline-block mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                        </svg>
-                    </a>
-                    <a href="#how-it-works" class="btn-secondary text-lg px-10 py-5">
-                        צפה בהדגמה
-                        <svg class="inline-block mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </a>
-                </div>
-                
-                <!-- Trust Badges -->
-                    <div class="flex flex-wrap justify-center items-center gap-8 text-gray-400 text-sm">
-                        <div class="flex items-center gap-2">
-                            <svg class="w-5 h-5 text-cyber-cyan" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                            <span>מסלול היכרות חינם</span>
-                        </div>
-                    <div class="flex items-center gap-2">
-                        <svg class="w-5 h-5 text-cyber-cyan" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        <span>הגדרה תוך דקות</span>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <svg class="w-5 h-5 text-cyber-cyan" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        </svg>
-                        <span>תשלומים מאובטחים</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Features Section - Bento Grid -->
-    <section id="features" class="py-32 relative">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <!-- Section Header -->
-            <div class="text-center mb-20 reveal">
-                <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-                    <span class="gradient-text">תשתית מלאה</span>
-                    <br>
-                    <span class="text-white">למכירות חכמות</span>
-                </h2>
-                <p class="text-xl text-gray-400 max-w-3xl mx-auto">
-                    כל מה שצריך להפוך את האתר שלך למכונת מכירות אוטונומית
-                </p>
-            </div>
-            
-            <!-- Bento Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                
-                <!-- Feature 1: AI Agents (Large) -->
-                <div class="bento-card lg:col-span-2 reveal">
-                    <div class="flex items-start gap-6">
-                        <div class="w-16 h-16 gradient-primary rounded-2xl flex items-center justify-center flex-shrink-0">
-                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="text-2xl font-bold text-white mb-3">סוכן מכירות AI מבוסס Gemini</h3>
-                            <p class="text-gray-400 leading-relaxed mb-4">
-                                בוט צ'אט חכם שמבין כוונות לקוחות, מציע מוצרים מהקטלוג שלך, ומנהל שיחות מכירה אוטונומיות. 
-                                מזהה כוונות רכישה ומפיק קישורי תשלום מותאמים.
-                            </p>
-                            <div class="flex flex-wrap gap-2">
-                                <span class="px-3 py-1 rounded-full glass-light text-xs text-gray-300">הבנת הקשר</span>
-                                <span class="px-3 py-1 rounded-full glass-light text-xs text-gray-300">המלצות מוצרים</span>
-                                <span class="px-3 py-1 rounded-full glass-light text-xs text-gray-300">זיהוי כוונה</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-<!-- Feature 2: Payments -->
-                <div class="bento-card reveal">
-                    <div class="w-14 h-14 bg-gradient-to-br from-green-400 to-green-600 rounded-xl flex items-center justify-center mb-6">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-white mb-3">סליקה ישירה בצ'אט לכל עסק</h3>
-                    <p class="text-gray-400 leading-relaxed">
-                        עסקים קטנים סולקים דרך <strong class="text-white">Bit</strong> — פשוט ומוכר לכולם.<br>
-                        עסקים גדולים סולקים דרך <strong class="text-white">PayMe</strong> — מקצועי ומאובטח.
-                    </p>
-                </div>
-                
-                <!-- Feature 3: Analytics Dashboard -->
-                <div class="bento-card reveal">
-                    <div class="w-14 h-14 bg-gradient-to-br from-cyber-cyan to-blue-600 rounded-xl flex items-center justify-center mb-6">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-white mb-3">דשבורד אנליטיקס מתקדם</h3>
-                    <p class="text-gray-400 leading-relaxed">
-                        מעקב בזמן אמת אחר הכנסות, יחס המרה, ערך הזמנה ממוצע, וגרפים אינטראקטיביים עם 
-                    </p>
-                </div>
-                
-                <!-- Feature 4: Embeddable Widget (Large) -->
-                <div class="bento-card lg:col-span-2 reveal">
-                    <div class="flex items-start gap-6">
-                        <div class="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl flex items-center justify-center flex-shrink-0">
-                            <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-                            </svg>
-                        </div>
-                        <div>
-                            <h3 class="text-2xl font-bold text-white mb-3">ווידג'ט צף להטמעה קלה</h3>
-                            <p class="text-gray-400 leading-relaxed mb-4">
-                               ווידג'ט קל משקל שמתקין אוטומטית צ'אטבוט צף בכל אתר. תמיכה בכל הפלטפורמות, 
-                                עיצוב רספונסיבי, ואינטגרציה מלאה עם המערכת.
-                            </p>
-                            <div class="flex flex-wrap gap-2">
-                                <span class="px-3 py-1 rounded-full glass-light text-xs text-gray-300">הטמעה בשורת קוד אחת</span>
-                                <span class="px-3 py-1 rounded-full glass-light text-xs text-gray-300">רספונסיבי למובייל</span>
-                                <span class="px-3 py-1 rounded-full glass-light text-xs text-gray-300">אבטחה מבוססת דומיינים</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Feature 5: WordPress Plugin -->
-                <div class="bento-card reveal">
-                    <div class="w-14 h-14 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center mb-6">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-white mb-3">תוסף וורדפרס רשמי</h3>
-                    <p class="text-gray-400 leading-relaxed">
-                        התקנה בלחיצת כפתור מלוח הבקרה של וורדפרס. הגדרות מתקדמות, תמיכה במייל, והטמעה אוטומטית.
-                    </p>
-                </div>
-
-                <!-- Feature 6: AI Website Builder -->
-                <div class="bento-card reveal">
-                    <div class="w-14 h-14 bg-gradient-to-br from-pink-400 to-pink-600 rounded-xl flex items-center justify-center mb-6">
-                        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-xl font-bold text-white mb-3">בונה אתרים מבוסס AI</h3>
-                    <p class="text-gray-400 leading-relaxed">
-                        יצירת דפי נחיתה אוטומטיים עם בינה מלאכותית. תצוגה מקדימה בזמן אמת ופרסום בלחיצה אחת.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- How It Works - Terminal Mockup -->
-    <section id="how-it-works" class="py-32 relative">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-20 reveal">
-                <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-                    <span class="text-white">איך זה</span>
-                    <span class="gradient-text">עובד</span>
-                </h2>
-                <p class="text-xl text-gray-400 max-w-3xl mx-auto">
-                    מתקתקות לקוח עד להשלמת רכישה בפחות מדקה
-                </p>
-            </div>
-            
-            <!-- Terminal Mockup -->
-            <div class="terminal max-w-5xl mx-auto reveal">
-                <div class="terminal-header">
-                    <div class="terminal-dot bg-red-500"></div>
-                    <div class="terminal-dot bg-yellow-500"></div>
-                    <div class="terminal-dot bg-green-500"></div>
-                    <span class="text-gray-400 text-sm ml-4">conversapay-terminal</span>
-                </div>
-                <div class="terminal-body">
-                    <div class="space-y-6">
-                        <!-- Step 1 -->
-                        <div class="flex items-start gap-4">
-                            <span class="text-cyber-cyan font-bold">$</span>
-                            <div class="flex-1">
-                                <p class="text-gray-300 mb-2">לקוח: "היי, אני מעוניין לרכוש את הקורס הדיגיטלי שלכם"</p>
-                                <div class="flex items-center gap-2 text-green-400">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                                    </svg>
-                                    <span class="text-sm">AI מנתח כוונה: רכישה...</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- Step 2 -->
-                        <div class="flex items-start gap-4">
-                            <span class="text-neon-purple font-bold">→</span>
-                            <div class="flex-1">
-                                <p class="text-gray-300 mb-2">AI: "מעולה! הקורס זמין במלאי בעלות של 299 ₪. מכין עבורך קישור מאובטח לתשלום..."</p>
-<div class="bg-midnight-light rounded-lg p-4 font-mono text-sm">
-    <div class="text-gray-400">יוצר קישור תשלום...</div>
-    <div class="text-green-400">✓ קישור נוצר בהצלחה</div>
-</div>
-                            </div>
-                        </div>
-                        
-                        <!-- Step 3 -->
-                        <div class="flex items-start gap-4">
-                            <span class="text-green-400 font-bold">✓</span>
-                            <div class="flex-1">
-                                <p class="text-white font-semibold mb-2">תשלום הושלם בהצלחה! הזמנה #ORD-2026-884 נוצרה.</p>
-                                <div class="flex items-center gap-4 text-sm">
-                                    <span class="text-cyber-cyan">הכנסה: +299 ₪</span>
-                                    <span class="text-green-400">יחס המרה: +1.2%</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Stats Section - Trust Indicators -->
-    <section class="py-32 relative overflow-hidden">
-        <div class="absolute inset-0 gradient-glow opacity-30"></div>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-                <div class="reveal">
-                    <div class="text-5xl sm:text-6xl font-bold gradient-text mb-4">100%</div>
-                    <div class="text-gray-400 text-lg">הפרדת נתונים מלאה בין עסקים</div>
-                    <p class="text-gray-500 text-sm mt-2">Supabase RLS Security</p>
-                </div>
-                <div class="reveal">
-                    <div class="text-5xl sm:text-6xl font-bold gradient-text mb-4">Gemini</div>
-                    <div class="text-gray-400 text-lg">מודל שפה מתקדם</div>
-                    <p class="text-gray-500 text-sm mt-2">Google AI Engine</p>
-                </div>
-<div class="reveal">
-                    <div class="text-5xl sm:text-6xl font-bold gradient-text mb-4">Bit / PayMe</div>
-                    <div class="text-gray-400 text-lg">סליקה לכל סוג עסק</div>
-                    <p class="text-gray-500 text-sm mt-2">קטן או גדול — מכוסה</p>
-                </div>
-                <div class="reveal">
-                    <div class="text-5xl sm:text-6xl font-bold gradient-text mb-4">24/7</div>
-                    <div class="text-gray-400 text-lg">סינכרון בזמן אמת</div>
-                    <p class="text-gray-500 text-sm mt-2">Real-Time Monitoring</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Pricing Section -->
-    <section id="pricing" class="py-32 relative">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-20 reveal">
-                <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-                    <span class="text-white">מסלולים</span>
-                    <span class="gradient-text">ומחירים</span>
-                </h2>
-                <p class="text-xl text-gray-400 max-w-3xl mx-auto">
-                    בחר את המסלול המתאים לעסק שלך
-                </p>
-            </div>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-                <!-- Free Trial Plan -->
-                <div class="pricing-card reveal">
-                    <h3 class="text-2xl font-bold text-white mb-2">מסלול היכרות</h3>
-                    <div class="text-5xl font-bold text-white mb-2">0 ₪<span class="text-2xl text-gray-500">/חודש</span></div>
-                    <p class="text-gray-400 mb-8">ללא עלות - ניסיון מוגבל</p>
-                    <ul class="space-y-4 mb-8">
-                        <li class="flex items-start gap-3">
-                            <svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                            <span class="text-gray-300">צ'אטבוט FAQ סטטי ללא בינה מלאכותית</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                            <span class="text-gray-300">ללא אפשרות סליקה או רכישה</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                            <span class="text-gray-300">גישה לדשבורד בסיסי</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                            <span class="text-gray-300">ניהול מוצרים מוגבל</span>
-                        </li>
-                        <li class="flex items-start gap-3">
-                            <svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                            </svg>
-                            <span class="text-gray-300">תמיכה במייל בלבד</span>
-                        </li>
-                    </ul>
-                    <a href="/register.html" class="block w-full btn-secondary text-center">התחל בחינם</a>
-                </div>
-                
-                <!-- Pro Plan (Featured) -->
-                <div class="pricing-card featured reveal">
-                    <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                        <span class="gradient-primary text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">הכי פופולרי</span>
-                    </div>
-                    <h3 class="text-2xl font-bold text-white mb-1">PRO</h3>
-                    <p class="text-cyber-cyan text-sm font-semibold mb-3">לעסקים קטנים — מספרה, מאמן, קייטרינג</p>
-                    <div class="text-5xl font-bold text-white mb-2">200 ₪<span class="text-2xl text-gray-500">/חודש</span></div>
-                    <p class="text-gray-400 mb-8">סליקה ישירה דרך Bit</p>
-                    <ul class="space-y-4 mb-8">
-                        <li class="flex items-start gap-3"><svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span class="text-gray-300">סוכן AI מבוסס Gemini</span></li>
-                        <li class="flex items-start gap-3"><svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span class="text-gray-300">סליקה ישירה בצ'אט דרך <strong class="text-white">Bit</strong></span></li>
-                        <li class="flex items-start gap-3"><svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span class="text-gray-300">ווידג'ט צף + תוסף וורדפרס</span></li>
-                        <li class="flex items-start gap-3"><svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span class="text-gray-300">דשבורד הזמנות ואנליטיקות</span></li>
-                        <li class="flex items-start gap-3"><svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span class="text-gray-300">הגדרה תוך 5 דקות — רק מספר טלפון</span></li>
-                    </ul>
-                    <a href="/register.html?plan=pro" class="block w-full btn-primary text-center">בחר מסלול PRO</a>
-                </div>
-
-                <!-- Premium Plan -->
-                <div class="pricing-card reveal">
-                    <h3 class="text-2xl font-bold text-white mb-1">PREMIUM</h3>
-                    <p class="text-neon-purple text-sm font-semibold mb-3">לעסקים גדולים — חנויות, מסעדות, שירותים מקצועיים</p>
-                    <div class="text-5xl font-bold text-white mb-2">350 ₪<span class="text-2xl text-gray-500">/חודש</span></div>
-                    <p class="text-gray-400 mb-8">סליקה מקצועית דרך PayMe</p>
-                    <ul class="space-y-4 mb-8">
-                        <li class="flex items-start gap-3"><svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span class="text-gray-300">כל תכונות PRO</span></li>
-                        <li class="flex items-start gap-3"><svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span class="text-gray-300">סליקה מקצועית דרך <strong class="text-white">PayMe</strong></span></li>
-                        <li class="flex items-start gap-3"><svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span class="text-gray-300">חיבור WhatsApp Business</span></li>
-                        <li class="flex items-start gap-3"><svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span class="text-gray-300">פריסה במספר דומיינים</span></li>
-                        <li class="flex items-start gap-3"><svg class="w-5 h-5 text-cyber-cyan mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg><span class="text-gray-300">תמיכה מועדפת עם מענה אישי</span></li>
-                    </ul>
-                    <a href="/register.html?plan=premium" class="block w-full btn-secondary text-center">בחר מסלול PREMIUM</a>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- CTA Section -->
-    <section class="py-32 relative">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="gradient-primary rounded-3xl p-16 text-center relative overflow-hidden reveal">
-                <div class="absolute inset-0 bg-black opacity-20"></div>
-                <div class="relative z-10">
-                    <h2 class="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
-                        מוכן להפוך את האתר שלך למכונת מכירות?
-                    </h2>
-                    <p class="text-xl text-blue-100 mb-10 max-w-3xl mx-auto">
-                        הצטרף לעסקים שכבר משתמשים ב-ConversaPay לאוטומציה חכמה של מכירות ושירות לקוחות.
-                    </p>
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                        <a href="/register.html" class="bg-white text-midnight px-10 py-5 rounded-xl font-bold text-lg hover:shadow-2xl transition transform hover:scale-105">
-                            צור חשבון חינמי
-                            <svg class="inline-block mr-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
-                            </svg>
-                        </a>
-                        <a href="/login.html" class="bg-transparent border-2 border-white text-white px-10 py-5 rounded-xl font-bold text-lg hover:bg-white hover:text-midnight transition">
-                            התחברות
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="border-t border-white/10 py-16">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-                <div>
-                    <a href="/" class="flex items-center space-x-3 mb-6">
-                        <div class="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                            </svg>
-                        </div>
-                        <span class="text-2xl font-bold gradient-text">ConversaPay</span>
-                    </a>
-                    <p class="text-gray-400 text-sm leading-relaxed">
-                        הפלטפורמה המובילה למכירות אוטונומיות מבוססות AI. הופכים אתרים למכונות מכירות חכמות.
-                    </p>
-                </div>
-                
-                <div>
-                    <h4 class="font-semibold text-white mb-4">מוצר</h4>
-                    <ul class="space-y-3 text-gray-400 text-sm">
-                        <li><a href="#features" class="hover:text-cyber-cyan transition">תכונות</a></li>
-                        <li><a href="#pricing" class="hover:text-cyber-cyan transition">תמחור</a></li>
-                        <li><a href="#" class="hover:text-cyber-cyan transition">תיעוד</a></li>
-                    </ul>
-                </div>
-                
-                <div>
-                    <h4 class="font-semibold text-white mb-4">חברה</h4>
-                    <ul class="space-y-3 text-gray-400 text-sm">
-                        <li><a href="#" class="hover:text-cyber-cyan transition">אודות</a></li>
-                        <li><a href="#" class="hover:text-cyber-cyan transition">בלוג</a></li>
-                        <li><a href="#" class="hover:text-cyber-cyan transition">קריירות</a></li>
-                    </ul>
-                </div>
-                
-                <div>
-                    <h4 class="font-semibold text-white mb-4">משפטי</h4>
-                    <ul class="space-y-3 text-gray-400 text-sm">
-                        <li><a href="#" class="hover:text-cyber-cyan transition">מדיניות פרטיות</a></li>
-                        <li><a href="#" class="hover:text-cyber-cyan transition">תנאי שימוש</a></li>
-                        <li><a href="#" class="hover:text-cyber-cyan transition">מדיניות עוגיות</a></li>
-                    </ul>
+    <main id="main-content">
+        <div class="container">
+            <div class="hero">
+                <h1>קבל תשלומים דרך שיחה טבעית</h1>
+                <p>ConversaPay הופכת את תהליך התשלום לחוויה פשוטה וטבעית. לקוחותיך יוכלו לשלם בקלות דרך צ'אט, ללא מטרדים וללא סיבוכים.</p>
+                <div class="hero-buttons">
+                    <button class="btn-primary" onclick="window.location.href='register.html'">התחל עכשיו</button>
+                    <button class="btn-secondary" onclick="document.getElementById('features').scrollIntoView({behavior: 'smooth'})">למד עוד</button>
                 </div>
             </div>
             
-            <div class="border-t border-white/10 pt-8 text-center text-gray-500 text-sm">
-                <p>© 2026 ConversaPay. כל הזכויות שמורות.</p>
+            <div id="features" class="features">
+                <article class="feature-card">
+                    <div class="feature-icon" aria-hidden="true">💬</div>
+                    <h3>שיחה טבעית</h3>
+                    <p>לקוחותיך מדברים כמו עם חבר. אין טפסים מסובכים, אין תהליכים מבלבלים.</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon" aria-hidden="true">🔒</div>
+                    <h3>בטוח ומאובטח</h3>
+                    <p>כל התשלומים מוצפנים ומאובטחים בסטנדרטים הגבוהים ביותר בתעשייה.</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon" aria-hidden="true">⚡</div>
+                    <h3>מהיר וקל</h3>
+                    <p>תשלום בשניות ספורות. אין המתנה, אין סיבוכים, אין בעיות.</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon" aria-hidden="true">📊</div>
+                    <h3>ניתוח מלא</h3>
+                    <p>ראה בדיוק כמה לקוחות קנו, כמה הם הוציאו, ומה הם אוהבים.</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon" aria-hidden="true">🌐</div>
+                    <h3>עבודה בכל מקום</h3>
+                    <p>הטמע את הווידג'ט שלנו בכל אתר. זה עובד בכל מקום, בכל זמן.</p>
+                </article>
+                <article class="feature-card">
+                    <div class="feature-icon" aria-hidden="true">💰</div>
+                    <h3>עמלות נמוכות</h3>
+                    <p>תשלום הוגן ותחרותי. אתה משלם רק על מה שאתה משתמש בו.</p>
+                </article>
             </div>
+            
+            <section id="benefits" class="benefits-section" aria-labelledby="benefits-heading">
+                <h2 id="benefits-heading">למה לבחור ב-ConversaPay?</h2>
+                <div class="benefits-grid">
+                    <div class="benefit-item">
+                        <div class="benefit-icon" aria-hidden="true">✓</div>
+                        <div class="benefit-text">
+                            <h3>עלייה בהמרות</h3>
+                            <p>לקוחות שמרגישים בנוח קונים יותר. התשלום הקל שלנו מגביר מכירות עד 40%.</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon" aria-hidden="true">✓</div>
+                        <div class="benefit-text">
+                            <h3>פחות ביטולים</h3>
+                            <p>כשהתשלום קל, אנשים לא מוותרים. ביטולי עגלה יורדים משמעותית.</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon" aria-hidden="true">✓</div>
+                        <div class="benefit-text">
+                            <h3>חיסכון בזמן</h3>
+                            <p>אין צורך בתמיכה ידנית. הלקוחות מטפלים בעצמם בתשלומים.</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon" aria-hidden="true">✓</div>
+                        <div class="benefit-text">
+                            <h3>נתונים חשובים</h3>
+                            <p>ראה בדיוק מה עובד ומה לא. קבל החלטות חכמות על בסיס נתונים.</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon" aria-hidden="true">✓</div>
+                        <div class="benefit-text">
+                            <h3>תמיכה 24/7</h3>
+                            <p>אנחנו כאן בשבילך. כל שאלה, כל בעיה - אנחנו עוזרים מיד.</p>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon" aria-hidden="true">✓</div>
+                        <div class="benefit-text">
+                            <h3>התחלה חינם</h3>
+                            <p>אין עלויות נסתרות. התחל בחינם, שלם רק כשאתה גדל.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section class="cta-section" aria-labelledby="cta-heading">
+                <h2 id="cta-heading">מוכן להתחיל?</h2>
+                <p>הצטרף לעשרות עסקים שכבר משתמשים ב-ConversaPay כדי להגביר את המכירות שלהם.</p>
+                <button class="btn-primary" onclick="window.location.href='register.html'" style="margin: 0 auto;">הרשם עכשיו - זה חינם</button>
+            </section>
         </div>
+    </main>
+    
+    <footer>
+        <p>&copy; 2024 ConversaPay. כל הזכויות שמורות.</p>
     </footer>
-
-    <!-- JavaScript -->
+    
     <script>
-        // Mobile menu toggle
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        const mobileMenu = document.getElementById('mobileMenu');
-        
-        mobileMenuBtn?.addEventListener('click', () => {
-            mobileMenu.classList.toggle('active');
-        });
-
-        // Close mobile menu when clicking links
-        mobileMenu?.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => {
-                mobileMenu.classList.remove('active');
-            });
-        });
-
-        // Smooth scroll for anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
-                e.preventDefault();
-                const target = document.querySelector(this.getAttribute('href'));
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        (function() {
+            'use strict';
+            
+            const hamburger = document.getElementById('menu-toggle');
+            const nav = document.getElementById('primary-nav');
+            const navLinks = nav ? nav.querySelectorAll('.nav-link, .nav-button') : [];
+            const focusableElements = 'a, button, input, textarea, select, details, [tabindex]:not([tabindex="-1"])';
+            
+            function openMenu() {
+                nav.style.display = 'block';
+                nav.style.position = 'absolute';
+                nav.style.top = '64px';
+                nav.style.left = '0';
+                nav.style.right = '0';
+                nav.style.background = '#0F1419';
+                nav.style.padding = '16px';
+                nav.style.borderBottom = '1px solid rgba(255,255,255,0.08)';
+                hamburger.setAttribute('aria-expanded', 'true');
+                const firstLink = nav.querySelector('a, button') || nav;
+                if (firstLink) firstLink.focus();
+            }
+            
+            function closeMenu() {
+                nav.style.display = '';
+                nav.style.position = '';
+                nav.style.top = '';
+                nav.style.left = '';
+                nav.style.right = '';
+                nav.style.background = '';
+                nav.style.padding = '';
+                nav.style.borderBottom = '';
+                hamburger.setAttribute('aria-expanded', 'false');
+                hamburger.focus();
+            }
+            
+            function toggleMenu() {
+                const expanded = hamburger.getAttribute('aria-expanded') === 'true';
+                if (expanded) {
+                    closeMenu();
+                } else {
+                    openMenu();
                 }
-            });
-        });
-
-        // Scroll reveal animation
-        const revealElements = document.querySelectorAll('.reveal');
-        
-        const revealObserver = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('active');
+            }
+            
+            function trapFocus(event) {
+                if (event.key !== 'Tab') return;
+                const focusable = nav.querySelectorAll(focusableElements);
+                if (focusable.length === 0) return;
+                const first = focusable[0];
+                const last = focusable[focusable.length - 1];
+                if (event.shiftKey && document.activeElement === first) {
+                    event.preventDefault();
+                    last.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                    event.preventDefault();
+                    first.focus();
                 }
-            });
-        }, {
-            threshold: 0.1,
-            rootMargin: '0px 0px -100px 0px'
-        });
-
-        revealElements.forEach(el => revealObserver.observe(el));
+            }
+            
+            if (hamburger && nav) {
+                hamburger.addEventListener('click', toggleMenu);
+                nav.addEventListener('keydown', trapFocus);
+                
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && hamburger.getAttribute('aria-expanded') === 'true') {
+                        closeMenu();
+                    }
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (hamburger.getAttribute('aria-expanded') === 'true' && !nav.contains(e.target) && !hamburger.contains(e.target)) {
+                        closeMenu();
+                    }
+                });
+            }
+            
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            
+            if (!prefersReducedMotion) {
+                const observerOptions = {
+                    threshold: 0.1,
+                    rootMargin: '0px 0px -50px 0px'
+                };
+                
+                const observer = new IntersectionObserver(function(entries) {
+                    entries.forEach(function(entry) {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('is-visible');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, observerOptions);
+                
+                document.querySelectorAll('.hero, .feature-card, .benefit-item, .cta-section').forEach(function(el, index) {
+                    if (el.classList.contains('feature-card')) {
+                        el.style.transitionDelay = (index % 3) * 0.1 + 's';
+                    }
+                    if (el.classList.contains('benefit-item')) {
+                        el.style.transitionDelay = (index % 6) * 0.05 + 's';
+                    }
+                    observer.observe(el);
+                });
+            } else {
+                document.querySelectorAll('.hero, .feature-card, .benefit-item, .cta-section').forEach(function(el) {
+                    el.classList.add('is-visible');
+                });
+            }
+        })();
     </script>
 </body>
 </html>

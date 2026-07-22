@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="תנאי שימוש באתר ובשירותי ConversaPay">
+    <title>ConversaPay - תנאי שימוש</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg-primary:#0F1419; --bg-secondary:#1A1F2E; --bg-card:rgba(26,31,46,0.7); --text-primary:#F5F7FA; --text-secondary:#A0AEC0; --accent-primary:#6366F1; --accent-secondary:#8B5CF6; --border-color:rgba(255,255,255,0.08); --shadow-lg:0 20px 48px rgba(0,0,0,0.5); --radius-md:12px; --font-display:'Rubik',sans-serif; --space-md:20px; --space-lg:30px; --space-xl:40px; --space-2xl:60px; }
+        * { font-family: var(--font-display); box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body { background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1f2e 50%, #0f1419 100%); color: var(--text-primary); min-height: 100vh; line-height: 1.7; }
+        body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(circle at 20% 30%, rgba(99,102,241,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(139,92,246,0.08) 0%, transparent 50%); pointer-events: none; z-index: 0; }
+        :focus-visible { outline: 3px solid var(--accent-primary); outline-offset: 3px; border-radius: 4px; }
+        a { color: var(--accent-secondary); text-decoration: none; transition: color 0.2s; }
+        a:hover { color: var(--accent-primary); }
+        header { background: var(--bg-card); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-color); padding: 0 var(--space-lg); height: 64px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow-lg); }
+        .navbar-brand { font-size: 1.25rem; font-weight: 800; background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-decoration: none; }
+        .nav-button { background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: transform 0.2s, box-shadow 0.2s; min-height: 44px; display: inline-flex; align-items: center; text-decoration: none; font-family: inherit; }
+        .nav-button:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(99,102,241,0.3); color: #fff; }
+        .legal-page { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: var(--space-2xl) var(--space-md); }
+        .legal-page h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 800; margin-bottom: var(--space-md); background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent-secondary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1.3; }
+        .legal-page .last-updated { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: var(--space-xl); padding-bottom: var(--space-lg); border-bottom: 1px solid var(--border-color); }
+        .legal-page h2 { font-size: 1.4rem; font-weight: 700; margin-top: var(--space-xl); margin-bottom: var(--space-md); color: var(--text-primary); scroll-margin-top: 80px; }
+        .legal-page h3 { font-size: 1.1rem; font-weight: 600; margin-top: var(--space-lg); margin-bottom: var(--space-sm); color: var(--text-primary); }
+        .legal-page p { margin-bottom: var(--space-md); color: var(--text-secondary); }
+        .legal-page ul { list-style: disc; padding-right: var(--space-lg); margin-bottom: var(--space-md); color: var(--text-secondary); }
+        .legal-page ul li { margin-bottom: 0.5em; }
+        .legal-page .card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-lg); margin-top: var(--space-lg); margin-bottom: var(--space-lg); }
+        .legal-page .card p { margin-bottom: 0.7em; color: var(--text-secondary); }
+        .legal-page .card p:last-child { margin-bottom: 0; }
+        .highlight { color: var(--text-primary); font-weight: 600; }
+        footer { background: var(--bg-card); border-top: 1px solid var(--border-color); padding: var(--space-lg); text-align: center; }
+        footer p { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.4em; }
+        footer a { color: var(--text-secondary); }
+        footer a:hover { color: var(--text-primary); }
+        @media (max-width: 600px) { .legal-page { padding: var(--space-lg) var(--space-md); } header { padding: 0 var(--space-md); } .legal-page ul { padding-right: var(--space-md); } }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="home.html" class="navbar-brand" aria-label="ConversaPay - דף הבית">ConversaPay</a>
+        <a href="home.html" class="nav-button">דף הבית</a>
+    </header>
+    
+    <main class="legal-page" role="main">
+        <h1>תנאי שימוש</h1>
+        <p class="last-updated">עדכנו לאחרונה: 22 ביולי 2026</p>
+        <h2>1. הסכמה לתנאים</h2>
+        <p>ברוכים הבאים ל-ConversaPay (&quot;השירות&quot;). השירות מוגש על ידי חברת ConversaPay, חברה ישראלית.</p>
+        <p>השימוש באתר ConversaPay (conversapay.com) ובכל האפליקציות והשירותים הנלווים (&quot;האתר&quot;) כפוף לתנאי שימוש אלה. עליך לקרוא תנאים אלה בעיון לפני השימוש. גלישה באתר ו שימוש בשירות מהווה הסכמה מלאה לכל התנאים האלה.</p>
+        <p>אם אינך מסכים לתנאים אלה, עליך להימנע משימוש בשירות. אנו שומרים לעצמנו את הזיכוי לשנות תנאים אלה בכל עת.</p>
+        <h2>2. תיאור השירות</h2>
+        <p>ConversaPay מספקת פלטפורמת תשלומים שיחתיים המאפשרת לעסקים לקבל תשלומים דרך מערכת הודעות מיידיות (&quot;השירות&quot;). השירות כולל בין היתר: יצירת והפעלת תשלומים באמצעות צ&apos;אט, ניהול חיובים מחזוריים ומנויים, קבלת תשלומים באמצעות ווידג&apos;ט המוטמע, מערכת ניהול לניהול תשלומים ופעילויות, אינטגרציה עם מערכות תשלום מקוונות.</p>
+        <p>השירות הינו כלי תשלומי ומיועד לעסקים קטנים ובינוניים.</p>
+        <h2>3. הרשמה וחשבון</h2>
+        <p>כדי להשתמש בשירות, עליך ליצור חשבון. התחייבות שלך ליצור חשבון כוללת: מידע מדוייק, עדכני מלא לגבי העסק, איש קשר ופרטי תשלום; שמירה על סודיות פרטי החשבון והודעתנו מידית על כל שימוש לא מורשה; אחריות מלאה לכל הפעולות הנעשות תחת חשבונך; עדכון המידע בחשבון תמידית כאשר ישנן שינויים.</p>
+        <p>אנו שומרים לעצמנו את הזיכוי לדחות בקשה לחשבון, לבטל או להשעות חשבונות קיימים או להגביל גישה לשירות בכל עת, לפי שיקול דעתנו הבלעדי.</p>
+        <h2>4. תשלומים ועמלות</h2>
+        <p>השימוש בשירות כפוף לתנאי תשלום הקיימים באתר. העמלות משתנות בהתאם לסוג החשבון ולנפחי העסקאות.</p>
+        <p><span class="highlight">אחריות תשלום:</span> אנו מספקים שירות תשלום באמצעות ספקי תשלום מורשים. תשלומים אינם מיוחסים אלינו ישירות אלא דרך הספקים. אנו לא אחראים על אי-קבלת תשלום מצד ספקי אמצעי תשלום.</p>
+        <h2>5. שימושים אסורים</h2>
+        <p>אתה מתחייב שלא להשתמש בשירות לצרכי בלתי חוקיים, לא הולמים או מפרים. האיסורים כוללים בין היתר: שימוש בשירות לצרכי הונאה, טרור או כל ארגון אסון; בקשת תשלום עבור שירותים אסורים בחוק; נסיון לחדור למערכות שלנו או לעקוף אמצעי אבטחה; שימוש כדי לפגוע בזכויות יוצרים, סימני מסחר או זכויות קניין; העלאת תוכנות זדוניות, דיוג או פעילות ספאם; ביצוע עסקאות בלתי חוקיות או בלתי הולמות.</p>
+        <h2>6. קניין רוחני</h2>
+        <p>כל התוכן, הלוגוטיפים, העיצובים, הקוד, הממשקים והמידע הנמצא באתר ובשירות כפופים לזכויות הקניין הרוחני של ConversaPay ו או של הצדדים השלישיים הרלוונטיים. אין לעשות בהם שימוש ללא אישור בכתב מראש.</p>
+        <h2>7. הגבלת האחריות</h2>
+        <p>השירות מוגיש &quot;כמו שהוא&quot;. אנו עושים מאמצים סבירים להבטיח תקינות השירות, אך לא נוכל להבטיח כי השירות יהיה זמין בכל עת או ללא נזק.</p>
+        <p><span class="highlight">הגבלת נזיקין:</span> בשום מקרה לא יהיה ConversaPay אחראי לנזקים ישירים, עקיפים, תוצאתיים או מיוחדים, לרבות איבוד מידע, רווחים אבוד, פגיעה בפרטיות או כל נזק אחר הנובע משימוש בשירות.</p>
+        <h2>8. ביטול והפסקת שימוש</h2>
+        <p>ניתן לבטל חשבון בכל עת דרך הגדרות החשבון או בפניה לשירות הלקוחות. ביטול חשבון אינו משנה זכויותינו או חובות שערערו לפני הביטול.</p>
+        <p>אנו שומרים לעצמנו את הזיכוי להפסיק גישה לשירות בכל עת, בפרט אם מדובר בפעילות בלתי חוקית, מפרת תנאים או פגיעה במידע.</p>
+        <h2>9. צדדים שלישיים</h2>
+        <p>השירות עשוי לכלול אינטגרציה עם שירותי צדדים שלישיים כגון ספקי תשלום, שירותי אבטחה, ניתוח, אחסון ושירותי אינטרנט.</p>
+        <p>אנו מאשרים שאיננו אחראים לפעולות השירותים של צדדים שלישיים, את מדיניות הפרטיות שלהם או את אופן הטיפול בנתונים שלהם.</p>
+        <h2>10. פיתוח והפסקת שירות</h2>
+        <p>אנו שומרים לעצמנו את הזיכוי לשנות, לשדרג, להשהות או להפסיק כל חלק מהשירות בכל עת, ללא הודעה מוקדמת.</p>
+        <p>במקרה של הפסקת שירות טוטלית, אנו נספק הודעה 30 ימים מראש כדי לאפשר לך לקבל את הנתונים הרלוונטיים.</p>
+        <h2>11. דין ושיפוט</h2>
+        <p>תנאי שימוש אלה כפופים לחוקי מדינת ישראל. כל מחלוקת הנובעת מתנאים אלה או מהשירות תשפט בבתי המשפט המוסמכים במחוז תל אביב.</p>
+        <p>אם בית משפט ימצא כי תנאי כלשהו אינו ניתן ליישום, יתבטל תנאי זה והשאר שלמים.</p>
+        <h2>12. זכויות הצרכן</h2>
+        <p>אם אתה צרכן ישראלי, זכויותיך תחת חוק הגנת הצרכן נשמרות בתנאי שימוש אלה.</p>
+        <h2>13. יצירת קשר</h2>
+        <p>לכל שאלה, פנייה או התנגדות בנוגע לתנאי שימוש אלה, ניתן לפנות אלינו בכתובת:</p>
+        <div class="card">
+            <p><strong>ConversaPay</strong></p>
+            <p>דוא&quot;ל: support@conversapay.com</p>
+            <p>אתר: https://www.conversapay.com</p>
+            <p>כתובת: תל אביב, ישראל</p>
+        </div>
+        <p>אנו פועלים לספק מענה תוך 5 ימי עסקים ממועד קבלת הפנייה.</p>
+        <h2>14. עדכון תנאי שימוש</h2>
+        <p>אנו עשויים לעדכן תנאי שימוש אלה מעת לעת. עדכונים יפרסמו באתר. שימוש חוזר בשירות לאחר פרסום עדכונים מהווה הסכמה לתנאים המעודכנים.</p>
+    </main>
+    
+    <footer role="contentinfo">
+        <p>&copy; 2024-2026 ConversaPay. כל הזכויות שמורות.</p>
+        <p><a href="privacy.html">מדיניות פרטיות</a> | <a href="terms.html">תנאי שימוש</a></p>
+    </footer>
+</body>
+</html>

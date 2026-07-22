@@ -647,3 +647,69 @@ class AnalyticsOverviewResponse(BaseModel):
         ge=0,
         description="Total count of unique chat sessions initiated by visitors"
     )
+
+
+# ============================================
+# Dashboard Models
+# ============================================
+
+class BusinessWidgetData(BaseModel):
+    """Schema for widget data response with tier-based controls."""
+    data: Dict[str, Any]
+    has_limitations: bool = False
+    overlay_active: bool = False
+    overlay_text: str = ""
+    upgrade_url: str = ""
+
+
+class DashboardUpgradeOptions(BaseModel):
+    """Schema for upgrade options available to user."""
+    plan_name: str
+    price: float
+    currency: str = "USD"
+    features: List[str]
+    payment_gateway: str  # "bit" or "payme"
+
+
+class PremiumFeatures(BaseModel):
+    """Schema for premium feature availability."""
+    has_whatsapp: bool = False
+    has_wordpress_plugin: bool = False
+    has_html_embed: bool = False
+    domain_limit: int = 1
+    whitelabel_available: bool = False
+
+
+class OrderSummary(BaseModel):
+    """Summary of order data for dashboard display."""
+    id: str
+    status: str
+    total: float
+    customer_name: Optional[str] = None
+    created_at: datetime
+
+
+class ProductSummary(BaseModel):
+    """Summary of product data for dashboard display."""
+    id: str
+    name: str
+    price: float
+    stock: int
+    category: Optional[str] = None
+
+
+class DashboardAnalyticsResponse(BaseModel):
+    """Comprehensive dashboard analytics response."""
+    business_id: str
+    business_name: str
+    total_revenue: float
+    closed_deals: int
+    conversion_rate: float
+    average_order_value: float
+    total_conversations: int
+    cdr_trend: str
+    charts_data: List[Dict[str, Any]] = []
+    product_summary: List[ProductSummary] = []
+    order_summary: List[OrderSummary] = []
+    tier: str = "free"
+    features: PremiumFeatures = PremiumFeatures()

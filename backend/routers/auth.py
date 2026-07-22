@@ -144,7 +144,13 @@ async def initialize_user_workspace(user_id: str, email: str, full_name: str, bu
     # Step 1: Create profile if it doesn't exist
     profile = get_user_profile(user_id)
     if not profile:
-        profile = create_user_profile(user_id, email, full_name)
+        # FIX: create_user_profile requires a verification token + expiry.
+        # Calling it with 3 args raised a TypeError here, which the caller's
+        # broad except-block swallowed as a generic 401 "invalid credentials" —
+        # silently breaking login for any user whose profile row was missing.
+        token = generate_verification_token()
+        expires_at = (datetime.utcnow() + timedelta(hours=24)).isoformat()
+        profile = create_user_profile(user_id, email, full_name, token, expires_at)
         if profile:
             result["profile_created"] = True
             logger.info(f"User profile created for: {email}")
@@ -776,4 +782,88 @@ async def update_current_user(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Failed to update profile"
+        )
+
+
+# ============================================
+# Google OAuth
+# ============================================
+#
+# IMPORTANT — why this looks different from a typical backend OAuth flow:
+#
+# Google/Supabase OAuth uses PKCE: the party that starts the flow generates
+# a secret "code_verifier", sends its hash to Google, and must later present
+# the SAME verifier to Supabase to exchange the returned `code` for a session.
+#
+# The old implementation started the flow in one backend request
+# (GET /auth/google, which created a throwaway Supabase client — the
+# verifier lived only in that client's memory) and tried to finish it in a
+# completely separate backend request (GET /auth/google/callback, a brand
+# new client with no memory of the verifier). Those two requests share
+# nothing, so the exchange failed on every single attempt. That's the bug
+# behind "Google Login doesn't work".
+#
+# The fix: let the browser do the OAuth handshake directly against Supabase
+# using the Supabase JS SDK (login.html / auth-callback.html). The SDK keeps
+# the code_verifier in the browser's own localStorage, so it survives the
+# redirect to Google and back. Once the browser has a real Supabase session,
+# it calls this endpoint once, with that session's access token, purely to
+# let our backend provision a profile + business row on first login.
+
+@router.post("/oauth/session", response_model=dict)
+async def complete_oauth_session(current_user: AuthUser = Depends(get_current_user)):
+    """
+    Finalize a Supabase OAuth (e.g. Google) sign-in.
+
+    Called by the frontend right after it establishes a Supabase session
+    client-side. Ensures a `profiles` row and a starter `business` exist
+    for the user, same as first-time email/password login does.
+    """
+    try:
+        full_name = ""
+        business_name = "העסק שלי"
+        try:
+            user_lookup = supabase.auth.admin.get_user_by_id(current_user.user_id)
+            metadata = (user_lookup.user.user_metadata or {}) if user_lookup and user_lookup.user else {}
+            full_name = metadata.get("full_name") or metadata.get("name") or ""
+            business_name = metadata.get("business_name") or (
+                f"העסק של {full_name}" if full_name else "העסק שלי"
+            )
+        except Exception as e:
+            logger.warning(f"Could not fetch OAuth user metadata: {str(e)}")
+
+        profile = get_user_profile(current_user.user_id)
+        if not profile:
+            token = generate_verification_token()
+            expires_at = (datetime.utcnow() + timedelta(hours=24)).isoformat()
+            profile = create_user_profile(
+                current_user.user_id, current_user.email, full_name, token, expires_at
+            )
+            if profile:
+                # Google already verified this email address for us.
+                supabase.table("profiles").update({"email_verified": True}) \
+                    .eq("user_id", current_user.user_id).execute()
+                logger.info(f"Profile created for OAuth user: {current_user.email}")
+
+        existing_business = supabase.table("businesses") \
+            .select("id") \
+            .eq("owner_id", current_user.user_id) \
+            .execute()
+
+        if not existing_business.data:
+            create_business_for_user(current_user.user_id, business_name)
+            logger.info(f"Business created for OAuth user: {current_user.email}")
+
+        return {
+            "user_id": current_user.user_id,
+            "email": current_user.email,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"OAuth session finalize error: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to finalize sign-in"
         )
