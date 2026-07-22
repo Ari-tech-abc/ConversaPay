@@ -19,7 +19,7 @@ app=FastAPI(title="ConversaPay API",version="2.0.0",lifespan=lifespan,docs_url="
 class DualCORSMiddleware(BaseHTTPMiddleware):
     async def dispatch(self,request,call_next):
         origin=request.headers.get("origin"); path=request.url.path
-        public=any(path.startswith(x) for x in (f"{settings.API_PREFIX}/chat",f"{settings.API_PREFIX}/widget",f"{settings.API_PREFIX}/webhooks/",f"{settings.API_PREFIX}/orders/") )
+        public=any(path.startswith(x) for x in (f"{settings.API_PREFIX}/chat",f"{settings.API_PREFIX}/widget",f"{settings.API_PREFIX}/webhooks/",f"{settings.API_PREFIX}/orders/",f"{settings.API_PREFIX}/site-builder/verify"))
         if request.method=="OPTIONS":
             response=Response(); response.headers["Access-Control-Allow-Origin"]="*" if public else (origin if origin in settings.cors_origins_list else "")
             response.headers["Access-Control-Allow-Methods"]="GET,POST,PUT,PATCH,DELETE,OPTIONS"; response.headers["Access-Control-Allow-Headers"]="Content-Type,Authorization,X-Builder-Token"; response.headers["Vary"]="Origin"; return response
