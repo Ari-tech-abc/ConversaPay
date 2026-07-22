@@ -86,6 +86,7 @@ async def get_dashboard_features(current_user: AuthUser = Depends(require_auth))
             "wordpress_plugin": False,
             "html_embed": False,
             "whatsapp_integration": False,
+            "domain_management": False,
             "domain_limit": 1,
             "overlay": True,
         },
@@ -98,6 +99,7 @@ async def get_dashboard_features(current_user: AuthUser = Depends(require_auth))
             "wordpress_plugin": True,
             "html_embed": True,
             "whatsapp_integration": False,
+            "domain_management": True,
             "domain_limit": plan.get("domain_limit", 3),
             "overlay": False,
         },
@@ -110,6 +112,7 @@ async def get_dashboard_features(current_user: AuthUser = Depends(require_auth))
             "wordpress_plugin": True,
             "html_embed": True,
             "whatsapp_integration": True,
+            "domain_management": True,
             "domain_limit": plan.get("domain_limit", 10),
             "overlay": False,
         },
@@ -227,7 +230,7 @@ async def get_dashboard_orders(current_user: AuthUser = Depends(require_auth)):
                 "orders": orders.data or [],
                 "total_count": len(orders.data or []),
                 "locked": True,
-                "lock_message": "Order management is locked for FREE tier. Upgrade to PRO or PREMIUM to unlock full order management.",
+                "lock_message": "ניהול הזמנות נעול בתכנית חינמית. שדרג ל-PRO או PREMIUM כדי לפתוח ניהול הזמנות מלא.",
                 "upgrade_url": "/pay?plan=pro"
             }
 
@@ -302,7 +305,13 @@ async def get_upgrade_options(current_user: AuthUser = Depends(require_auth)):
                 "plan_name": "PRO",
                 "price": 19.99,
                 "currency": "USD",
-                "features": ["Full order management", "Unlimited widgets", "Analytics dashboard"],
+                "features": [
+                    "ניהול הזמנות מלא",
+                    "הטמעת ווידג'ט ללא הגבלה",
+                    "סטטיסטיקות מתקדמות",
+                    "ניהול דומיינים (3 דומיינים)",
+                    "תמיכה ב-WordPress ו-HTML"
+                ],
                 "payment_gateway": "bit",
                 "upgrade_url": "/pay?plan=pro"
             })
@@ -310,7 +319,28 @@ async def get_upgrade_options(current_user: AuthUser = Depends(require_auth)):
                 "plan_name": "PREMIUM",
                 "price": 49.99,
                 "currency": "USD",
-                "features": ["All PRO features", "WhatsApp integration", "Advanced analytics"],
+                "features": [
+                    "כל תכונות PRO",
+                    "אינטגרציית WhatsApp",
+                    "ניהול דומיינים מורחב (10 דומיינים)",
+                    "תמיכה בעסקאות מלאה",
+                    "אנליטיקות מתקדמות"
+                ],
+                "payment_gateway": "payme",
+                "upgrade_url": "/pay?plan=premium"
+            })
+        elif current_tier == "pro":
+            plans.append({
+                "plan_name": "PREMIUM",
+                "price": 49.99,
+                "currency": "USD",
+                "features": [
+                    "כל תכונות PRO",
+                    "אינטגרציית WhatsApp",
+                    "ניהול דומיינים מורחב (10 דומיינים)",
+                    "תמיכה בעסקאות מלאה",
+                    "אנליטיקות מתקדמות"
+                ],
                 "payment_gateway": "payme",
                 "upgrade_url": "/pay?plan=premium"
             })
@@ -336,7 +366,7 @@ async def get_whatsapp_status(current_user: AuthUser = Depends(require_auth)):
         if plan_type != "premium":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="WhatsApp features are only available for PREMIUM tier"
+                detail="WhatsApp integration is only available for PREMIUM tier"
             )
 
         result = supabase.table("profiles").select("whatsapp_phone_number_id, whatsapp_access_token, whatsapp_verify_token").eq("user_id", current_user.user_id).execute()
@@ -390,7 +420,7 @@ async def update_payme_settings(
         if plan_type != "premium":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="PayMe settings are only available for PREMIUM tier"
+                detail="הגדרות PayMe זמינות רק בתכנית PREMIUM"
             )
 
         result = supabase.table("profiles").update({"payme_id": payme_id, "payme_merchant_id": payme_id}).eq("user_id", current_user.user_id).execute()
@@ -398,7 +428,7 @@ async def update_payme_settings(
         if not result.data:
             raise HTTPException(status_code=500, detail="Failed to update PayMe settings")
 
-        return {"message": "PayMe settings updated successfully", "payme_id": payme_id}
+        return {"message": "הגדרות PayMe עודכנו בהצלחה", "payme_id": payme_id}
     except HTTPException:
         raise
     except Exception as e:

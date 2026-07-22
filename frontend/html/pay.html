@@ -11,29 +11,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "Invoice",
-        "name": "חשבונית לשירותים דיגיטליים",
-        "description": "חשבונית עבור הזמנה ב-ConversaPay",
-        "url": "https://www.conversapay.com/pay",
-        "provider": {
-            "@type": "Organization",
-            "name": "ConversaPay",
-            "url": "https://www.conversapay.com"
-        },
-        "orderNumber": "12345",
-        "paymentMethod": "BIT",
-        "dateIssued": "2026-07-22",
-        "totalPaymentDue": {
-            "@type": "PriceSpecification",
-            "price": 99.99,
-            "priceCurrency": "ILS"
-        }
-    }
-    </script>
-    
     <style>
         :root {
             --bg-primary: #0F1419;
@@ -45,8 +22,10 @@
             --accent-secondary: #A78BFA;
             --accent-success: #10B981;
             --accent-error: #EF4444;
+            --accent-warning: #F59E0B;
             --border-color: rgba(255, 255, 255, 0.08);
             --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.5);
             --radius-sm: 12px;
             --radius-md: 16px;
             --radius-lg: 24px;
@@ -110,12 +89,12 @@
             border: 1px solid var(--border-color);
             border-radius: var(--radius-lg);
             padding: 48px;
-            max-width: 520px;
+            max-width: 560px;
             width: 100%;
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--shadow-lg);
             position: relative;
             z-index: 1;
-            min-height: 520px;
+            min-height: 580px;
             overflow: hidden;
         }
         
@@ -139,7 +118,7 @@
         
         .pay-header h1 {
             color: var(--text-primary);
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: 800;
             margin: 0 0 8px 0;
             letter-spacing: -0.02em;
@@ -239,11 +218,11 @@
         
         .step-section.active {
             display: block;
-            animation: fadeInUp 0.3s ease;
+            animation: fadeInUp 0.4s ease;
         }
         
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
         
@@ -260,7 +239,7 @@
         }
         
         .payment-methods h3 {
-            font-size: 0.95rem;
+            font-size: 1rem;
             font-weight: 600;
             color: var(--text-primary);
             margin-bottom: 4px;
@@ -278,27 +257,50 @@
             display: flex;
             align-items: center;
             gap: 16px;
-            padding: 18px 20px;
+            padding: 20px;
             background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border-color);
+            border: 2px solid var(--border-color);
             border-radius: var(--radius-sm);
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             color: var(--text-secondary);
-            min-height: 64px;
+            min-height: 72px;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+        }
+        
+        .method-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(129, 140, 248, 0.1) 0%, rgba(167, 139, 250, 0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .method-card:hover::before {
+            opacity: 1;
         }
         
         .method-card:hover {
-            border-color: rgba(129, 140, 248, 0.4);
-            background: rgba(129, 140, 248, 0.06);
+            border-color: rgba(129, 140, 248, 0.5);
             color: var(--text-primary);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(129, 140, 248, 0.15);
         }
         
         .method-option:checked + .method-card {
             border-color: var(--accent-primary);
-            background: rgba(129, 140, 248, 0.1);
             color: var(--text-primary);
-            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15);
+            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.2);
+        }
+        
+        .method-option:checked + .method-card::before {
+            opacity: 1;
         }
         
         .method-option:focus-visible + .method-card {
@@ -307,138 +309,95 @@
         }
         
         .method-icon {
-            font-size: 1.75rem;
-            width: 40px;
+            font-size: 2rem;
+            width: 48px;
             text-align: center;
             flex-shrink: 0;
+            position: relative;
+            z-index: 1;
         }
         
         .method-info {
             display: flex;
             flex-direction: column;
-            gap: 2px;
+            gap: 4px;
             flex: 1;
+            position: relative;
+            z-index: 1;
         }
         
         .method-name {
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 1.05rem;
         }
         
         .method-desc {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             opacity: 0.8;
         }
         
         .method-check {
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             border: 2px solid var(--border-color);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.75rem;
+            font-size: 0.85rem;
             color: transparent;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             flex-shrink: 0;
+            position: relative;
+            z-index: 1;
         }
         
         .method-option:checked + .method-card .method-check {
             background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
             border-color: var(--accent-primary);
             color: white;
+            box-shadow: 0 0 12px rgba(129, 140, 248, 0.4);
         }
         
-        .card-form {
-            margin-top: 4px;
-            padding: 20px;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid var(--border-color);
-            border-radius: var(--radius-sm);
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+        .method-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
         }
         
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
+        .method-card.premium-only {
+            border-style: dashed;
         }
         
-        .form-group label {
-            font-size: 0.85rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-        }
-        
-        .form-group input {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 14px 16px;
-            color: var(--text-primary);
-            font-size: 1rem;
-            min-height: 48px;
-            transition: all 0.2s ease;
-            font-family: 'Rubik', sans-serif;
-        }
-        
-        .form-group input:focus {
-            outline: none;
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15);
-        }
-        
-        .form-group input.invalid {
-            border-color: var(--accent-error);
-        }
-        
-        .form-group input.valid {
-            border-color: var(--accent-success);
-        }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        
-        .field-error {
-            font-size: 0.8rem;
-            color: var(--accent-error);
-            min-height: 18px;
-        }
-        
-        .card-type {
-            font-size: 0.8rem;
-            color: var(--accent-primary);
-            min-height: 18px;
+        .premium-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #F59E0B 0%, #EF4444 100%);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 999px;
+            margin-right: 8px;
+            position: relative;
+            z-index: 1;
         }
         
         .order-summary {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
-            padding: 20px;
+            padding: 24px;
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 12px;
         }
         
         .order-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 14px 0;
+            padding: 16px 0;
             border-bottom: 1px solid var(--border-color);
-            cursor: pointer;
-            transition: background 0.2s ease;
-        }
-        
-        .order-item:hover {
-            background: rgba(255, 255, 255, 0.01);
         }
         
         .order-item:last-of-type {
@@ -448,16 +407,16 @@
         .item-name {
             font-weight: 500;
             color: var(--text-primary);
-            font-size: 0.95rem;
+            font-size: 1rem;
         }
         
         .item-price {
             color: var(--text-secondary);
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
         
         .item-details {
-            padding: 8px 0 12px 0;
+            padding: 10px 0 14px 0;
             font-size: 0.85rem;
             color: var(--text-secondary);
             display: flex;
@@ -475,7 +434,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 16px 0;
+            padding: 18px 0;
             border-top: 2px solid var(--border-color);
             margin-top: 8px;
         }
@@ -483,10 +442,11 @@
         .total-label {
             font-weight: 600;
             color: var(--text-primary);
+            font-size: 1.1rem;
         }
         
         .total-amount {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: 800;
             background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
             -webkit-background-clip: text;
@@ -495,7 +455,7 @@
         }
         
         .order-summary-actions {
-            margin-top: 8px;
+            margin-top: 12px;
         }
         
         .btn {
@@ -506,19 +466,36 @@
             border-radius: var(--radius-sm);
             border: none;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
             font-family: 'Rubik', sans-serif;
             width: 100%;
+            position: relative;
+            overflow: hidden;
         }
         
         .btn-primary {
             background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
             color: white;
             box-shadow: 0 8px 16px rgba(129, 140, 248, 0.3);
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+        
+        .btn-primary:hover:not(:disabled)::before {
+            left: 100%;
         }
         
         .btn-primary:hover:not(:disabled) {
@@ -545,12 +522,13 @@
         .btn-secondary:hover {
             border-color: rgba(129, 140, 248, 0.4);
             background: rgba(129, 140, 248, 0.08);
+            transform: translateY(-1px);
         }
         
         .btn-row {
             display: flex;
             gap: 12px;
-            margin-top: 8px;
+            margin-top: 12px;
         }
         
         .btn-row .btn {
@@ -562,19 +540,26 @@
             flex-wrap: wrap;
             gap: 10px;
             justify-content: center;
-            margin-top: 16px;
+            margin-top: 20px;
         }
         
         .badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: var(--text-secondary);
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border-color);
-            padding: 8px 12px;
+            padding: 8px 14px;
             border-radius: 999px;
+            transition: all 0.2s ease;
+        }
+        
+        .badge:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(129, 140, 248, 0.3);
+            transform: translateY(-1px);
         }
         
         .success-state {
@@ -586,48 +571,56 @@
         
         .success-state.active {
             display: block;
-            animation: fadeInUp 0.4s ease;
+            animation: fadeInUp 0.5s ease;
         }
         
         .success-icon {
-            width: 64px;
-            height: 64px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--accent-success), #059669);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 20px;
-            font-size: 2rem;
+            margin: 0 auto 24px;
+            font-size: 2.5rem;
             color: white;
             font-weight: 800;
+            box-shadow: 0 12px 24px rgba(16, 185, 129, 0.3);
+            animation: scaleIn 0.5s ease;
+        }
+        
+        @keyframes scaleIn {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
         
         .receipt {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
-            padding: 24px;
+            padding: 28px;
             text-align: right;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
         
         .receipt-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            margin-bottom: 16px;
-            border-bottom: 1px dashed var(--border-color);
-            padding-bottom: 12px;
+            margin-bottom: 20px;
+            border-bottom: 2px dashed var(--border-color);
+            padding-bottom: 16px;
         }
         
         .receipt-header h2 {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             color: var(--text-primary);
         }
         
         .receipt-header time {
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             color: var(--text-secondary);
             text-align: left;
             direction: ltr;
@@ -636,20 +629,20 @@
         .receipt-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 12px;
-            font-size: 0.9rem;
+            margin-bottom: 16px;
+            font-size: 0.95rem;
         }
         
         .receipt-table th {
             text-align: right;
             color: var(--text-secondary);
             font-weight: 500;
-            padding: 8px 0;
+            padding: 10px 0;
             border-bottom: 1px solid var(--border-color);
         }
         
         .receipt-table td {
-            padding: 10px 0;
+            padding: 12px 0;
             color: var(--text-primary);
             border-bottom: 1px solid rgba(255, 255, 255, 0.03);
         }
@@ -658,30 +651,34 @@
             font-weight: 700;
             border-top: 2px solid var(--border-color);
             border-bottom: none;
-            padding-top: 12px;
+            padding-top: 14px;
+            font-size: 1.1rem;
         }
         
         .receipt-footer {
             display: flex;
             justify-content: space-between;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             color: var(--text-secondary);
-            margin-top: 12px;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
             direction: ltr;
             text-align: left;
         }
         
         .redirect-countdown {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: var(--text-secondary);
-            margin-top: 12px;
+            margin-top: 16px;
             direction: ltr;
         }
         
         .processing-skeleton {
             display: flex;
             flex-direction: column;
-            gap: 14px;
+            gap: 16px;
+            padding: 20px 0;
         }
         
         .skeleton {
@@ -692,12 +689,12 @@
         }
         
         .skeleton-header {
-            height: 120px;
+            height: 140px;
             border-radius: var(--radius-md);
         }
         
         .skeleton-line {
-            height: 16px;
+            height: 18px;
             border-radius: 6px;
         }
         
@@ -717,19 +714,19 @@
         .loading-text {
             text-align: center;
             color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-top: 20px;
+            font-size: 0.95rem;
+            margin-top: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 12px;
         }
         
         .spinner {
             display: inline-block;
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(129, 140, 248, 0.3);
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(129, 140, 248, 0.3);
             border-top-color: var(--accent-primary);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
@@ -743,20 +740,26 @@
             background: rgba(239, 68, 68, 0.1);
             border: 1px solid rgba(239, 68, 68, 0.3);
             border-radius: var(--radius-sm);
-            padding: 14px 16px;
+            padding: 16px 18px;
             color: var(--accent-error);
-            font-size: 0.9rem;
-            margin-bottom: 16px;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 12px;
+            gap: 14px;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
         
         .error-banner button {
             white-space: nowrap;
-            min-height: 40px;
-            padding: 8px 16px;
+            min-height: 44px;
+            padding: 10px 18px;
             border-radius: 8px;
             background: var(--accent-error);
             color: white;
@@ -764,7 +767,13 @@
             font-weight: 600;
             cursor: pointer;
             font-family: 'Rubik', sans-serif;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+        
+        .error-banner button:hover {
+            background: #DC2626;
+            transform: translateY(-1px);
         }
         
         .empty-state {
@@ -774,7 +783,7 @@
         }
         
         .pay-footer {
-            margin-top: 20px;
+            margin-top: 24px;
             position: relative;
             z-index: 1;
             text-align: center;
@@ -788,8 +797,20 @@
         .actions {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin-top: 20px;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
         }
         
         :focus-visible {
@@ -798,8 +819,12 @@
         }
         
         @media (max-width: 480px) {
-            .pay-container {
-                padding: 28px 20px;
+            main.pay-container {
+                padding: 32px 20px;
+            }
+            
+            .pay-header h1 {
+                font-size: 1.8rem;
             }
             
             .stepper-label {
@@ -812,18 +837,22 @@
                 font-size: 0.75rem;
             }
             
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-            
             .receipt-header {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 4px;
+                gap: 6px;
             }
             
             .receipt-header time {
                 text-align: right;
+            }
+            
+            .total-amount {
+                font-size: 1.5rem;
+            }
+            
+            .btn-row {
+                flex-direction: column;
             }
         }
     </style>
@@ -833,7 +862,7 @@
     
     <main class="pay-container" id="main-content" role="main">
         <header class="pay-header">
-            <h1>סיכום הזמנה</h1>
+            <h1>💳 סיכום הזמנה</h1>
             <p class="order-meta" id="orderMeta">הזמנה #12345 · 22 ביולי 2026</p>
         </header>
         
@@ -879,45 +908,17 @@
                     </label>
                     
                     <input type="radio" name="paymentMethod" id="methodPayme" value="payme" class="method-option">
-                    <label for="methodPayme" class="method-card">
+                    <label for="methodPayme" class="method-card" id="paymeCard">
                         <div class="method-icon" aria-hidden="true">📱</div>
                         <div class="method-info">
-                            <span class="method-name">PayMe</span>
+                            <span class="method-name">
+                                <span class="premium-badge" id="premiumBadge" style="display: none;">PREMIUM</span>
+                                PayMe
+                            </span>
                             <span class="method-desc">שלח בקשת תשלום</span>
                         </div>
                         <div class="method-check" aria-hidden="true">✓</div>
                     </label>
-                    
-                    <input type="radio" name="paymentMethod" id="methodCard" value="card" class="method-option">
-                    <label for="methodCard" class="method-card">
-                        <div class="method-icon" aria-hidden="true">🏦</div>
-                        <div class="method-info">
-                            <span class="method-name">כרטיס אשראי</span>
-                            <span class="method-desc">ויזה, מאסטרקארד, אמריקן אקספרס</span>
-                        </div>
-                        <div class="method-check" aria-hidden="true">✓</div>
-                    </label>
-                </div>
-                
-                <div id="cardFormSection" class="card-form" hidden>
-                    <div class="form-group">
-                        <label for="cardNumber">מספר כרטיס</label>
-                        <input type="text" id="cardNumber" inputmode="numeric" autocomplete="cc-number" aria-describedby="cardNumberError cardType" maxlength="19" placeholder="1234 5678 9012 3456">
-                        <div id="cardNumberError" class="field-error" aria-live="polite"></div>
-                        <div id="cardType" class="card-type" aria-live="polite"></div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="cardExpiry">תוקף (MM/YY)</label>
-                            <input type="text" id="cardExpiry" inputmode="numeric" autocomplete="cc-expiry" aria-describedby="cardExpiryError" maxlength="5" placeholder="MM/YY">
-                            <div id="cardExpiryError" class="field-error" aria-live="polite"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="cardCvv">CVV</label>
-                            <input type="text" id="cardCvv" inputmode="numeric" autocomplete="cc-csc" aria-describedby="cardCvvError" maxlength="4" placeholder="123">
-                            <div id="cardCvvError" class="field-error" aria-live="polite"></div>
-                        </div>
-                    </div>
                 </div>
                 
                 <div class="actions">
@@ -929,36 +930,10 @@
                 <h2 id="stepReviewHeading" class="sr-only">סקירת פרטי ההזמנה</h2>
                 
                 <article class="order-summary" aria-label="פרטי הזמנה">
-                    <details class="order-item" open>
-                        <summary class="item-name">
-                            מוצר דיגיטלי
-                            <span class="item-price" style="margin-inline-start: 8px;">1 × ₪99.99</span>
-                        </summary>
-                        <div class="item-details">
-                            <span>מק"ט: DIG-001</span>
-                            <span>קטגוריה: תוכן דיגיטלי</span>
-                        </div>
-                        <div class="item-total">₪99.99</div>
-                    </details>
-                    <div id="planFeatures" style="display: none; margin-top: 16px; padding-top: 16px; border-top: 1px dashed var(--border-color);"></div>
-                </article>
-                    
-                    <details class="order-item">
-                        <summary class="item-name">
-                            דמי משלוח
-                            <span class="item-price" style="margin-inline-start: 8px;">משלוח רגיל</span>
-                        </summary>
-                        <div class="item-details">
-                            <span>שיטת משלוח: משלוח רגיל</span>
-                            <span> זמן אספקה: 3-5 ימי עסקים</span>
-                        </div>
-                        <div class="item-total">₪0.00</div>
-                    </details>
-                    
-                    <div class="order-total">
-                        <span class="total-label">סך הכל</span>
-                        <span class="total-amount">₪99.99</span>
+                    <div id="orderSummary">
+                        <!-- Dynamic content will be inserted here -->
                     </div>
+                    <div id="planFeatures" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px dashed var(--border-color);"></div>
                 </article>
                 
                 <div class="security-badges" aria-label="אבטחה ופרטיות">
@@ -999,12 +974,14 @@
         </form>
         
         <section id="stepDone" class="step-section" data-step="4" aria-labelledby="stepDoneHeading">
-            <h2 id="stepDoneHeading">התשלום בוצע בהצלחה!</h2>
+            <h2 id="stepDoneHeading" style="text-align: center; margin-bottom: 24px;">✨ התשלום בוצע בהצלחה!</h2>
+            
+            <div class="success-icon" aria-hidden="true">✓</div>
             
             <div class="receipt" aria-label="קבלה">
                 <div class="receipt-header">
-                    <h3>קובלנס #12345</h3>
-                    <time datetime="2026-07-22T11:00:00+03:00">22 ביולי 2026, 11:00</time>
+                    <h3 id="receiptTitle">קובלנס #12345</h3>
+                    <time id="receiptTime" datetime="2026-07-22T11:00:00+03:00">22 ביולי 2026, 11:00</time>
                 </div>
                 <table class="receipt-table">
                     <thead>
@@ -1014,28 +991,19 @@
                             <th style="text-align:left;">מחיר</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td>מוצר דיגיטלי</td>
-                            <td style="text-align:center;">1</td>
-                            <td style="text-align:left;">₪99.99</td>
-                        </tr>
-                        <tr>
-                            <td>דמי משלוח</td>
-                            <td style="text-align:center;">-</td>
-                            <td style="text-align:left;">₪0.00</td>
-                        </tr>
+                    <tbody id="receiptItems">
+                        <!-- Dynamic items -->
                     </tbody>
                     <tfoot>
                         <tr>
                             <td colspan="2">סך הכל</td>
-                            <td style="text-align:left;">₪99.99</td>
+                            <td style="text-align:left;" id="receiptTotal">₪99.99</td>
                         </tr>
                     </tfoot>
                 </table>
                 <div class="receipt-footer">
                     <span>אמצעי תשלום: <strong id="receiptMethod">ביט</strong></span>
-                    <span>מס' אישור: <strong>6789</strong></span>
+                    <span>מס' אישור: <strong id="receiptApproval">6789</strong></span>
                 </div>
             </div>
             
@@ -1069,6 +1037,7 @@
         let countdownInterval = null;
         let timeLeft = 10;
         let currentPlan = null;
+        let userPlanType = null;
 
         async function loadOrder() {
             const params = new URLSearchParams(window.location.search);
@@ -1110,12 +1079,26 @@
                 'premium': 'תכנית PREMIUM'
             };
             const planPrices = {
-                'pro': 19.99,
-                'premium': 49.99
+                'pro': 500,
+                'premium': 750
             };
             const planFeatures = {
-                'pro': ['ניהול הזמנות מלא', 'ווידג'טים ללא הגבלה', 'לוח ניתוח'],
-                'premium': ['כל תכונות PRO', 'אינטגרציית WhatsApp', 'ניתוח מתקדם']
+                'pro': [
+                    'ניהול הזמנות מלא',
+                    'הטמעת ווידג\'ט ללא הגבלה',
+                    'סטטיסטיקות מתקדמות',
+                    'ניהול דומיינים (3 דומיינים)',
+                    'תמיכה ב-WordPress ו-HTML',
+                    'ייצוא CSV ו-JSON'
+                ],
+                'premium': [
+                    'כל תכונות PRO',
+                    'אינטגרציית WhatsApp',
+                    'ניהול דומיינים מורחב (10 דומיינים)',
+                    'תמיכה בעסקאות מלאה',
+                    'אנליטיקות מתקדמות',
+                    'תמיכה VIP 24/7'
+                ]
             };
             
             const planName = planNames[plan] || 'תכנית';
@@ -1135,14 +1118,64 @@
             renderPlanFeatures(planFeatures[plan] || []);
         }
 
+        async function checkUserPlan() {
+            const token = localStorage.getItem('access_token');
+            if (!token) return;
+            
+            try {
+                const res = await fetch(`${API_BASE_URL}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    userPlanType = data.profile?.plan_type || data.plan_type;
+                    updatePaymentMethodsByPlan(userPlanType);
+                }
+            } catch (e) {
+                console.error('Failed to fetch user plan:', e);
+            }
+        }
+
+        function updatePaymentMethodsByPlan(planType) {
+            const paymeRadio = document.getElementById('methodPayme');
+            const paymeCard = document.getElementById('paymeCard');
+            const premiumBadge = document.getElementById('premiumBadge');
+            
+            if (planType === 'premium') {
+                // Premium users can use both BIT and PayMe
+                paymeRadio.disabled = false;
+                paymeCard.classList.remove('disabled', 'premium-only');
+                premiumBadge.style.display = 'none';
+            } else if (planType === 'pro') {
+                // PRO users can only use BIT - disable PayMe
+                paymeRadio.disabled = true;
+                paymeCard.classList.add('disabled', 'premium-only');
+                premiumBadge.style.display = 'inline-block';
+                
+                // Auto-select BIT if PayMe was selected
+                if (selectedMethod === 'payme') {
+                    selectedMethod = 'bit';
+                    document.getElementById('methodBit').checked = true;
+                }
+            } else {
+                // Free users - only BIT available
+                paymeRadio.disabled = true;
+                paymeCard.classList.add('disabled', 'premium-only');
+                premiumBadge.style.display = 'inline-block';
+                selectedMethod = 'bit';
+                document.getElementById('methodBit').checked = true;
+            }
+        }
+
         function renderPlanFeatures(features) {
             const featuresContainer = document.getElementById('planFeatures');
             if (!featuresContainer) return;
             
             featuresContainer.innerHTML = features.map(f => `
-                <div class="benefit-item" style="padding: 8px 0;">
-                    <span class="benefit-icon" aria-hidden="true" style="color: var(--accent-success);">✓</span>
-                    <span style="color: var(--text-secondary); font-size: 0.9rem;">${f}</span>
+                <div class="benefit-item" style="padding: 10px 0; display: flex; align-items: center; gap: 10px;">
+                    <span class="benefit-icon" aria-hidden="true" style="color: var(--accent-success); font-size: 1.2rem; font-weight: bold;">✓</span>
+                    <span style="color: var(--text-secondary); font-size: 0.95rem;">${f}</span>
                 </div>
             `).join('');
             featuresContainer.style.display = 'block';
@@ -1164,7 +1197,7 @@
                     ${itemsHtml}
                     <div class="order-total">
                         <div class="total-label">סך הכל</div>
-                        <div class="total-amount">₪${(order.total || 0).toFixed(2)}</div>
+                        <div class="total-amount" id="totalAmount">₪${(order.total || 0).toFixed(2)}</div>
                     </div>
                 `;
             }
@@ -1174,36 +1207,16 @@
         
         const methodLabels = {
             bit: 'ביט',
-            payme: 'PayMe',
-            card: 'כרטיס אשראי'
+            payme: 'PayMe'
         };
         
         document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
             radio.addEventListener('change', (e) => {
-                selectedMethod = e.target.value;
-                updateCardFormVisibility();
+                if (!e.target.disabled) {
+                    selectedMethod = e.target.value;
+                }
             });
         });
-        
-        function updateCardFormVisibility() {
-            const cardForm = document.getElementById('cardFormSection');
-            if (selectedMethod === 'card') {
-                cardForm.hidden = false;
-            } else {
-                cardForm.hidden = true;
-                clearCardErrors();
-            }
-        }
-        
-        function clearCardErrors() {
-            ['cardNumber', 'cardExpiry', 'cardCvv'].forEach(id => {
-                document.getElementById(id).classList.remove('invalid', 'valid');
-            });
-            document.getElementById('cardNumberError').textContent = '';
-            document.getElementById('cardExpiryError').textContent = '';
-            document.getElementById('cardCvvError').textContent = '';
-            document.getElementById('cardType').textContent = '';
-        }
         
         function goToStep(step) {
             if (step < 1 || step > 4) return;
@@ -1244,7 +1257,6 @@
         }
         
         function goToReview() {
-            if (selectedMethod === 'card' && !validateCard(true)) return;
             hideError();
             goToStep(2);
             document.getElementById('stepReview').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1310,7 +1322,8 @@
                     business_id: currentOrder.business_id || new URLSearchParams(window.location.search).get('business_id'),
                     order_id: currentOrder.order_id,
                     customer_email: customerEmail,
-                    customer_name: ''
+                    customer_name: '',
+                    payment_method: selectedMethod
                 };
 
                 const res = await fetch(`${API_BASE_URL}/payments/checkout-session`, {
@@ -1327,9 +1340,7 @@
                     throw new Error(data.detail || 'שגיאה ביצירת תשלום');
                 }
 
-                if (selectedMethod === 'card') {
-                    goToStep(4);
-                } else if (data.url) {
+                if (data.url) {
                     window.location.href = data.url;
                 } else {
                     goToStep(4);
@@ -1339,18 +1350,6 @@
                 showError(error.message || 'שגיאה בעיבוד התשלום. אנא נסה שוב.');
                 goToStep(2);
             }
-        }
-        
-        function simulatePayment() {
-            return new Promise((resolve, reject) => {
-                setTimeout(() => {
-                    if (Math.random() > 0.1) {
-                        resolve();
-                    } else {
-                        reject(new Error('Payment failed'));
-                    }
-                }, 2000);
-            });
         }
         
         function retryPayment() {
@@ -1378,6 +1377,7 @@
                 if (timeLeft <= 0) {
                     clearInterval(countdownInterval);
                     el.textContent = 'מעבר...';
+                    window.location.href = 'home.html';
                 } else {
                     el.textContent = 'מעבר לעמוד הבית בעוד ' + timeLeft + ' שניות';
                 }
@@ -1387,6 +1387,7 @@
         function cancelRedirect() {
             clearInterval(countdownInterval);
             document.getElementById('countdown').textContent = 'מעבר בוטל';
+            window.location.href = 'home.html';
         }
         
         function downloadReceipt() {
@@ -1395,10 +1396,7 @@
             const dateStr = order.created_at ? new Date(order.created_at).toLocaleString('he-IL') : '22 ביולי 2026';
             const total = (order.total || 0).toFixed(2);
             const methodName = methodLabels[selectedMethod] || selectedMethod;
-            const items = (order.items || [
-                { name: 'מוצר דיגיטלי', quantity: 1, price: 99.99 },
-                { name: 'דמי משלוח', quantity: '-', price: 0.00 }
-            ]);
+            const items = order.items || [];
 
             let receipt = '';
             receipt += 'ConversaPay - קבלה\n';
@@ -1428,164 +1426,9 @@
             URL.revokeObjectURL(url);
         }
         
-        function formatCardNumber(value) {
-            const v = value.replace(/\s+/g, '').replace(/[^0-9]/g, '');
-            const matches = v.match(/\d{4,16}/g);
-            const match = matches && matches[0] || '';
-            const parts = [];
-            for (let i = 0, len = match.length; i < len; i += 4) {
-                parts.push(match.substring(i, i + 4));
-            }
-            return parts.length ? parts.join(' ') : v;
-        }
-        
-        function detectCardType(number) {
-            const n = number.replace(/\s/g, '');
-            if (/^4/.test(n)) return 'Visa';
-            if (/^5[1-5]/.test(n)) return 'Mastercard';
-            if (/^3[47]/.test(n)) return 'American Express';
-            return '';
-        }
-        
-        function luhnCheck(cardNumber) {
-            const digits = cardNumber.replace(/\s/g, '');
-            if (!/^\d+$/.test(digits) || digits.length < 13 || digits.length > 19) return false;
-            let sum = 0;
-            let isEven = false;
-            for (let i = digits.length - 1; i >= 0; i--) {
-                let digit = parseInt(digits[i], 10);
-                if (isEven) {
-                    digit *= 2;
-                    if (digit > 9) digit -= 9;
-                }
-                sum += digit;
-                isEven = !isEven;
-            }
-            return sum % 10 === 0;
-        }
-        
-        function validateCard(silent = false) {
-            let valid = true;
-            const numInput = document.getElementById('cardNumber');
-            const expiryInput = document.getElementById('cardExpiry');
-            const cvvInput = document.getElementById('cardCvv');
-            const numError = document.getElementById('cardNumberError');
-            const expiryError = document.getElementById('cardExpiryError');
-            const cvvError = document.getElementById('cardCvvError');
-            
-            const rawNum = numInput.value.replace(/\s/g, '');
-            const rawExpiry = expiryInput.value.replace(/\D/g, '');
-            const rawCvv = cvvInput.value.replace(/\D/g, '');
-            
-            numInput.classList.remove('invalid', 'valid');
-            expiryInput.classList.remove('invalid', 'valid');
-            cvvInput.classList.remove('invalid', 'valid');
-            numError.textContent = '';
-            expiryError.textContent = '';
-            cvvError.textContent = '';
-            
-            if (!rawNum) {
-                numInput.classList.add('invalid');
-                numError.textContent = 'נא להזין מספר כרטיס';
-                valid = false;
-            } else if (!luhnCheck(rawNum)) {
-                numInput.classList.add('invalid');
-                numError.textContent = 'מספר כרטיס לא תקין';
-                valid = false;
-            } else if (!/^\d{13,19}$/.test(rawNum)) {
-                numInput.classList.add('invalid');
-                numError.textContent = 'מספר כרטיס חייב להיות בין 13 ל-19 ספרות';
-                valid = false;
-            } else {
-                numInput.classList.add('valid');
-            }
-            
-            if (!rawExpiry) {
-                expiryInput.classList.add('invalid');
-                expiryError.textContent = 'נא להזין תאריך תקף';
-                valid = false;
-            } else {
-                const month = parseInt(rawExpiry.substring(0, 2), 10);
-                const year = parseInt('20' + rawExpiry.substring(2, 4), 10);
-                const now = new Date();
-                const currentMonth = now.getMonth() + 1;
-                const currentYear = now.getFullYear();
-                
-                if (month < 1 || month > 12) {
-                    expiryInput.classList.add('invalid');
-                    expiryError.textContent = 'חודש לא תקין';
-                    valid = false;
-                } else if (year < currentYear || (year === currentYear && month < currentMonth)) {
-                    expiryInput.classList.add('invalid');
-                    expiryError.textContent = 'הכרטיס לא בתוקף';
-                    valid = false;
-                } else {
-                    expiryInput.classList.add('valid');
-                }
-            }
-            
-            if (!rawCvv) {
-                cvvInput.classList.add('invalid');
-                cvvError.textContent = 'נא להזין CVV';
-                valid = false;
-            } else if (!/^\d{3,4}$/.test(rawCvv)) {
-                cvvInput.classList.add('invalid');
-                cvvError.textContent = 'CVV חייב להיות 3 או 4 ספרות';
-                valid = false;
-            } else {
-                cvvInput.classList.add('valid');
-            }
-            
-            return valid;
-        }
-        
-        document.getElementById('cardNumber').addEventListener('input', (e) => {
-            const cursorPos = e.target.selectionStart;
-            const oldLength = e.target.value.length;
-            e.target.value = formatCardNumber(e.target.value);
-            const newLength = e.target.value.length;
-            const cardType = detectCardType(e.target.value);
-            document.getElementById('cardType').textContent = cardType ? 'סוג כרטיס: ' + cardType : '';
-            
-            const rawNum = e.target.value.replace(/\s/g, '');
-            if (!rawNum) {
-                e.target.classList.remove('valid', 'invalid');
-                document.getElementById('cardNumberError').textContent = '';
-            } else if (/^\d{13,19}$/.test(rawNum)) {
-                if (luhnCheck(rawNum)) {
-                    e.target.classList.add('valid');
-                    e.target.classList.remove('invalid');
-                    document.getElementById('cardNumberError').textContent = '';
-                } else {
-                    e.target.classList.add('invalid');
-                    e.target.classList.remove('valid');
-                }
-            }
-            if (!luhnCheck(rawNum) && rawNum.length >= 13) {
-                document.getElementById('cardNumberError').textContent = 'מספר כרטיס לא תקין';
-            }
-        });
-        
-        document.getElementById('cardExpiry').addEventListener('input', (e) => {
-            let v = e.target.value.replace(/\D/g, '');
-            if (v.length >= 2) {
-                v = v.substring(0, 2) + '/' + v.substring(2, 4);
-            }
-            e.target.value = v;
-        });
-        
-        document.getElementById('cardCvv').addEventListener('input', (e) => {
-            e.target.value = e.target.value.replace(/\D/g, '').substring(0, 4);
-        });
-        
-        [document.getElementById('cardNumber'), document.getElementById('cardExpiry'), document.getElementById('cardCvv')].forEach(input => {
-            input.addEventListener('blur', () => {
-                if (input.value.trim()) validateCard(true);
-            });
-        });
-        
-        updateCardFormVisibility();
+        // Initialize
         loadOrder();
+        checkUserPlan();
     </script>
 </body>
 </html>

@@ -364,7 +364,27 @@ CREATE INDEX idx_logs_source ON logs(source);
 CREATE INDEX idx_logs_created_at ON logs(created_at);
 
 -- ============================================
--- 13. EMAIL_TEMPLATES
+-- 13. AUDIT_LOGS
+-- ============================================
+
+CREATE TABLE audit_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES profiles(user_id) ON DELETE SET NULL,
+    action VARCHAR(100) NOT NULL, -- 'password_reset', 'login', 'logout', 'email_verified', etc.
+    ip_address INET,
+    user_agent TEXT,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    details JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+CREATE INDEX idx_audit_logs_user_id ON audit_logs(user_id);
+CREATE INDEX idx_audit_logs_action ON audit_logs(action);
+CREATE INDEX idx_audit_logs_timestamp ON audit_logs(timestamp);
+CREATE INDEX idx_audit_logs_ip_address ON audit_logs(ip_address);
+
+-- ============================================
+-- 14. EMAIL_TEMPLATES
 -- ============================================
 
 CREATE TABLE email_templates (

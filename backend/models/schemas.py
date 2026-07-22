@@ -15,7 +15,7 @@ from enum import Enum
 class SubscriptionTier(str, Enum):
     FREE = "free"
     PRO = "pro"
-    ENTERPRISE = "enterprise"
+    PREMIUM = "premium"
 
 
 class SubscriptionStatus(str, Enum):

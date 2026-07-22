@@ -551,7 +551,7 @@
     <a href="#main-content" class="skip-link">דלג לתוכן הראשי</a>
     
     <header role="banner">
-        <a href="#" class="navbar-brand" aria-label="ConversaPay - דף הבית">ConversaPay</a>
+        <a href="home.html" class="navbar-brand" aria-label="ConversaPay - דף הבית">ConversaPay</a>
         <button class="hamburger" id="menu-toggle" aria-expanded="false" aria-controls="primary-nav" aria-label="פתח תפריט">
             <span></span>
             <span></span>
@@ -617,7 +617,7 @@
                         <div class="benefit-icon" aria-hidden="true">✓</div>
                         <div class="benefit-text">
                             <h3>עלייה בהמרות</h3>
-                            <p>לקוחות שמרגישים בנוח קונים יותר. התשלום הקל שלנו מגביר מכירות עד 40%.</p>
+                            <p>לקוחות שמרגישים בנוח קונים יותר. התשלום הקל שלנו יכול לשפר את המכירות שלך.</p>
                         </div>
                     </div>
                     <div class="benefit-item">
@@ -658,9 +658,53 @@
                 </div>
             </section>
             
+            <section id="pricing" class="benefits-section" aria-labelledby="pricing-heading">
+                <h2 id="pricing-heading">תכניות מחיר</h2>
+                <div class="benefits-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                    <div class="benefit-item">
+                        <div class="benefit-icon" aria-hidden="true">🆓</div>
+                        <div class="benefit-text">
+                            <h3>חינמי</h3>
+                            <p>ניהול מוצרים, סטטיסטיקות בסיסיות, פרופיל אישי</p>
+                            <button class="btn btn-secondary" onclick="window.location.href='register.html'" style="margin-top: 12px; width: 100%;">התחל בחינם</button>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon" aria-hidden="true">⭐</div>
+                        <div class="benefit-text">
+                            <h3>PRO - ₪500/חודש</h3>
+                            <p>ניהול הזמנות מלא, הטמעת ווידג'ט, סטטיסטיקות מתקדמות, ניהול דומיינים</p>
+                            <button class="btn btn-primary" onclick="window.location.href='/pay?plan=pro'" style="margin-top: 12px; width: 100%;">שדרג ל-PRO</button>
+                        </div>
+                    </div>
+                    <div class="benefit-item">
+                        <div class="benefit-icon" aria-hidden="true">👑</div>
+                        <div class="benefit-text">
+                            <h3>PREMIUM - ₪750/חודש</h3>
+                            <p>כל תכונות PRO + אינטגרציית WhatsApp, תמיכה בעסקאות מלאה, 10 דומיינים</p>
+                            <button class="btn btn-primary" onclick="window.location.href='/pay?plan=premium'" style="margin-top: 12px; width: 100%;">שדרג ל-PREMIUM</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="widget-demo" class="benefits-section" aria-labelledby="demo-heading">
+                <h2 id="demo-heading">הדגמה חיה של הווידג'ט</h2>
+                <p style="text-align: center; color: var(--text-secondary); margin-bottom: var(--space-xl);">ראה איך הווידג'ט עובד בפועל - תשלום דרך צ'אט טבעי</p>
+                <div style="max-width: 400px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--space-lg); box-shadow: var(--shadow-md);">
+                    <div style="background: rgba(99, 102, 241, 0.1); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: var(--space-md); margin-bottom: var(--space-md);">
+                        <div style="font-weight: 600; margin-bottom: 8px;">שיחה עם AI</div>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 12px;">היי! אני כאן לעזור לך. איזה מוצר מעניין אותך?</div>
+                        <div style="background: rgba(99, 102, 241, 0.15); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 0.9rem; margin-bottom: 8px;">אני מחפש מוצר למשלוח מהיר</div>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem;">מעולה! יש לנו כמה אפשרויות. האם תרצה לשלם עכשיו?</div>
+                    </div>
+                    <button class="btn btn-primary" onclick="window.location.href='register.html'" style="width: 100%;">נסה בעצמך - התחל בחינם</button>
+                </div>
+            </section>
+
             <section class="cta-section" aria-labelledby="cta-heading">
                 <h2 id="cta-heading">מוכן להתחיל?</h2>
-                <p>הצטרף לעשרות עסקים שכבר משתמשים ב-ConversaPay כדי להגביר את המכירות שלהם.</p>
+                <p>הצטרף ל-ConversaPay והתחל לקבל תשלומים דרך שיחה טבעית.</p>
                 <button class="btn-primary" onclick="window.location.href='register.html'" style="margin: 0 auto;">הרשם עכשיו - זה חינם</button>
             </section>
         </div>
