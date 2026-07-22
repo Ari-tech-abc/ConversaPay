@@ -1,361 +1,115 @@
-"""
-ConversaPay - Multi-Tenant SaaS Platform
-Main application entry point with modular architecture
-"""
-import os
-import logging
+import os, logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse, Response
 from dotenv import load_dotenv
-
-# Load environment variables
 load_dotenv()
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
-
-# Import routers and services
 from backend.config import settings
-from backend.routers import auth, businesses, products, chat, orders, payments, logs, webhooks, analytics, widget, admin, dashboard
+from backend.routers import auth, businesses, products, chat, orders, payments, logs, webhooks, analytics, widget, admin, dashboard, api_keys, site_builder
 from backend.routers.payme_webhook import router as payme_webhook_router
 from backend.routers.whatsapp import router as whatsapp_webhook_router
 from backend.services.monitoring_service import monitoring_service
 
-# Conditionally import the dev simulator router (never in production)
-if not settings.is_production:
-    from backend.routers.dev_simulator import router as dev_simulator_router
-    logger.warning("⚠️  Development simulator router loaded - DO NOT RUN IN PRODUCTION")
-else:
-    dev_simulator_router = None
-
-
-# ============================================
-# Application Lifecycle
-# ============================================
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """
-    Application startup and shutdown events.
-    """
-    # Startup
-    logger.info("🚀 Starting ConversaPay Backend v2.0.0")
-    logger.info(f"Environment: {settings.ENVIRONMENT}")
-    logger.info(f"Debug mode: {settings.DEBUG}")
-    
-    # Initialize monitoring
+    logger.info("Starting ConversaPay")
     monitoring_service.initialize()
-    
-    # Validate critical settings
-    if not settings.SUPABASE_URL:
-        logger.warning("⚠️  SUPABASE_URL not configured")
-    if not settings.GEMINI_API_KEY:
-        logger.warning("⚠️  GEMINI_API_KEY not configured")
-    if not settings.STRIPE_API_KEY:
-        logger.warning("⚠️  STRIPE_API_KEY not configured")
-    if not settings.RESEND_API_KEY:
-        logger.warning("⚠️  RESEND_API_KEY not configured - email notifications disabled")
-    if not settings.PAYME_PAY_KEY or not settings.PAYME_SELLER_KEY:
-        logger.warning("⚠️  PayMe API keys not configured - PayMe payments disabled")
-    
-    logger.info("✅ Application startup complete")
-    
     yield
-    
-    # Shutdown
-    logger.info("👋 Shutting down ConversaPay Backend")
+    logger.info("Stopping ConversaPay")
 
+app = FastAPI(title="ConversaPay API", version="2.0.0", lifespan=lifespan, docs_url="/docs", redoc_url="/redoc")
 
-# ============================================
-# FastAPI Application
-# ============================================
+class DualCORSMiddleware(CORSMiddleware):
+    pass
 
-# - Widget/customer API: allow any origin (no credentials) for embedded chat on external sites.
-from starlette.middleware.base import BaseHTTPMiddleware
-
-class DualCORSMiddleware(BaseHTTPMiddleware):
-    """
-    Dual-tier CORS middleware:
-    - Widget/public endpoints: Allow any origin (*), no credentials
-    - Dashboard/admin endpoints: Restrict to configured origins only, allow credentials
-    """
-    async def dispatch(self, request: Request, call_next):
-        origin = request.headers.get("origin")
-        path = request.url.path
-
-        # Widget endpoints (public customer-facing) and webhooks
-        is_public_endpoint = (
-            path.startswith(f"{settings.API_PREFIX}/chat")
-            or path.startswith(f"{settings.API_PREFIX}/orders/pay")
-            or (path.startswith(f"{settings.API_PREFIX}/orders/") and ("/summary" in path or "/status" in path or "/public" in path))
-            or path.startswith(f"{settings.API_PREFIX}/payments/checkout-session")
-            or path.startswith(f"{settings.API_PREFIX}/payments/webhook")
-            or path.startswith(f"{settings.API_PREFIX}/webhooks/payme") # PayMe webhook is public
-            or path.startswith(f"{settings.API_PREFIX}/webhooks/whatsapp") # WhatsApp webhook is public
-            or path.startswith(f"{settings.API_PREFIX}/widget")
-        )
-
-        # Handle preflight requests
-        if request.method == "OPTIONS":
-            response = Response()
-            if is_public_endpoint:
-                response.headers["Access-Control-Allow-Origin"] = "*"
-                response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-                response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-                response.headers["Vary"] = "Origin"
-            else:
-                if origin and origin in settings.cors_origins_list:
-                    response.headers["Access-Control-Allow-Origin"] = origin
-                    response.headers["Access-Control-Allow-Credentials"] = "true"
-                    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-                    response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
-                    response.headers["Vary"] = "Origin"
-            return response
-
-        # Process request
-        response = await call_next(request)
-
-        # Add CORS headers to response
-        if is_public_endpoint:
-            # Allow any origin for public endpoints, no credentials
-            response.headers["Access-Control-Allow-Origin"] = "*"
-            response.headers["Vary"] = "Origin"
-        else:
-            # Restrict to configured origins for dashboard endpoints
-            if origin and origin in settings.cors_origins_list:
-                response.headers["Access-Control-Allow-Origin"] = origin
-                response.headers["Access-Control-Allow-Credentials"] = "true"
-                response.headers["Vary"] = "Origin"
-
-        return response
-
-
-# ============================================
-# FastAPI Application
-# ============================================
-
-app = FastAPI(
-    title="ConversaPay API",
-    description="Multi-tenant SaaS platform for AI-powered sales and customer service",
-    version="2.0.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
-    lifespan=lifespan
-)
-
-# Add DualCORSMiddleware for dual-tier CORS policy
-app.add_middleware(DualCORSMiddleware)
-
-
-# ============================================
-# Health Check
-# ============================================
+app.add_middleware(DualCORSMiddleware, allow_origins=settings.cors_origins_list, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 @app.get("/health")
-async def health_check():
-    """
-    Health check endpoint.
-    """
-    return {
-        "status": "healthy",
-        "version": "2.0.0",
-        "environment": settings.ENVIRONMENT
-    }
-
+async def health(): return {"status":"healthy","version":"2.0.0","environment":settings.ENVIRONMENT}
 
 @app.get(f"{settings.API_PREFIX}/config/public")
-async def public_config():
-    """
-    Public, non-secret configuration values needed by the frontend.
+async def public_config(): return {"supabase_url":settings.SUPABASE_URL,"supabase_anon_key":settings.SUPABASE_ANON_KEY}
 
-    The Supabase anon key is safe to expose to the browser by design —
-    it is protected by Row Level Security, exactly like a Firebase web
-    config. This lets the frontend talk to Supabase Auth directly
-    (needed for a working Google OAuth / PKCE flow — see auth.py).
-    """
-    return {
-        "supabase_url": settings.SUPABASE_URL,
-        "supabase_anon_key": settings.SUPABASE_ANON_KEY,
-    }
+prefix = settings.API_PREFIX
+app.include_router(auth.router, prefix=f"{prefix}/auth", tags=["authentication"])
+app.include_router(businesses.router, prefix=prefix, tags=["businesses"])
+app.include_router(products.router, prefix=prefix, tags=["products"])
+app.include_router(chat.router, prefix=prefix, tags=["chat"])
+app.include_router(orders.router, prefix=prefix, tags=["orders"])
+app.include_router(payments.router, prefix=prefix, tags=["payments"])
+app.include_router(logs.router, prefix=prefix, tags=["logs"])
+app.include_router(webhooks.router, prefix=prefix, tags=["webhooks"])
+app.include_router(analytics.router, prefix=prefix, tags=["analytics"])
+app.include_router(widget.router, prefix=f"{prefix}/widget", tags=["widget"])
+app.include_router(dashboard.router, prefix=f"{prefix}/dashboard", tags=["dashboard"])
+app.include_router(admin.router, prefix=f"{prefix}/admin", tags=["admin"])
+app.include_router(api_keys.router, prefix=prefix, tags=["api-keys"])
+app.include_router(site_builder.router, prefix=prefix, tags=["site-builder"])
+app.include_router(payme_webhook_router, prefix=prefix, tags=["payme-webhook"])
+app.include_router(whatsapp_webhook_router, prefix=prefix, tags=["whatsapp-webhook"])
 
+if not settings.is_production:
+    from backend.routers.dev_simulator import router as dev_simulator_router
+    app.include_router(dev_simulator_router, prefix=prefix, tags=["dev-simulator"])
 
-# ============================================
-# API Routes
-# ============================================
-
-# Include routers
-app.include_router(auth.router, prefix=f"{settings.API_PREFIX}/auth", tags=["authentication"])
-app.include_router(businesses.router, prefix=f"{settings.API_PREFIX}", tags=["businesses"])
-app.include_router(products.router, prefix=f"{settings.API_PREFIX}", tags=["products"])
-app.include_router(chat.router, prefix=f"{settings.API_PREFIX}", tags=["chat"])
-app.include_router(orders.router, prefix=f"{settings.API_PREFIX}", tags=["orders"])
-app.include_router(payments.router, prefix=f"{settings.API_PREFIX}", tags=["payments"])
-app.include_router(logs.router, prefix=f"{settings.API_PREFIX}", tags=["logs"])
-app.include_router(webhooks.router, prefix=f"{settings.API_PREFIX}", tags=["webhooks"])
-app.include_router(analytics.router, prefix=f"{settings.API_PREFIX}", tags=["analytics"])
-app.include_router(widget.router, prefix=f"{settings.API_PREFIX}/widget", tags=["widget"])
-app.include_router(dashboard.router, prefix=f"{settings.API_PREFIX}/dashboard", tags=["dashboard"])
-app.include_router(admin.router, prefix=f"{settings.API_PREFIX}/admin", tags=["admin"])
-
-# Register PayMe webhook router
-app.include_router(payme_webhook_router, prefix=f"{settings.API_PREFIX}", tags=["payme-webhook"])
-
-# Register WhatsApp webhook router
-app.include_router(whatsapp_webhook_router, prefix=f"{settings.API_PREFIX}", tags=["whatsapp-webhook"])
-
-# Conditionally include the dev simulator router (never in production)
-if not settings.is_production and dev_simulator_router is not None:
-    app.include_router(dev_simulator_router, prefix=f"{settings.API_PREFIX}", tags=["dev-simulator"])
-
-
-# ============================================
-# Static Files & Frontend Routes
-# ============================================
-
-# Get current directory for static files
 current_dir = os.path.dirname(os.path.abspath(__file__))
-
-# ── Directory helpers ────────────────────────────────────────────────────────
-static_dir   = os.path.join(current_dir, "backend", "static")
+static_dir = os.path.join(current_dir, "backend", "static")
 frontend_dir = os.path.join(current_dir, "frontend")
-html_dir     = os.path.join(frontend_dir, "html")
+html_dir = os.path.join(frontend_dir, "html")
+site_builder_dir = os.path.join(current_dir, "conversapay-site-builder", "frontend")
 
-def _html(name: str) -> str:
-    """Return the absolute path to an HTML file inside frontend/html/."""
-    return os.path.join(html_dir, name)
-
-# Mount /static  → backend/static  (widget.js, robots.txt, sitemap.xml)
+def _html(name): return os.path.join(html_dir, name)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
-
-# Mount /frontend → frontend/  (js/, html/ — lets the browser load JS assets)
 app.mount("/frontend", StaticFiles(directory=frontend_dir), name="frontend")
 
-# ── HTML page routes ─────────────────────────────────────────────────────────
-
 @app.get("/")
-async def root_index():
-    """Marketing landing page."""
-    return FileResponse(_html("home.html"))
-
+async def root(): return FileResponse(_html("home.html"))
 @app.get("/dashboard")
 @app.get("/dashboard.html")
-async def dashboard():
-    """Dashboard page."""
-    return FileResponse(_html("dashboard.html"))
-
+async def dashboard_page(): return FileResponse(_html("dashboard.html"))
 @app.get("/login")
 @app.get("/login.html")
-async def login():
-    """Login page."""
-    return FileResponse(_html("login.html"))
-
+async def login_page(): return FileResponse(_html("login.html"))
 @app.get("/register")
 @app.get("/register.html")
-async def register():
-    """Register page."""
-    return FileResponse(_html("register.html"))
-
+async def register_page(): return FileResponse(_html("register.html"))
 @app.get("/demo")
 @app.get("/demo.html")
-async def demo():
-    """Widget demo test page."""
-    return FileResponse(_html("demo.html"))
-
+async def demo_page(): return FileResponse(_html("demo.html"))
 @app.get("/pay")
 @app.get("/pay.html")
-async def pay():
-    """Payment page."""
-    return FileResponse(_html("pay.html"))
-
+async def pay_page(): return FileResponse(_html("pay.html"))
 @app.get("/admin")
 @app.get("/admin.html")
-async def admin_dashboard():
-    """Admin dashboard page."""
-    return FileResponse(_html("admin-dashboard.html"))
-
+async def admin_page(): return FileResponse(_html("admin-dashboard.html"))
 @app.get("/admin/login")
 @app.get("/admin-login.html")
-async def admin_login_page():
-    """Admin login page."""
-    return FileResponse(_html("admin-login.html"))
-
+async def admin_login_page(): return FileResponse(_html("admin-login.html"))
 @app.get("/setup-guide")
 @app.get("/setup-guide.html")
-async def setup_guide():
-    """Setup guide page."""
-    return FileResponse(_html("setup-guide.html"))
-
+async def setup_guide_page(): return FileResponse(_html("setup-guide.html"))
 @app.get("/auth/callback")
-async def auth_callback():
-    """OAuth callback page."""
-    return FileResponse(_html("auth-callback.html"))
-
-
-# ============================================
-# SEO & Utility Routes
-# ============================================
+async def auth_callback_page(): return FileResponse(_html("auth-callback.html"))
+@app.get("/site-builder")
+async def site_builder_page():
+    return FileResponse(os.path.join(site_builder_dir, "index.html"))
 
 @app.get("/robots.txt")
-async def robots_txt():
-    return FileResponse(
-        os.path.join(static_dir, "robots.txt"), media_type="text/plain"
-    )
-
+async def robots(): return FileResponse(os.path.join(static_dir, "robots.txt"), media_type="text/plain")
 @app.get("/sitemap.xml", include_in_schema=False)
-async def sitemap_xml():
-    return FileResponse(
-        os.path.join(static_dir, "sitemap.xml"), media_type="application/xml"
-    )
-
-
-# ============================================
-# Error Handlers
-# ============================================
+async def sitemap(): return FileResponse(os.path.join(static_dir, "sitemap.xml"), media_type="application/xml")
 
 @app.exception_handler(404)
-async def not_found_handler(request: Request, exc):
-    """
-    Handle 404 errors.
-    """
-    return JSONResponse(
-        status_code=404,
-        content={"error": "Not found", "detail": str(exc.detail)}
-    )
-
-
+async def not_found(request: Request, exc): return JSONResponse(status_code=404, content={"error":"Not found","detail":str(exc.detail)})
 @app.exception_handler(500)
-async def internal_error_handler(request: Request, exc):
-    """
-    Handle 500 errors.
-    """
-    logger.error(f"Internal server error: {str(exc)}", exc_info=True)
-    return JSONResponse(
-        status_code=500,
-        content={"error": "Internal server error", "detail": "An unexpected error occurred"}
-    )
-
-
-# ============================================
-# Main Entry Point
-# ============================================
+async def internal_error(request: Request, exc):
+    logger.error("Internal server error", exc_info=True)
+    return JSONResponse(status_code=500, content={"error":"Internal server error","detail":"An unexpected error occurred"})
 
 if __name__ == "__main__":
     import uvicorn
-    
-    # Dynamic port binding for Render deployment
-    port = int(os.getenv("PORT", 8000))
-    
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=port,
-        reload=settings.DEBUG,
-        log_level="info"
-    )
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("PORT",8000)), reload=settings.DEBUG)
