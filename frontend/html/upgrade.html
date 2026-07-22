@@ -300,7 +300,7 @@
                 <div class="plan-badge">מומלץ</div>
                 <div class="plan-header">
                     <h3 class="plan-name">PRO</h3>
-                    <div class="plan-price">₪500<span>/חודש</span></div>
+                    <div class="plan-price">₪200<span>/חודש</span></div>
                     <p class="plan-description">לעסקים קטנים ובינוניים</p>
                 </div>
                 <ul class="plan-features">
@@ -310,15 +310,15 @@
                     <li>ניהול דומיינים (3 דומיינים)</li>
                     <li>תמיכה ב-WordPress ו-HTML</li>
                     <li>ייצוא CSV ו-JSON</li>
-                    <li>תמיכה עדינה</li>
+                    <li>תמיכה מהירה</li>
                 </ul>
-                <button class="btn btn-primary" onclick="window.location.href='/pay?plan=pro'">שדרג ל-PRO</button>
+                <button class="btn btn-primary" onclick="window.location.href='pay.html?plan=pro'">שדרג ל-PRO</button>
             </div>
             
             <div class="plan-card">
                 <div class="plan-header">
                     <h3 class="plan-name">PREMIUM</h3>
-                    <div class="plan-price">₪750<span>/חודש</span></div>
+                    <div class="plan-price">₪350<span>/חודש</span></div>
                     <p class="plan-description">לעסקים גדולים ומתקדמים</p>
                 </div>
                 <ul class="plan-features">
@@ -328,9 +328,9 @@
                     <li>תמיכה בעסקאות מלאה</li>
                     <li>אנליטיקות מתקדמות</li>
                     <li>תמיכה VIP 24/7</li>
-                    <li>API גישה מלאה</li>
+                    <li>גישת API מלאה</li>
                 </ul>
-                <button class="btn btn-primary" onclick="window.location.href='/pay?plan=premium'">שדרג ל-PREMIUM</button>
+                <button class="btn btn-primary" onclick="window.location.href='pay.html?plan=premium'">שדרג ל-PREMIUM</button>
             </div>
         </div>
         
@@ -340,7 +340,6 @@
     </div>
     
     <script>
-        // Load current plan from API
         async function loadCurrentPlan() {
             const token = localStorage.getItem('access_token');
             if (!token) {
@@ -378,7 +377,6 @@
             }
         }
         
-        // Check auth on load
         document.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('access_token');
             if (!token) {
