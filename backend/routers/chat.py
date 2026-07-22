@@ -1,7 +1,7 @@
-"""Public AI chat router with three-tier plan enforcement."""
-import logging, re, uuid
+"""Public AI chat router with three-tier plan enforcement and widget key checks."""
+import hashlib, logging, re, uuid
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, status, Request
+from fastapi import APIRouter, HTTPException, Request
 from supabase import create_client, Client
 from backend.config import settings
 from backend.middleware.rate_limiter import check_rate_limit
@@ -12,6 +12,31 @@ from backend.services.session_service import session_service
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
 supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+
+
+def _host(value: str) -> str:
+    value = (value or "").strip()
+    if "://" in value:
+        value = value.split("://", 1)[1]
+    return value.split("/", 1)[0].split(":", 1)[0].lower().rstrip(".")
+
+
+def _is_internal_origin(request: Request) -> bool:
+    origin = _host(request.headers.get("origin") or request.headers.get("referer") or request.headers.get("host"))
+    own = _host(settings.BASE_URL)
+    return origin in {"localhost", "127.0.0.1", own, "conversapay.org"} or origin.endswith(".conversapay.org")
+
+
+def _valid_widget_key(business_id: str, raw_key: str | None) -> bool:
+    if not raw_key:
+        return False
+    hashed = hashlib.sha256(raw_key.encode("utf-8")).hexdigest()
+    result = supabase.table("api_keys").select("id").eq("business_id", business_id).eq("key_hash", hashed).eq("is_active", True).maybe_single().execute()
+    if not result.data:
+        return False
+    supabase.table("api_keys").update({"last_used_at": datetime.utcnow().isoformat()}).eq("id", result.data["id"]).execute()
+    return True
+
 
 @router.post("", response_model=ChatResponse)
 async def chat(request: ChatRequest, request_obj: Request):
@@ -25,6 +50,11 @@ async def chat(request: ChatRequest, request_obj: Request):
         business = business_result.data[0]
         profile = supabase.table("profiles").select("plan_type").eq("user_id", business["owner_id"]).maybe_single().execute()
         plan_type = (profile.data or {}).get("plan_type", "free")
+        if not _is_internal_origin(request_obj):
+            if plan_type == "free":
+                raise HTTPException(status_code=403, detail="External widget access requires PRO or PREMIUM")
+            if not _valid_widget_key(business["id"], request_obj.headers.get("X-Widget-Key")):
+                raise HTTPException(status_code=401, detail="Valid widget API key required")
         can_checkout = plan_type in ("pro", "premium")
         conversation = await session_service.get_or_create_conversation(business_id=business["id"], session_id=request.session_id or f"session_{uuid.uuid4().hex}", channel="web")
         products = supabase.table("products").select("*").eq("business_id", business["id"]).eq("is_active", True).execute().data or []
@@ -33,10 +63,10 @@ async def chat(request: ChatRequest, request_obj: Request):
         if request.customer_info:
             customer = await session_service.get_or_create_customer(business_id=business["id"], email=request.customer_info.get("email"), phone=request.customer_info.get("phone"), name=request.customer_info.get("name"))
             if customer:
-                customer_context = {"name":customer.get("name"),"email":customer.get("email"),"phone":customer.get("phone"),"purchase_count":customer.get("purchase_count",0),"total_purchases":customer.get("total_purchases",0)}
+                customer_context = {"name": customer.get("name"), "email": customer.get("email"), "phone": customer.get("phone"), "purchase_count": customer.get("purchase_count", 0), "total_purchases": customer.get("total_purchases", 0)}
         history = await session_service.get_conversation_history(conversation_id=conversation["id"], limit=20)
         await session_service.add_message(conversation_id=conversation["id"], role="user", content=request.message)
-        answer = await gemini_service.chat(business_id=business["id"], session_id=conversation["session_id"], message=request.message, business_data=business, products=products, customer_context=customer_context, conversation_history=[{"role":m["role"],"content":m["content"]} for m in history])
+        answer = await gemini_service.chat(business_id=business["id"], session_id=conversation["session_id"], message=request.message, business_data=business, products=products, customer_context=customer_context, conversation_history=[{"role": m["role"], "content": m["content"]} for m in history])
         if not can_checkout and answer.get("intent") == "checkout":
             answer["intent"] = "upgrade_required"
             answer["response"] = "רכישה בצ׳אט זמינה במסלולי PRO ו-PREMIUM. שדרג כדי להפעיל אותה."
@@ -47,18 +77,14 @@ async def chat(request: ChatRequest, request_obj: Request):
             product = next((p for p in products if p.get("item_key") == action.get("item_key")), None)
             if product and product.get("payment_link"):
                 response.payment_url = product["payment_link"]
-            else:
+            elif product:
                 quantity = max(1, int(action.get("quantity", 1)))
-                price = float(product.get("price", 0)) if product else 0.0
-                if not product or price < 0:
-                    response.action_data = {**action, "error": "Product unavailable"}
-                else:
-                    order_data = {"business_id":business["id"],"customer_id":customer.get("id") if customer else None,"conversation_id":conversation["id"],"order_number":f"ORD-{datetime.utcnow():%Y%m%d}-{uuid.uuid4().hex[:8].upper()}","status":"pending","payment_status":"pending","subtotal":round(price*quantity,2),"tax":0,"total":round(price*quantity,2),"currency":product.get("currency","ILS"),"items":[{"product_id":product.get("id"),"item_key":product.get("item_key"),"name":product.get("name"),"quantity":quantity,"price":price}],"customer_info":request.customer_info or {},"created_at":datetime.utcnow().isoformat()}
-                    created = supabase.table("orders").insert(order_data).execute()
-                    if created.data:
-                        order = created.data[0]
-                        action.update({"order_id":order["id"],"order_number":order["order_number"]})
-                        response.payment_url = f"/pay.html?order_id={order['id']}"
+                price = float(product.get("price", 0))
+                order_data = {"business_id": business["id"], "customer_id": customer.get("id") if customer else None, "conversation_id": conversation["id"], "order_number": f"ORD-{datetime.utcnow():%Y%m%d}-{uuid.uuid4().hex[:8].upper()}", "status": "pending", "payment_status": "pending", "subtotal": round(price * quantity, 2), "tax": 0, "total": round(price * quantity, 2), "currency": product.get("currency", "ILS"), "items": [{"product_id": product.get("id"), "item_key": product.get("item_key"), "name": product.get("name"), "quantity": quantity, "price": price}], "customer_info": request.customer_info or {}, "created_at": datetime.utcnow().isoformat()}
+                created = supabase.table("orders").insert(order_data).execute()
+                if created.data:
+                    action.update({"order_id": created.data[0]["id"], "order_number": created.data[0]["order_number"]})
+                    response.payment_url = f"/pay.html?order_id={created.data[0]['id']}"
             response.action_data = action
         return response
     except HTTPException:
