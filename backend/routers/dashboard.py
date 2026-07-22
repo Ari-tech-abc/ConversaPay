@@ -1,436 +1,86 @@
-"""
-Dashboard router for user dashboard analytics, widget management, and tier-based features.
-Provides comprehensive dashboard functionality with tier-based access controls.
-"""
-from fastapi import APIRouter, HTTPException, status, Depends, Request
-from typing import List, Dict, Any, Optional
-import logging
-from datetime import datetime, timedelta
+"""Dashboard APIs with explicit three-tier feature gates."""
+from typing import Any, Dict
+from fastapi import APIRouter, Depends, HTTPException
 from supabase import create_client, Client
-
 from backend.config import settings
 from backend.middleware.auth import AuthUser, require_auth
-from backend.models.schemas import (
-    ProfileResponse,
-    OrderResponse,
-    ProductResponse,
-)
 
-logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
+supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
 
-supabase: Client = create_client(
-    settings.SUPABASE_URL,
-    settings.SUPABASE_SERVICE_ROLE_KEY
-)
-
+PLANS = {
+    "free": {"products": True, "analytics": True, "profile": True, "domains": False, "orders": False, "sales": False, "wordpress": False, "html_embed": False, "whatsapp": False, "site_builder": False, "api_key_limit": 0, "domain_limit": 0},
+    "pro": {"products": True, "analytics": True, "profile": True, "domains": True, "orders": True, "sales": True, "wordpress": True, "html_embed": True, "whatsapp": False, "site_builder": False, "api_key_limit": 3, "domain_limit": 3},
+    "premium": {"products": True, "analytics": True, "profile": True, "domains": True, "orders": True, "sales": True, "wordpress": True, "html_embed": True, "whatsapp": True, "site_builder": True, "api_key_limit": 10, "domain_limit": 10},
+}
 
 def get_user_plan(user_id: str) -> Dict[str, Any]:
-    """Fetch user profile and return plan info."""
-    try:
-        result = supabase.table("profiles").select("*").eq("user_id", user_id).execute()
-        if result.data:
-            row = result.data[0]
-            return {
-                "plan_type": row.get("plan_type", "free"),
-                "email_verified": row.get("email_verified", False),
-                "subscription_expires_at": row.get("subscription_expires_at"),
-                "domain_limit": row.get("domain_limit", 1),
-                "payme_id": row.get("payme_id"),
-            }
-    except Exception as e:
-        logger.error(f"Error fetching user plan: {str(e)}")
-    return {"plan_type": "free", "email_verified": False, "domain_limit": 1}
+    result = supabase.table("profiles").select("plan_type,email_verified,subscription_expires_at,payme_id,whatsapp_phone_number_id").eq("user_id", user_id).maybe_single().execute()
+    row = result.data or {}
+    plan = row.get("plan_type", "free") if row.get("plan_type", "free") in PLANS else "free"
+    return {**row, "plan_type": plan}
 
-
-def require_verified_email(user: AuthUser) -> None:
-    """Raise 403 if email is not verified."""
+def require_verified(user: AuthUser) -> Dict[str, Any]:
     plan = get_user_plan(user.user_id)
-    if not plan.get("email_verified"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="email_not_verified"
-        )
+    if not plan.get("email_verified", False): raise HTTPException(403, "email_not_verified")
+    return plan
 
+def gate(plan: str, feature: str):
+    if not PLANS[plan].get(feature): raise HTTPException(403, f"{feature} is unavailable on the {plan.upper()} plan")
 
-# ============================================
-# Profile & Tier
-# ============================================
-
-@router.get("/profile", response_model=Dict[str, Any])
-async def get_dashboard_profile(current_user: AuthUser = Depends(require_auth)):
-    """Get current user's dashboard profile with tier information."""
-    require_verified_email(current_user)
-    profile = get_user_plan(current_user.user_id)
-    return {
-        "user_id": current_user.user_id,
-        "email": current_user.email,
-        **profile
-    }
-
+@router.get("/profile")
+async def profile(current_user: AuthUser = Depends(require_auth)):
+    p = require_verified(current_user)
+    return {"user_id":current_user.user_id,"email":current_user.email,"plan_type":p["plan_type"],"email_verified":p.get("email_verified",False),"subscription_expires_at":p.get("subscription_expires_at")}
 
 @router.get("/features")
-async def get_dashboard_features(current_user: AuthUser = Depends(require_auth)):
-    """Return available features based on user's tier."""
-    require_verified_email(current_user)
-    plan = get_user_plan(current_user.user_id)
-    plan_type = plan.get("plan_type", "free")
+async def features(current_user: AuthUser = Depends(require_auth)):
+    p = require_verified(current_user); plan=p["plan_type"]
+    return {"plan_type":plan, **PLANS[plan], "upgrade_url":"/upgrade.html" if plan != "premium" else ""}
 
-    features = {
-        "free": {
-            "analytics": True,
-            "product_management": True,
-            "order_management": False,
-            "sales": False,
-            "widget_embed": False,
-            "wordpress_plugin": False,
-            "html_embed": False,
-            "whatsapp_integration": False,
-            "domain_management": False,
-            "domain_limit": 1,
-            "overlay": True,
-        },
-        "pro": {
-            "analytics": True,
-            "product_management": True,
-            "order_management": True,
-            "sales": True,
-            "widget_embed": True,
-            "wordpress_plugin": True,
-            "html_embed": True,
-            "whatsapp_integration": False,
-            "domain_management": True,
-            "domain_limit": plan.get("domain_limit", 3),
-            "overlay": False,
-        },
-        "premium": {
-            "analytics": True,
-            "product_management": True,
-            "order_management": True,
-            "sales": True,
-            "widget_embed": True,
-            "wordpress_plugin": True,
-            "html_embed": True,
-            "whatsapp_integration": True,
-            "domain_management": True,
-            "domain_limit": plan.get("domain_limit", 10),
-            "overlay": False,
-        },
-    }
-
-    return features.get(plan_type, features["free"])
-
-
-# ============================================
-# Analytics
-# ============================================
+@router.get("/limits")
+async def limits(current_user: AuthUser = Depends(require_auth)):
+    p=require_verified(current_user); plan=p["plan_type"]
+    return {"plan_type":plan,"domain_limit":PLANS[plan]["domain_limit"],"api_key_limit":PLANS[plan]["api_key_limit"],"features":PLANS[plan]}
 
 @router.get("/analytics")
-async def get_analytics(current_user: AuthUser = Depends(require_auth)):
-    """Get aggregated business dashboard metrics."""
-    require_verified_email(current_user)
-    try:
-        businesses = supabase.table("businesses").select("id, business_name").eq("owner_id", current_user.user_id).execute()
-        if not businesses.data:
-            return {
-                "business_id": None,
-                "business_name": "",
-                "total_revenue": 0.0,
-                "closed_deals": 0,
-                "conversion_rate": 0.0,
-                "average_order_value": 0.0,
-                "total_conversations": 0,
-                "cdr_trend": "",
-                "charts_data": []
-            }
-
-        business_id = businesses.data[0]["id"]
-        business_name = businesses.data[0]["business_name"]
-
-        paid_orders = supabase.table("orders").select("total, status, created_at").eq("business_id", business_id).eq("status", "paid").execute()
-        total_revenue = sum(o.get("total", 0) for o in (paid_orders.data or []))
-        closed_deals = len(paid_orders.data) if paid_orders.data else 0
-        average_order_value = round(total_revenue / closed_deals, 2) if closed_deals > 0 else 0.0
-
-        conversations = supabase.table("conversations").select("session_id").eq("business_id", business_id).execute()
-        unique_sessions = len(set(c.get("session_id") for c in (conversations.data or []))) if conversations.data else 0
-        conversion_rate = round((closed_deals / unique_sessions) * 100, 2) if unique_sessions > 0 else 0.0
-
-        return {
-            "business_id": business_id,
-            "business_name": business_name,
-            "total_revenue": round(total_revenue, 2),
-            "closed_deals": closed_deals,
-            "conversion_rate": conversion_rate,
-            "average_order_value": average_order_value,
-            "total_conversations": unique_sessions,
-            "cdr_trend": "improving" if conversion_rate > 10 else "stable" if conversion_rate > 5 else "declining",
-            "charts_data": []
-        }
-    except Exception as e:
-        logger.error(f"Analytics error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Analytics calculation failed")
-
-
-# ============================================
-# Products
-# ============================================
+async def analytics(current_user: AuthUser = Depends(require_auth)):
+    p=require_verified(current_user)
+    businesses=supabase.table("businesses").select("id,business_name").eq("owner_id",current_user.user_id).execute()
+    if not businesses.data: return {"business_id":None,"business_name":"","total_revenue":0,"closed_deals":0,"conversion_rate":0,"average_order_value":0,"total_conversations":0,"charts_data":[]}
+    bid=businesses.data[0]["id"]
+    paid=supabase.table("orders").select("total").eq("business_id",bid).in_("status",["paid","shipped","delivered"]).execute().data or []
+    conversations=supabase.table("conversations").select("session_id").eq("business_id",bid).execute().data or []
+    revenue=sum(float(x.get("total",0)) for x in paid); deals=len(paid); sessions=len({x.get("session_id") for x in conversations if x.get("session_id")})
+    return {"business_id":bid,"business_name":businesses.data[0]["business_name"],"total_revenue":round(revenue,2),"closed_deals":deals,"conversion_rate":round(deals/sessions*100,2) if sessions else 0,"average_order_value":round(revenue/deals,2) if deals else 0,"total_conversations":sessions,"charts_data":[]}
 
 @router.get("/products")
-async def get_dashboard_products(current_user: AuthUser = Depends(require_auth)):
-    """Get product summary for the user's business."""
-    require_verified_email(current_user)
-    try:
-        businesses = supabase.table("businesses").select("id").eq("owner_id", current_user.user_id).execute()
-        if not businesses.data:
-            return {"products": [], "total": 0}
-
-        business_id = businesses.data[0]["id"]
-        products = supabase.table("products").select("id, name, price, stock_quantity, category").eq("business_id", business_id).execute()
-
-        product_list = []
-        for p in (products.data or []):
-            product_list.append({
-                "id": p.get("id"),
-                "name": p.get("name"),
-                "price": p.get("price", 0.0),
-                "stock": p.get("stock_quantity", 0),
-                "category": p.get("category", "")
-            })
-
-        return {"products": product_list, "total": len(product_list)}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Products fetch error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to fetch products")
-
-
-# ============================================
-# Orders (Tier-gated)
-# ============================================
+async def products(current_user: AuthUser = Depends(require_auth)):
+    require_verified(current_user); businesses=supabase.table("businesses").select("id").eq("owner_id",current_user.user_id).execute()
+    if not businesses.data:return {"products":[],"total":0}
+    rows=supabase.table("products").select("id,name,price,inventory_count,metadata").eq("business_id",businesses.data[0]["id"]).execute().data or []
+    return {"products":[{"id":x.get("id"),"name":x.get("name"),"price":x.get("price",0),"stock":x.get("inventory_count",-1),"category":(x.get("metadata") or {}).get("category","")} for x in rows],"total":len(rows)}
 
 @router.get("/orders")
-async def get_dashboard_orders(current_user: AuthUser = Depends(require_auth)):
-    """Get order summary - FREE tier returns locked response."""
-    require_verified_email(current_user)
-    try:
-        plan = get_user_plan(current_user.user_id)
-        tier = plan.get("plan_type", "free")
-
-        businesses = supabase.table("businesses").select("id").eq("owner_id", current_user.user_id).execute()
-        if not businesses.data:
-            raise HTTPException(status_code=404, detail="No business found")
-
-        business_id = businesses.data[0]["id"]
-
-        if tier == "free":
-            orders = supabase.table("orders").select("id, status, total, created_at").eq("business_id", business_id).order("created_at", desc=True).limit(5).execute()
-            return {
-                "orders": orders.data or [],
-                "total_count": len(orders.data or []),
-                "locked": True,
-                "lock_message": "ניהול הזמנות נעול בתכנית חינמית. שדרג ל-PRO או PREMIUM כדי לפתוח ניהול הזמנות מלא.",
-                "upgrade_url": "/pay?plan=pro"
-            }
-
-        orders = supabase.table("orders").select("id, status, total, customer_name, created_at").eq("business_id", business_id).order("created_at", desc=True).limit(50).execute()
-        return {"orders": orders.data or [], "total_count": len(orders.data or [])}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Orders fetch error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to fetch orders")
-
-
-# ============================================
-# Widget Domain Management
-# ============================================
-
-@router.get("/widget/{business_id}")
-async def get_widget_data(
-    business_id: str,
-    current_user: AuthUser = Depends(require_auth)
-):
-    """Get widget data with tier-based overlay controls."""
-    require_verified_email(current_user)
-    try:
-        ownership = supabase.table("businesses").select("id").eq("id", business_id).eq("owner_id", current_user.user_id).execute()
-        if not ownership.data:
-            raise HTTPException(status_code=403, detail="Unauthorized access")
-
-        widget = supabase.table("widgets").select("*").eq("business_id", business_id).execute()
-        profile = get_user_plan(current_user.user_id)
-        tier = profile.get("plan_type", "free")
-        widget_data = widget.data[0] if widget.data else {}
-
-        if tier == "free":
-            return {
-                "data": widget_data,
-                "has_limitations": True,
-                "overlay_active": True,
-                "overlay_text": "Order management is locked for FREE tier. Upgrade to unlock full features.",
-                "upgrade_url": "/pay?plan=pro"
-            }
-
-        return {
-            "data": widget_data,
-            "has_limitations": False,
-            "overlay_active": False,
-            "overlay_text": "",
-            "upgrade_url": ""
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Widget fetch error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get widget data")
-
-
-# ============================================
-# Upgrade Options
-# ============================================
+async def orders(current_user: AuthUser = Depends(require_auth)):
+    p=require_verified(current_user); plan=p["plan_type"]; businesses=supabase.table("businesses").select("id").eq("owner_id",current_user.user_id).execute()
+    if not businesses.data:return {"orders":[],"total_count":0,"locked":False}
+    rows=supabase.table("orders").select("id,order_number,status,total,customer_info,created_at").eq("business_id",businesses.data[0]["id"]).order("created_at",desc=True).limit(50).execute().data or []
+    if not PLANS[plan]["orders"]: return {"orders":rows[:5],"total_count":len(rows[:5]),"locked":True,"lock_message":"ניהול הזמנות ומכירות זמין במסלולי PRO ו-PREMIUM.","upgrade_url":"/upgrade.html"}
+    return {"orders":rows,"total_count":len(rows),"locked":False}
 
 @router.get("/upgrade-options")
-async def get_upgrade_options(current_user: AuthUser = Depends(require_auth)):
-    """Get available tier upgrade options."""
-    require_verified_email(current_user)
-    try:
-        profile = get_user_plan(current_user.user_id)
-        current_tier = profile.get("plan_type", "free")
+async def upgrade_options(current_user: AuthUser = Depends(require_auth)):
+    p=require_verified(current_user); current=p["plan_type"]; plans=[]
+    if current=="free": plans.append({"plan_name":"PRO","price":200,"currency":"ILS","features":["ניהול דומיינים","ניהול הזמנות ומכירות","ווידג׳ט","עד 3 API keys"],"upgrade_url":"/pay?plan=pro"})
+    if current in ("free","pro"): plans.append({"plan_name":"PREMIUM","price":350,"currency":"ILS","features":["כל תכונות PRO","WhatsApp","בונה אתרים חד-פעמי","עד 10 API keys"],"upgrade_url":"/pay?plan=premium"})
+    return {"plans":plans,"current_tier":current}
 
-        plans = []
-        if current_tier == "free":
-            plans.append({
-                "plan_name": "PRO",
-                "price": 19.99,
-                "currency": "USD",
-                "features": [
-                    "ניהול הזמנות מלא",
-                    "הטמעת ווידג'ט ללא הגבלה",
-                    "סטטיסטיקות מתקדמות",
-                    "ניהול דומיינים (3 דומיינים)",
-                    "תמיכה ב-WordPress ו-HTML"
-                ],
-                "payment_gateway": "bit",
-                "upgrade_url": "/pay?plan=pro"
-            })
-            plans.append({
-                "plan_name": "PREMIUM",
-                "price": 49.99,
-                "currency": "USD",
-                "features": [
-                    "כל תכונות PRO",
-                    "אינטגרציית WhatsApp",
-                    "ניהול דומיינים מורחב (10 דומיינים)",
-                    "תמיכה בעסקאות מלאה",
-                    "אנליטיקות מתקדמות"
-                ],
-                "payment_gateway": "payme",
-                "upgrade_url": "/pay?plan=premium"
-            })
-        elif current_tier == "pro":
-            plans.append({
-                "plan_name": "PREMIUM",
-                "price": 49.99,
-                "currency": "USD",
-                "features": [
-                    "כל תכונות PRO",
-                    "אינטגרציית WhatsApp",
-                    "ניהול דומיינים מורחב (10 דומיינים)",
-                    "תמיכה בעסקאות מלאה",
-                    "אנליטיקות מתקדמות"
-                ],
-                "payment_gateway": "payme",
-                "upgrade_url": "/pay?plan=premium"
-            })
-
-        return {"plans": plans, "current_tier": current_tier}
-    except Exception as e:
-        logger.error(f"Upgrade options error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to load upgrade options")
-
-
-# ============================================
-# WhatsApp (PREMIUM only)
-# ============================================
-
-@router.get("/whatsapp")
-async def get_whatsapp_status(current_user: AuthUser = Depends(require_auth)):
-    """Get WhatsApp connection status - PREMIUM tier only."""
-    require_verified_email(current_user)
-    try:
-        profile = get_user_plan(current_user.user_id)
-        plan_type = profile.get("plan_type", "free")
-
-        if plan_type != "premium":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="WhatsApp integration is only available for PREMIUM tier"
-            )
-
-        result = supabase.table("profiles").select("whatsapp_phone_number_id, whatsapp_access_token, whatsapp_verify_token").eq("user_id", current_user.user_id).execute()
-        data = result.data[0] if result.data else {}
-
-        return {
-            "connected": bool(data.get("whatsapp_phone_number_id")),
-            "phone_number": data.get("whatsapp_phone_number_id", ""),
-            "plan_type": plan_type
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"WhatsApp status error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to get WhatsApp status")
-
-
-# ============================================
-# Settings
-# ============================================
+@router.get("/builder-access")
+async def builder_access(current_user: AuthUser = Depends(require_auth)):
+    p=require_verified(current_user); gate(p["plan_type"],"site_builder")
+    return {"available":True,"start_url":"/api/v1/site-builder/access"}
 
 @router.get("/settings")
-async def get_settings(current_user: AuthUser = Depends(require_auth)):
-    """Get user settings including PayMe configuration."""
-    require_verified_email(current_user)
-    try:
-        profile = get_user_plan(current_user.user_id)
-        return {
-            "payme_id": profile.get("payme_id"),
-            "payme_merchant_id": profile.get("payme_id"),
-            "whatsapp_phone": profile.get("whatsapp_phone_number_id"),
-            "whatsapp_token": profile.get("whatsapp_access_token"),
-            "domain_limit": profile.get("domain_limit", 1)
-        }
-    except Exception as e:
-        logger.error(f"Settings fetch error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to load settings")
-
-
-@router.put("/settings/payme/{payme_id}")
-async def update_payme_settings(
-    payme_id: str,
-    current_user: AuthUser = Depends(require_auth)
-):
-    """Update PayMe merchant ID for PREMIUM tier users."""
-    require_verified_email(current_user)
-    try:
-        profile = get_user_plan(current_user.user_id)
-        plan_type = profile.get("plan_type", "free")
-
-        if plan_type != "premium":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="הגדרות PayMe זמינות רק בתכנית PREMIUM"
-            )
-
-        result = supabase.table("profiles").update({"payme_id": payme_id, "payme_merchant_id": payme_id}).eq("user_id", current_user.user_id).execute()
-
-        if not result.data:
-            raise HTTPException(status_code=500, detail="Failed to update PayMe settings")
-
-        return {"message": "הגדרות PayMe עודכנו בהצלחה", "payme_id": payme_id}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"PayMe update error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to update PayMe settings")
+async def settings_page(current_user: AuthUser = Depends(require_auth)):
+    p=require_verified(current_user); return {"plan_type":p["plan_type"],"payme_id":p.get("payme_id"),"whatsapp_phone":p.get("whatsapp_phone_number_id"),"domain_limit":PLANS[p["plan_type"]]["domain_limit"],"api_key_limit":PLANS[p["plan_type"]]["api_key_limit"]}
