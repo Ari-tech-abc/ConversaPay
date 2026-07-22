@@ -1,202 +1,75 @@
-"""
-Widget Router - Public API for embedded chat widget
-Handles widget configuration with domain-based security and Pro tier enforcement
-"""
+"""Public widget configuration with three-tier plan enforcement."""
 from fastapi import APIRouter, HTTPException, status, Request
 from fastapi.responses import JSONResponse
+from datetime import datetime, timezone
 import logging
-from datetime import datetime
-
 from supabase import create_client
+from backend.config import settings
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["widget"])
 
 
-async def get_business_plan_info(business_id: str, supabase_client) -> dict:
-    """
-    Get the business owner's subscription plan info.
-    Returns dict with plan_type, is_active, and expires_at.
-    """
-    try:
-        # Get the business record to find the owner
-        biz_result = supabase_client.table('businesses')\
-            .select('owner_id')\
-            .eq('id', business_id)\
-            .single()\
-            .execute()
-        
-        if not biz_result.data:
-            logger.warning(f"Business not found for plan check: {business_id}")
-            return {'plan_type': 'free', 'is_active': True}
-        
-        user_id = biz_result.data.get('owner_id')
-        if not user_id:
-            logger.warning(f"Business {business_id} has no owner_id")
-            return {'plan_type': 'free', 'is_active': True}
-        
-        # Check the user's profile for subscription plan
-        profile_result = supabase_client.table('profiles')\
-            .select('plan_type, subscription_expires_at')\
-            .eq('user_id', user_id)\
-            .single()\
-            .execute()
-        
-        if not profile_result.data:
-            logger.warning(f"No profile found for user {user_id}")
-            return {'plan_type': 'free', 'is_active': True}
-        
-        profile = profile_result.data
-        plan_type = profile.get('plan_type', 'free')
-        is_pro = plan_type in ('pro', 'premium')
-        expires_at = profile.get('subscription_expires_at')
-        
-        # Free tier is always active (no expiry) - Widget works for everyone
-        if plan_type == 'free':
-            return {'plan_type': 'free', 'is_active': True, 'is_pro': False}
-        
-        # Check if paid subscription has expired
-        is_active = True
-        if expires_at:
-            try:
-                # Fix: handle timezone-aware datetime
-                expires_dt = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
-                expires_dt = expires_dt.replace(tzinfo=None)  # Make naive
-                now = datetime.utcnow()
-                if expires_dt < now:
-                    is_active = False
-            except Exception as e:
-                logger.warning(f"Error parsing subscription expiry for user {user_id}: {e}")
-                pass
-        
-        logger.info(f"User {user_id} plan: {plan_type}, active: {is_active} (business {business_id})")
-        return {
-            'plan_type': plan_type, 
-            'is_active': is_active,
-            'is_pro': plan_type in ('pro', 'premium') or is_pro
-        }
-        
-    except Exception as e:
-        logger.error(f"Error checking plan for business {business_id}: {str(e)}", exc_info=True)
-        return {'plan_type': 'free', 'is_active': True, 'is_pro': False}
+def _host(value: str) -> str:
+    value = (value or "").strip()
+    if "://" in value:
+        value = value.split("://", 1)[1]
+    return value.split("/", 1)[0].split(":", 1)[0].lower().rstrip(".")
+
+
+def _plan_info(business_id: str, client) -> dict:
+    business = client.table("businesses").select("owner_id").eq("id", business_id).maybe_single().execute()
+    if not business.data:
+        return {"plan_type": "free", "active": False}
+    profile = client.table("profiles").select("plan_type, subscription_expires_at").eq("user_id", business.data["owner_id"]).maybe_single().execute()
+    row = profile.data or {}
+    plan = row.get("plan_type", "free")
+    expiry = row.get("subscription_expires_at")
+    active = True
+    if plan in ("pro", "premium") and expiry:
+        try:
+            expires = datetime.fromisoformat(str(expiry).replace("Z", "+00:00"))
+            if expires.tzinfo is None:
+                expires = expires.replace(tzinfo=timezone.utc)
+            active = expires > datetime.now(timezone.utc)
+        except ValueError:
+            active = False
+    return {"plan_type": plan, "active": active}
 
 
 @router.get("/config/{business_id}")
 async def get_widget_config(business_id: str, request: Request):
-    """
-    Get public widget configuration for a business.
-    """
     try:
-        # Get the origin/referer from request headers
-        origin = request.headers.get('Origin', '')
-        referer = request.headers.get('Referer', '')
-        host = request.headers.get('Host', '')
-        
-        # Determine the requesting domain
-        requesting_domain = origin or referer or host
-        if requesting_domain.startswith('http'):
-            requesting_domain = requesting_domain.split('/')[2]
-        
-        logger.info(f"Widget config request for business {business_id} from domain: {requesting_domain}")
-        
-        # Handle the system demo bot slug "conversapay"
-        is_demo_bot = (business_id == 'conversapay')
-        
-        from backend.config import settings as app_settings
-        supabase = create_client(
-            app_settings.SUPABASE_URL,
-            app_settings.SUPABASE_SERVICE_ROLE_KEY
-        )
-        
-        if is_demo_bot:
-            result = supabase.table('businesses')\
-                .select('id, settings, bot_name, greeting_message, theme_colors')\
-                .eq('business_id', business_id)\
-                .single()\
-                .execute()
-        else:
-            result = supabase.table('businesses')\
-                .select('settings, bot_name, greeting_message, theme_colors')\
-                .eq('id', business_id)\
-                .single()\
-                .execute()
-        
+        client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+        demo = business_id == "conversapay"
+        query = client.table("businesses").select("id, settings, bot_name, greeting_message, theme_colors") if demo else client.table("businesses").select("settings, bot_name, greeting_message, theme_colors")
+        result = (query.eq("business_id", business_id) if demo else query.eq("id", business_id)).maybe_single().execute()
         if not result.data:
             raise HTTPException(status_code=404, detail="Business not found")
-        
         business = result.data
-        biz_settings = business.get('settings', {})
-        allowed_domains = biz_settings.get('allowed_domains', [])
-        
-        bot_name = business.get('bot_name', 'AI Assistant')
-        greeting_message = business.get('greeting_message', 'Hello! How can I help you today?')
-        theme_colors = business.get('theme_colors', {})
-        
-        # Determine plan info
-        plan_info = await get_business_plan_info(business_id, supabase)
-        plan_type = plan_info.get('plan_type', 'free')
-        is_plan_active = plan_info.get('is_active', False)
-        
-        # Determine if this is the conversapay.org internal domain
-        own_domain = app_settings.BASE_URL.split('://')[-1].split('/')[0] if '://' in app_settings.BASE_URL else app_settings.BASE_URL
-        is_conversapay_domain = (
-            'localhost' in requesting_domain or
-            '127.0.0.1' in requesting_domain or
-            'conversapay' in requesting_domain or
-            own_domain in requesting_domain or
-            requesting_domain.endswith('conversapay.org')
-        )
-        
-        # 3-Tier Access Control - Widget works for everyone on internal domain
-        if is_conversapay_domain:
-            pass  # Always allowed
-        elif plan_type == 'free':
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Widget available only on conversapay.org for Free plan. Upgrade to Pro."
-            )
-        elif not is_plan_active:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"Your {plan_type.capitalize()} subscription has expired."
-            )
-        
-        # Build response
-        config = {
+        plan = _plan_info(business.get("id", business_id), client)
+        origin = _host(request.headers.get("origin") or request.headers.get("referer") or request.headers.get("host"))
+        own = _host(settings.BASE_URL)
+        internal = origin in {"localhost", "127.0.0.1", own} or origin == "conversapay.org" or origin.endswith(".conversapay.org")
+        if plan["plan_type"] == "free" and not internal:
+            raise HTTPException(status_code=403, detail="Widget is available on the ConversaPay domain for the free plan")
+        if plan["plan_type"] in ("pro", "premium") and not plan["active"]:
+            raise HTTPException(status_code=403, detail="Subscription has expired")
+        return JSONResponse(content={
             "business_id": business_id,
-            "bot_name": bot_name,
-            "greeting_message": greeting_message,
+            "bot_name": business.get("bot_name", "AI Assistant"),
+            "greeting_message": business.get("greeting_message", "Hello! How can I help you today?"),
             "avatar_url": None,
-            "theme_colors": theme_colors or {
-                "primary": "#A855F7",
-                "secondary": "#00D9FF",
-                "background": "#0B0F19"
-            },
-            "features": {
-                "checkout": plan_type in ('pro', 'premium'),
-                "product_catalog": True,
-                "plan_type": plan_type,
-                "is_pro": plan_type in ('pro', 'premium')
-            }
-        }
-        
-        return JSONResponse(content=config)
-        
+            "theme_colors": business.get("theme_colors") or {"primary": "#A855F7", "secondary": "#00D9FF", "background": "#0B0F19"},
+            "features": {"checkout": plan["plan_type"] in ("pro", "premium"), "product_catalog": True, "plan_type": plan["plan_type"]}
+        })
     except HTTPException:
         raise
-    except Exception as e:
-        logger.error(f"Error fetching widget config: {str(e)}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to load widget configuration"
-        )
+    except Exception as exc:
+        logger.error("Widget config error: %s", exc, exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to load widget configuration")
 
 
 @router.get("/health")
 async def widget_health():
-    """Health check for widget service."""
-    return {
-        "status": "healthy",
-        "service": "conversapay-widget",
-        "version": "2.0.0"
-    }
+    return {"status": "healthy", "service": "conversapay-widget", "version": "2.0.0"}
