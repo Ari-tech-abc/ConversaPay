@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="ConversaPay user dashboard">
+  <meta name="description" content="לוח הניהול של ConversaPay לעסקים">
   <meta name="theme-color" content="#0b1020">
   <meta name="referrer" content="same-origin">
-  <title>ConversaPay | Dashboard</title>
+  <title>ConversaPay | לוח ניהול</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -889,7 +889,7 @@
           <div class="brand-mark">CP</div>
           <div>
             <span class="brand-title">ConversaPay</span>
-            <span class="brand-sub">Commerce command center</span>
+            <span class="brand-sub">מרכז הניהול שלך</span>
           </div>
         </a>
 
@@ -903,29 +903,29 @@
           </div>
           <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
             <span class="plan-pill" id="planPill"><span class="dot"></span><span id="plan">FREE</span></span>
-            <span class="tiny-pill" id="securityState">Session secured</span>
+            <span class="tiny-pill" id="securityState">כניסה מוגנת</span>
           </div>
         </section>
 
         <section class="nav-section">
-          <span class="nav-label">ניווט</span>
+          <span class="nav-label">מה תרצו לראות</span>
           <a class="nav-link" href="#overview"><span class="nav-main"><span class="nav-icon">◈</span><span>סקירה</span></span><span class="nav-chevron">←</span></a>
           <a class="nav-link" href="#orders"><span class="nav-main"><span class="nav-icon">₪</span><span>הזמנות</span></span><span class="nav-chevron">←</span></a>
           <a class="nav-link" href="#products"><span class="nav-main"><span class="nav-icon">□</span><span>מוצרים</span></span><span class="nav-chevron">←</span></a>
-          <a class="nav-link" href="#keys"><span class="nav-main"><span class="nav-icon">⌘</span><span>API Keys</span></span><span class="nav-chevron">←</span></a>
+          <a class="nav-link" href="#keys"><span class="nav-main"><span class="nav-icon">⌘</span><span>מפתחות חיבור</span></span><span class="nav-chevron">←</span></a>
         </section>
 
         <section class="nav-section">
           <span class="nav-label">פעולות מהירות</span>
-          <a class="quick-action" href="/setup-guide.html"><span class="nav-main"><span class="nav-icon">↗</span><span>הטמעה והתקנה</span></span><span class="nav-chevron">←</span></a>
-          <a class="quick-action" href="/settings.html"><span class="nav-main"><span class="nav-icon">⚙</span><span>הגדרות</span></span><span class="nav-chevron">←</span></a>
-          <button class="nav-button" id="logoutBtn" type="button"><span class="nav-main"><span class="nav-icon">⇠</span><span>התנתקות</span></span><span class="nav-chevron">←</span></button>
+          <a class="quick-action" href="/setup-guide.html"><span class="nav-main"><span class="nav-icon">↗</span><span>חיבור לאתר</span></span><span class="nav-chevron">←</span></a>
+          <a class="quick-action" href="/settings.html"><span class="nav-main"><span class="nav-icon">⚙</span><span>חשבון והעדפות</span></span><span class="nav-chevron">←</span></a>
+          <button class="nav-button" id="logoutBtn" type="button"><span class="nav-main"><span class="nav-icon">⇠</span><span>יציאה מהחשבון</span></span><span class="nav-chevron">←</span></button>
         </section>
 
         <section class="upgrade-card" aria-label="שדרוג">
-          <strong>מוכנים לפתוח את כל הפיצ׳רים?</strong>
-          <p>הזמנות מלאות, דומיינים, Site Builder, WhatsApp ומפתחות API נרחבים — הכל ממסך אחד.</p>
-          <a class="btn primary" href="/upgrade.html">שדרוג תוכנית</a>
+          <strong>רוצים לפתוח עוד יכולות?</strong>
+          <p>תצוגת מכירות מלאה, חיבור לאתרים, בונה אתר ו‑WhatsApp — במסלול מתקדם אחד.</p>
+          <a class="btn primary" href="/upgrade.html">שדרוג מסלול</a>
         </section>
       </aside>
 
@@ -933,17 +933,17 @@
         <section class="hero" id="overview">
           <div class="hero-grid">
             <div>
-              <span class="eyebrow">ConversaPay dashboard</span>
-              <h1>שליטה חכמה על המכירות, המוצר והאבטחה.</h1>
-              <p id="heroCopy">טוען נתוני חשבון, הזמנות, מוצרים ופיצ׳רים זמינים...</p>
+              <span class="eyebrow">לוח ניהול פשוט</span>
+              <h1>כל מה שצריך כדי לנהל את העסק במקום אחד.</h1>
+              <p id="heroCopy">טוען נתוני חשבון, מכירות, מוצרים ויכולות זמינות...</p>
               <div class="hero-actions">
                 <a class="btn secondary" href="/upgrade.html">ניהול מסלול</a>
-                <button class="btn primary" id="builderBtn" type="button" hidden>פתח Site Builder</button>
-                <button class="btn secondary" id="newKeyHeroBtn" type="button">צור API Key</button>
+                <button class="btn primary" id="builderBtn" type="button" hidden>פתח את בונה האתר</button>
+                <button class="btn secondary" id="newKeyHeroBtn" type="button">צור מפתח חיבור</button>
               </div>
               <div class="hero-foot">
-                <span class="badge" id="businessBadge">אין עסק פעיל</span>
-                <span class="badge" id="featureSummary">בודק פיצ׳רים...</span>
+                <span class="badge" id="businessBadge">טוען עסק...</span>
+                <span class="badge" id="featureSummary">טוען גישה...</span>
               </div>
             </div>
 
@@ -951,24 +951,24 @@
               <article class="spotlight-card">
                 <div class="spotlight-header">
                   <div>
-                    <span class="muted">בריאות חשבון</span>
+                    <span class="muted">מצב החשבון</span>
                     <div class="spotlight-value" id="securityScore">A+</div>
                   </div>
-                  <span class="tiny-pill state-open" id="subscriptionState">Active</span>
+                  <span class="tiny-pill state-open" id="subscriptionState">פעיל</span>
                 </div>
-                <p class="muted">Session מאובטח, גישה לפי תוכנית, ו־API Keys עם שליטה מרכזית.</p>
+                <p class="muted">החשבון מוגן, והגישה ליכולות נקבעת לפי המסלול שלך.</p>
                 <div class="progress" aria-hidden="true"><span id="securityProgress"></span></div>
               </article>
 
               <article class="spotlight-card">
                 <div class="spotlight-header">
                   <div>
-                    <span class="muted">חלון פעולה מהיר</span>
+                    <span class="muted">מה אפשר לעשות עכשיו</span>
                     <div class="spotlight-value" id="keyLimitSpotlight">0</div>
                   </div>
-                  <span class="tiny-pill" id="ordersLockSummary">Checking</span>
+                  <span class="tiny-pill" id="ordersLockSummary">טוען</span>
                 </div>
-                <p class="muted" id="spotlightCopy">טוען מגבלות API, מצב הזמנות וגישה לפיצ׳רים מתקדמים.</p>
+                <p class="muted" id="spotlightCopy">טוען אפשרויות זמינות בחשבון...</p>
               </article>
             </div>
           </div>
@@ -982,28 +982,28 @@
         <section class="panel">
           <div class="panel-head">
             <div class="panel-title">
-              <h2>מדדי ליבה</h2>
-              <p>תמונת מצב מיידית של הפעילות העסקית שלך.</p>
+              <h2>תמונת מצב</h2>
+              <p>המספרים החשובים של הפעילות העסקית שלך.</p>
             </div>
           </div>
           <div class="grid-4">
             <article class="metric">
-              <div class="metric-label"><span>הכנסות</span><span class="tiny-pill">Revenue</span></div>
+              <div class="metric-label"><span>הכנסות</span><span class="tiny-pill">נכנס בפועל</span></div>
               <strong id="revenue">₪0</strong>
-              <small>סך ההכנסות שנאספו בפועל.</small>
+              <small>סך הכסף שהתקבל בפועל.</small>
             </article>
             <article class="metric">
-              <div class="metric-label"><span>עסקאות</span><span class="tiny-pill">Deals</span></div>
+              <div class="metric-label"><span>עסקאות</span><span class="tiny-pill">הושלמו</span></div>
               <strong id="deals">0</strong>
-              <small>מספר העסקאות שנסגרו.</small>
+              <small>מספר העסקאות שנסגרו בהצלחה.</small>
             </article>
             <article class="metric">
-              <div class="metric-label"><span>שיחות</span><span class="tiny-pill">Sessions</span></div>
+              <div class="metric-label"><span>שיחות</span><span class="tiny-pill">נמדדו</span></div>
               <strong id="conversations">0</strong>
-              <small>כמות אינטראקציות שנמדדו במערכת.</small>
+              <small>כמות הפניות שנרשמו במערכת.</small>
             </article>
             <article class="metric">
-              <div class="metric-label"><span>אחוז המרה</span><span class="tiny-pill">Conversion</span></div>
+              <div class="metric-label"><span>אחוז המרה</span><span class="tiny-pill">מתוך הפניות</span></div>
               <strong id="conversionRate">0%</strong>
               <small id="conversionHint">עוד אין מספיק נתונים להצגת מגמה.</small>
             </article>
@@ -1014,8 +1014,22 @@
           <article class="panel">
             <div class="panel-head">
               <div class="panel-title">
-                <h2>מצב תוכנית</h2>
-                <p>הטבות, מגבלות ויכולות זמינות.</p>
+                <h2>פעולות מהירות</h2>
+                <p>הדברים שעושים הכי הרבה, בלי לחפש.</p>
+              </div>
+            </div>
+            <div class="security-list">
+              <button class="row-card" id="quickCreateKey" type="button"><span class="row-meta"><strong>יצירת מפתח חיבור</strong><small class="muted">לחיבור האתר או מערכת חיצונית</small></span><span class="nav-chevron">+</span></button>
+              <a class="row-card" href="/setup-guide.html"><span class="row-meta"><strong>מדריך התחלה</strong><small class="muted">חיבור לאתר, WordPress וקוד מוכן</small></span><span class="nav-chevron">←</span></a>
+              <a class="row-card" href="/profile.html"><span class="row-meta"><strong>פרטי חשבון</strong><small class="muted">עדכון המשתמש והעסק</small></span><span class="nav-chevron">←</span></a>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h2>המסלול שלך</h2>
+                <p>מה פתוח עכשיו ומה מחכה לשדרוג.</p>
               </div>
               <span class="status-pill" id="planStatusBadge">FREE</span>
             </div>
@@ -1025,25 +1039,11 @@
           <article class="panel">
             <div class="panel-head">
               <div class="panel-title">
-                <h2>מרכז אבטחה</h2>
-                <p>בדיקות לקוח, session וגישה רגישה.</p>
+                <h2>מצב החשבון</h2>
+                <p>בדיקות גישה, הגנה וחיבור בטוח.</p>
               </div>
             </div>
             <div class="security-list" id="securityChecklist"></div>
-          </article>
-
-          <article class="panel">
-            <div class="panel-head">
-              <div class="panel-title">
-                <h2>פעולות מהירות</h2>
-                <p>קיצורי דרך לעבודה שוטפת.</p>
-              </div>
-            </div>
-            <div class="security-list">
-              <button class="row-card" id="quickCreateKey" type="button"><span class="row-meta"><strong>יצירת API Key</strong><small class="muted">פתח מפתח חדש לעסק הפעיל</small></span><span class="nav-chevron">+</span></button>
-              <a class="row-card" href="/setup-guide.html"><span class="row-meta"><strong>מדריך הטמעה</strong><small class="muted">WordPress, HTML וקוד מוכן לשימוש</small></span><span class="nav-chevron">←</span></a>
-              <a class="row-card" href="/profile.html"><span class="row-meta"><strong>ניהול פרופיל</strong><small class="muted">עדכון פרטי משתמש וזהות החשבון</small></span><span class="nav-chevron">←</span></a>
-            </div>
           </article>
         </section>
 
@@ -1078,8 +1078,8 @@
           <article class="panel" id="products">
             <div class="panel-head">
               <div class="panel-title">
-                <h2>קטלוג מוצרים</h2>
-                <p>מבט מהיר על מוצרים, מחירים ומלאי.</p>
+                <h2>מוצרים ומחירים</h2>
+                <p>מבט מהיר על המוצרים, המחירים והמלאי שלך.</p>
               </div>
               <a class="btn secondary" href="/setup-guide.html">איך מתחילים</a>
             </div>
@@ -1093,10 +1093,10 @@
           <article class="panel" id="keys">
             <div class="panel-head">
               <div class="panel-title">
-                <h2>Widget API Keys</h2>
+                <h2>מפתחות חיבור</h2>
                 <p id="keyHelp">בודק הרשאות וזמינות...</p>
               </div>
-              <button class="btn primary" id="newKeyBtn" type="button">צור Key</button>
+              <button class="btn primary" id="newKeyBtn" type="button">צור מפתח</button>
             </div>
             <div class="key-list" id="keysBody">
               <div class="empty">טוען...</div>
@@ -1106,24 +1106,24 @@
           <article class="panel">
             <div class="panel-head">
               <div class="panel-title">
-                <h2>פיצ׳רים לפי התוכנית</h2>
-                <p>מה פתוח כבר עכשיו ומה מחכה לשדרוג.</p>
+                <h2>יכולות זמינות</h2>
+                <p>מה פתוח כבר עכשיו ומה אפשר להוסיף בהמשך.</p>
               </div>
             </div>
             <div class="feature-grid">
               <article class="feature-card" id="ordersFeature">
                 <div class="feature-body">
                   <h3>הזמנות ומכירות</h3>
-                  <p>ניהול גבייה, עסקאות וניתוח הכנסות במסך אחד.</p>
+                  <p>מעקב אחרי גבייה, עסקאות והכנסות במקום אחד.</p>
                   <div class="feature-list">
-                    <div class="row-card"><span class="row-meta"><strong>אחוז המרה</strong><small class="muted">מדד לביצועי המכירה</small></span><strong id="featureConversion">0%</strong></div>
-                    <div class="row-card"><span class="row-meta"><strong>עסקאות סגורות</strong><small class="muted">התקדמות מסחרית</small></span><strong id="featureDeals">0</strong></div>
+                    <div class="row-card"><span class="row-meta"><strong>אחוז המרה</strong><small class="muted">איך פניות הופכות לרכישה</small></span><strong id="featureConversion">0%</strong></div>
+                    <div class="row-card"><span class="row-meta"><strong>עסקאות סגורות</strong><small class="muted">כמה רכישות הושלמו</small></span><strong id="featureDeals">0</strong></div>
                   </div>
                 </div>
                 <div class="overlay" id="ordersLock">
                   <div class="overlay-box">
-                    <strong>אזור ההזמנות פתוח ב‑PRO</strong>
-                    <p>פתח תצוגה מלאה של מכירות, סטטיסטיקות ותהליכי גבייה.</p>
+                    <strong>אזור ההזמנות נפתח במסלול PRO</strong>
+                    <p>פתחו תצוגה מלאה של מכירות, סטטיסטיקות ותשלומים ממקום אחד.</p>
                     <a class="btn primary" href="/upgrade.html">שדרג עכשיו</a>
                   </div>
                 </div>
@@ -1131,17 +1131,17 @@
 
               <article class="feature-card" id="domainsFeature">
                 <div class="feature-body">
-                  <h3>דומיינים והטמעה</h3>
-                  <p>חיבור האתרים שלך, שליטה בפריסה והגבלות אבטחה.</p>
+                  <h3>חיבור לאתרים</h3>
+                  <p>חיבור האתרים שלכם, שליטה בפריסה וגישה בטוחה לכל יעד.</p>
                   <div class="feature-list">
-                    <div class="row-card"><span class="row-meta"><strong>מגבלת דומיינים</strong><small class="muted">כמה יעדים מותר לחבר</small></span><strong id="domainLimit">0</strong></div>
-                    <div class="row-card"><span class="row-meta"><strong>מצב הטמעה</strong><small class="muted">תלוי במסלול</small></span><strong id="embedState">מנוהל</strong></div>
+                    <div class="row-card"><span class="row-meta"><strong>מספר אתרים</strong><small class="muted">כמה אתרים אפשר לחבר</small></span><strong id="domainLimit">0</strong></div>
+                    <div class="row-card"><span class="row-meta"><strong>סטטוס חיבור</strong><small class="muted">זמינות לפי המסלול</small></span><strong id="embedState">מנוהל</strong></div>
                   </div>
                 </div>
                 <div class="overlay" id="domainsLock">
                   <div class="overlay-box">
-                    <strong>ניהול דומיינים זמין ב‑PRO</strong>
-                    <p>שלב את הווידג׳ט באתרים חיצוניים ונהל גישה בצורה בטוחה.</p>
+                    <strong>חיבור לאתרים זמין ב‑PRO</strong>
+                    <p>חברו את ConversaPay לאתרים חיצוניים ונהלו גישה בצורה פשוטה ובטוחה.</p>
                     <a class="btn primary" href="/upgrade.html">שדרג ל‑PRO</a>
                   </div>
                 </div>
@@ -1149,17 +1149,17 @@
 
               <article class="feature-card" id="embedFeature">
                 <div class="feature-body">
-                  <h3>HTML + WordPress</h3>
-                  <p>קוד הטמעה, מדריכים וזרימות פריסה מוכנות לשימוש.</p>
+                  <h3>קוד חיבור והטמעה</h3>
+                  <p>קוד מוכן, מדריכים ברורים וזרימות פריסה פשוטות לשימוש.</p>
                   <div class="feature-list">
                     <div class="row-card"><span class="row-meta"><strong>מדריך הטמעה</strong><small class="muted">זמין בכל מסלול</small></span><strong>מוכן</strong></div>
-                    <div class="row-card"><span class="row-meta"><strong>קוד מוכן</strong><small class="muted">פתיחה לפי תוכנית</small></span><strong id="embedStatus">Checking</strong></div>
+                    <div class="row-card"><span class="row-meta"><strong>קוד מוכן</strong><small class="muted">נפתח לפי המסלול שלך</small></span><strong id="embedStatus">טוען</strong></div>
                   </div>
                 </div>
                 <div class="overlay" id="embedLock">
                   <div class="overlay-box">
-                    <strong>הטמעה מתקדמת זמינה ב‑PRO</strong>
-                    <p>פתח קוד מלא, הורדות WordPress ופריסה מבוקרת.</p>
+                    <strong>חיבור מתקדם נפתח ב‑PRO</strong>
+                    <p>פתחו קוד מלא, הורדות WordPress ופריסה מבוקרת לאתר שלכם.</p>
                     <a class="btn primary" href="/upgrade.html">שדרג ל‑PRO</a>
                   </div>
                 </div>
@@ -1167,17 +1167,17 @@
 
               <article class="feature-card" id="whatsappFeature">
                 <div class="feature-body">
-                  <h3>WhatsApp + Site Builder</h3>
-                  <p>הפיצ׳רים הפרימיום שלך לזרימות מכירה ושדרוג נוכחות דיגיטלית.</p>
+                  <h3>WhatsApp ובונה האתר</h3>
+                  <p>כלי פרימיום לצמיחה, תקשורת עם לקוחות ונוכחות דיגיטלית חזקה יותר.</p>
                   <div class="feature-list">
-                    <div class="row-card"><span class="row-meta"><strong>WhatsApp</strong><small class="muted">Business workflows</small></span><strong id="whatsappStatus">נעול</strong></div>
-                    <div class="row-card"><span class="row-meta"><strong>Site Builder</strong><small class="muted">גישה מאובטחת חד-פעמית</small></span><strong id="builderStatus">נעול</strong></div>
+                    <div class="row-card"><span class="row-meta"><strong>WhatsApp</strong><small class="muted">תקשורת עם לקוחות</small></span><strong id="whatsappStatus">נעול</strong></div>
+                    <div class="row-card"><span class="row-meta"><strong>בונה האתר</strong><small class="muted">פתיחת גישה מהירה</small></span><strong id="builderStatus">נעול</strong></div>
                   </div>
                 </div>
                 <div class="overlay" id="whatsappLock">
                   <div class="overlay-box">
-                    <strong>פיצ׳רי PREMIUM בלבד</strong>
-                    <p>WhatsApp Business ובונה האתרים זמינים למנויי Premium.</p>
+                    <strong>כלי PREMIUM בלבד</strong>
+                    <p>WhatsApp Business ובונה האתר זמינים למנויי Premium.</p>
                     <a class="btn primary" href="/upgrade.html">שדרג ל‑PREMIUM</a>
                   </div>
                 </div>
@@ -1193,8 +1193,8 @@
     <div class="modal" role="dialog" aria-modal="true" aria-labelledby="createKeyTitle">
       <div class="modal-head">
         <div>
-          <h3 id="createKeyTitle">יצירת API Key חדש</h3>
-          <p class="helper">תן שם ברור למפתח כדי לזהות אותו מאוחר יותר.</p>
+          <h3 id="createKeyTitle">יצירת מפתח חיבור חדש</h3>
+          <p class="helper">בחרו שם ברור שיעזור לזהות את החיבור בהמשך.</p>
         </div>
         <button class="btn small secondary" data-close-modal="createKeyModal" type="button">סגור</button>
       </div>
@@ -1202,7 +1202,7 @@
         <div class="modal-body">
           <div class="field">
             <label for="keyNameInput">שם המפתח</label>
-            <input id="keyNameInput" name="keyName" type="text" maxlength="120" placeholder="למשל: Production Widget">
+            <input id="keyNameInput" name="keyName" type="text" maxlength="120" placeholder="למשל: האתר הראשי">
           </div>
         </div>
         <div class="modal-foot">
@@ -1218,13 +1218,13 @@
       <div class="modal-head">
         <div>
           <h3 id="revealKeyTitle">המפתח נוצר בהצלחה</h3>
-          <p class="helper">שמור אותו עכשיו — זו הפעם היחידה שהוא יוצג במלואו.</p>
+          <p class="helper">שמרו אותו עכשיו — זו הפעם היחידה שהוא יוצג במלואו.</p>
         </div>
         <button class="btn small secondary" data-close-modal="revealKeyModal" type="button">סגור</button>
       </div>
       <div class="modal-body">
         <div class="field">
-          <label>API Key</label>
+          <label>מפתח חיבור</label>
           <div class="secure-output" id="revealedKeyValue">—</div>
         </div>
       </div>
@@ -1382,13 +1382,13 @@
       const container = $('planHighlights');
       container.textContent = '';
       const rows = [
-        ['מצב מנוי', features.subscription_active === false ? 'המנוי לא פעיל כרגע' : `תוכנית ${state.currentPlan.toUpperCase()} פעילה`, features.subscription_active === false ? 'נדרש חידוש כדי לפתוח את כל היכולות' : 'הגישה לפיצ׳רים נקבעת לפי המסלול'],
-        ['API Keys', String(features.api_key_limit ?? 0), 'כמות המפתחות הפעילים שמותר לייצר'],
-        ['דומיינים', String(features.domain_limit ?? 0), 'מספר הדומיינים הזמינים לחיבור'],
-        ['Site Builder', features.site_builder ? 'פתוח' : 'נעול', 'גישה מאובטחת נוצרת ישירות מהשרת']
+        ['מצב המסלול', features.subscription_active === false ? 'נדרש חידוש' : `תוכנית ${state.currentPlan.toUpperCase()} פעילה`, features.subscription_active === false ? 'חידוש המסלול יחזיר את כל היכולות המלאות' : 'היכולות הזמינות נקבעות לפי המסלול שלך'],
+        ['מפתחות חיבור', String(features.api_key_limit ?? 0), 'כמה מפתחות חיבור אפשר ליצור כרגע'],
+        ['חיבור לאתרים', String(features.domain_limit ?? 0), 'מספר האתרים שאפשר לחבר למסלול הנוכחי'],
+        ['בונה האתר', features.site_builder ? 'פתוח' : 'נעול', 'גישה ישירה מתוך החשבון ללא צעדים מיותרים']
       ];
       rows.forEach(([title, value, subtitle]) => {
-        const card = buildRowCard(title, subtitle, value, title === 'Site Builder' && !features.site_builder ? 'status-pill state-locked' : '');
+        const card = buildRowCard(title, subtitle, value, title === 'בונה האתר' && !features.site_builder ? 'status-pill state-locked' : '');
         container.appendChild(card);
       });
     }
@@ -1397,10 +1397,10 @@
       const container = $('securityChecklist');
       container.textContent = '';
       const checks = [
-        ['Session', 'הטוקן נטען מהאחסון ונבדק בכל בקשה רגישה', 'Protected'],
-        ['API Keys', features.api_key_limit > 0 ? 'אפשר ליצור מפתחות עם שליטה מתוך הדאשבורד' : 'יצירת מפתחות דורשת שדרוג מסלול', features.api_key_limit > 0 ? 'Ready' : 'Locked'],
-        ['Site Builder', features.site_builder ? 'גישה זמנית נמשכת מהשרת ולא נשלחת כטוקן URL קבוע' : 'זמין במסלול PREMIUM בלבד', features.site_builder ? 'Hardened' : 'Restricted'],
-        ['גישה לדומיינים', features.domains ? 'פיצ׳ר פתוח ומנוהל לפי תוכנית' : 'עדיין נעול במסלול הנוכחי', features.domains ? 'Managed' : 'Locked']
+        ['כניסה לחשבון', 'הכניסה נבדקת אוטומטית לפני כל פעולה רגישה', 'מוגן'],
+        ['מפתחות חיבור', features.api_key_limit > 0 ? 'אפשר ליצור מפתחות ולנהל אותם מתוך החשבון' : 'יצירת מפתחות תיפתח לאחר שדרוג מסלול', features.api_key_limit > 0 ? 'זמין' : 'דורש שדרוג'],
+        ['בונה האתר', features.site_builder ? 'הגישה נפתחת בצורה מאובטחת מתוך השרת' : 'זמין במסלול PREMIUM בלבד', features.site_builder ? 'פעיל' : 'מוגבל'],
+        ['חיבור לאתרים', features.domains ? 'אפשר לחבר אתרים ולנהל גישה לפי המסלול' : 'החיבור עדיין נעול במסלול הנוכחי', features.domains ? 'פתוח' : 'נעול']
       ];
       checks.forEach(([title, subtitle, value]) => container.appendChild(buildRowCard(title, subtitle, value)));
     }
@@ -1485,7 +1485,7 @@
       if (isLocked) {
         const empty = document.createElement('div');
         empty.className = 'empty';
-        empty.textContent = 'המפתחות נעולים במסלול הנוכחי.';
+        empty.textContent = 'מפתחות החיבור נעולים במסלול הנוכחי.';
         container.appendChild(empty);
         return;
       }
@@ -1493,7 +1493,7 @@
       if (!keys.length) {
         const empty = document.createElement('div');
         empty.className = 'empty';
-        empty.textContent = 'אין keys פעילים כרגע.';
+        empty.textContent = 'אין מפתחות חיבור פעילים כרגע.';
         container.appendChild(empty);
         return;
       }
@@ -1505,7 +1505,7 @@
         const meta = document.createElement('div');
         meta.className = 'row-meta';
         const title = document.createElement('strong');
-        title.textContent = key.name || 'API Key';
+        title.textContent = key.name || 'מפתח חיבור';
         const sub = document.createElement('small');
         sub.className = 'muted';
         sub.textContent = `${key.key_prefix || 'key'}…`;
@@ -1515,7 +1515,7 @@
         actions.className = 'row-actions';
         const pill = document.createElement('span');
         pill.className = 'tiny-pill';
-        pill.textContent = 'Active';
+        pill.textContent = 'פעיל';
         const button = document.createElement('button');
         button.className = 'btn small danger';
         button.type = 'button';
@@ -1542,10 +1542,10 @@
       $('newKeyHeroBtn').disabled = isLocked;
       $('quickCreateKey').disabled = isLocked;
       $('keyLimitSpotlight').textContent = String(data.limit ?? state.features?.api_key_limit ?? 0);
-      $('ordersLockSummary').textContent = isLocked ? 'API מוגבל' : 'API פתוח';
+      $('ordersLockSummary').textContent = isLocked ? 'מוגבל' : 'זמין';
       $('keyHelp').textContent = isLocked
-        ? 'Widget API Keys זמינים במסלולי PRO ו‑PREMIUM.'
-        : `${String(data.plan_type || state.currentPlan).toUpperCase()}: עד ${data.limit} מפתחות פעילים`;
+        ? 'מפתחות חיבור זמינים במסלולי PRO ו‑PREMIUM.'
+        : `${String(data.plan_type || state.currentPlan).toUpperCase()}: עד ${data.limit} מפתחות חיבור פעילים`;
       renderKeys(data.keys || [], isLocked);
     }
 
@@ -1580,7 +1580,7 @@
         $('revealedKeyValue').textContent = state.createdKeyValue || 'לא הוחזר מפתח מלא.';
         closeModal('createKeyModal');
         openModal('revealKeyModal');
-        showNotice('API Key חדש נוצר בהצלחה.');
+        showNotice('נוצר מפתח חיבור חדש.');
         $('createKeyForm').reset();
         await loadKeys();
       } catch (error) {
@@ -1604,24 +1604,24 @@
       $('planStatusBadge').textContent = state.currentPlan.toUpperCase();
       $('businessBadge').textContent = state.currentBusinessName;
       $('planPill').className = 'plan-pill';
-      $('subscriptionState').textContent = features.subscription_active === false ? 'Renewal needed' : 'Active';
+      $('subscriptionState').textContent = features.subscription_active === false ? 'נדרש חידוש' : 'פעיל';
       $('subscriptionState').className = features.subscription_active === false ? 'tiny-pill state-critical' : 'tiny-pill state-open';
-      $('securityState').textContent = state.currentPlan === 'premium' ? 'Premium secured' : 'Session secured';
+      $('securityState').textContent = state.currentPlan === 'premium' ? 'הגנה מורחבת' : 'כניסה מוגנת';
       $('heroCopy').textContent = features.subscription_active === false
-        ? 'המנוי לא פעיל כרגע. חלק מהפיצ׳רים חזרו ל‑FREE עד לחידוש.'
-        : `תוכנית ${state.currentPlan.toUpperCase()} פעילה. כאן תראה מכירות, מוצרים, מפתחות API וגישה לפיצ׳רים מתקדמים.`;
+        ? 'המסלול לא פעיל כרגע. חלק מהיכולות חזרו למצב הבסיסי עד לחידוש.'
+        : `תוכנית ${state.currentPlan.toUpperCase()} פעילה. כאן אפשר לראות מכירות, מוצרים, מפתחות חיבור וכלי צמיחה במקום אחד.`;
       $('featureSummary').textContent = features.subscription_active === false
-        ? 'המנוי לא פעיל'
-        : `${state.currentPlan.toUpperCase()} · גישה חיה`;
+        ? 'המסלול לא פעיל'
+        : `${state.currentPlan.toUpperCase()} · פעיל`;
       $('spotlightCopy').textContent = features.orders
-        ? 'גישה מלאה להזמנות, API Keys ופעולות מסחריות מרכזיות.'
-        : 'הזמנות ו‑API Keys מתקדמים ייפתחו לאחר שדרוג ל‑PRO או PREMIUM.';
+        ? 'אפשר לראות הזמנות, לנהל מפתחות חיבור ולעבוד ממסך אחד.'
+        : 'הזמנות מלאות ומפתחות חיבור מתקדמים ייפתחו אחרי שדרוג למסלול מתאים.';
       $('securityScore').textContent = features.site_builder || features.whatsapp ? 'A+' : features.orders ? 'A' : 'B+';
       $('securityProgress').style.width = features.site_builder ? '96%' : features.orders ? '84%' : '68%';
       $('builderStatus').textContent = features.site_builder ? 'פתוח' : 'נעול';
       $('whatsappStatus').textContent = features.whatsapp ? 'פתוח' : 'נעול';
       $('embedStatus').textContent = features.html_embed ? 'פתוח' : 'נעול';
-      $('embedState').textContent = features.domains ? 'מחובר לפי מסלול' : 'דורש שדרוג';
+      $('embedState').textContent = features.domains ? 'זמין במסלול' : 'דורש שדרוג';
 
       setAvatar(me.profile?.full_name || me.email || 'א');
       $('revenue').textContent = formatCurrency(analytics.total_revenue);
@@ -1632,8 +1632,8 @@
       $('featureDeals').textContent = String(analytics.closed_deals ?? 0);
       $('domainLimit').textContent = String(features.domain_limit ?? 0);
       $('conversionHint').textContent = Number(analytics.conversion_rate || 0) >= 10
-        ? 'יחס המרה בריא יחסית למסלול הנוכחי.'
-        : 'כדאי לשפר מסרים, הצעות וזרימת תשלום להגדלת ההמרה.';
+        ? 'יחס ההמרה נראה בריא למסלול הנוכחי.'
+        : 'אפשר לשפר את המסרים או את חוויית התשלום כדי להגדיל המרות.';
 
       setFeatureLock('ordersFeature', 'ordersLock', !!features.orders);
       setFeatureLock('domainsFeature', 'domainsLock', !!features.domains);
@@ -1642,7 +1642,7 @@
 
       const ordersList = Array.isArray(orders.orders) ? orders.orders : [];
       $('ordersHint').textContent = orders.locked
-        ? 'מוצגות עד 5 הזמנות בלבד. שדרוג יפתח את התמונה המלאה.'
+        ? 'מוצגות כאן עד 5 הזמנות אחרונות. לשאר התמונה המלאה אפשר לשדרג.'
         : `מציג ${ordersList.length} הזמנות אחרונות.`;
 
       renderPlanHighlights(features);
@@ -1659,7 +1659,7 @@
         if (!data.url) throw new Error('לא התקבל קישור גישה תקין.');
         location.href = data.url;
       } catch (error) {
-        showNotice(error.message || 'לא ניתן לפתוח את בונה האתרים.', true);
+        showNotice(error.message || 'לא ניתן לפתוח את בונה האתר.', true);
         button.disabled = false;
         button.textContent = originalText;
       }
@@ -1689,7 +1689,7 @@
         }
       } catch (error) {
         if (error.message !== 'unauthorized') {
-          showNotice(error.message || 'שגיאה בטעינת הדאשבורד.', true);
+          showNotice(error.message || 'שגיאה בטעינת לוח הניהול.', true);
         }
       }
     }
@@ -1735,7 +1735,7 @@
         event.preventDefault();
         const name = $('keyNameInput').value.trim();
         if (!name) {
-          showNotice('נא להזין שם למפתח.', true);
+          showNotice('נא להזין שם למפתח החיבור.', true);
           return;
         }
         createKey(name);
@@ -1745,7 +1745,7 @@
         if (!state.createdKeyValue) return;
         try {
           await navigator.clipboard.writeText(state.createdKeyValue);
-          showNotice('המפתח הועתק ללוח.');
+          showNotice('מפתח החיבור הועתק ללוח.');
         } catch (_) {
           showNotice('לא ניתן להעתיק את המפתח אוטומטית.', true);
         }
