@@ -1,30 +1,18 @@
 """
 Seed / reset the fixed ConversaPay administrator: AMRANIARIEL.
 
-Why this exists
----------------
-The admin credentials must NEVER live in front-end HTML/JS (anyone could read
-them via "view source"). Instead the account lives in the ``admin_users`` table
-with a salted PBKDF2 password hash, exactly like the interactive creation
-script. The password is therefore CHANGEABLE at any time - just re-run this
-script (or update the row in the database) with a new value.
+The password is intentionally required from the environment. This script
+must never create a usable account with a committed or implicit password.
 
-Usage
------
-    # 1. Make sure the username column exists (once):
-    #    psql < backend/scripts/add_admin_username.sql
-    #
-    # 2. Seed / reset the admin:
-    python -m backend.scripts.seed_admin_amraniariel
-
-The password can be overridden with the ADMIN_SEED_PASSWORD env var so it does
-not have to be committed anywhere.
+Usage:
+    ADMIN_SEED_PASSWORD='use-a-long-random-secret' \\
+      python -m backend.scripts.seed_admin_amraniariel
 """
 
-import os
-import sys
 import hashlib
+import os
 import secrets
+import sys
 from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -32,35 +20,24 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from supabase import create_client
 from backend.config import settings
 
-# --- Fixed identity -------------------------------------------------------
 ADMIN_USERNAME = "AMRANIARIEL"
 ADMIN_EMAIL = os.environ.get("ADMIN_SEED_EMAIL", "amraniariel12@gmail.com")
 ADMIN_FULL_NAME = "Ariel Amrani"
-# Default password is changeable: override via env, or change the DB row later.
-ADMIN_PASSWORD = os.environ.get("ADMIN_SEED_PASSWORD", "AA13243546")
 
 
 def hash_password(password: str) -> str:
-    """Salted PBKDF2-SHA256 hash, matching the format used by the admin router."""
+    """Salted PBKDF2-SHA256 hash, matching the admin router format."""
     salt = secrets.token_hex(32)
-    pwd_hash = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100000)
-    return f"{salt}${pwd_hash.hex()}"
+    digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100000)
+    return f"{salt}${digest.hex()}"
 
 
 def seed_admin() -> None:
-    print("=" * 60)
-    print("ConversaPay - seeding fixed admin:", ADMIN_USERNAME)
-    print("=" * 60)
+    password = os.environ.get("ADMIN_SEED_PASSWORD")
+    if not password or len(password) < 12:
+        raise SystemExit("ADMIN_SEED_PASSWORD is required and must be at least 12 characters")
 
-    supabase = create_client(
-        settings.SUPABASE_URL,
-        settings.SUPABASE_SERVICE_ROLE_KEY,
-    )
-
-    password_hash = hash_password(ADMIN_PASSWORD)
-    now = datetime.now(timezone.utc).isoformat()
-
-    # Look up an existing row by username first, then by email.
+    supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
     existing = supabase.table("admin_users").select("id").eq("username", ADMIN_USERNAME).execute()
     if not existing.data:
         existing = supabase.table("admin_users").select("id").eq("email", ADMIN_EMAIL).execute()
@@ -69,7 +46,7 @@ def seed_admin() -> None:
         "username": ADMIN_USERNAME,
         "email": ADMIN_EMAIL,
         "full_name": ADMIN_FULL_NAME,
-        "password_hash": password_hash,
+        "password_hash": hash_password(password),
         "role": "super_admin",
         "status": "active",
         "login_attempts": 0,
@@ -83,19 +60,16 @@ def seed_admin() -> None:
     }
 
     if existing.data:
-        admin_id = existing.data[0]["id"]
-        supabase.table("admin_users").update(payload).eq("id", admin_id).execute()
+        supabase.table("admin_users").update(payload).eq("id", existing.data[0]["id"]).execute()
         print("Updated existing admin and reset password.")
     else:
-        payload["created_at"] = now
+        payload["created_at"] = datetime.now(timezone.utc).isoformat()
         supabase.table("admin_users").insert(payload).execute()
         print("Created new admin.")
 
-    print(f"   Username: {ADMIN_USERNAME}")
-    print(f"   Email:    {ADMIN_EMAIL}")
-    print("   Role:     super_admin")
-    print("   Password: (set - change it any time by re-running with ADMIN_SEED_PASSWORD)")
-    print("\nLog in at: /admin-login.html  (use the username)")
+    print(f"Username: {ADMIN_USERNAME}")
+    print(f"Email: {ADMIN_EMAIL}")
+    print("Password: supplied via ADMIN_SEED_PASSWORD and never printed")
 
 
 if __name__ == "__main__":
