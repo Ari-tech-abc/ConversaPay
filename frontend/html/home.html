@@ -3,142 +3,117 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>ConversaPay | מכירות ותשלומים שמרגישים טבעיים</title>
-  <meta name="description" content="ConversaPay מחברת בין שיחה, הצעה ותשלום בחוויה אלגנטית, מהירה ומאובטחת לעסקים מודרניים.">
-  <meta name="theme-color" content="#f4f1ea">
+  <title>ConversaPay | מכירות ותשלומים לעסקים מודרניים</title>
+  <meta name="description" content="ConversaPay מחברת בין שיחה, הצעה ותשלום בחוויית מכירה ברורה, מהירה ומוכנה לייצור.">
+  <meta name="theme-color" content="#07111f">
   <link rel="canonical" href="https://www.conversapay.org/">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="conversapay-ui.css">
   <style>
-    :root{--bg:oklch(96% .012 92);--ink:oklch(24% .025 255);--muted:oklch(48% .025 255);--line:oklch(86% .018 92);--paper:oklch(99% .008 92);--accent:oklch(55% .19 258);--soft:oklch(91% .055 258);--warm:oklch(76% .13 72);--success:oklch(52% .12 155)}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 'DM Sans',system-ui,sans-serif}body:before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 86% 8%,oklch(86% .08 258/.32),transparent 32%),radial-gradient(circle at 12% 58%,oklch(90% .07 72/.35),transparent 28%)}a{color:inherit}.wrap{width:min(1180px,calc(100% - 40px));margin:auto;position:relative}header{height:76px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.brand{font:700 1.18rem 'Space Grotesk';text-decoration:none;letter-spacing:-.04em}.nav{display:flex;align-items:center;gap:24px}.nav a{text-decoration:none;color:var(--muted);font-size:.92rem}.nav a:hover{color:var(--ink)}.nav .login{padding:10px 16px;border:1px solid var(--line);border-radius:999px;color:var(--ink);background:var(--paper)}.hero{padding:96px 0 112px;display:grid;grid-template-columns:1.05fr .95fr;gap:80px;align-items:center}.eyebrow{display:inline-flex;align-items:center;gap:8px;color:var(--accent);font-weight:700;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase}.eyebrow i{width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block}.hero h1{font:700 clamp(3rem,7vw,6.5rem)/.94 'Space Grotesk';letter-spacing:-.085em;margin:18px 0 28px;max-width:10ch;text-wrap:balance}.hero p{font-size:1.12rem;color:var(--muted);max-width:50ch;margin:0 0 32px}.actions{display:flex;gap:12px;flex-wrap:wrap}.btn{display:inline-flex;min-height:48px;align-items:center;justify-content:center;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:700;border:1px solid transparent;transition:transform .2s cubic-bezier(.16,1,.3,1)}.btn:hover{transform:translateY(-2px)}.primary{background:var(--ink);color:var(--paper)}.secondary{background:var(--paper);border-color:var(--line)}.hero-note{margin-top:16px;color:var(--muted);font-size:.86rem}.hero-visual{position:relative;min-height:430px}.orbit{position:absolute;inset:12% 8%;border:1px solid var(--line);border-radius:50%;transform:rotate(-16deg)}.orbit:after{content:"";position:absolute;width:14px;height:14px;border-radius:50%;background:var(--warm);top:4%;right:18%;box-shadow:0 0 0 8px oklch(76% .13 72/.16)}.console{position:absolute;inset:8% 4% 8% 12%;background:var(--paper);border:1px solid var(--line);border-radius:28px;padding:20px;box-shadow:0 28px 70px oklch(24% .025 255/.14);transform:rotate(2deg)}.console-top{display:flex;justify-content:space-between;align-items:center;padding-bottom:18px;border-bottom:1px solid var(--line)}.dots{display:flex;gap:5px}.dots span{width:7px;height:7px;border-radius:50%;background:var(--line)}.console-title{font-weight:700}.chat{display:grid;gap:12px;padding:24px 4px}.bubble{max-width:82%;padding:13px 15px;border-radius:18px;background:oklch(94% .012 92);color:var(--muted)}.bubble.me{margin-right:auto;background:var(--accent);color:var(--paper);border-bottom-left-radius:5px}.checkout{padding:16px;border:1px solid var(--line);border-radius:18px;background:var(--bg)}.checkout-row{display:flex;justify-content:space-between}.checkout strong{font:700 1.5rem 'Space Grotesk'}.mini-btn{display:block;text-align:center;margin-top:14px;background:var(--ink);color:var(--paper);padding:10px;border-radius:999px;font-weight:700}.section{padding:72px 0;border-top:1px solid var(--line)}.section-head{display:flex;justify-content:space-between;gap:24px;align-items:end;margin-bottom:34px}.section h2{font:700 clamp(2rem,4vw,3.3rem)/1 'Space Grotesk';letter-spacing:-.065em;margin:0;max-width:12ch}.section-head p{max-width:42ch;color:var(--muted);margin:0}.features{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line)}.feature{background:var(--paper);padding:28px;min-height:190px}.feature-num{font:700 .8rem 'Space Grotesk';color:var(--accent)}.feature h3{font:700 1.3rem 'Space Grotesk';margin:34px 0 10px}.feature p{color:var(--muted);margin:0}.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.plan{padding:26px;background:var(--paper);border:1px solid var(--line);border-radius:22px}.plan.featured{background:var(--ink);color:var(--paper);border-color:var(--ink);transform:translateY(-10px)}.plan small{color:var(--muted)}.featured small{color:oklch(84% .025 92)}.plan h3{font:700 1.5rem 'Space Grotesk';margin:12px 0 4px}.price{font:700 2.4rem 'Space Grotesk';margin:24px 0}.price span{font:400 .9rem 'DM Sans';color:var(--muted)}.featured .price span{color:oklch(84% .025 92)}.plan ul{list-style:none;padding:0;margin:0 0 24px;display:grid;gap:10px;color:var(--muted)}.featured ul{color:oklch(88% .02 92)}.plan li:before{content:"✓";color:var(--success);margin-left:8px;font-weight:700}.cta{padding:80px 0 96px}.cta-inner{background:var(--soft);border:1px solid oklch(55% .19 258/.22);border-radius:28px;padding:48px;display:flex;justify-content:space-between;align-items:center;gap:28px}.cta h2{font:700 clamp(2rem,4vw,3.5rem)/1 'Space Grotesk';letter-spacing:-.07em;margin:0 0 12px}.cta p{margin:0;color:var(--muted)}footer{border-top:1px solid var(--line);padding:24px 0;color:var(--muted);font-size:.85rem;display:flex;justify-content:space-between}@media(max-width:860px){.hero{grid-template-columns:1fr;gap:40px;padding:68px 0 80px}.hero-visual{min-height:360px}.features,.plans{grid-template-columns:1fr}.plan.featured{transform:none}.section-head,.cta-inner{align-items:flex-start;flex-direction:column}.cta-inner{padding:32px}.nav a:not(.login){display:none}}@media(max-width:520px){.wrap{width:min(100% - 28px,1180px)}.hero-visual{min-height:310px}.console{inset:5% 0 5% 4%;padding:14px}.hero h1{font-size:clamp(2.8rem,16vw,4.8rem)}.section{padding:52px 0}footer{flex-direction:column;gap:8px}}
+    .home-shell{display:grid;gap:22px}
+    .home-hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(280px,.9fr);gap:22px;align-items:stretch}
+    .home-hero .cp-panel{background:radial-gradient(circle at top right, rgba(55,215,255,.22), transparent 26%),linear-gradient(135deg, rgba(124,92,255,.22), rgba(7,17,31,.92));}
+    .visual-card{display:grid;gap:14px;align-content:center}
+    .chat-card,.summary-card{padding:16px 18px;border-radius:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+    .chat-line{padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.05);color:var(--cp-muted-strong)}
+    .chat-line.me{background:linear-gradient(135deg,var(--cp-accent),#4fdcff);color:white}
+    .home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+    .home-plan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+    @media (max-width:920px){.home-hero{grid-template-columns:1fr}}
   </style>
 </head>
-<body>
-  <div class="wrap">
-    <header>
-      <a class="brand" href="/">ConversaPay</a>
-      <nav class="nav" aria-label="ניווט ראשי">
-        <a href="#how">איך זה עובד</a>
-        <a href="#plans">מסלולים</a>
-        <a class="login" href="/login.html">כניסה לחשבון</a>
-      </nav>
-    </header>
+<body class="cp-page">
+  <header class="cp-topbar">
+    <a class="cp-brand" href="home.html"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
+    <div class="cp-actions" style="margin:0;min-width:260px;max-width:340px;">
+      <a class="cp-button-secondary" href="#plans">מסלולים</a>
+      <a class="cp-button" href="login.html">כניסה לחשבון</a>
+    </div>
+  </header>
 
-    <main>
-      <section class="hero">
-        <div>
-          <span class="eyebrow"><i></i> חוויית מכירה שמרגישה טבעית</span>
-          <h1>תנו ללקוחות לקנות כמו שהם מדברים.</h1>
-          <p>ConversaPay מחברת בין שיחה, הצעה ותשלום בחוויה אחת אלגנטית וברורה. פחות צעדים, פחות בלבול, ויותר רכישות שמרגישות פשוטות ללקוח.</p>
-          <div class="actions">
-            <a class="btn primary" href="/register.html">פתחו חשבון חינם</a>
-            <a class="btn secondary" href="#how">ראו איך זה עובד</a>
+  <main class="cp-shell home-shell">
+    <section class="home-hero">
+      <article class="cp-panel cp-stack">
+        <span class="cp-kicker">Conversational commerce</span>
+        <h1 class="cp-title">מכירות, תשלומים ובונה אתר במקום אחד.</h1>
+        <p class="cp-subtitle">ConversaPay נבנתה לעסקים שרוצים מסלול פשוט: להציג מוצר, לדבר עם הלקוח, ולקבל תשלום בלי חיכוך.</p>
+        <div class="cp-actions">
+          <a class="cp-button" href="register.html">פתחו חשבון</a>
+          <a class="cp-button-secondary" href="dashboard.html">צפו בדאשבורד</a>
+        </div>
+        <div class="cp-links">
+          <a class="cp-link" href="privacy.html">מדיניות פרטיות</a>
+          <a class="cp-link" href="terms.html">תנאי שימוש</a>
+        </div>
+      </article>
+
+      <article class="cp-panel visual-card">
+        <div class="chat-card">
+          <div class="chat-line">מצאתי ללקוח את המוצר המתאים.</div>
+          <div class="chat-line me">אפשר לסגור הזמנה עכשיו?</div>
+          <div class="chat-line">כן. הנה תשלום מאובטח בלחיצה אחת.</div>
+        </div>
+        <div class="summary-card cp-list">
+          <div class="cp-list-item"><div class="cp-list-meta"><strong>שליטה מלאה</strong><small>מוצרים, הזמנות וחיבורים</small></div><span class="cp-badge good">Live</span></div>
+          <div class="cp-list-item"><div class="cp-list-meta"><strong>בונה אתר</strong><small>זמין מתוך החשבון</small></div><span class="cp-badge">Builder</span></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="home-grid">
+      <article class="cp-plan">
+        <h2>שיחה</h2>
+        <p class="cp-muted">הלקוח מתחיל טבעי. ConversaPay ממשיכה את המסלול בלי טפסים מיותרים.</p>
+      </article>
+      <article class="cp-plan">
+        <h2>מכירה</h2>
+        <p class="cp-muted">מוצר, מחיר ותשלום באותה חוויה, עם מעבר חלק בין שלבים.</p>
+      </article>
+      <article class="cp-plan">
+        <h2>ניהול</h2>
+        <p class="cp-muted">הדאשבורד מרכז נתונים, חיבורים, מפתחות והגדרות למסך אחד מקצועי.</p>
+      </article>
+    </section>
+
+    <section class="cp-stack" id="plans">
+      <div class="cp-stack" style="text-align:center;">
+        <h2>בחירת מסלול</h2>
+        <p class="cp-muted">מתחילים ב‑FREE, צומחים עם PRO, ומרחיבים עם PREMIUM.</p>
+      </div>
+      <div class="home-plan-grid">
+        <article class="cp-plan">
+          <div class="cp-badge">FREE</div>
+          <div class="cp-price">₪0<small>/חודש</small></div>
+          <div class="cp-list">
+            <div class="cp-list-item"><div class="cp-list-meta"><strong>מוצרים וחשבון</strong><small>בסיס עבודה מלא להתחלה</small></div></div>
+            <div class="cp-list-item"><div class="cp-list-meta"><strong>פתיחת בונה האתר</strong><small>גישה מתוך החשבון</small></div></div>
           </div>
-          <div class="hero-note">הקמה מהירה · אבטחה מובנית · שליטה מלאה לכל אורך הדרך</div>
-        </div>
-
-        <div class="hero-visual" aria-label="הדגמה של שיחת תשלום">
-          <div class="orbit"></div>
-          <div class="console">
-            <div class="console-top">
-              <span class="console-title">ConversaPay / מכירה חכמה</span>
-              <div class="dots"><span></span><span></span><span></span></div>
-            </div>
-            <div class="chat">
-              <div class="bubble">היי, מצאתי לך את האפשרות שמתאימה בדיוק למה שחיפשת.</div>
-              <div class="bubble me">מעולה. אפשר לסיים הזמנה עכשיו?</div>
-              <div class="bubble">כן, הנה סיכום קצר ותשלום מאובטח בלחיצה אחת.</div>
-              <div class="checkout">
-                <div class="checkout-row"><span>ערכת התחלה</span><strong>₪200</strong></div>
-                <a class="mini-btn" href="/register.html">המשך לתשלום</a>
-              </div>
-            </div>
+        </article>
+        <article class="cp-plan featured">
+          <div class="cp-badge good">PRO</div>
+          <div class="cp-price">₪200<small>/חודש</small></div>
+          <div class="cp-list">
+            <div class="cp-list-item"><div class="cp-list-meta"><strong>הזמנות מלאות</strong><small>מכירות, תשלומים וסטטיסטיקות</small></div></div>
+            <div class="cp-list-item"><div class="cp-list-meta"><strong>הטמעה לאתרים</strong><small>דומיינים ומפתחות חיבור</small></div></div>
           </div>
-        </div>
-      </section>
-
-      <section class="section" id="how">
-        <div class="section-head">
-          <h2>כך מכירה טובה מרגישה</h2>
-          <p>כל מסך וכל צעד נבנו כדי לעזור ללקוח להבין מהר, להרגיש בטוח, ולהשלים רכישה בלי חיכוך מיותר.</p>
-        </div>
-        <div class="features">
-          <article class="feature">
-            <span class="feature-num">01 / שיחה</span>
-            <h3>הלקוח מתחיל בדרך טבעית</h3>
-            <p>הווידג׳ט מוביל את השיחה בשפה פשוטה, עוזר לבחור נכון ומחליף טפסים מכבידים בחוויה נעימה יותר.</p>
-          </article>
-          <article class="feature">
-            <span class="feature-num">02 / הצעה</span>
-            <h3>הצעה ברורה בזמן הנכון</h3>
-            <p>מוצרים, מחירים ותשלום נשארים מחוברים לאותו מסע, כך שהלקוח לא צריך לקפוץ בין מסכים או לנחש מה הצעד הבא.</p>
-          </article>
-          <article class="feature">
-            <span class="feature-num">03 / ניהול</span>
-            <h3>מרכז ניהול ברור ומסודר</h3>
-            <p>מכירות, מוצרים והגדרות העסק מרוכזים במסך אחד נקי, בלי שפה טכנית מיותרת ובלי עומס מבלבל.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="section" id="plans">
-        <div class="section-head">
-          <h2>מתחילים נכון וגדלים בזמן שלכם</h2>
-          <p>כל מסלול בנוי לשלב אחר בעסק, כדי שתשלמו רק על מה שאתם באמת צריכים עכשיו.</p>
-        </div>
-        <div class="plans">
-          <article class="plan">
-            <small>להתנסות חכמה</small>
-            <h3>FREE</h3>
-            <div class="price">₪0 <span>/ חודש</span></div>
-            <ul>
-              <li>ניהול מוצרים</li>
-              <li>תמונת מצב בסיסית</li>
-              <li>פרופיל עסק</li>
-            </ul>
-            <a class="btn secondary" href="/register.html">התחילו בחינם</a>
-          </article>
-          <article class="plan featured">
-            <small>לעסקים בצמיחה</small>
-            <h3>PRO</h3>
-            <div class="price">₪200 <span>/ חודש</span></div>
-            <ul>
-              <li>הזמנות ומכירות</li>
-              <li>חיבור לאתר</li>
-              <li>עד 3 מפתחות חיבור</li>
-            </ul>
-            <a class="btn secondary" href="/register.html?plan=pro">בחרו PRO</a>
-          </article>
-          <article class="plan">
-            <small>למערך מלא</small>
-            <h3>PREMIUM</h3>
-            <div class="price">₪350 <span>/ חודש</span></div>
-            <ul>
-              <li>כל מה שיש ב‑PRO</li>
-              <li>WhatsApp Business</li>
-              <li>בונה אתרים מבוסס AI</li>
-            </ul>
-            <a class="btn secondary" href="/register.html?plan=premium">בחרו PREMIUM</a>
-          </article>
-        </div>
-      </section>
-
-      <section class="cta">
-        <div class="cta-inner">
-          <div>
-            <h2>השלב הבא של העסק שלכם מתחיל כאן.</h2>
-            <p>פתחו חשבון, הוסיפו מוצר אחד, ותנו ללקוחות דרך נעימה יותר לקנות.</p>
+        </article>
+        <article class="cp-plan">
+          <div class="cp-badge">PREMIUM</div>
+          <div class="cp-price">₪350<small>/חודש</small></div>
+          <div class="cp-list">
+            <div class="cp-list-item"><div class="cp-list-meta"><strong>WhatsApp Business</strong><small>תקשורת מתקדמת עם לקוחות</small></div></div>
+            <div class="cp-list-item"><div class="cp-list-meta"><strong>נפח מורחב</strong><small>יותר מפתחות חיבור ויכולות</small></div></div>
           </div>
-          <a class="btn primary" href="/register.html">בואו נתחיל</a>
-        </div>
-      </section>
-    </main>
+        </article>
+      </div>
+    </section>
+  </main>
 
-    <footer>
-      <span>© 2026 ConversaPay</span>
-      <span>מכירות חכמות יותר, לעסקים שרוצים להיראות ולהרגיש מקצועיים.</span>
-    </footer>
-  </div>
+  <footer class="cp-footer">
+    <p>© 2026 ConversaPay</p>
+    <p>מכירות חכמות לעסקים שרוצים UI מדויק ומוכן ל‑production.</p>
+  </footer>
 </body>
 </html>

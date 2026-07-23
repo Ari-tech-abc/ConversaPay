@@ -1,1 +1,76 @@
-<!doctype html><html lang="he" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ConversaPay - שדרוג תכנית</title><style>:root{--bg:#0f1419;--card:#1a1f2ecc;--text:#f5f7fa;--muted:#a0aec0;--a:#6366f1;--line:#ffffff16}*{box-sizing:border-box;font-family:system-ui,sans-serif}body{margin:0;min-height:100vh;background:linear-gradient(135deg,var(--bg),#1a1f2e);color:var(--text)}main{max-width:1100px;margin:auto;padding:60px 18px}.intro{text-align:center;margin-bottom:42px}.intro h1{font-size:clamp(2rem,5vw,3.2rem);margin:0 0 12px;color:#d8d8ff}.muted{color:var(--muted)}.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:22px}.plan{padding:28px;background:var(--card);border:1px solid var(--line);border-radius:22px}.plan.featured{border:2px solid var(--a)}.price{font-size:2.5rem;font-weight:800;color:#a5b4fc}.price small{font-size:.9rem;color:var(--muted);font-weight:400}.plan ul{list-style:none;padding:0;color:var(--muted);line-height:2}.plan li:before{content:'✓';color:#10b981;margin-left:8px;font-weight:800}button{width:100%;border:0;border-radius:11px;padding:14px;background:var(--a);color:#fff;font-weight:700;font-size:1rem;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.back{display:block;text-align:center;margin-top:30px;color:var(--muted);text-decoration:none}</style></head><body><main><header class="intro"><h1>שדרג את ConversaPay</h1><p class="muted">מחירים תואמים לשרת ולחיוב בפועל, בלי הפתעות.</p></header><div id="current" class="muted" style="text-align:center;margin-bottom:20px"></div><section class="plans"><article class="plan"><h2>חינמי</h2><div class="price">₪0<small>/חודש</small></div><ul><li>ניהול מוצרים בסיסי</li><li>סטטיסטיקות בסיסיות</li><li>פרופיל אישי</li></ul><button disabled>התכנית הנוכחית</button></article><article class="plan featured"><h2>PRO</h2><div class="price">₪200<small>/חודש</small></div><ul><li>ניהול הזמנות מלא</li><li>ווידג׳ט והטמעה</li><li>סטטיסטיקות מתקדמות</li><li>עד 3 דומיינים</li></ul><button data-plan="pro">שדרג ל-PRO</button></article><article class="plan"><h2>PREMIUM</h2><div class="price">₪350<small>/חודש</small></div><ul><li>כל תכונות PRO</li><li>אינטגרציית WhatsApp</li><li>עד 10 דומיינים</li><li>תמיכה מתקדמת</li></ul><button data-plan="premium">שדרג ל-PREMIUM</button></article></section><a class="back" href="/dashboard.html">← חזרה לדאשבורד</a></main><script>const API='/api/v1',token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token');if(!token)location.href='/login.html';async function start(plan){const b=document.querySelector(`[data-plan="${plan}"]`);b.disabled=true;b.textContent='יוצר תשלום...';try{const me=await fetch(`${API}/auth/me`,{headers:{Authorization:`Bearer ${token}`}});if(!me.ok)throw Error('נדרשת התחברות');const u=await me.json();const r=await fetch(`${API}/payments/create-checkout-session`,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({user_id:u.user_id,email:u.email,plan_type:plan})});const d=await r.json().catch(()=>({}));if(!r.ok||!d.url)throw Error(d.detail||'שגיאה ביצירת תשלום');location.href=d.url}catch(e){alert(e.message||'שגיאה ביצירת תשלום');b.disabled=false;b.textContent=`שדרג ל-${plan.toUpperCase()}`}}document.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>start(b.dataset.plan));(async()=>{try{const r=await fetch(`${API}/auth/me`,{headers:{Authorization:`Bearer ${token}`}});if(!r.ok)return;const d=await r.json();document.getElementById('current').textContent=`התכנית הנוכחית: ${(d.profile||{}).plan_type||'free'}`}catch(_){}})();</script></body></html>
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ConversaPay - שדרוג תכנית</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="conversapay-ui.css">
+</head>
+<body class="cp-page">
+  <header class="cp-topbar">
+    <a class="cp-brand" href="dashboard.html"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
+    <a class="cp-backlink" href="dashboard.html">חזרה לדאשבורד</a>
+  </header>
+
+  <main class="cp-shell">
+    <section class="cp-panel cp-stack" style="margin-bottom:18px;text-align:center;">
+      <h1>בחירת מסלול</h1>
+      <p class="cp-muted">מחירים תואמים לחיוב בפועל, עם מעבר חלק בין FREE, PRO ו‑PREMIUM.</p>
+      <div id="current" class="cp-badge" style="margin-inline:auto;">טוען מסלול...</div>
+    </section>
+
+    <section class="cp-grid-3">
+      <article class="cp-plan">
+        <div class="cp-stack">
+          <div class="cp-badge">FREE</div>
+          <h2>חינמי</h2>
+          <div class="cp-price">₪0<small>/חודש</small></div>
+        </div>
+        <div class="cp-list">
+          <div class="cp-list-item"><div class="cp-list-meta"><strong>ניהול מוצרים</strong><small>קטלוג בסיסי וניהול חשבון</small></div></div>
+          <div class="cp-list-item"><div class="cp-list-meta"><strong>פתיחת בונה האתר</strong><small>גישה מתוך החשבון גם ב‑FREE</small></div></div>
+          <div class="cp-list-item"><div class="cp-list-meta"><strong>תמונת מצב בסיסית</strong><small>מעקב ראשוני על הפעילות</small></div></div>
+        </div>
+        <button disabled class="cp-button-secondary">התכנית הנוכחית</button>
+      </article>
+
+      <article class="cp-plan featured">
+        <div class="cp-stack">
+          <div class="cp-badge good">PRO</div>
+          <h2>PRO</h2>
+          <div class="cp-price">₪200<small>/חודש</small></div>
+        </div>
+        <div class="cp-list">
+          <div class="cp-list-item"><div class="cp-list-meta"><strong>ניהול הזמנות מלא</strong><small>תשלומים, הזמנות ונתוני מכירה</small></div></div>
+          <div class="cp-list-item"><div class="cp-list-meta"><strong>חיבור לאתרים</strong><small>דומיינים, קוד חיבור והטמעה</small></div></div>
+          <div class="cp-list-item"><div class="cp-list-meta"><strong>עד 3 מפתחות חיבור</strong><small>שליטה באינטגרציות חיצוניות</small></div></div>
+        </div>
+        <button class="cp-button" data-plan="pro">שדרג ל‑PRO</button>
+      </article>
+
+      <article class="cp-plan">
+        <div class="cp-stack">
+          <div class="cp-badge">PREMIUM</div>
+          <h2>PREMIUM</h2>
+          <div class="cp-price">₪350<small>/חודש</small></div>
+        </div>
+        <div class="cp-list">
+          <div class="cp-list-item"><div class="cp-list-meta"><strong>כל יכולות PRO</strong><small>הכול פתוח למסחר והטמעה</small></div></div>
+          <div class="cp-list-item"><div class="cp-list-meta"><strong>WhatsApp Business</strong><small>תקשורת מתקדמת עם לקוחות</small></div></div>
+          <div class="cp-list-item"><div class="cp-list-meta"><strong>עד 10 מפתחות חיבור</strong><small>נפח מורחב לצמיחה</small></div></div>
+        </div>
+        <button class="cp-button" data-plan="premium">שדרג ל‑PREMIUM</button>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const API='/api/v1',token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token');
+    if(!token)location.href='/login.html';
+    async function start(plan){const b=document.querySelector(`[data-plan="${plan}"]`);b.disabled=true;b.textContent='יוצר תשלום...';try{const me=await fetch(`${API}/auth/me`,{headers:{Authorization:`Bearer ${token}`}});if(!me.ok)throw Error('נדרשת התחברות');const u=await me.json();const r=await fetch(`${API}/payments/create-checkout-session`,{method:'POST',headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify({user_id:u.user_id,email:u.email,plan_type:plan})});const d=await r.json().catch(()=>({}));if(!r.ok||!d.url)throw Error(d.detail||'שגיאה ביצירת תשלום');location.href=d.url}catch(e){alert(e.message||'שגיאה ביצירת תשלום');b.disabled=false;b.textContent=`שדרג ל‑${plan.toUpperCase()}`}}document.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>start(b.dataset.plan));(async()=>{try{const r=await fetch(`${API}/auth/me`,{headers:{Authorization:`Bearer ${token}`}});if(!r.ok)return;const d=await r.json();document.getElementById('current').textContent=`המסלול הנוכחי: ${((d.profile||{}).plan_type||'free').toUpperCase()}`}catch(_){document.getElementById('current').textContent='המסלול הנוכחי: FREE'}})();
+  </script>
+</body>
+</html>
