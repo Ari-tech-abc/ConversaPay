@@ -23,7 +23,6 @@ def get_user_plan(user_id:str)->Dict[str,Any]:
         result=supabase.table("profiles").select("*").eq("user_id",user_id).order("created_at",desc=True).limit(1).execute()
         row=(result.data or [{}])[0]
     except Exception as exc:
-        # Keep the endpoint usable during schema rollout. The plan defaults safely to FREE.
         import logging; logging.getLogger(__name__).error("Profile lookup failed for dashboard: %s",exc,exc_info=True); row={}
     requested=normalize_plan(row.get("plan_type")); active=subscription_active({**row,"plan_type":requested}); return {**row,"plan_type":requested if active else "free","subscription_active":active}
 def require_verified(user:AuthUser)->Dict[str,Any]:
