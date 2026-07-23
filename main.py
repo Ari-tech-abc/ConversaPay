@@ -37,6 +37,8 @@ if not settings.is_production:
 current_dir=os.path.dirname(os.path.abspath(__file__)); static_dir=os.path.join(current_dir,"backend","static"); frontend_dir=os.path.join(current_dir,"frontend"); html_dir=os.path.join(frontend_dir,"html"); site_builder_dir=os.path.join(current_dir,"conversapay-site-builder","frontend")
 def _html(n): return os.path.join(html_dir,n)
 app.mount("/static",StaticFiles(directory=static_dir),name="static"); app.mount("/frontend",StaticFiles(directory=frontend_dir),name="frontend")
+@app.get("/conversapay-ui.css")
+async def conversapay_ui_stylesheet(): return FileResponse(_html("conversapay-ui.css"),media_type="text/css")
 @app.get("/")
 async def root(): return FileResponse(_html("home.html"))
 @app.get("/dashboard")
