@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import Response
 from supabase import Client, create_client
 
@@ -30,6 +31,81 @@ PLAN_PRICE_IDS = {
     "pro": settings.STRIPE_PRO_PRICE_ID,
     "premium": settings.STRIPE_PREMIUM_PRICE_ID,
 }
+
+
+def _utc_now_iso() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _period_end_iso(timestamp: Any) -> str | None:
+    if not timestamp:
+        return None
+    return datetime.fromtimestamp(int(timestamp), timezone.utc).isoformat()
+
+
+def _update_profile_plan(
+    user_id: str,
+    *,
+    plan_type: str,
+    subscription_expires_at: str | None,
+) -> None:
+    now = _utc_now_iso()
+    supabase.table("profiles").update(
+        {
+            "plan_type": plan_type,
+            "subscription_expires_at": subscription_expires_at,
+            "updated_at": now,
+        }
+    ).eq("user_id", user_id).execute()
+    supabase.table("businesses").update(
+        {
+            "subscription_tier": plan_type,
+            "subscription_status": "active" if plan_type != "free" else "active",
+        }
+    ).eq("owner_id", user_id).execute()
+
+
+def _mark_order_as_paid(
+    order_id: str,
+    *,
+    payment_status: str,
+    metadata_updates: dict[str, Any] | None = None,
+    paid: bool = False,
+) -> None:
+    now = _utc_now_iso()
+    order_status = "paid" if paid else "pending"
+    order_payment_status = "paid" if paid else payment_status
+    supabase.table("orders").update(
+        {
+            "status": order_status,
+            "payment_status": order_payment_status,
+            "updated_at": now,
+        }
+    ).eq("id", order_id).execute()
+
+    payment_result = (
+        supabase.table("payments")
+        .select("id, metadata")
+        .eq("order_id", order_id)
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
+    if not payment_result.data:
+        return
+
+    payment_row = payment_result.data[0]
+    metadata = dict(payment_row.get("metadata") or {})
+    metadata.update(metadata_updates or {})
+    update_payload: dict[str, Any] = {
+        "status": payment_status,
+        "metadata": metadata,
+        "updated_at": now,
+    }
+    if paid:
+        update_payload["paid_at"] = now
+
+    supabase.table("payments").update(update_payload).eq("id", payment_row["id"]).execute()
 
 
 @router.post("/create-checkout-session", response_model=SubscriptionResponse)
@@ -86,6 +162,99 @@ async def create_subscription_checkout_session(
         url=session["url"],
         payme_sale_id=None,
     )
+
+
+@router.get("/confirm-session", response_model=dict)
+async def confirm_checkout_session(
+    session_id: str = Query(..., min_length=1),
+    current_user: AuthUser = Depends(require_auth),
+) -> dict[str, Any]:
+    try:
+        session = stripe_service.retrieve_checkout_session(session_id)
+    except ValueError as exc:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
+    except StripeServiceError as exc:
+        detail = str(exc)
+        status_code = (
+            status.HTTP_500_INTERNAL_SERVER_ERROR
+            if "not configured" in detail.lower()
+            else status.HTTP_502_BAD_GATEWAY
+        )
+        raise HTTPException(status_code, detail) from exc
+
+    metadata = dict(session.get("metadata") or {})
+    session_user_id = metadata.get("user_id")
+    if session_user_id and session_user_id != current_user.user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Session does not belong to the current user")
+
+    response: dict[str, Any] = {
+        "session_id": session.get("id"),
+        "mode": session.get("mode"),
+        "status": session.get("status"),
+        "payment_status": session.get("payment_status"),
+        "confirmed": False,
+    }
+
+    if session.get("mode") == "subscription":
+        plan = (metadata.get("plan_type") or "pro").lower()
+        if plan not in PLAN_PRICES:
+            plan = "pro"
+
+        subscription_obj = session.get("subscription")
+        if isinstance(subscription_obj, str):
+            subscription_obj = stripe_service.retrieve_subscription(subscription_obj)
+
+        subscription_status = subscription_obj.get("status") if subscription_obj else None
+        subscription_expires_at = (
+            _period_end_iso(subscription_obj.get("current_period_end"))
+            if subscription_obj
+            else None
+        )
+
+        if (
+            session.get("payment_status") in {"paid", "no_payment_required"}
+            or session.get("status") == "complete"
+            or subscription_status in {"active", "trialing"}
+        ):
+            _update_profile_plan(
+                current_user.user_id,
+                plan_type=plan,
+                subscription_expires_at=subscription_expires_at,
+            )
+            response.update(
+                {
+                    "confirmed": True,
+                    "plan_type": plan,
+                    "subscription_status": subscription_status or "active",
+                    "subscription_expires_at": subscription_expires_at,
+                }
+            )
+        else:
+            response.update(
+                {
+                    "plan_type": plan,
+                    "subscription_status": subscription_status,
+                    "subscription_expires_at": subscription_expires_at,
+                }
+            )
+
+    elif session.get("mode") == "payment":
+        order_id = metadata.get("order_id")
+        if order_id and session.get("payment_status") == "paid":
+            _mark_order_as_paid(
+                order_id,
+                payment_status="succeeded",
+                metadata_updates={
+                    "provider": "stripe",
+                    "session_id": session.get("id"),
+                    "payment_intent": session.get("payment_intent"),
+                    "customer": session.get("customer"),
+                },
+                paid=True,
+            )
+            response["confirmed"] = True
+
+    return response
 
 
 @router.get("/profile", response_model=ProfileResponse)

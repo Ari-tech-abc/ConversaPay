@@ -53,14 +53,27 @@ def _claim(event_id: str, event_type: str) -> bool:
         raise
 
 
-def _update_profile(user_id: str, *, plan_type: str, subscription_expires_at: str | None) -> None:
+def _update_profile_and_business(
+    user_id: str,
+    *,
+    plan_type: str,
+    subscription_expires_at: str | None,
+    subscription_status: str,
+) -> None:
+    now = _utc_now_iso()
     supabase.table("profiles").update(
         {
             "plan_type": plan_type,
             "subscription_expires_at": subscription_expires_at,
-            "updated_at": _utc_now_iso(),
+            "updated_at": now,
         }
     ).eq("user_id", user_id).execute()
+    supabase.table("businesses").update(
+        {
+            "subscription_tier": plan_type,
+            "subscription_status": subscription_status,
+        }
+    ).eq("owner_id", user_id).execute()
 
 
 def _update_order_and_payment(
@@ -132,15 +145,19 @@ def _apply_subscription_state(
     if not user_id:
         return
 
-    effective_plan = plan_type or "pro"
-    if subscription_status in {"canceled", "unpaid", "incomplete_expired"}:
-        effective_plan = "free"
-        subscription_expires_at = None
+    effective_plan = (plan_type or "pro").lower()
+    effective_status = subscription_status or "active"
+    effective_expiry = subscription_expires_at
 
-    _update_profile(
+    if effective_status in {"canceled", "unpaid", "incomplete_expired"}:
+        effective_plan = "free"
+        effective_expiry = None
+
+    _update_profile_and_business(
         user_id,
         plan_type=effective_plan,
-        subscription_expires_at=subscription_expires_at,
+        subscription_expires_at=effective_expiry,
+        subscription_status=effective_status,
     )
 
 
@@ -188,6 +205,16 @@ async def stripe_webhook(request: Request) -> dict[str, Any]:
             )
 
         if obj.get("mode") == "subscription":
+            # Apply an optimistic upgrade immediately from checkout metadata,
+            # then refine it from the actual subscription object when available.
+            if metadata.get("user_id"):
+                _apply_subscription_state(
+                    user_id=metadata.get("user_id"),
+                    plan_type=metadata.get("plan_type"),
+                    subscription_status="active",
+                    subscription_expires_at=None,
+                )
+
             subscription_context = _subscription_context(obj.get("subscription"))
             subscription_metadata = subscription_context.get("metadata") or {}
             _apply_subscription_state(
@@ -237,8 +264,6 @@ async def stripe_webhook(request: Request) -> dict[str, Any]:
                 subscription_expires_at=subscription_context.get("current_period_end"),
             )
         else:
-            # Keep the user on their current tier during transient payment failures.
-            # Only a canceled/unpaid subscription should actually downgrade them.
             if subscription_status in {"canceled", "unpaid", "incomplete_expired"}:
                 _apply_subscription_state(
                     user_id=subscription_metadata.get("user_id"),

@@ -152,6 +152,18 @@ class StripeService:
             raise StripeServiceError("Stripe Checkout session creation failed") from exc
         return self._serialize_session(session)
 
+    def retrieve_checkout_session(self, session_id: str) -> Any:
+        self._ensure_configured()
+        if not session_id:
+            raise ValueError("session_id is required")
+        try:
+            return stripe.checkout.Session.retrieve(
+                session_id,
+                expand=["subscription", "payment_intent"],
+            )
+        except stripe.error.StripeError as exc:
+            raise StripeServiceError("Stripe checkout session retrieval failed") from exc
+
     def retrieve_subscription(self, subscription_id: str) -> Any:
         self._ensure_configured()
         if not subscription_id:
