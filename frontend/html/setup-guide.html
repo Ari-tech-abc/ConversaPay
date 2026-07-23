@@ -1,4 +1,175 @@
 <!doctype html>
-<html lang="he" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="מדריך הטמעה ומפתחות חיבור של ConversaPay"><title>ConversaPay - מדריך הטמעה</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/frontend/html/conversapay-ui.css"></head><body class="cp-page"><header class="cp-topbar"><a class="cp-brand" href="home.html"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a><a class="cp-backlink" href="dashboard.html">חזרה לדאשבורד</a></header><main class="cp-shell cp-stack"><section class="cp-panel cp-stack" style="text-align:center;"><span class="cp-kicker" style="justify-content:center;">מדריך התחלה</span><h1>מדריך הטמעה</h1><p class="cp-muted">כך מחברים את ConversaPay לאתר בצורה ברורה ובטוחה.</p></section><section class="cp-grid-3"><article class="cp-plan"><div class="cp-badge">FREE</div><h2>FREE</h2><p class="cp-muted">ניהול מוצרים ומענה מתוך חשבון ConversaPay. בונה האתר אינו כלול.</p><span class="cp-badge warn">בונה האתר: PREMIUM בלבד</span></article><article class="cp-plan featured"><div class="cp-badge good">PRO</div><h2>PRO</h2><p class="cp-muted">הטמעה לאתרים, דומיינים, הזמנות, מכירות ועד 3 מפתחות חיבור.</p></article><article class="cp-plan"><div class="cp-badge">PREMIUM</div><h2>PREMIUM</h2><p class="cp-muted">כל יכולות PRO, בונה האתר, WhatsApp Business ועד 10 מפתחות חיבור.</p></article></section><section class="cp-panel cp-stack"><h2>1. מזהה עסק</h2><p class="cp-muted">פתחו את הדאשבורד והעתיקו את מזהה העסק. אין להכניס לקוד מפתחות סודיים או פרטי תשלום.</p><div class="cp-notice warning">מפתח שמופיע בדפדפן גלוי לכל מבקר. השתמשו רק במזהה עסק או במפתח חיבור ייעודי.</div></section><section class="cp-panel cp-stack"><h2>2. קוד הטמעה</h2><p class="cp-muted">החליפו את הערכים בקוד והכניסו אותו לפני ‎&lt;/body&gt;‎.</p><button class="cp-button" id="copy" type="button" style="max-width:220px;">העתק קוד</button><div class="cp-card" style="padding:0;overflow:auto;background:#091221;"><pre id="snippet" style="margin:0;padding:18px;color:#e6e7ed;direction:ltr;text-align:left;white-space:pre-wrap;">&lt;script src="https://YOUR-CONVERSAPAY-DOMAIN/frontend/js/widget.js"
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="מדריך הטמעה, WhatsApp ומפתחות חיבור של ConversaPay">
+  <title>ConversaPay - מדריך הטמעה</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+  <style>
+    .guide-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .guide-steps {
+      display: grid;
+      gap: 12px;
+    }
+
+    .guide-step {
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .guide-step strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .guide-code {
+      margin: 0;
+      padding: 18px;
+      color: #e6e7ed;
+      direction: ltr;
+      text-align: left;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .guide-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+  </style>
+</head>
+<body class="cp-page">
+  <header class="cp-topbar">
+    <a class="cp-brand" href="home.html"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
+    <a class="cp-backlink" href="dashboard.html">חזרה לדאשבורד</a>
+  </header>
+
+  <main class="cp-shell cp-stack">
+    <section class="cp-panel cp-stack" style="text-align:center;">
+      <span class="cp-kicker" style="justify-content:center;">מדריך התחלה</span>
+      <h1>מדריך הטמעה</h1>
+      <p class="cp-muted">כך מחברים את ConversaPay לאתר, ל-WhatsApp ולמפתחות החיבור בצורה ברורה ובטוחה.</p>
+    </section>
+
+    <section class="cp-grid-3">
+      <article class="cp-plan">
+        <div class="cp-badge">FREE</div>
+        <h2>FREE</h2>
+        <p class="cp-muted">ניהול מוצרים ומענה מתוך חשבון ConversaPay. בונה האתר אינו כלול.</p>
+        <span class="cp-badge warn">בונה האתר: PREMIUM בלבד</span>
+      </article>
+      <article class="cp-plan featured">
+        <div class="cp-badge good">PRO</div>
+        <h2>PRO</h2>
+        <p class="cp-muted">הטמעה לאתרים, דומיינים, הזמנות, מכירות ועד 3 מפתחות חיבור.</p>
+      </article>
+      <article class="cp-plan">
+        <div class="cp-badge">PREMIUM</div>
+        <h2>PREMIUM</h2>
+        <p class="cp-muted">כל יכולות PRO, בונה האתר, WhatsApp Business ועד 10 מפתחות חיבור.</p>
+      </article>
+    </section>
+
+    <section class="cp-panel cp-stack">
+      <h2>1. מזהה עסק</h2>
+      <p class="cp-muted">פתחו את הדאשבורד והעתיקו את מזהה העסק. אין להכניס לקוד מפתחות סודיים או פרטי תשלום.</p>
+      <div class="cp-notice warning">מפתח שמופיע בדפדפן גלוי לכל מבקר. השתמשו רק במזהה עסק או במפתח חיבור ייעודי.</div>
+    </section>
+
+    <section class="cp-panel cp-stack">
+      <h2>2. קוד הטמעה לאתר</h2>
+      <p class="cp-muted">החליפו את הערכים בקוד והכניסו אותו לפני ‎&lt;/body&gt;‎.</p>
+      <div class="guide-actions">
+        <button class="cp-button" id="copy" type="button" style="max-width:220px;">העתק קוד</button>
+        <a class="cp-button-secondary" href="dashboard.html">חזרה לדאשבורד</a>
+      </div>
+      <div class="cp-card" style="padding:0;overflow:auto;background:#091221;">
+        <pre id="snippet" class="guide-code">&lt;script src="https://YOUR-CONVERSAPAY-DOMAIN/frontend/js/widget.js"
   data-business-id="YOUR_BUSINESS_UUID"
-  data-api-key="YOUR_WIDGET_API_KEY" defer&gt;&lt;/script&gt;</pre></div><p class="cp-muted">הטמעה חיצונית זמינה במסלולי PRO ו‑PREMIUM. בונה האתר זמין ב‑PREMIUM בלבד.</p></section><section class="cp-panel cp-stack"><h2>3. מפתחות חיבור</h2><div class="cp-list"><div class="cp-list-item"><div class="cp-list-meta"><strong>צור מפתח</strong><small>דאשבורד ← מפתחות חיבור</small></div></div><div class="cp-list-item"><div class="cp-list-meta"><strong>שמור במקום בטוח</strong><small>המפתח מוצג פעם אחת בלבד</small></div></div><div class="cp-list-item"><div class="cp-list-meta"><strong>השבת מפתח לא בשימוש</strong><small>אפשר מתוך הדאשבורד</small></div></div></div></section><section class="cp-panel cp-stack"><h2>4. בדיקה</h2><div class="cp-list"><div class="cp-list-item"><div class="cp-list-meta"><strong>רענון האתר</strong><small>ודאו שהווידג׳ט נטען</small></div></div><div class="cp-list-item"><div class="cp-list-meta"><strong>שליחת הודעת בדיקה</strong><small>בדקו שהשיחה עובדת</small></div></div></div><a class="cp-button" href="dashboard.html" style="max-width:240px;">חזרה לדאשבורד</a></section></main><script>document.getElementById('copy').onclick=async()=>{try{await navigator.clipboard.writeText(document.getElementById('snippet').textContent);document.getElementById('copy').textContent='הועתק ✓';setTimeout(()=>document.getElementById('copy').textContent='העתק קוד',1600)}catch{alert('לא ניתן להעתיק אוטומטית')}};</script></body></html>
+  data-api-key="YOUR_WIDGET_API_KEY" defer&gt;&lt;/script&gt;</pre>
+      </div>
+      <p class="cp-muted">הטמעה חיצונית זמינה במסלולי PRO ו‑PREMIUM. בונה האתר זמין ב‑PREMIUM בלבד.</p>
+    </section>
+
+    <section class="cp-panel guide-grid">
+      <div>
+        <h2>3. חיבור הבוט ל-WhatsApp</h2>
+        <p class="cp-muted">מדריך זה זמין למסלול PREMIUM עם WhatsApp Business.</p>
+      </div>
+
+      <div class="guide-steps">
+        <div class="guide-step">
+          <strong>שלב 1 — פתח Meta / WhatsApp Cloud API</strong>
+          <span class="cp-muted">צרו או פתחו אפליקציה ב-Meta for Developers והפעילו WhatsApp Business Platform.</span>
+        </div>
+        <div class="guide-step">
+          <strong>שלב 2 — אספו 3 נתונים</strong>
+          <span class="cp-muted">צריך להעתיק את <b>Phone Number ID</b>, את <b>Access Token</b> ואת <b>Verify Token</b> שאתם בוחרים בעצמכם.</span>
+        </div>
+        <div class="guide-step">
+          <strong>שלב 3 — הזינו את הפרטים ב-ConversaPay</strong>
+          <span class="cp-muted">בדאשבורד עברו ל-<a class="cp-link" href="settings.html">הגדרות</a> והזינו את שלושת השדות של WhatsApp.</span>
+        </div>
+        <div class="guide-step">
+          <strong>שלב 4 — הגדירו Webhook ב-Meta</strong>
+          <span class="cp-muted">השתמשו בכתובת ה-Webhook הזאת:</span>
+          <div class="cp-card" style="padding:12px 14px;background:#091221;direction:ltr;text-align:left;">https://YOUR-CONVERSAPAY-DOMAIN/api/v1/whatsapp/webhook</div>
+          <span class="cp-muted">בשדה Verify Token ב-Meta הזינו את אותו Verify Token שהכנסתם ב-ConversaPay.</span>
+        </div>
+        <div class="guide-step">
+          <strong>שלב 5 — בצעו בדיקה</strong>
+          <span class="cp-muted">שלחו הודעת ניסיון למספר ה-WhatsApp ובדקו שההודעות נכנסות לבוט ועוברות מענה.</span>
+        </div>
+      </div>
+
+      <div class="cp-notice warning">אם ה-Webhook מאושר אבל אין תגובה, בדקו קודם שה-Phone Number ID וה-Access Token שייכים לאותו נכס ב-Meta.</div>
+    </section>
+
+    <section class="cp-panel cp-stack">
+      <h2>4. מפתחות חיבור</h2>
+      <div class="cp-list">
+        <div class="cp-list-item"><div class="cp-list-meta"><strong>צור מפתח</strong><small>דאשבורד ← API Keys</small></div></div>
+        <div class="cp-list-item"><div class="cp-list-meta"><strong>שמור במקום בטוח</strong><small>המפתח מוצג פעם אחת בלבד</small></div></div>
+        <div class="cp-list-item"><div class="cp-list-meta"><strong>השבת מפתח לא בשימוש</strong><small>אפשר מתוך הדאשבורד</small></div></div>
+      </div>
+    </section>
+
+    <section class="cp-panel cp-stack">
+      <h2>5. בדיקה</h2>
+      <div class="cp-list">
+        <div class="cp-list-item"><div class="cp-list-meta"><strong>רענון האתר</strong><small>ודאו שהווידג׳ט נטען</small></div></div>
+        <div class="cp-list-item"><div class="cp-list-meta"><strong>שליחת הודעת בדיקה</strong><small>בדקו שהשיחה עובדת</small></div></div>
+        <div class="cp-list-item"><div class="cp-list-meta"><strong>בדיקת WhatsApp</strong><small>שלחו הודעת ניסיון ובדקו שה-Webhook מגיב</small></div></div>
+      </div>
+      <div class="guide-actions">
+        <a class="cp-button" href="dashboard.html" style="max-width:240px;">חזרה לדאשבורד</a>
+        <a class="cp-button-secondary" href="settings.html">הגדרות WhatsApp</a>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    document.getElementById('copy').onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(document.getElementById('snippet').textContent);
+        document.getElementById('copy').textContent = 'הועתק ✓';
+        setTimeout(() => document.getElementById('copy').textContent = 'העתק קוד', 1600);
+      } catch {
+        alert('לא ניתן להעתיק אוטומטית');
+      }
+    };
+  </script>
+</body>
+</html>

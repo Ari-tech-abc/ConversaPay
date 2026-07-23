@@ -914,7 +914,7 @@
       $('builderButton').disabled = !builderEnabled;
       $('builderButton').onclick = async () => {
         if (!builderEnabled) return;
-        const data = await apiRequest('/site-builder/access');
+        const data = await apiRequest('/site-builder/access', { method: 'POST' });
         if (data.url) {
           location.href = data.url;
         }
