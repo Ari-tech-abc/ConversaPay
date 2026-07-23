@@ -192,7 +192,7 @@ async def stripe_webhook(request: Request) -> dict[str, Any]:
     if not _claim(event_id, event_type):
         return {"status": "ok", "processed": False}
 
-    obj = event["data"]["object"]
+    obj = stripe_service.serialize_stripe_object(event["data"]["object"])
     metadata = dict(obj.get("metadata") or {})
 
     if event_type in {"checkout.session.completed", "checkout.session.async_payment_succeeded"}:

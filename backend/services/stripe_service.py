@@ -22,6 +22,18 @@ class StripeService:
             stripe.api_key = secret_key
 
     @staticmethod
+    def serialize_stripe_object(obj: Any) -> Any:
+        if obj is None:
+            return None
+        if isinstance(obj, (dict, list, str, int, float, bool)):
+            return obj
+        if hasattr(obj, "to_dict_recursive"):
+            return obj.to_dict_recursive()
+        if hasattr(obj, "to_dict"):
+            return obj.to_dict()
+        return obj
+
+    @staticmethod
     def _minor_units(amount: Decimal | int | float | str, currency: str) -> int:
         value = Decimal(str(amount))
         if value <= 0:
@@ -152,26 +164,28 @@ class StripeService:
             raise StripeServiceError("Stripe Checkout session creation failed") from exc
         return self._serialize_session(session)
 
-    def retrieve_checkout_session(self, session_id: str) -> Any:
+    def retrieve_checkout_session(self, session_id: str) -> dict[str, Any]:
         self._ensure_configured()
         if not session_id:
             raise ValueError("session_id is required")
         try:
-            return stripe.checkout.Session.retrieve(
+            session = stripe.checkout.Session.retrieve(
                 session_id,
                 expand=["subscription", "payment_intent"],
             )
         except stripe.error.StripeError as exc:
             raise StripeServiceError("Stripe checkout session retrieval failed") from exc
+        return self.serialize_stripe_object(session)
 
-    def retrieve_subscription(self, subscription_id: str) -> Any:
+    def retrieve_subscription(self, subscription_id: str) -> dict[str, Any]:
         self._ensure_configured()
         if not subscription_id:
             raise ValueError("subscription_id is required")
         try:
-            return stripe.Subscription.retrieve(subscription_id)
+            subscription = stripe.Subscription.retrieve(subscription_id)
         except stripe.error.StripeError as exc:
             raise StripeServiceError("Stripe subscription retrieval failed") from exc
+        return self.serialize_stripe_object(subscription)
 
 
 stripe_service = StripeService()
