@@ -1,2 +1,58 @@
-<!doctype html><html lang="he" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ConversaPay - פרופיל</title><style>:root{--bg:#f5f4ee;--paper:#fffef8;--ink:#17202d;--muted:#637084;--line:#d9d8cf;--accent:#635bff}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,sans-serif}main{width:min(720px,calc(100% - 32px));margin:auto;padding:32px 0}.back{color:var(--muted);text-decoration:none}.card{margin-top:24px;padding:28px;background:var(--paper);border:1px solid var(--line);border-radius:22px}.head{display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--line);padding-bottom:20px;margin-bottom:24px}.avatar{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:var(--paper);font-size:1.8rem;font-weight:800}.muted{color:var(--muted)}label{display:block;margin:16px 0 7px;font-weight:700}input{width:100%;padding:13px 14px;border-radius:11px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:1rem}input:focus{outline:2px solid var(--accent);outline-offset:2px}button{border:0;border-radius:11px;padding:13px 20px;background:var(--ink);color:var(--paper);font-weight:700;cursor:pointer}.actions{display:flex;gap:10px;margin-top:24px}.notice{margin-bottom:16px;padding:12px 14px;border-radius:10px;background:#e2f3e9;color:#176b45}.error{background:#f9e3e0;color:#8e2e27}@media(max-width:520px){.head{align-items:flex-start}.actions{flex-direction:column}.actions button,.actions a{width:100%;text-align:center}}
-</style></head><body><main><a class="back" href="/dashboard.html">← חזרה לדאשבורד</a><section class="card"><div class="head"><div class="avatar" id="avatar">א</div><div><h1 id="nameDisplay">פרופיל</h1><p class="muted" id="emailDisplay">טוען...</p></div></div><div id="notice" role="status" hidden></div><form id="profileForm"><label for="fullName">שם מלא</label><input id="fullName" autocomplete="name" required maxlength="255"><label for="email">אימייל</label><input id="email" type="email" disabled><div class="actions"><a class="back" href="/dashboard.html">ביטול</a><button type="submit" id="save">שמור שינויים</button></div></form></section></main><script>const API='/api/v1';const token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token');if(!token)location.href='/login.html';const $=id=>document.getElementById(id),auth={Authorization:`Bearer ${token}`};function show(t,e=false){const n=$('notice');n.textContent=t;n.className=e?'notice error':'notice';n.hidden=false}async function load(){const r=await fetch(`${API}/auth/me`,{headers:auth});if(r.status===401){localStorage.clear();sessionStorage.clear();location.href='/login.html';return}if(!r.ok){show('לא ניתן לטעון את הפרופיל',true);return}const d=await r.json(),p=d.profile||{},name=p.full_name||'';$('fullName').value=name;$('email').value=d.email||p.email||'';$('emailDisplay').textContent=d.email||p.email||'';$('nameDisplay').textContent=name||'פרופיל';$('avatar').textContent=(name||d.email||'א').trim().charAt(0).toUpperCase()}$('profileForm').onsubmit=async e=>{e.preventDefault();const name=$('fullName').value.trim();if(!name)return show('נא להזין שם מלא',true);$('save').disabled=true;try{const r=await fetch(`${API}/auth/me?full_name=${encodeURIComponent(name)}`,{method:'PUT',headers:auth});if(r.status===401){localStorage.clear();sessionStorage.clear();location.href='/login.html';return}if(!r.ok){const d=await r.json().catch(()=>({}));throw Error(d.detail||'עדכון הפרופיל נכשל')}await load();show('הפרופיל עודכן בהצלחה')}catch(e){show(e.message,true)}finally{$('save').disabled=false}};load();</script></body></html>
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ConversaPay - פרופיל</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="conversapay-ui.css">
+</head>
+<body class="cp-page">
+  <header class="cp-topbar">
+    <a class="cp-brand" href="/dashboard.html"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
+    <a class="cp-backlink" href="/dashboard.html">חזרה לדאשבורד</a>
+  </header>
+
+  <main class="cp-shell">
+    <section class="cp-panel" style="max-width:760px;margin:auto;">
+      <div class="cp-list-item" style="margin-bottom:18px;align-items:center;">
+        <div class="cp-brand-mark" id="avatar" style="width:72px;height:72px;border-radius:22px;">א</div>
+        <div class="cp-list-meta">
+          <h1 id="nameDisplay">פרופיל</h1>
+          <p class="cp-muted" id="emailDisplay">טוען...</p>
+        </div>
+      </div>
+
+      <div id="notice" class="cp-notice" role="status" hidden></div>
+
+      <form id="profileForm" class="cp-stack">
+        <div class="cp-field">
+          <label class="cp-label" for="fullName">שם מלא</label>
+          <input class="cp-input" id="fullName" autocomplete="name" required maxlength="255">
+        </div>
+        <div class="cp-field">
+          <label class="cp-label" for="email">אימייל</label>
+          <input class="cp-input" id="email" type="email" disabled>
+        </div>
+        <div class="cp-actions" style="margin-top:8px;">
+          <a class="cp-button-secondary" href="/dashboard.html">ביטול</a>
+          <button class="cp-button" type="submit" id="save">שמור שינויים</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    const API='/api/v1';
+    const token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token');
+    if(!token)location.href='/login.html';
+    const $=id=>document.getElementById(id),auth={Authorization:`Bearer ${token}`};
+    function show(t,e=false){const n=$('notice');n.textContent=t;n.className=e?'cp-notice error':'cp-notice';n.hidden=false}
+    async function load(){const r=await fetch(`${API}/auth/me`,{headers:auth});if(r.status===401){localStorage.clear();sessionStorage.clear();location.href='/login.html';return}if(!r.ok){show('לא ניתן לטעון את הפרופיל',true);return}const d=await r.json(),p=d.profile||{},name=p.full_name||'';$('fullName').value=name;$('email').value=d.email||p.email||'';$('emailDisplay').textContent=d.email||p.email||'';$('nameDisplay').textContent=name||'פרופיל';$('avatar').textContent=(name||d.email||'א').trim().charAt(0).toUpperCase()}
+    $('profileForm').onsubmit=async e=>{e.preventDefault();const name=$('fullName').value.trim();if(!name)return show('נא להזין שם מלא',true);$('save').disabled=true;try{const r=await fetch(`${API}/auth/me?full_name=${encodeURIComponent(name)}`,{method:'PUT',headers:auth});if(r.status===401){localStorage.clear();sessionStorage.clear();location.href='/login.html';return}if(!r.ok){const d=await r.json().catch(()=>({}));throw Error(d.detail||'עדכון הפרופיל נכשל')}await load();show('הפרופיל עודכן בהצלחה')}catch(e){show(e.message,true)}finally{$('save').disabled=false}};
+    load();
+  </script>
+</body>
+</html>

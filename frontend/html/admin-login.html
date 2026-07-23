@@ -4,82 +4,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>ConversaPay - כניסת מנהל</title>
-  <style>
-    :root {
-      --bg: #0F1419;
-      --card: rgba(26,31,46,.78);
-      --text: #F5F7FA;
-      --muted: #A0AEC0;
-      --a: #6366F1;
-      --b: #8B5CF6;
-    }
-    * { box-sizing: border-box; font-family: system-ui, sans-serif; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(135deg, var(--bg), #1a1f2e, var(--bg));
-      color: var(--text);
-    }
-    main {
-      width: min(420px, calc(100% - 32px));
-      padding: 34px;
-      background: var(--card);
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 22px;
-      box-shadow: 0 20px 48px #0008;
-    }
-    h1 {
-      text-align: center;
-      background: linear-gradient(135deg, var(--a), var(--b));
-      -webkit-background-clip: text;
-      color: transparent;
-    }
-    .group { margin: 16px 0; }
-    label { display: block; margin-bottom: 7px; }
-    input {
-      width: 100%;
-      padding: 13px;
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 10px;
-      background: #ffffff0d;
-      color: var(--text);
-      font-size: 1rem;
-    }
-    .btn {
-      width: 100%;
-      padding: 14px;
-      border: 0;
-      border-radius: 10px;
-      background: linear-gradient(135deg, var(--a), var(--b));
-      color: white;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .btn:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
-    .error { color: #FCA5A5; margin: 12px 0; min-height: 1.2em; }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="conversapay-ui.css">
 </head>
-<body>
-  <main>
-    <h1>כניסת מנהל</h1>
-    <p style="color:var(--muted);text-align:center">התחבר לחשבון המנהל</p>
-    <div id="error" class="error" role="alert"></div>
-    <form id="form">
-      <div class="group">
-        <label for="identifier">שם משתמש</label>
-        <input id="identifier" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+<body class="cp-page">
+  <main class="cp-shell" style="display:grid;place-items:center;min-height:100vh;padding-top:0;">
+    <section class="cp-card" style="width:min(440px,100%);">
+      <div class="cp-stack" style="margin-bottom:18px;text-align:center;">
+        <span class="cp-kicker" style="justify-content:center;">Admin Access</span>
+        <h1>כניסת מנהל</h1>
+        <p class="cp-muted">גישה ישירה לחשבון הניהול.</p>
       </div>
-      <div class="group">
-        <label for="password">סיסמה</label>
-        <input id="password" type="password" autocomplete="current-password" required>
-      </div>
-      <button class="btn" id="submit" type="submit">כניסה</button>
-    </form>
+      <div id="error" class="cp-notice error" role="alert" hidden></div>
+      <form id="form" class="cp-stack">
+        <div class="cp-field">
+          <label class="cp-label" for="identifier">שם משתמש</label>
+          <input class="cp-input" id="identifier" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+        </div>
+        <div class="cp-field">
+          <label class="cp-label" for="password">סיסמה</label>
+          <input class="cp-input" id="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button class="cp-button" id="submit" type="submit">כניסה</button>
+      </form>
+    </section>
   </main>
 
   <script>
@@ -91,6 +41,7 @@
 
       button.disabled = true;
       button.textContent = 'מתחבר...';
+      message.hidden = true;
       message.textContent = '';
 
       try {
@@ -114,6 +65,7 @@
         sessionStorage.setItem('admin_email', data.email || '');
         location.href = '/admin-dashboard.html';
       } catch (error) {
+        message.hidden = false;
         message.textContent = error.message;
         button.disabled = false;
         button.textContent = originalText;

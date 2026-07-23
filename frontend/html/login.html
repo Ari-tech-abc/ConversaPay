@@ -4,88 +4,58 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>ConversaPay - כניסה</title>
-  <style>
-    * { box-sizing: border-box; font-family: system-ui; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: radial-gradient(circle at 20% 10%, #28204e, transparent 35%), linear-gradient(135deg, #0f1419, #1a1f2e);
-      color: #f5f7fa;
-    }
-    .card {
-      width: min(420px, calc(100% - 32px));
-      padding: 30px;
-      background: #1a1f2ecc;
-      border: 1px solid #ffffff18;
-      border-radius: 20px;
-      box-shadow: 0 20px 48px #0007;
-    }
-    h1 { margin-top: 0; color: #a5b4fc; }
-    label { display: block; margin: 15px 0 6px; font-weight: 600; }
-    input {
-      width: 100%;
-      padding: 13px;
-      border-radius: 10px;
-      border: 1px solid #ffffff1a;
-      background: #ffffff0d;
-      color: #fff;
-      font-size: 1rem;
-    }
-    button {
-      width: 100%;
-      margin-top: 18px;
-      padding: 13px;
-      border: 0;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      color: #fff;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    button:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
-    .secondary {
-      background: #ffffff0d;
-      border: 1px solid #ffffff1a;
-    }
-    .notice {
-      margin-top: 16px;
-      padding: 12px;
-      border-radius: 10px;
-      background: #ef444422;
-      color: #fca5a5;
-    }
-    .muted { color: #a0aec0; }
-    .links { text-align: center; margin-top: 18px; }
-    .links a { color: #a5b4fc; margin: 0 5px; }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="conversapay-ui.css">
 </head>
-<body>
-  <main class="card">
-    <h1>כניסה ל-ConversaPay</h1>
-    <p class="muted">נהל את העסק והתשלומים שלך.</p>
+<body class="cp-page">
+  <header class="cp-topbar">
+    <a class="cp-brand" href="home.html"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
+    <a class="cp-backlink" href="home.html">חזרה לדף הבית</a>
+  </header>
 
-    <form id="form">
-      <label for="email">אימייל</label>
-      <input id="email" type="email" required autocomplete="email">
+  <main class="cp-shell cp-auth-shell">
+    <section class="cp-auth-intro">
+      <div class="cp-stack">
+        <span class="cp-kicker">גישה לחשבון</span>
+        <h1 class="cp-title">כניסה מהירה, שקטה ומוכנה לעבודה.</h1>
+        <p class="cp-subtitle">התחברו כדי לנהל מוצרים, תשלומים, חיבורים ובונה אתר באותה סביבת עבודה.</p>
+      </div>
+      <div class="cp-list">
+        <div class="cp-list-item"><div class="cp-list-meta"><strong>גישה מאובטחת</strong><small>כניסה לחשבון עם שמירה על סשן מאובטח</small></div><span class="cp-badge good">מוגן</span></div>
+        <div class="cp-list-item"><div class="cp-list-meta"><strong>ניהול מלא</strong><small>מכירות, מוצרים והגדרות במקום אחד</small></div><span class="cp-badge">Dashboard</span></div>
+      </div>
+    </section>
 
-      <label for="password">סיסמה</label>
-      <input id="password" type="password" required autocomplete="current-password">
+    <main class="cp-card">
+      <div class="cp-stack" style="margin-bottom:18px;">
+        <h2>כניסה ל‑ConversaPay</h2>
+        <p class="cp-muted">ניהול העסק והתשלומים שלך.</p>
+      </div>
 
-      <button id="submit" type="submit">כניסה</button>
-    </form>
+      <form id="form" class="cp-stack">
+        <div class="cp-field">
+          <label class="cp-label" for="email">אימייל</label>
+          <input class="cp-input" id="email" type="email" required autocomplete="email">
+        </div>
 
-    <button class="secondary" id="google" type="button">המשך עם Google</button>
-    <div id="notice" class="notice" hidden></div>
+        <div class="cp-field">
+          <label class="cp-label" for="password">סיסמה</label>
+          <input class="cp-input" id="password" type="password" required autocomplete="current-password">
+        </div>
 
-    <div class="links">
-      <a href="forgot-password.html">שכחתי סיסמה</a>
-      <a href="register.html">הרשמה</a>
-    </div>
+        <button class="cp-button" id="submit" type="submit">כניסה</button>
+      </form>
+
+      <button class="cp-button-secondary" id="google" type="button" style="width:100%;margin-top:12px;">המשך עם Google</button>
+      <div id="notice" class="cp-notice error" hidden></div>
+
+      <div class="cp-links" style="margin-top:18px;">
+        <a class="cp-link" href="forgot-password.html">שכחתי סיסמה</a>
+        <a class="cp-link" href="register.html">הרשמה</a>
+      </div>
+    </main>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
