@@ -484,7 +484,8 @@
       products: [],
       orders: [],
       customDomains: [],
-      editingProductId: null
+      editingProductId: null,
+      ordersLocked: false
     };
 
     const $ = (id) => document.getElementById(id);
@@ -906,11 +907,10 @@
 
       try {
         hideNotice();
-        const [me, features, analytics, productsData, ordersData, businesses] = await Promise.all([
+        const [me, features, analytics, ordersData, businesses] = await Promise.all([
           get('/auth/me'),
           get('/dashboard/features'),
           get('/dashboard/analytics'),
-          get('/dashboard/products'),
           get('/dashboard/orders'),
           get('/businesses')
         ]);
@@ -919,7 +919,6 @@
         state.features = features;
         state.analytics = analytics;
         state.currentBusiness = Array.isArray(businesses) && businesses.length ? businesses[0] : null;
-        state.products = Array.isArray(productsData.products) ? productsData.products : [];
         state.orders = Array.isArray(ordersData.orders) ? ordersData.orders : [];
         state.ordersLocked = ordersData.locked === true;
         state.customDomains = Array.isArray(state.currentBusiness?.settings?.custom_domains)
@@ -928,9 +927,9 @@
 
         renderTopSection();
         setBusinessState();
-        renderProducts();
         renderDomains();
         renderOrders();
+        await loadProducts();
       } catch (error) {
         showNotice(error.message || 'לא ניתן לטעון את הדאשבורד');
       }
