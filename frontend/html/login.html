@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>ConversaPay - כניסה</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -10,139 +10,18 @@
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
 </head>
 <body class="cp-page">
-  <header class="cp-topbar">
-    <a class="cp-brand" href="home.html"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
-    <a class="cp-backlink" href="home.html">חזרה לדף הבית</a>
-  </header>
-
+  <header class="cp-topbar"><a class="cp-brand" href="home.html"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a><a class="cp-backlink" href="home.html">חזרה לדף הבית</a></header>
   <main class="cp-shell cp-auth-shell">
-    <section class="cp-auth-intro">
-      <div class="cp-stack">
-        <span class="cp-kicker">גישה לחשבון</span>
-        <h1 class="cp-title">כניסה מהירה, שקטה ומוכנה לעבודה.</h1>
-        <p class="cp-subtitle">התחברו כדי לנהל מוצרים, תשלומים, חיבורים ובונה אתר באותה סביבת עבודה.</p>
-      </div>
-      <div class="cp-list">
-        <div class="cp-list-item"><div class="cp-list-meta"><strong>גישה מאובטחת</strong><small>כניסה לחשבון עם שמירה על סשן מאובטח</small></div><span class="cp-badge good">מוגן</span></div>
-        <div class="cp-list-item"><div class="cp-list-meta"><strong>ניהול מלא</strong><small>מכירות, מוצרים והגדרות במקום אחד</small></div><span class="cp-badge">Dashboard</span></div>
-      </div>
-    </section>
-
-    <main class="cp-card">
-      <div class="cp-stack" style="margin-bottom:18px;">
-        <h2>כניסה ל‑ConversaPay</h2>
-        <p class="cp-muted">ניהול העסק והתשלומים שלך.</p>
-      </div>
-
-      <form id="form" class="cp-stack">
-        <div class="cp-field">
-          <label class="cp-label" for="email">אימייל</label>
-          <input class="cp-input" id="email" type="email" required autocomplete="email">
-        </div>
-
-        <div class="cp-field">
-          <label class="cp-label" for="password">סיסמה</label>
-          <input class="cp-input" id="password" type="password" required autocomplete="current-password">
-        </div>
-
-        <button class="cp-button" id="submit" type="submit">כניסה</button>
-      </form>
-
-      <button class="cp-button-secondary" id="google" type="button" style="width:100%;margin-top:12px;">המשך עם Google</button>
-      <div id="notice" class="cp-notice error" hidden></div>
-
-      <div class="cp-links" style="margin-top:18px;">
-        <a class="cp-link" href="forgot-password.html">שכחתי סיסמה</a>
-        <a class="cp-link" href="register.html">הרשמה</a>
-      </div>
-    </main>
+    <section class="cp-auth-intro"><div class="cp-stack"><span class="cp-kicker">גישה לחשבון</span><h1 class="cp-title">כניסה מהירה, שקטה ומוכנה לעבודה.</h1><p class="cp-subtitle">התחברו כדי לנהל מוצרים, תשלומים, חיבורים ובונה אתר באותה סביבת עבודה.</p></div><div class="cp-list"><div class="cp-list-item"><div class="cp-list-meta"><strong>גישה מאובטחת</strong><small>כניסה לחשבון עם שמירה על סשן מאובטח</small></div><span class="cp-badge good">מוגן</span></div></div></section>
+    <section class="cp-card"><div class="cp-stack" style="margin-bottom:18px;"><h2>כניסה ל‑ConversaPay</h2><p class="cp-muted">ניהול העסק והתשלומים שלך.</p></div><form id="form" class="cp-stack"><div class="cp-field"><label class="cp-label" for="email">אימייל</label><input class="cp-input" id="email" type="email" required autocomplete="email"></div><div class="cp-field"><label class="cp-label" for="password">סיסמה</label><input class="cp-input" id="password" type="password" required autocomplete="current-password"></div><button class="cp-button" id="submit" type="submit">כניסה</button></form><button class="cp-button-secondary" id="google" type="button" style="width:100%;margin-top:12px;">המשך עם Google</button><div id="notice" class="cp-notice error" hidden></div><div class="cp-links" style="margin-top:18px;"><a class="cp-link" href="forgot-password.html">שכחתי סיסמה</a><a class="cp-link" href="register.html">הרשמה</a></div></section>
   </main>
-
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script>
-    const API = '/api/v1';
-    const $ = (id) => document.getElementById(id);
-
-    function note(message) {
-      $('notice').textContent = message;
-      $('notice').hidden = false;
-    }
-
-    function clearOAuthError() {
-      localStorage.removeItem('auth_error');
-      sessionStorage.removeItem('auth_error');
-    }
-
-    function showStoredOAuthError() {
-      const error = localStorage.getItem('auth_error') || sessionStorage.getItem('auth_error');
-      if (!error) return;
-      clearOAuthError();
-      if (error === 'callback_error') {
-        note('התחברות עם Google לא הושלמה. אפשר לנסות שוב או להיכנס עם אימייל וסיסמה.');
-      }
-    }
-
-    $('form').onsubmit = async (event) => {
-      event.preventDefault();
-      const submitBtn = $('submit');
-      submitBtn.disabled = true;
-      $('notice').hidden = true;
-
-      try {
-        const response = await fetch(`${API}/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: $('email').value.trim(),
-            password: $('password').value
-          })
-        });
-
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(
-            data.detail === 'email_not_verified'
-              ? 'יש לאמת את האימייל לפני הכניסה'
-              : data.detail || 'אימייל או סיסמה שגויים'
-          );
-        }
-
-        clearOAuthError();
-        localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('user_id', data.user_id);
-        localStorage.setItem('email', data.email || '');
-        location.href = 'dashboard.html';
-      } catch (error) {
-        note(error.message || 'שגיאה בהתחברות');
-      } finally {
-        submitBtn.disabled = false;
-      }
-    };
-
-    $('google').onclick = async () => {
-      const button = $('google');
-      const originalText = button.textContent;
-      button.disabled = true;
-      button.textContent = 'מעביר ל-Google...';
-      $('notice').hidden = true;
-
-      try {
-        const configResponse = await fetch(`${API}/config/public`);
-        const config = await configResponse.json();
-        const supabaseClient = window.supabase.createClient(config.supabase_url, config.supabase_anon_key);
-        const { error } = await supabaseClient.auth.signInWithOAuth({
-          provider: 'google',
-          options: { redirectTo: location.origin + '/auth/callback' }
-        });
-        if (error) throw error;
-      } catch (_) {
-        note('שגיאה בהתחברות עם Google');
-        button.disabled = false;
-        button.textContent = originalText;
-      }
-    };
-
-    showStoredOAuthError();
+    const API='/api/v1',$=id=>document.getElementById(id),note=m=>{$('notice').textContent=m;$('notice').hidden=false};
+    function clearOAuthError(){localStorage.removeItem('auth_error');sessionStorage.removeItem('auth_error')}
+    $('form').onsubmit=async e=>{e.preventDefault();$('submit').disabled=true;$('notice').hidden=true;try{const r=await fetch(`${API}/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})}),d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.detail==='email_not_verified'?'יש לאמת את האימייל לפני הכניסה':d.detail||'אימייל או סיסמה שגויים');clearOAuthError();localStorage.setItem('access_token',d.access_token);localStorage.setItem('user_id',d.user_id);localStorage.setItem('email',d.email||'');location.href='dashboard.html'}catch(err){note(err.message||'שגיאה בהתחברות')}finally{$('submit').disabled=false}};
+    $('google').onclick=async()=>{const b=$('google');b.disabled=true;b.textContent='מעביר ל-Google...';try{const c=await(await fetch(`${API}/config/public`)).json(),sb=window.supabase.createClient(c.supabase_url,c.supabase_anon_key),{error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+'/auth/callback'}});if(error)throw error}catch(_){note('שגיאה בהתחברות עם Google');b.disabled=false;b.textContent='המשך עם Google'}};
+    const err=localStorage.getItem('auth_error')||sessionStorage.getItem('auth_error');if(err){clearOAuthError();note('התחברות עם Google לא הושלמה. אפשר לנסות שוב או להיכנס עם אימייל וסיסמה.')}
   </script>
 </body>
 </html>
