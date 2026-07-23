@@ -23,7 +23,6 @@ from backend.models.schemas import (
     PasswordReset
 )
 from backend.services.email_service import email_service
-from backend.services.payme_service import payme_service
 
 logger = logging.getLogger(__name__)
 
