@@ -116,6 +116,21 @@
       color: var(--ink);
     }
 
+    .side .divider {
+      height: 1px;
+      background: var(--line);
+      margin: 12px 4px;
+    }
+
+    .side .label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      padding: 4px 10px;
+      margin-top: 6px;
+    }
+
     .side .upgrade {
       background: var(--ink);
       color: #fff;
@@ -201,6 +216,30 @@
     }
 
     .section h2 { margin: 0; }
+
+    .locked-divider {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 38px 0 6px;
+      color: var(--muted);
+    }
+
+    .locked-divider::before,
+    .locked-divider::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--line);
+    }
+
+    .locked-divider span {
+      font-size: 0.82rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
 
     .table {
       width: 100%;
@@ -329,6 +368,9 @@
         width: auto;
       }
 
+      .side .divider,
+      .side .label { display: none; }
+
       .side .upgrade { margin-top: 3px; }
       .grid { grid-template-columns: repeat(2, 1fr); }
     }
@@ -363,9 +405,16 @@
     <div class="layout">
       <nav class="side" aria-label="ניווט">
         <a href="#overview">סקירה</a>
-        <a href="#orders">הזמנות</a>
         <a href="#products">מוצרים</a>
+        <a href="#keys">API keys</a>
+        <div class="divider"></div>
+        <div class="label">נעול לשדרוג</div>
+        <a href="#orders">הזמנות</a>
         <a href="#domains">דומיינים</a>
+        <a href="#embed">הטמעה</a>
+        <a href="#builderSection">בונה אתרים</a>
+        <a href="#whatsapp">WhatsApp</a>
+        <div class="divider"></div>
         <a href="setup-guide.html">הטמעה</a>
         <a href="profile.html">פרופיל</a>
         <a href="settings.html">הגדרות</a>
@@ -407,43 +456,56 @@
           </article>
         </section>
 
-        <section class="section" id="orders">
-          <div class="section-head">
-            <h2>הזמנות ומכירות</h2>
-            <a class="btn alt" href="pay.html">צור תשלום</a>
-          </div>
-          <div class="content" id="ordersContent">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>הזמנה</th>
-                  <th>סטטוס</th>
-                  <th>סכום</th>
-                  <th>תאריך</th>
-                </tr>
-              </thead>
-              <tbody id="ordersBody">
-                <tr>
-                  <td colspan="4" class="muted">טוען...</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="overlay" id="ordersOverlay" hidden>
-            <div>
-              <strong>ניהול הזמנות נעול</strong>
-              <p>הזמנות, מכירות וייצוא זמינים ב-PRO וב-PREMIUM.</p>
-              <a class="btn" href="upgrade.html">שדרג עכשיו</a>
-            </div>
-          </div>
-        </section>
-
         <section class="section" id="products">
           <div class="section-head">
             <h2>מוצרים</h2>
             <a class="btn alt" href="setup-guide.html">איך מתחילים</a>
           </div>
           <div id="productsBody" class="content muted">טוען...</div>
+        </section>
+
+        <section class="section" id="keys">
+          <div class="section-head">
+            <h2>API keys לווידג׳ט</h2>
+            <button class="btn" id="newKey">צור key</button>
+          </div>
+          <p class="muted">PRO: עד 3 keys. PREMIUM: עד 10. המפתח מוצג פעם אחת בלבד.</p>
+          <div id="keysBody" class="muted">טוען...</div>
+        </section>
+
+        <div class="locked-divider"><span>נעול לשדרוג</span></div>
+
+        <section class="section" id="orders">
+          <div class="section-head">
+            <h2>הזמנות ומכירות</h2>
+            <a class="btn alt" href="pay.html">צור תשלום</a>
+          </div>
+          <div class="locked">
+            <div class="content" id="ordersContent">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>הזמנה</th>
+                    <th>סטטוס</th>
+                    <th>סכום</th>
+                    <th>תאריך</th>
+                  </tr>
+                </thead>
+                <tbody id="ordersBody">
+                  <tr>
+                    <td colspan="4" class="muted">טוען...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="overlay" id="ordersOverlay" hidden>
+              <div>
+                <strong>ניהול הזמנות נעול</strong>
+                <p>הזמנות, מכירות וייצוא זמינים ב-PRO וב-PREMIUM.</p>
+                <a class="btn" href="upgrade.html">שדרג עכשיו</a>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section class="section" id="domains">
@@ -575,15 +637,6 @@
               </div>
             </div>
           </div>
-        </section>
-
-        <section class="section" id="keys">
-          <div class="section-head">
-            <h2>API keys לווידג׳ט</h2>
-            <button class="btn" id="newKey">צור key</button>
-          </div>
-          <p class="muted">PRO: עד 3 keys. PREMIUM: עד 10. המפתח מוצג פעם אחת בלבד.</p>
-          <div id="keysBody" class="muted">טוען...</div>
         </section>
       </main>
     </div>
