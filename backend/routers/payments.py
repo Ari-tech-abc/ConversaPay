@@ -57,12 +57,20 @@ def _update_profile_plan(
             "updated_at": now,
         }
     ).eq("user_id", user_id).execute()
-    supabase.table("businesses").update(
-        {
-            "subscription_tier": plan_type,
-            "subscription_status": "active" if plan_type != "free" else "active",
-        }
-    ).eq("owner_id", user_id).execute()
+
+    try:
+        supabase.table("businesses").update(
+            {
+                "subscription_tier": plan_type,
+                "subscription_status": "active",
+            }
+        ).eq("owner_id", user_id).execute()
+    except Exception as exc:
+        logger.warning(
+            "Profile was upgraded but business tier sync failed for user %s: %s",
+            user_id,
+            exc,
+        )
 
 
 def _mark_order_as_paid(
@@ -185,7 +193,10 @@ async def confirm_checkout_session(
     metadata = dict(session.get("metadata") or {})
     session_user_id = metadata.get("user_id")
     if session_user_id and session_user_id != current_user.user_id:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Session does not belong to the current user")
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "Session does not belong to the current user",
+        )
 
     response: dict[str, Any] = {
         "session_id": session.get("id"),
@@ -201,26 +212,48 @@ async def confirm_checkout_session(
             plan = "pro"
 
         subscription_obj = session.get("subscription")
-        if isinstance(subscription_obj, str):
-            subscription_obj = stripe_service.retrieve_subscription(subscription_obj)
+        subscription_status = None
+        subscription_expires_at = None
 
-        subscription_status = subscription_obj.get("status") if subscription_obj else None
-        subscription_expires_at = (
-            _period_end_iso(subscription_obj.get("current_period_end"))
-            if subscription_obj
-            else None
-        )
+        try:
+            if isinstance(subscription_obj, str):
+                subscription_obj = stripe_service.retrieve_subscription(subscription_obj)
+            if subscription_obj:
+                subscription_status = subscription_obj.get("status")
+                subscription_expires_at = _period_end_iso(
+                    subscription_obj.get("current_period_end")
+                )
+        except (StripeServiceError, ValueError, AttributeError) as exc:
+            logger.warning(
+                "Unable to load Stripe subscription details for session %s: %s",
+                session_id,
+                exc,
+            )
 
         if (
             session.get("payment_status") in {"paid", "no_payment_required"}
             or session.get("status") == "complete"
             or subscription_status in {"active", "trialing"}
         ):
-            _update_profile_plan(
-                current_user.user_id,
-                plan_type=plan,
-                subscription_expires_at=subscription_expires_at,
-            )
+            try:
+                _update_profile_plan(
+                    current_user.user_id,
+                    plan_type=plan,
+                    subscription_expires_at=subscription_expires_at,
+                )
+            except Exception as exc:
+                logger.error(
+                    "Failed to sync upgraded plan for user %s from session %s: %s",
+                    current_user.user_id,
+                    session_id,
+                    exc,
+                    exc_info=True,
+                )
+                raise HTTPException(
+                    status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    "Failed to sync upgraded plan to the user profile",
+                ) from exc
+
             response.update(
                 {
                     "confirmed": True,

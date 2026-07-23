@@ -68,12 +68,20 @@ def _update_profile_and_business(
             "updated_at": now,
         }
     ).eq("user_id", user_id).execute()
-    supabase.table("businesses").update(
-        {
-            "subscription_tier": plan_type,
-            "subscription_status": subscription_status,
-        }
-    ).eq("owner_id", user_id).execute()
+
+    try:
+        supabase.table("businesses").update(
+            {
+                "subscription_tier": plan_type,
+                "subscription_status": subscription_status,
+            }
+        ).eq("owner_id", user_id).execute()
+    except Exception as exc:
+        logger.warning(
+            "Profile was synced from Stripe but business sync failed for user %s: %s",
+            user_id,
+            exc,
+        )
 
 
 def _update_order_and_payment(
@@ -205,8 +213,6 @@ async def stripe_webhook(request: Request) -> dict[str, Any]:
             )
 
         if obj.get("mode") == "subscription":
-            # Apply an optimistic upgrade immediately from checkout metadata,
-            # then refine it from the actual subscription object when available.
             if metadata.get("user_id"):
                 _apply_subscription_state(
                     user_id=metadata.get("user_id"),
