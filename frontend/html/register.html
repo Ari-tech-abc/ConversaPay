@@ -10,67 +10,14 @@
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
 </head>
 <body class="cp-page">
-  <header class="cp-topbar">
-    <a class="cp-brand" href="home.html"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
-    <a class="cp-backlink" href="login.html">כבר יש חשבון?</a>
-  </header>
-
+  <header class="cp-topbar"><a class="cp-brand" href="home.html"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a><a class="cp-backlink" href="login.html">כבר יש חשבון?</a></header>
   <main class="cp-shell cp-auth-shell">
-    <section class="cp-auth-intro">
-      <div class="cp-stack">
-        <span class="cp-kicker">פתיחת חשבון</span>
-        <h1 class="cp-title">מתחילים חכם וממשיכים בקצב של העסק.</h1>
-        <p class="cp-subtitle">יצירת חשבון לוקחת רגע. אחר כך אפשר להוסיף מוצרים, לנהל גבייה ולפתוח יכולות מתקדמות.</p>
-      </div>
-      <div class="cp-list">
-        <div class="cp-list-item"><div class="cp-list-meta"><strong>התחלה בחינם</strong><small>פתיחת חשבון ללא כרטיס אשראי</small></div><span class="cp-badge">FREE</span></div>
-        <div class="cp-list-item"><div class="cp-list-meta"><strong>מוכן לצמיחה</strong><small>שדרוג ל‑PRO או PREMIUM מתוך החשבון</small></div><span class="cp-badge good">Scalable</span></div>
-      </div>
-    </section>
-
-    <section class="cp-card">
-      <div class="cp-stack" style="margin-bottom:18px;">
-        <h2>צור חשבון</h2>
-        <p class="cp-muted">התחלה חינם.</p>
-      </div>
-
-      <form id="form" class="cp-stack">
-        <div class="cp-field">
-          <label class="cp-label" for="name">שם מלא</label>
-          <input class="cp-input" id="name" required maxlength="255" autocomplete="name">
-        </div>
-        <div class="cp-field">
-          <label class="cp-label" for="business">שם העסק</label>
-          <input class="cp-input" id="business" required maxlength="255" autocomplete="organization">
-        </div>
-        <div class="cp-field">
-          <label class="cp-label" for="email">אימייל</label>
-          <input class="cp-input" id="email" type="email" required autocomplete="email">
-        </div>
-        <div class="cp-field">
-          <label class="cp-label" for="password">סיסמה, לפחות 8 תווים</label>
-          <input class="cp-input" id="password" type="password" minlength="8" required autocomplete="new-password">
-        </div>
-        <div class="cp-field">
-          <label class="cp-label" for="confirm">אימות סיסמה</label>
-          <input class="cp-input" id="confirm" type="password" minlength="8" required autocomplete="new-password">
-        </div>
-        <label class="cp-muted" style="display:flex;gap:10px;align-items:flex-start;">
-          <input id="terms" type="checkbox" required style="width:auto;margin-top:4px"> אני מסכים לתנאים ולמדיניות הפרטיות
-        </label>
-        <button class="cp-button" id="submit" type="submit">הרשמה</button>
-      </form>
-
-      <div id="notice" class="cp-notice" hidden></div>
-      <div class="cp-links" style="margin-top:18px;">
-        <a class="cp-link" href="login.html">כבר יש לך חשבון? כניסה</a>
-      </div>
-    </section>
+    <section class="cp-auth-intro"><div class="cp-stack"><span class="cp-kicker">פתיחת חשבון</span><h1 class="cp-title">מתחילים חכם וממשיכים בקצב של העסק.</h1><p class="cp-subtitle">יצירת חשבון לוקחת רגע. אחר כך אפשר להוסיף מוצרים, לנהל גבייה ולפתוח יכולות מתקדמות.</p></div><div class="cp-list"><div class="cp-list-item"><div class="cp-list-meta"><strong>התחלה בחינם</strong><small>פתיחת חשבון ללא כרטיס אשראי</small></div><span class="cp-badge">FREE</span></div><div class="cp-list-item"><div class="cp-list-meta"><strong>מוכן לצמיחה</strong><small>שדרוג ל‑PRO או PREMIUM מתוך החשבון</small></div><span class="cp-badge good">מוכן לצמיחה</span></div></div></section>
+    <section class="cp-card"><div class="cp-stack" style="margin-bottom:18px;"><h2>צור חשבון</h2><p class="cp-muted">התחלה חינם.</p></div><form id="form" class="cp-stack"><div class="cp-field"><label class="cp-label" for="name">שם מלא</label><input class="cp-input" id="name" required maxlength="255" autocomplete="name"></div><div class="cp-field"><label class="cp-label" for="business">שם העסק</label><input class="cp-input" id="business" required maxlength="255" autocomplete="organization"></div><div class="cp-field"><label class="cp-label" for="email">אימייל</label><input class="cp-input" id="email" type="email" required autocomplete="email"></div><div class="cp-field"><label class="cp-label" for="password">סיסמה, לפחות 8 תווים</label><input class="cp-input" id="password" type="password" minlength="8" required autocomplete="new-password"></div><div class="cp-field"><label class="cp-label" for="confirm">אימות סיסמה</label><input class="cp-input" id="confirm" type="password" minlength="8" required autocomplete="new-password"></div><label class="cp-muted" style="display:flex;gap:10px;align-items:flex-start;"><input id="terms" type="checkbox" required style="width:auto;margin-top:4px"> <span>אני מסכים <a class="cp-link" href="terms.html">לתנאי השימוש</a> ול<a class="cp-link" href="privacy.html">מדיניות הפרטיות</a></span></label><button class="cp-button" id="submit" type="submit">הרשמה</button></form><div id="notice" class="cp-notice" hidden></div><div class="cp-links" style="margin-top:18px;"><a class="cp-link" href="login.html">כבר יש לך חשבון? כניסה</a></div></section>
   </main>
-
   <script>
     const API='/api/v1',$=id=>document.getElementById(id),note=(t,e=false)=>{$('notice').textContent=t;$('notice').className=e?'cp-notice error':'cp-notice';$('notice').hidden=false};
-    $('form').onsubmit=async e=>{e.preventDefault();const p=$('password').value;if(p.length<8||p!==$('confirm').value)return note('הסיסמה חייבת להכיל לפחות 8 תווים ולהיות זהה באימות',true);if(!$('terms').checked)return note('יש לאשר את התנאים',true);$('submit').disabled=true;try{const r=await fetch(`${API}/auth/signup`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({full_name:$('name').value.trim(),business_name:$('business').value.trim(),email:$('email').value.trim(),password:p})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.detail||'הרשמה נכשלה');note('נשלח אליך אימייל אימות. בדוק גם את תיקיית הספאם.');$('form').reset()}catch(err){note(err.message||'שגיאה בהרשמה',true)}finally{$('submit').disabled=false}};
+    $('form').onsubmit=async e=>{e.preventDefault();const p=$('password').value;if(p.length<8||p!==$('confirm').value)return note('הסיסמה חייבת להכיל לפחות 8 תווים ולהיות זהה באימות',true);if(!$('terms').checked)return note('יש לאשר את תנאי השימוש ומדיניות הפרטיות',true);$('submit').disabled=true;try{const r=await fetch(`${API}/auth/signup`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({full_name:$('name').value.trim(),business_name:$('business').value.trim(),email:$('email').value.trim(),password:p})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.detail||'הרשמה נכשלה');note('נשלח אליך אימייל אימות. בדוק גם את תיקיית הספאם.');$('form').reset()}catch(err){note(err.message||'שגיאה בהרשמה',true)}finally{$('submit').disabled=false}};
   </script>
 </body>
 </html>
