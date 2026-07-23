@@ -4,9 +4,15 @@ Handles Instant Payment Notifications (IPN) from PayMe payment gateway.
 
 SECURITY FIXES:
   C2 - HMAC-SHA256 signature verification added (_verify_payme_signature).
-  H5 - Idempotency check on sale_id prevents double-activation.
-  M6 - payme_card_token is hashed before storage.
+  H4 - Atomic idempotency via a dedicated webhook_events table (unique
+       provider+event_id claim) instead of the overwrite-prone
+       profiles.payme_sale_id check. Prevents double-activation on
+       concurrent IPNs and re-processing of old sale ids.
+  H5 - payme_card_token is hashed before storage.
+  B1 - subscription_expires_at is now set on activation (+1 month) so a
+       missed renewal downgrades the account automatically.
 """
+import calendar
 import hashlib
 import hmac as hmac_lib
 from fastapi import APIRouter, HTTPException, status, Request
@@ -29,7 +35,7 @@ supabase: Client = create_client(
 
 
 # ============================================
-# Signature Verification
+# Helpers
 # ============================================
 
 def _verify_payme_signature(raw_body: bytes, provided_sig: str) -> bool:
@@ -51,8 +57,48 @@ def _verify_payme_signature(raw_body: bytes, provided_sig: str) -> bool:
 
 
 def _hash_card_token(token: str) -> str:
-    """One-way SHA-256 hash of a card token for safe storage (Fix M6)."""
+    """One-way SHA-256 hash of a card token for safe storage (Fix H5)."""
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def _one_month_from(now: datetime) -> datetime:
+    """
+    Return the same day one calendar month later, clamped to the last day of
+    the target month (matches the PayMe sub_period of 1 month). This is the
+    subscription's paid-through date; a renewal IPN pushes it forward again.
+    """
+    month = now.month + 1
+    year = now.year + (1 if month > 12 else 0)
+    month = 1 if month > 12 else month
+    day = min(now.day, calendar.monthrange(year, month)[1])
+    return now.replace(year=year, month=month, day=day)
+
+
+def _claim_event(provider: str, event_id: str, event_status: str) -> bool:
+    """
+    Atomically claim a webhook event so it is processed exactly once.
+
+    Relies on the UNIQUE(provider, event_id) constraint on webhook_events:
+    the first insert wins and returns True; a duplicate raises a unique
+    violation which we translate into False (already processed). Any other
+    database error is re-raised so the caller can fail safely rather than
+    risk a double-activation.
+    """
+    try:
+        supabase.table("webhook_events").insert({
+            "provider": provider,
+            "event_id": event_id,
+            "status": str(event_status) if event_status is not None else None,
+            "received_at": datetime.utcnow().isoformat(),
+        }).execute()
+        return True
+    except Exception as exc:
+        msg = str(exc).lower()
+        if any(marker in msg for marker in ("duplicate", "unique", "23505", "conflict", "already exists")):
+            return False
+        # Unknown failure: do not silently proceed — surface it.
+        logger.error("Failed to claim webhook event %s/%s: %s", provider, event_id, exc, exc_info=True)
+        raise
 
 
 # ============================================
@@ -66,8 +112,9 @@ async def handle_payme_webhook(request: Request):
 
     Security controls applied:
       1. HMAC-SHA256 signature verification (C2).
-      2. sale_id idempotency — skip if already processed (H4).
+      2. Atomic exactly-once processing via webhook_events (H4).
       3. Card token hashed before storage (H5).
+      4. subscription_expires_at set on activation (B1).
     """
     # Read raw body ONCE — needed for both signature check and JSON parse.
     raw_body = await request.body()
@@ -105,12 +152,8 @@ async def handle_payme_webhook(request: Request):
             detail="Missing sale_id in webhook payload"
         )
 
-    # --- H4: Idempotency — skip if this sale_id was already processed ---
-    already_processed = supabase.table("profiles") \
-        .select("user_id") \
-        .eq("payme_sale_id", sale_id) \
-        .execute()
-    if already_processed.data:
+    # --- H4: Atomic idempotency. Claim the event before doing any work. ---
+    if not _claim_event("payme", sale_id, payme_status):
         logger.info(f"PayMe webhook for sale_id={sale_id} already processed — skipping")
         return {"status": "success", "processed": False, "reason": "already_processed"}
 
@@ -141,14 +184,18 @@ async def _activate_subscription(
 
     try:
         safe_plan = plan_type if plan_type in ("pro", "premium") else "pro"
+        now = datetime.utcnow()
 
         profile_data = {
             "plan_type": safe_plan,
+            # B1: paid-through date. Without this the account would stay paid
+            # forever even if a future renewal never arrives.
+            "subscription_expires_at": _one_month_from(now).isoformat(),
             # H5: store a one-way hash of the card token, never the raw value.
             "payme_card_token": _hash_card_token(card_token) if card_token else None,
             "payme_sale_id": sale_id,
-            "subscription_activated_at": datetime.utcnow().isoformat(),
-            "updated_at": datetime.utcnow().isoformat()
+            "subscription_activated_at": now.isoformat(),
+            "updated_at": now.isoformat()
         }
 
         existing = supabase.table("profiles") \
@@ -183,6 +230,7 @@ async def _deactivate_subscription(user_id: Optional[str], sale_id: str):
         supabase.table("profiles") \
             .update({
                 "plan_type": "free",
+                "subscription_expires_at": None,
                 "payme_card_token": None,
                 "subscription_cancelled_at": datetime.utcnow().isoformat(),
                 "updated_at": datetime.utcnow().isoformat()

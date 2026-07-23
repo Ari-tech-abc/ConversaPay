@@ -2,13 +2,19 @@
 Development Simulator Router
 Contains endpoints that are ONLY available in non-production environments
 for testing and development purposes. Never included in production builds.
+
+SECURITY FIX (B3): the mark-paid endpoint now requires an authenticated user
+who owns the order's business, in addition to the non-production guard. The
+env flag alone is not a sufficient control — a single misconfigured variable
+would otherwise let anyone who knows an order_id mark it as paid.
 """
-from fastapi import APIRouter, HTTPException, status, Body
+from fastapi import APIRouter, HTTPException, status, Body, Depends
 import logging
 from datetime import datetime
 
 from supabase import create_client, Client
 from backend.config import settings
+from backend.middleware.auth import AuthUser, require_auth
 from backend.models.schemas import PaymentInfo, OrderStatus
 
 logger = logging.getLogger(__name__)
@@ -30,11 +36,14 @@ supabase: Client = create_client(
 async def dev_mark_order_paid(
     order_id: str,
     payment_info: PaymentInfo = Body(...),
+    current_user: AuthUser = Depends(require_auth),
 ):
     """
     DEVELOPMENT ONLY - Simulates payment by marking an order as paid.
     THIS ENDPOINT IS NEVER AVAILABLE IN PRODUCTION.
     Use PayMe webhooks for payment verification in production.
+
+    Requires an authenticated caller who owns the order's business.
     """
     # SECURITY: Double-check we are NOT in production
     if settings.is_production:
@@ -58,6 +67,19 @@ async def dev_mark_order_paid(
 
         order = order_result.data[0]
 
+        # SECURITY: the caller must own the business this order belongs to.
+        business = supabase.table("businesses")\
+            .select("id")\
+            .eq("id", order.get("business_id"))\
+            .eq("owner_id", current_user.user_id)\
+            .execute()
+
+        if not business.data:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied"
+            )
+
         # Update order status to paid
         update_data = {
             "status": OrderStatus.PAID.value,
@@ -77,7 +99,7 @@ async def dev_mark_order_paid(
             .execute()
 
         if result.data:
-            logger.info(f"[DEV-SIMULATOR] Order {order_id} marked as paid")
+            logger.info(f"[DEV-SIMULATOR] Order {order_id} marked as paid by {current_user.user_id}")
             return {
                 "status": "success",
                 "message": "Order marked as paid (SIMULATOR)",
