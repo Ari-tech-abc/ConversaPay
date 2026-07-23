@@ -697,12 +697,36 @@ function showWebsiteOnboarding() {
     if (onboardingCard) {
         onboardingCard.classList.remove('d-none');
         
-        // Set dynamic link to site builder - use currentBusiness.id (UUID) for API consistency
-        const token = ConversaPayAuth.getToken();
-        const siteBuilderUrl = `http://localhost:8001/frontend/index.html?business_id=${currentBusiness.id}&token=${token}`;
         const generateBtn = document.getElementById('generateSiteBtn');
         if (generateBtn) {
-            generateBtn.href = siteBuilderUrl;
+            generateBtn.onclick = async (event) => {
+                event.preventDefault();
+                const originalText = generateBtn.textContent;
+                generateBtn.textContent = 'פותח...';
+                generateBtn.setAttribute('aria-busy', 'true');
+                generateBtn.style.pointerEvents = 'none';
+
+                try {
+                    const token = ConversaPayAuth.getToken();
+                    const response = await fetch(`${API_BASE_URL}/site-builder/access`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok || !data.url) {
+                        throw new Error(data.detail || 'לא ניתן לפתוח את בונה האתרים כרגע');
+                    }
+                    window.location.href = data.url;
+                } catch (error) {
+                    console.error('Error opening site builder:', error);
+                    alert(error.message || 'לא ניתן לפתוח את בונה האתרים כרגע');
+                    generateBtn.textContent = originalText;
+                    generateBtn.removeAttribute('aria-busy');
+                    generateBtn.style.pointerEvents = '';
+                }
+            };
         }
     }
     

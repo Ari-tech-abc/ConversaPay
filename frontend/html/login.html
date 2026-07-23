@@ -1,3 +1,178 @@
-<!doctype html><html lang="he" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ConversaPay - כניסה</title><style>*{box-sizing:border-box;font-family:system-ui}body{margin:0;min-height:100vh;display:grid;place-items:center;background:radial-gradient(circle at 20% 10%,#28204e,transparent 35%),linear-gradient(135deg,#0f1419,#1a1f2e);color:#f5f7fa}.card{width:min(420px,calc(100% - 32px));padding:30px;background:#1a1f2ecc;border:1px solid #ffffff18;border-radius:20px;box-shadow:0 20px 48px #0007}h1{margin-top:0;color:#a5b4fc}label{display:block;margin:15px 0 6px;font-weight:600}input{width:100%;padding:13px;border-radius:10px;border:1px solid #ffffff1a;background:#ffffff0d;color:#fff;font-size:1rem}button{width:100%;margin-top:18px;padding:13px;border:0;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-weight:700;cursor:pointer}.secondary{background:#ffffff0d;border:1px solid #ffffff1a}.notice{margin-top:16px;padding:12px;border-radius:10px;background:#ef444422;color:#fca5a5}.muted{color:#a0aec0}.links{text-align:center;margin-top:18px}.links a{color:#a5b4fc;margin:0 5px}</style></head><body><main class="card"><h1>כניסה ל-ConversaPay</h1><p class="muted">נהל את העסק והתשלומים שלך.</p><form id="form"><label for="email">אימייל</label><input id="email" type="email" required autocomplete="email"><label for="password">סיסמה</label><input id="password" type="password" required autocomplete="current-password"><button id="submit">כניסה</button></form><button class="secondary" id="google">המשך עם Google</button><div id="notice" class="notice" hidden></div><div class="links"><a href="forgot-password.html">שכחתי סיסמה</a><a href="register.html">הרשמה</a></div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script><script>
-const API='/api/v1',$=id=>document.getElementById(id),note=t=>{$('notice').textContent=t;$('notice').hidden=false};$('form').onsubmit=async e=>{e.preventDefault();$('submit').disabled=true;try{const r=await fetch(`${API}/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:$('email').value.trim(),password:$('password').value})});const d=await r.json();if(!r.ok)throw new Error(d.detail==='email_not_verified'?'יש לאמת את האימייל לפני הכניסה':d.detail||'אימייל או סיסמה שגויים');localStorage.setItem('access_token',d.access_token);localStorage.setItem('user_id',d.user_id);localStorage.setItem('email',d.email||'');location.href='dashboard.html'}catch(err){note(err.message)}finally{$('submit').disabled=false}};$('google').onclick=async()=>{try{const c=await (await fetch(`${API}/config/public`)).json();const sb=window.supabase.createClient(c.supabase_url,c.supabase_anon_key);const {error}=await sb.auth.signInWithOAuth({provider:'google',options:{redirectTo:location.origin+'/auth/callback'}});if(error)throw error}catch(_){note('שגיאה בהתחברות עם Google')}};
-</script></body></html>
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ConversaPay - כניסה</title>
+  <style>
+    * { box-sizing: border-box; font-family: system-ui; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 20% 10%, #28204e, transparent 35%), linear-gradient(135deg, #0f1419, #1a1f2e);
+      color: #f5f7fa;
+    }
+    .card {
+      width: min(420px, calc(100% - 32px));
+      padding: 30px;
+      background: #1a1f2ecc;
+      border: 1px solid #ffffff18;
+      border-radius: 20px;
+      box-shadow: 0 20px 48px #0007;
+    }
+    h1 { margin-top: 0; color: #a5b4fc; }
+    label { display: block; margin: 15px 0 6px; font-weight: 600; }
+    input {
+      width: 100%;
+      padding: 13px;
+      border-radius: 10px;
+      border: 1px solid #ffffff1a;
+      background: #ffffff0d;
+      color: #fff;
+      font-size: 1rem;
+    }
+    button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 13px;
+      border: 0;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    .secondary {
+      background: #ffffff0d;
+      border: 1px solid #ffffff1a;
+    }
+    .notice {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 10px;
+      background: #ef444422;
+      color: #fca5a5;
+    }
+    .muted { color: #a0aec0; }
+    .links { text-align: center; margin-top: 18px; }
+    .links a { color: #a5b4fc; margin: 0 5px; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>כניסה ל-ConversaPay</h1>
+    <p class="muted">נהל את העסק והתשלומים שלך.</p>
+
+    <form id="form">
+      <label for="email">אימייל</label>
+      <input id="email" type="email" required autocomplete="email">
+
+      <label for="password">סיסמה</label>
+      <input id="password" type="password" required autocomplete="current-password">
+
+      <button id="submit" type="submit">כניסה</button>
+    </form>
+
+    <button class="secondary" id="google" type="button">המשך עם Google</button>
+    <div id="notice" class="notice" hidden></div>
+
+    <div class="links">
+      <a href="forgot-password.html">שכחתי סיסמה</a>
+      <a href="register.html">הרשמה</a>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const API = '/api/v1';
+    const $ = (id) => document.getElementById(id);
+
+    function note(message) {
+      $('notice').textContent = message;
+      $('notice').hidden = false;
+    }
+
+    function clearOAuthError() {
+      localStorage.removeItem('auth_error');
+      sessionStorage.removeItem('auth_error');
+    }
+
+    function showStoredOAuthError() {
+      const error = localStorage.getItem('auth_error') || sessionStorage.getItem('auth_error');
+      if (!error) return;
+      clearOAuthError();
+      if (error === 'callback_error') {
+        note('התחברות עם Google לא הושלמה. אפשר לנסות שוב או להיכנס עם אימייל וסיסמה.');
+      }
+    }
+
+    $('form').onsubmit = async (event) => {
+      event.preventDefault();
+      const submitBtn = $('submit');
+      submitBtn.disabled = true;
+      $('notice').hidden = true;
+
+      try {
+        const response = await fetch(`${API}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: $('email').value.trim(),
+            password: $('password').value
+          })
+        });
+
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(
+            data.detail === 'email_not_verified'
+              ? 'יש לאמת את האימייל לפני הכניסה'
+              : data.detail || 'אימייל או סיסמה שגויים'
+          );
+        }
+
+        clearOAuthError();
+        localStorage.setItem('access_token', data.access_token);
+        localStorage.setItem('user_id', data.user_id);
+        localStorage.setItem('email', data.email || '');
+        location.href = 'dashboard.html';
+      } catch (error) {
+        note(error.message || 'שגיאה בהתחברות');
+      } finally {
+        submitBtn.disabled = false;
+      }
+    };
+
+    $('google').onclick = async () => {
+      const button = $('google');
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = 'מעביר ל-Google...';
+      $('notice').hidden = true;
+
+      try {
+        const configResponse = await fetch(`${API}/config/public`);
+        const config = await configResponse.json();
+        const supabaseClient = window.supabase.createClient(config.supabase_url, config.supabase_anon_key);
+        const { error } = await supabaseClient.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: location.origin + '/auth/callback' }
+        });
+        if (error) throw error;
+      } catch (_) {
+        note('שגיאה בהתחברות עם Google');
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    };
+
+    showStoredOAuthError();
+  </script>
+</body>
+</html>
