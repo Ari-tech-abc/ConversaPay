@@ -10,6 +10,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(level
 logger=logging.getLogger(__name__)
 from backend.config import settings
 from backend.routers import auth,businesses,products,chat,orders,payments,logs,webhooks,analytics,widget,admin,dashboard,api_keys,site_builder
+from backend.routers.admin_password import router as admin_password_router
 from backend.routers.payme_webhook import router as payme_webhook_router
 from backend.routers.whatsapp import router as whatsapp_webhook_router
 from backend.services.monitoring_service import monitoring_service
@@ -21,8 +22,7 @@ class DualCORSMiddleware(BaseHTTPMiddleware):
         origin=request.headers.get("origin"); path=request.url.path
         public=any(path.startswith(x) for x in (f"{settings.API_PREFIX}/chat",f"{settings.API_PREFIX}/widget",f"{settings.API_PREFIX}/webhooks/",f"{settings.API_PREFIX}/orders/",f"{settings.API_PREFIX}/site-builder/verify"))
         if request.method=="OPTIONS":
-            response=Response(); response.headers["Access-Control-Allow-Origin"]="*" if public else (origin if origin in settings.cors_origins_list else "")
-            response.headers["Access-Control-Allow-Methods"]="GET,POST,PUT,PATCH,DELETE,OPTIONS"; response.headers["Access-Control-Allow-Headers"]="Content-Type,Authorization,X-Builder-Token"; response.headers["Vary"]="Origin"; return response
+            response=Response(); response.headers["Access-Control-Allow-Origin"]="*" if public else (origin if origin in settings.cors_origins_list else ""); response.headers["Access-Control-Allow-Methods"]="GET,POST,PUT,PATCH,DELETE,OPTIONS"; response.headers["Access-Control-Allow-Headers"]="Content-Type,Authorization,X-Builder-Token"; response.headers["Vary"]="Origin"; return response
         response=await call_next(request)
         if public: response.headers["Access-Control-Allow-Origin"]="*"
         elif origin in settings.cors_origins_list: response.headers.update({"Access-Control-Allow-Origin":origin,"Access-Control-Allow-Credentials":"true"})
@@ -33,7 +33,7 @@ async def health(): return {"status":"healthy","version":"2.0.0","environment":s
 @app.get(f"{settings.API_PREFIX}/config/public")
 async def public_config(): return {"supabase_url":settings.SUPABASE_URL,"supabase_anon_key":settings.SUPABASE_ANON_KEY}
 prefix=settings.API_PREFIX
-for r,p,t in [(auth.router,f"{prefix}/auth","authentication"),(businesses.router,prefix,"businesses"),(products.router,prefix,"products"),(chat.router,prefix,"chat"),(orders.router,prefix,"orders"),(payments.router,prefix,"payments"),(logs.router,prefix,"logs"),(webhooks.router,prefix,"webhooks"),(analytics.router,prefix,"analytics"),(widget.router,f"{prefix}/widget","widget"),(dashboard.router,f"{prefix}/dashboard","dashboard"),(admin.router,f"{prefix}/admin","admin"),(api_keys.router,prefix,"api-keys"),(site_builder.router,prefix,"site-builder"),(payme_webhook_router,prefix,"payme-webhook"),(whatsapp_webhook_router,prefix,"whatsapp-webhook")]: app.include_router(r,prefix=p,tags=[t])
+for r,p,t in [(auth.router,f"{prefix}/auth","authentication"),(businesses.router,prefix,"businesses"),(products.router,prefix,"products"),(chat.router,prefix,"chat"),(orders.router,prefix,"orders"),(payments.router,prefix,"payments"),(logs.router,prefix,"logs"),(webhooks.router,prefix,"webhooks"),(analytics.router,prefix,"analytics"),(widget.router,f"{prefix}/widget","widget"),(dashboard.router,f"{prefix}/dashboard","dashboard"),(admin.router,f"{prefix}/admin","admin"),(admin_password_router,f"{prefix}/admin","admin-security"),(api_keys.router,prefix,"api-keys"),(site_builder.router,prefix,"site-builder"),(payme_webhook_router,prefix,"payme-webhook"),(whatsapp_webhook_router,prefix,"whatsapp-webhook")]: app.include_router(r,prefix=p,tags=[t])
 if not settings.is_production:
     from backend.routers.dev_simulator import router as dev_simulator_router
     app.include_router(dev_simulator_router,prefix=prefix,tags=["dev-simulator"])
@@ -63,6 +63,9 @@ async def admin_page(): return FileResponse(_html("admin-dashboard.html"))
 @app.get("/admin/login")
 @app.get("/admin-login.html")
 async def admin_login_page(): return FileResponse(_html("admin-login.html"))
+@app.get("/admin/change-password")
+@app.get("/admin-change-password.html")
+async def admin_change_password_page(): return FileResponse(_html("admin-change-password.html"))
 @app.get("/setup-guide")
 @app.get("/setup-guide.html")
 async def setup_guide_page(): return FileResponse(_html("setup-guide.html"))
