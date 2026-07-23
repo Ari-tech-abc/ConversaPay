@@ -8,6 +8,38 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+  <style>
+    .profile-shell {
+      max-width: 760px;
+      margin: auto;
+      display: grid;
+      gap: 18px;
+    }
+
+    .info-card {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .uuid-box {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(7,17,31,0.78);
+      border: 1px solid var(--cp-line);
+      direction: ltr;
+      text-align: left;
+      word-break: break-all;
+    }
+  </style>
 </head>
 <body class="cp-page">
   <header class="cp-topbar">
@@ -15,8 +47,8 @@
     <a class="cp-backlink" href="/dashboard.html">חזרה לדאשבורד</a>
   </header>
 
-  <main class="cp-shell">
-    <section class="cp-panel" style="max-width:760px;margin:auto;">
+  <main class="cp-shell profile-shell">
+    <section class="cp-panel">
       <div class="cp-list-item" style="margin-bottom:18px;align-items:center;">
         <div class="cp-brand-mark" id="avatar" style="width:72px;height:72px;border-radius:22px;">א</div>
         <div class="cp-list-meta">
@@ -42,6 +74,17 @@
         </div>
       </form>
     </section>
+
+    <section class="info-card">
+      <div>
+        <h2 style="margin:0 0 6px 0;">Business UUID</h2>
+        <p class="cp-muted" style="margin:0;">המזהה של העסק הראשי שלך, לשימוש בהטמעות וחיבורים.</p>
+      </div>
+      <div class="uuid-box">
+        <span id="businessUuid">טוען...</span>
+        <button class="cp-button-secondary" type="button" id="copyBusinessUuid">העתק UUID</button>
+      </div>
+    </section>
   </main>
 
   <script>
@@ -49,9 +92,27 @@
     const token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token');
     if(!token)location.href='/login.html';
     const $=id=>document.getElementById(id),auth={Authorization:`Bearer ${token}`};
+    function clearSession(){localStorage.clear();sessionStorage.clear();location.href='/login.html'}
     function show(t,e=false){const n=$('notice');n.textContent=t;n.className=e?'cp-notice error':'cp-notice';n.hidden=false}
-    async function load(){const r=await fetch(`${API}/auth/me`,{headers:auth});if(r.status===401){localStorage.clear();sessionStorage.clear();location.href='/login.html';return}if(!r.ok){show('לא ניתן לטעון את הפרופיל',true);return}const d=await r.json(),p=d.profile||{},name=p.full_name||'';$('fullName').value=name;$('email').value=d.email||p.email||'';$('emailDisplay').textContent=d.email||p.email||'';$('nameDisplay').textContent=name||'פרופיל';$('avatar').textContent=(name||d.email||'א').trim().charAt(0).toUpperCase()}
-    $('profileForm').onsubmit=async e=>{e.preventDefault();const name=$('fullName').value.trim();if(!name)return show('נא להזין שם מלא',true);$('save').disabled=true;try{const r=await fetch(`${API}/auth/me?full_name=${encodeURIComponent(name)}`,{method:'PUT',headers:auth});if(r.status===401){localStorage.clear();sessionStorage.clear();location.href='/login.html';return}if(!r.ok){const d=await r.json().catch(()=>({}));throw Error(d.detail||'עדכון הפרופיל נכשל')}await load();show('הפרופיל עודכן בהצלחה')}catch(e){show(e.message,true)}finally{$('save').disabled=false}};
+    async function load(){
+      const [meResponse,businessesResponse]=await Promise.all([
+        fetch(`${API}/auth/me`,{headers:auth}),
+        fetch(`${API}/businesses`,{headers:auth})
+      ]);
+      if(meResponse.status===401||businessesResponse.status===401){clearSession();return}
+      if(!meResponse.ok){show('לא ניתן לטעון את הפרופיל',true);return}
+      const d=await meResponse.json(),p=d.profile||{},name=p.full_name||'';
+      $('fullName').value=name;$('email').value=d.email||p.email||'';$('emailDisplay').textContent=d.email||p.email||'';$('nameDisplay').textContent=name||'פרופיל';$('avatar').textContent=(name||d.email||'א').trim().charAt(0).toUpperCase();
+      if(businessesResponse.ok){
+        const businesses=await businessesResponse.json();
+        const business=Array.isArray(businesses)&&businesses.length?businesses[0]:null;
+        $('businessUuid').textContent=business?.id||'אין עסק פעיל';
+      } else {
+        $('businessUuid').textContent='אין עסק פעיל';
+      }
+    }
+    $('profileForm').onsubmit=async e=>{e.preventDefault();const name=$('fullName').value.trim();if(!name)return show('נא להזין שם מלא',true);$('save').disabled=true;try{const r=await fetch(`${API}/auth/me?full_name=${encodeURIComponent(name)}`,{method:'PUT',headers:auth});if(r.status===401){clearSession();return}if(!r.ok){const d=await r.json().catch(()=>({}));throw Error(d.detail||'עדכון הפרופיל נכשל')}await load();show('הפרופיל עודכן בהצלחה')}catch(e){show(e.message,true)}finally{$('save').disabled=false}};
+    $('copyBusinessUuid').onclick=async()=>{const value=$('businessUuid').textContent;if(!value||value==='טוען...'||value==='אין עסק פעיל')return;try{await navigator.clipboard.writeText(value);$('copyBusinessUuid').textContent='הועתק ✓';setTimeout(()=>$('copyBusinessUuid').textContent='העתק UUID',1600)}catch{show('לא ניתן להעתיק אוטומטית',true)}};
     load();
   </script>
 </body>

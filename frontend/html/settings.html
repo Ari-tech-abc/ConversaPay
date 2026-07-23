@@ -8,6 +8,94 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+  <style>
+    .settings-shell {
+      display: grid;
+      gap: 18px;
+      max-width: 860px;
+      margin: auto;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+    }
+
+    .summary-card,
+    .settings-card {
+      display: grid;
+      gap: 12px;
+      padding: 20px;
+      border-radius: 22px;
+      background: var(--cp-panel);
+      border: 1px solid var(--cp-line);
+      box-shadow: var(--cp-shadow);
+    }
+
+    .summary-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .field-grid .full {
+      grid-column: 1 / -1;
+    }
+
+    .settings-field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .settings-field label {
+      color: var(--cp-muted-strong);
+      font-weight: 600;
+    }
+
+    .settings-field input,
+    .webhook-box {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--cp-line);
+      background: rgba(7, 17, 31, 0.78);
+      color: var(--cp-text);
+      padding: 12px 14px;
+      font: inherit;
+      box-sizing: border-box;
+    }
+
+    .webhook-box {
+      direction: ltr;
+      text-align: left;
+      word-break: break-all;
+    }
+
+    .settings-actions,
+    .inline-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .help-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .help-item {
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+  </style>
 </head>
 <body class="cp-page">
   <header class="cp-topbar">
@@ -15,100 +103,191 @@
     <a class="cp-backlink" href="dashboard.html">חזרה לדאשבורד</a>
   </header>
 
-  <main class="cp-shell">
-    <section class="cp-panel" style="max-width:760px;margin:auto;">
-      <div class="cp-stack" style="margin-bottom:16px;">
+  <main class="cp-shell settings-shell">
+    <section class="settings-card">
+      <div class="cp-stack">
         <h1>הגדרות</h1>
-        <p class="cp-muted">הגדרות זמינות של החשבון והמערכת.</p>
+        <p class="cp-muted">ניהול מהיר של החיבורים, המגבלות והגדרות WhatsApp שלך.</p>
       </div>
-      <div id="rows" class="cp-list">טוען...</div>
+    </section>
+
+    <section class="summary-grid" id="summaryGrid">
+      <article class="summary-card">
+        <small class="cp-muted">PayMe</small>
+        <div class="summary-value" id="paymeStatus">—</div>
+      </article>
+      <article class="summary-card">
+        <small class="cp-muted">WhatsApp</small>
+        <div class="summary-value" id="whatsappStatus">—</div>
+      </article>
+      <article class="summary-card">
+        <small class="cp-muted">מגבלת דומיינים</small>
+        <div class="summary-value" id="domainLimit">0</div>
+      </article>
+      <article class="summary-card">
+        <small class="cp-muted">מגבלת API Keys</small>
+        <div class="summary-value" id="apiKeyLimit">0</div>
+      </article>
+    </section>
+
+    <section class="settings-card">
+      <div class="cp-stack">
+        <h2>חיבור WhatsApp Business</h2>
+        <p class="cp-muted">מלא את הפרטים מ-Meta כדי לחבר את הבוט ל-WhatsApp.</p>
+      </div>
+
       <div id="notice" class="cp-notice" hidden></div>
+
+      <form id="whatsappForm" class="cp-stack">
+        <div class="field-grid">
+          <div class="settings-field">
+            <label for="phoneNumberId">Phone Number ID</label>
+            <input id="phoneNumberId" placeholder="לדוגמה: 123456789012345">
+          </div>
+          <div class="settings-field">
+            <label for="verifyToken">Verify Token</label>
+            <input id="verifyToken" placeholder="בחר טוקן משלך לאימות ה-Webhook">
+          </div>
+          <div class="settings-field full">
+            <label for="accessToken">Access Token</label>
+            <input id="accessToken" placeholder="Paste Meta access token here">
+          </div>
+          <div class="settings-field full">
+            <label>Webhook URL</label>
+            <div class="webhook-box" id="webhookUrl">טוען...</div>
+          </div>
+        </div>
+
+        <div class="settings-actions">
+          <button class="cp-button" type="submit" id="saveWhatsApp">שמור הגדרות WhatsApp</button>
+          <button class="cp-button-secondary" type="button" id="copyWebhook">העתק Webhook</button>
+          <a class="cp-button-secondary" href="setup-guide.html">פתח מדריך</a>
+        </div>
+      </form>
+    </section>
+
+    <section class="settings-card">
+      <div class="cp-stack">
+        <h2>עזרה מהירה</h2>
+        <p class="cp-muted">רק כדי לוודא שהחיבור עובד חלק.</p>
+      </div>
+      <div class="help-list">
+        <div class="help-item"><strong>1. Meta App</strong><br><span class="cp-muted">הפעל WhatsApp Business Platform בתוך Meta Developers.</span></div>
+        <div class="help-item"><strong>2. שלושת השדות</strong><br><span class="cp-muted">צריך Phone Number ID, Access Token ו-Verify Token.</span></div>
+        <div class="help-item"><strong>3. בדיקת Webhook</strong><br><span class="cp-muted">אותו Verify Token צריך להופיע גם כאן וגם בהגדרות ה-Webhook ב-Meta.</span></div>
+      </div>
     </section>
   </main>
 
   <script>
-    function getToken() {
-      return (
-        localStorage.getItem('access_token') ||
-        localStorage.getItem('conversapay_auth_token') ||
-        sessionStorage.getItem('access_token') ||
-        sessionStorage.getItem('conversapay_auth_token')
-      );
+    const API = '/api/v1';
+    const token = localStorage.getItem('access_token') || localStorage.getItem('conversapay_auth_token') || sessionStorage.getItem('access_token') || sessionStorage.getItem('conversapay_auth_token');
+    const auth = token ? { Authorization: `Bearer ${token}` } : null;
+    const $ = (id) => document.getElementById(id);
+
+    if (!token) {
+      location.href = 'login.html';
     }
 
-    function clearUserSession() {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('conversapay_auth_token');
-      localStorage.removeItem('conversapay_user');
-      localStorage.removeItem('user_id');
-      localStorage.removeItem('email');
-      sessionStorage.removeItem('access_token');
-      sessionStorage.removeItem('conversapay_auth_token');
-      sessionStorage.removeItem('conversapay_user');
-      sessionStorage.removeItem('user_id');
-      sessionStorage.removeItem('email');
+    function showNotice(message, isError = false) {
+      const notice = $('notice');
+      notice.textContent = message;
+      notice.className = isError ? 'cp-notice error' : 'cp-notice';
+      notice.hidden = false;
     }
 
-    function appendRow(label, value, href) {
-      const row = document.createElement('div');
-      row.className = 'cp-list-item';
-
-      const meta = document.createElement('div');
-      meta.className = 'cp-list-meta';
-      const strong = document.createElement('strong');
-      strong.textContent = label;
-      meta.appendChild(strong);
-      row.appendChild(meta);
-
-      if (href) {
-        const link = document.createElement('a');
-        link.className = 'cp-link';
-        link.href = href;
-        link.textContent = value;
-        row.appendChild(link);
-      } else {
-        const badge = document.createElement('span');
-        badge.className = 'cp-badge';
-        badge.textContent = value;
-        row.appendChild(badge);
-      }
-
-      document.getElementById('rows').appendChild(row);
+    function clearSessionAndRedirect() {
+      ['access_token','conversapay_auth_token','conversapay_user','user_id','email'].forEach((key) => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      });
+      location.href = 'login.html';
     }
 
-    (async () => {
-      const token = getToken();
-      if (!token) {
-        location.href = 'login.html';
-        return;
-      }
+    function setWebhookUrl() {
+      $('webhookUrl').textContent = `${window.location.origin}/api/v1/whatsapp/webhook`;
+    }
 
+    async function loadSettings() {
+      setWebhookUrl();
       try {
-        const response = await fetch('/api/v1/dashboard/settings', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
+        const response = await fetch(`${API}/dashboard/settings`, { headers: auth });
         if (response.status === 401) {
-          clearUserSession();
-          location.href = 'login.html';
+          clearSessionAndRedirect();
           return;
         }
-
-        if (!response.ok) throw new Error();
-
+        if (!response.ok) throw new Error('לא ניתן לטעון את ההגדרות');
         const data = await response.json();
-        const rows = document.getElementById('rows');
-        rows.textContent = '';
 
-        appendRow('PayMe', data.payme_id ? 'מחובר' : 'לא מוגדר');
-        appendRow('WhatsApp', data.whatsapp_phone ? 'מחובר' : 'לא מוגדר');
-        appendRow('מגבלת דומיינים', String(Number(data.domain_limit || 0)));
-        appendRow('מגבלת API keys', String(Number(data.api_key_limit || 0)));
-        appendRow('פרופיל', 'ניהול פרופיל', 'profile.html');
-      } catch (_) {
-        document.getElementById('rows').textContent = 'שגיאה בטעינת ההגדרות';
+        $('paymeStatus').textContent = data.payme_id ? 'מחובר' : 'לא מוגדר';
+        $('whatsappStatus').textContent = data.whatsapp_phone ? 'מחובר' : 'מוכן לחיבור';
+        $('domainLimit').textContent = String(Number(data.domain_limit || 0));
+        $('apiKeyLimit').textContent = String(Number(data.api_key_limit || 0));
+        $('phoneNumberId').value = data.whatsapp_phone || '';
+      } catch (error) {
+        showNotice(error.message || 'שגיאה בטעינת ההגדרות', true);
       }
-    })();
+    }
+
+    async function loadProfileSettings() {
+      try {
+        const response = await fetch(`${API}/auth/me`, { headers: auth });
+        if (response.status === 401) {
+          clearSessionAndRedirect();
+          return;
+        }
+        if (!response.ok) return;
+        const data = await response.json();
+        const profile = data.profile || {};
+        $('phoneNumberId').value = profile.whatsapp_phone_number_id || $('phoneNumberId').value;
+        $('accessToken').value = profile.whatsapp_access_token || '';
+        $('verifyToken').value = profile.whatsapp_verify_token || '';
+      } catch (_) {}
+    }
+
+    $('copyWebhook').onclick = async () => {
+      try {
+        await navigator.clipboard.writeText($('webhookUrl').textContent);
+        $('copyWebhook').textContent = 'הועתק ✓';
+        setTimeout(() => $('copyWebhook').textContent = 'העתק Webhook', 1600);
+      } catch (_) {
+        showNotice('לא ניתן להעתיק אוטומטית', true);
+      }
+    };
+
+    $('whatsappForm').onsubmit = async (event) => {
+      event.preventDefault();
+      $('saveWhatsApp').disabled = true;
+      const original = $('saveWhatsApp').textContent;
+      $('saveWhatsApp').textContent = 'שומר...';
+      try {
+        const response = await fetch(`${API}/auth/whatsapp-settings`, {
+          method: 'PUT',
+          headers: { ...auth, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            whatsapp_phone_number_id: $('phoneNumberId').value.trim(),
+            whatsapp_access_token: $('accessToken').value.trim(),
+            whatsapp_verify_token: $('verifyToken').value.trim()
+          })
+        });
+        if (response.status === 401) {
+          clearSessionAndRedirect();
+          return;
+        }
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.detail || 'שמירת הגדרות WhatsApp נכשלה');
+        showNotice('הגדרות WhatsApp נשמרו בהצלחה');
+        await loadSettings();
+      } catch (error) {
+        showNotice(error.message || 'שגיאה בשמירה', true);
+      } finally {
+        $('saveWhatsApp').disabled = false;
+        $('saveWhatsApp').textContent = original;
+      }
+    };
+
+    loadSettings();
+    loadProfileSettings();
   </script>
 </body>
 </html>
