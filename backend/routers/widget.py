@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 from datetime import datetime, timezone
-import hashlib, logging
+import hashlib, hmac, logging
 from supabase import create_client
 from backend.config import settings
 logger=logging.getLogger(__name__)
@@ -11,6 +11,9 @@ def host(value):
     value=(value or "").strip()
     if "://" in value: value=value.split("://",1)[1]
     return value.split("/",1)[0].split(":",1)[0].lower().rstrip(".")
+def _key_hash(raw):
+    """Keyed HMAC-SHA256 hash. Must match backend/routers/api_keys.py."""
+    return hmac.new(settings.SECRET_KEY.encode(), raw.encode(), hashlib.sha256).hexdigest()
 def plan_info(business_id, client):
     b=client.table("businesses").select("owner_id").eq("id",business_id).maybe_single().execute()
     if not b.data:return {"plan_type":"free","active":False}
@@ -22,7 +25,7 @@ def plan_info(business_id, client):
     return {"plan_type":plan,"active":active}
 def valid_key(client,business_id,raw):
     if not raw:return False
-    row=client.table("api_keys").select("id").eq("business_id",business_id).eq("key_hash",hashlib.sha256(raw.encode()).hexdigest()).eq("is_active",True).maybe_single().execute()
+    row=client.table("api_keys").select("id").eq("business_id",business_id).eq("key_hash",_key_hash(raw)).eq("is_active",True).maybe_single().execute()
     if not row.data:return False
     client.table("api_keys").update({"last_used_at":datetime.now(timezone.utc).isoformat()}).eq("id",row.data["id"]).execute(); return True
 @router.get("/config/{business_id}")
