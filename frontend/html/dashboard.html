@@ -4,54 +4,170 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#07111f">
-  <title>ConversaPay | לוח ניהול</title>
+  <title>ConversaPay | DASHBOARD</title>
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
   <style>
+    :root {
+      --dash-accent: #37d7ff;
+      --dash-accent-2: #8b5cf6;
+      --dash-panel-soft: rgba(255, 255, 255, 0.035);
+      --dash-panel-strong: rgba(255, 255, 255, 0.06);
+    }
+
     .dash {
       display: grid;
       gap: 20px;
+      padding-bottom: 96px;
     }
 
-    .dash-head {
+    .topbar {
+      position: sticky;
+      top: 14px;
+      z-index: 20;
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 14px;
+      padding: 14px 18px;
+      border-radius: 24px;
+      background: rgba(7, 17, 31, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: var(--cp-shadow);
+      backdrop-filter: blur(18px);
       flex-wrap: wrap;
     }
 
-    .dash-nav {
+    .topbar-left,
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .topbar-title {
+      display: grid;
+      gap: 3px;
+    }
+
+    .topbar-title strong {
+      font-size: 1rem;
+      letter-spacing: 0.08em;
+    }
+
+    .topbar-title span {
+      font-size: 0.86rem;
+      color: var(--cp-muted);
+    }
+
+    .nav-pills {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .nav-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 14px;
+      border-radius: 999px;
+      text-decoration: none;
+      color: var(--cp-muted-strong);
+      background: rgba(255, 255, 255, 0.045);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: 0.2s ease;
+    }
+
+    .nav-pill.active,
+    .nav-pill:hover {
+      color: var(--cp-text);
+      border-color: rgba(55, 215, 255, 0.3);
+      background: rgba(55, 215, 255, 0.08);
+    }
+
+    .hero {
+      display: grid;
+      gap: 16px;
+      padding: 30px;
+      border-radius: 30px;
+      background:
+        radial-gradient(circle at top right, rgba(55, 215, 255, 0.22), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(139, 92, 246, 0.18), transparent 28%),
+        linear-gradient(135deg, rgba(124, 92, 255, 0.22), rgba(7, 17, 31, 0.95));
+      border: 1px solid var(--cp-line);
+      box-shadow: var(--cp-shadow);
+    }
+
+    .hero-top,
+    .section-header,
+    .panel-header,
+    .collection-meta,
+    .dash-row,
+    .profile-dock-card {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .hero-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #d8f7ff;
+      width: fit-content;
+      letter-spacing: 0.14em;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3rem);
+    }
+
+    .hero-copy {
+      max-width: 760px;
+      color: var(--cp-muted-strong);
+      line-height: 1.7;
+    }
+
+    .hero-actions,
+    .panel-actions,
+    .inline-actions,
+    .bottom-actions {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
       align-items: center;
     }
 
-    .dash-nav a {
-      color: var(--cp-muted-strong);
-      text-decoration: none;
-    }
-
-    .dash-hero {
+    .overview-grid,
+    .tools-grid,
+    .panel-grid,
+    .tiers-grid {
       display: grid;
       gap: 16px;
-      padding: 28px;
-      border-radius: 28px;
-      background:
-        radial-gradient(circle at top right, rgba(55, 215, 255, 0.2), transparent 28%),
-        linear-gradient(135deg, rgba(124, 92, 255, 0.22), rgba(7, 17, 31, 0.92));
-      border: 1px solid var(--cp-line);
-      box-shadow: var(--cp-shadow);
     }
 
-    .dash-grid {
-      display: grid;
+    .overview-grid,
+    .tools-grid,
+    .tiers-grid {
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
     }
 
-    .dash-card,
-    .dash-panel {
+    .panel-grid {
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    }
+
+    .card,
+    .panel,
+    .subpanel {
       display: grid;
       gap: 14px;
       padding: 22px;
@@ -61,26 +177,29 @@
       box-shadow: var(--cp-shadow);
     }
 
-    .dash-card h2,
-    .dash-panel h2,
-    .dash-panel h3 {
+    .subpanel {
+      background: var(--dash-panel-soft);
+      border-color: rgba(255, 255, 255, 0.08);
+      box-shadow: none;
+    }
+
+    .card h2,
+    .panel h2,
+    .panel h3,
+    .subpanel h3,
+    .subpanel h4 {
       margin: 0;
     }
 
-    .dash-value {
+    .metric-value {
       font: 800 2rem 'Poppins', sans-serif;
     }
 
     .dash-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
       padding: 13px 14px;
       border-radius: 16px;
       background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.07);
-      flex-wrap: wrap;
     }
 
     .dash-row strong,
@@ -88,10 +207,18 @@
       word-break: break-word;
     }
 
-    .tiers-grid {
+    .tool-card {
+      padding: 18px;
+      border-radius: 22px;
+      background: var(--dash-panel-soft);
+      border: 1px solid rgba(255, 255, 255, 0.08);
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 16px;
+      gap: 12px;
+    }
+
+    .tool-card.highlight {
+      background: linear-gradient(135deg, rgba(55, 215, 255, 0.08), rgba(139, 92, 246, 0.08));
+      border-color: rgba(55, 215, 255, 0.22);
     }
 
     .tier-card {
@@ -100,7 +227,7 @@
       padding: 20px;
       border-radius: 22px;
       border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(255, 255, 255, 0.035);
+      background: var(--dash-panel-soft);
     }
 
     .tier-card.current {
@@ -126,13 +253,8 @@
 
     .tier-card li::before {
       content: '•';
-      color: #37d7ff;
+      color: var(--dash-accent);
       font-size: 1.1rem;
-    }
-
-    .management-stack {
-      display: grid;
-      gap: 20px;
     }
 
     .form-grid {
@@ -145,49 +267,48 @@
       grid-column: 1 / -1;
     }
 
-    .dash-field {
+    .field {
       display: grid;
       gap: 8px;
     }
 
-    .dash-field label {
+    .field label {
       color: var(--cp-muted-strong);
       font-size: 0.95rem;
       font-weight: 600;
     }
 
-    .dash-field input,
-    .dash-field textarea,
-    .dash-field select {
+    .field input,
+    .field textarea {
       width: 100%;
       border-radius: 14px;
       border: 1px solid var(--cp-line);
-      background: rgba(7, 17, 31, 0.75);
+      background: rgba(7, 17, 31, 0.78);
       color: var(--cp-text);
       padding: 12px 14px;
       font: inherit;
       resize: vertical;
     }
 
-    .dash-field textarea {
+    .field textarea {
       min-height: 110px;
     }
 
-    .management-header,
-    .section-header {
+    .checkbox-row {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
+      gap: 10px;
+      color: var(--cp-muted-strong);
     }
 
-    .collection {
+    .collection,
+    .key-list {
       display: grid;
       gap: 12px;
     }
 
-    .collection-item {
+    .collection-item,
+    .key-item {
       display: grid;
       gap: 12px;
       padding: 16px;
@@ -196,26 +317,21 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
-    .collection-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .collection-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .muted-box {
+    .muted-box,
+    .empty-state,
+    .raw-key-box {
       padding: 16px;
       border-radius: 18px;
-      background: rgba(255, 255, 255, 0.035);
+      background: rgba(255, 255, 255, 0.03);
       border: 1px dashed rgba(255, 255, 255, 0.12);
       color: var(--cp-muted);
+    }
+
+    .raw-key-box {
+      background: rgba(55, 215, 255, 0.08);
+      border-style: solid;
+      border-color: rgba(55, 215, 255, 0.2);
+      color: var(--cp-text);
     }
 
     .inline-note {
@@ -245,166 +361,267 @@
       flex-wrap: wrap;
     }
 
-    .checkbox-row {
+    .profile-dock {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 30;
       display: flex;
       align-items: center;
       gap: 10px;
-      color: var(--cp-muted-strong);
+      text-decoration: none;
+      color: inherit;
     }
 
-    .empty-state {
-      padding: 18px;
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px dashed rgba(255, 255, 255, 0.1);
+    .profile-dock-card {
+      padding: 8px 10px 8px 8px;
+      border-radius: 999px;
+      background: rgba(7, 17, 31, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: var(--cp-shadow);
+      backdrop-filter: blur(16px);
+    }
+
+    .profile-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--dash-accent), var(--dash-accent-2));
+      color: #07111f;
+      font-weight: 800;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .profile-meta {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .profile-meta strong,
+    .profile-meta span {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 160px;
+    }
+
+    .profile-meta span {
       color: var(--cp-muted);
+      font-size: 0.82rem;
     }
 
     .builder-locked {
-      opacity: 0.82;
+      opacity: 0.86;
     }
 
     .builder-locked .cp-button {
       display: none;
     }
 
-    @media (max-width: 640px) {
-      .dash-head {
-        align-items: flex-start;
+    @media (max-width: 860px) {
+      .topbar {
+        top: 10px;
       }
 
-      .dash-nav {
+      .profile-dock {
+        right: 14px;
+        bottom: 14px;
+      }
+
+      .profile-meta {
+        display: none;
+      }
+
+      .profile-dock-card {
+        padding: 8px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .topbar-left,
+      .topbar-right,
+      .hero-top,
+      .hero-actions,
+      .panel-actions,
+      .inline-actions,
+      .bottom-actions {
         width: 100%;
       }
 
-      .dash-nav > * {
-        flex: 1;
-        text-align: center;
+      .nav-pills,
+      .hero-actions,
+      .panel-actions,
+      .inline-actions,
+      .bottom-actions {
+        display: grid;
+        grid-template-columns: 1fr;
+      }
+
+      .nav-pill,
+      .cp-button,
+      .cp-button-secondary {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .profile-dock {
+        right: 12px;
+        bottom: 12px;
       }
     }
   </style>
 </head>
 <body class="cp-page">
   <main class="cp-shell dash">
-    <header class="dash-head">
-      <a class="cp-brand" href="home.html">
-        <span class="cp-brand-mark">CP</span>
-        <span>ConversaPay</span>
-      </a>
+    <header class="topbar">
+      <div class="topbar-left">
+        <a class="cp-brand" href="home.html">
+          <span class="cp-brand-mark">CP</span>
+          <span>ConversaPay</span>
+        </a>
+        <div class="topbar-title">
+          <strong>DASHBOARD</strong>
+          <span>ניהול מסודר של העסק, המוצרים והחיבורים שלך</span>
+        </div>
+      </div>
 
-      <nav class="dash-nav" aria-label="ניווט">
-        <a href="upgrade.html">שדרוג מסלול</a>
-        <a href="settings.html">הגדרות</a>
+      <div class="topbar-right">
+        <nav class="nav-pills" aria-label="ניווט מהיר">
+          <a class="nav-pill active" href="dashboard.html">Dashboard</a>
+          <a class="nav-pill" href="upgrade.html">מסלולים</a>
+          <a class="nav-pill" href="settings.html">הגדרות</a>
+          <a class="nav-pill" href="setup-guide.html">הטמעה</a>
+        </nav>
         <button class="cp-button-secondary" id="logout" type="button">יציאה</button>
-      </nav>
+      </div>
     </header>
 
-    <section class="dash-hero">
-      <span class="cp-kicker">לוח ניהול</span>
-      <h1 class="cp-title">שלום, <span id="name">טוען...</span></h1>
-      <p class="cp-subtitle" id="business">טוען נתוני העסק...</p>
-      <div class="cp-actions">
-        <a class="cp-button" href="setup-guide.html">מדריך התחלה</a>
-        <a class="cp-button-secondary" href="profile.html">פרופיל</a>
+    <section class="hero">
+      <div class="hero-top">
+        <span class="hero-kicker">DASHBOARD</span>
+        <span class="cp-badge" id="currentPlanBadge">FREE</span>
+      </div>
+
+      <div>
+        <h1>שלום, <span id="name">טוען...</span></h1>
+        <p class="hero-copy" id="business">טוען נתוני העסק...</p>
+      </div>
+
+      <div class="hero-actions">
+        <button class="cp-button" id="openProductFormHero" type="button">הוסף מוצר</button>
+        <button class="cp-button-secondary" id="focusDomainsHero" type="button">נהל דומיינים</button>
+        <button class="cp-button-secondary" id="focusApiKeysHero" type="button">API Keys</button>
       </div>
     </section>
 
     <div id="notice" class="cp-notice error hidden"></div>
 
-    <section class="dash-grid" id="metrics">
-      <article class="dash-card">
+    <section class="overview-grid" id="metrics">
+      <article class="card">
         <h2>הכנסות</h2>
-        <div class="dash-value" id="revenue">₪0</div>
+        <div class="metric-value" id="revenue">₪0</div>
         <small class="cp-muted">סך הכנסות שהתקבלו</small>
       </article>
-      <article class="dash-card">
+      <article class="card">
         <h2>עסקאות</h2>
-        <div class="dash-value" id="deals">0</div>
+        <div class="metric-value" id="deals">0</div>
         <small class="cp-muted">עסקאות שנסגרו</small>
       </article>
-      <article class="dash-card">
+      <article class="card">
         <h2>שיחות</h2>
-        <div class="dash-value" id="conversations">0</div>
+        <div class="metric-value" id="conversations">0</div>
         <small class="cp-muted">שיחות שנרשמו</small>
       </article>
-      <article class="dash-card">
+      <article class="card">
         <h2>המרה</h2>
-        <div class="dash-value" id="conversion">0%</div>
+        <div class="metric-value" id="conversion">0%</div>
         <small class="cp-muted">יחס המרה נוכחי</small>
       </article>
     </section>
 
-    <section class="dash-panel">
-      <div class="section-header">
-        <div>
-          <h2>המסלולים והפיצ'רים</h2>
-          <p class="cp-muted">כל Tier מסודר עם היכולות שלו, על אותו רקע ובמבט אחד.</p>
+    <section class="tools-grid">
+      <article class="tool-card highlight" id="builderCard">
+        <div class="section-header">
+          <h3>בונה האתר</h3>
+          <span class="cp-badge" id="builderBadge">בודק...</span>
         </div>
-        <span class="cp-badge" id="currentPlanBadge">FREE</span>
-      </div>
-      <div class="tiers-grid" id="tierCards"></div>
-    </section>
-
-    <section class="dash-grid">
-      <article class="dash-card" id="builderCard">
-        <h2>בונה האתר</h2>
         <p class="cp-muted" id="builderCopy">בודק זמינות...</p>
-        <span class="cp-badge" id="builderBadge">בודק...</span>
         <button class="cp-button" id="builderButton" type="button">פתח את בונה האתר</button>
       </article>
 
-      <article class="dash-card">
-        <h2>המסלול שלך</h2>
-        <div class="dash-row"><span>מסלול</span><strong class="cp-badge" id="plan">FREE</strong></div>
+      <article class="tool-card">
+        <div class="section-header">
+          <h3>סטטוס מסלול</h3>
+          <strong class="cp-badge" id="plan">FREE</strong>
+        </div>
         <div class="dash-row"><span>מפתחות חיבור</span><strong id="keyLimit">0</strong></div>
         <div class="dash-row"><span>חיבור דומיינים</span><strong id="domainLimit">0</strong></div>
       </article>
 
-      <article class="dash-card">
-        <h2>גישה מהירה</h2>
-        <a class="cp-button-secondary" href="setup-guide.html">מדריך הטמעה</a>
-        <a class="cp-button-secondary" href="profile.html">עריכת פרופיל</a>
-        <a class="cp-button-secondary" href="upgrade.html">ניהול מסלול</a>
+      <article class="tool-card">
+        <div class="section-header">
+          <h3>גישה מהירה</h3>
+          <span class="cp-badge good">מסודר</span>
+        </div>
+        <div class="bottom-actions">
+          <a class="cp-button-secondary" href="setup-guide.html">מדריך הטמעה</a>
+          <a class="cp-button-secondary" href="upgrade.html">ניהול מסלול</a>
+        </div>
       </article>
     </section>
 
-    <section class="management-stack">
-      <article class="dash-panel">
-        <div class="management-header">
+    <section class="panel">
+      <div class="section-header">
+        <div>
+          <h2>מסלולים ופיצ'רים</h2>
+          <p class="cp-muted">כל Tier מסודר במקום אחד, בלי בלגן ובלי פיצול מיותר.</p>
+        </div>
+      </div>
+      <div class="tiers-grid" id="tierCards"></div>
+    </section>
+
+    <section class="panel-grid">
+      <article class="panel" id="productsPanel">
+        <div class="panel-header">
           <div>
             <h2>ניהול מוצרים</h2>
-            <p class="cp-muted">הוספה, עריכה ומחיקה של מוצרים מתוך אותו מסך.</p>
+            <p class="cp-muted">יצירה, עריכה ומחיקה של מוצרים מתוך אותו Dashboard.</p>
           </div>
-          <div class="collection-actions">
+          <div class="panel-actions">
             <button class="cp-button" id="toggleProductForm" type="button">הוסף מוצר</button>
-            <button class="cp-button-secondary hidden" id="cancelProductEdit" type="button">בטל</button>
+            <button class="cp-button-secondary hidden" id="cancelProductEdit" type="button">בטל עריכה</button>
           </div>
         </div>
 
-        <form id="productForm" class="dash-card hidden">
+        <form id="productForm" class="subpanel hidden">
           <input id="productId" type="hidden">
           <div class="form-grid">
-            <div class="dash-field">
+            <div class="field">
               <label for="productName">שם מוצר</label>
               <input id="productName" required maxlength="255" placeholder="לדוגמה: פגישת ייעוץ">
             </div>
-            <div class="dash-field">
+            <div class="field">
               <label for="productItemKey">מזהה מוצר</label>
               <input id="productItemKey" required maxlength="100" placeholder="consulting_session">
             </div>
-            <div class="dash-field">
+            <div class="field">
               <label for="productPrice">מחיר</label>
               <input id="productPrice" type="number" min="0" step="0.01" required placeholder="0.00">
             </div>
-            <div class="dash-field">
+            <div class="field">
               <label for="productPaymentLink">קישור תשלום</label>
               <input id="productPaymentLink" type="url" placeholder="https://...">
             </div>
-            <div class="dash-field full">
+            <div class="field full">
               <label for="productDescription">תיאור</label>
               <textarea id="productDescription" placeholder="תיאור קצר של המוצר"></textarea>
             </div>
-            <div class="dash-field full">
+            <div class="field full">
               <label for="productImageUrl">תמונה</label>
               <input id="productImageUrl" type="url" placeholder="https://...">
             </div>
@@ -413,7 +630,7 @@
             <input id="productIsActive" type="checkbox" checked>
             <span>המוצר פעיל להצגה ולמכירה</span>
           </label>
-          <div class="cp-actions">
+          <div class="bottom-actions">
             <button class="cp-button" id="productSubmit" type="submit">שמור מוצר</button>
             <button class="cp-button-secondary" id="productCancelInline" type="button">סגור</button>
           </div>
@@ -423,11 +640,11 @@
         <div id="products" class="collection"></div>
       </article>
 
-      <article class="dash-panel">
-        <div class="management-header">
+      <article class="panel" id="domainsPanel">
+        <div class="panel-header">
           <div>
             <h2>ניהול דומיינים</h2>
-            <p class="cp-muted">לא מפוצל למסך נוסף — כל ניהול הדומיינים מרוכז כאן.</p>
+            <p class="cp-muted">ניהול ישיר מהדאשבורד, בלי לפצל את המסך לשניים.</p>
           </div>
           <span class="cp-badge" id="domainPlanBadge">FREE</span>
         </div>
@@ -438,17 +655,17 @@
         </div>
 
         <div id="domainLockedNotice" class="muted-box hidden">
-          ניהול דומיינים זמין במסלולי PRO ו‑PREMIUM. אפשר לשדרג כדי לחבר דומיינים פעילים.
+          ניהול דומיינים זמין במסלולי PRO ו‑PREMIUM. שדרוג יפתח הוספה והסרה של דומיינים מהמסך הזה.
         </div>
 
-        <form id="domainForm" class="dash-card">
+        <form id="domainForm" class="subpanel">
           <div class="form-grid">
-            <div class="dash-field full">
+            <div class="field full">
               <label for="domainInput">דומיין חדש</label>
               <input id="domainInput" placeholder="example.com">
             </div>
           </div>
-          <div class="cp-actions">
+          <div class="bottom-actions">
             <button class="cp-button" id="addDomainButton" type="submit">הוסף דומיין</button>
             <a class="cp-button-secondary" href="setup-guide.html">מדריך חיבור</a>
           </div>
@@ -459,16 +676,69 @@
       </article>
     </section>
 
-    <section class="dash-panel">
-      <div class="section-header">
-        <div>
-          <h2>הזמנות אחרונות</h2>
-          <p class="cp-muted">תצוגה מרוכזת של ההזמנות האחרונות מהמערכת.</p>
+    <section class="panel-grid">
+      <article class="panel" id="apiKeysPanel">
+        <div class="panel-header">
+          <div>
+            <h2>API Keys</h2>
+            <p class="cp-muted">יצירת מפתחות חיבור לזכאים ישירות מהדאשבורד.</p>
+          </div>
+          <span class="cp-badge" id="apiKeyPlanBadge">FREE</span>
         </div>
-      </div>
-      <div id="orders" class="collection"><p class="cp-muted">טוען...</p></div>
+
+        <div class="dash-row">
+          <span>מפתחות פעילים</span>
+          <strong><span id="apiKeyCount">0</span> / <span id="apiKeyLimitValue">0</span></strong>
+        </div>
+
+        <div id="apiKeyLockedNotice" class="muted-box hidden">
+          API Keys זמינים רק במסלולי PRO ו‑PREMIUM.
+        </div>
+
+        <form id="apiKeyForm" class="subpanel">
+          <div class="form-grid">
+            <div class="field full">
+              <label for="apiKeyName">שם מפתח</label>
+              <input id="apiKeyName" maxlength="100" placeholder="Widget key for main website">
+            </div>
+          </div>
+          <div class="bottom-actions">
+            <button class="cp-button" id="createApiKeyButton" type="submit">צור API Key</button>
+          </div>
+        </form>
+
+        <div id="apiKeySummary" class="inline-note">טוען מפתחות...</div>
+        <div id="latestApiKeyBox" class="raw-key-box hidden">
+          <strong>המפתח החדש שלך</strong>
+          <div id="latestApiKeyValue" style="word-break:break-all;margin-top:8px;"></div>
+          <div class="bottom-actions" style="margin-top:12px;">
+            <button class="cp-button-secondary" id="copyLatestApiKey" type="button">העתק מפתח</button>
+          </div>
+        </div>
+        <div id="apiKeys" class="key-list"></div>
+      </article>
+
+      <article class="panel" id="ordersPanel">
+        <div class="panel-header">
+          <div>
+            <h2>הזמנות אחרונות</h2>
+            <p class="cp-muted">תצוגה מרוכזת של ההזמנות האחרונות מהמערכת.</p>
+          </div>
+        </div>
+        <div id="orders" class="collection"><p class="cp-muted">טוען...</p></div>
+      </article>
     </section>
   </main>
+
+  <a class="profile-dock" href="profile.html" aria-label="פרופיל">
+    <div class="profile-dock-card">
+      <span class="profile-avatar" id="profileDockAvatar">C</span>
+      <div class="profile-meta">
+        <strong id="profileDockName">Profile</strong>
+        <span id="profileDockPlan">FREE</span>
+      </div>
+    </div>
+  </a>
 
   <script>
     const API = '/api/v1';
@@ -484,6 +754,9 @@
       products: [],
       orders: [],
       customDomains: [],
+      apiKeys: [],
+      apiKeysLocked: false,
+      latestCreatedKey: null,
       editingProductId: null,
       ordersLocked: false
     };
@@ -492,8 +765,8 @@
 
     const PLAN_FEATURES = {
       free: ['ניהול מוצרים', 'אנליטיקות בסיסיות', 'פרופיל חשבון'],
-      pro: ['ניהול מוצרים', 'ניהול דומיינים', 'הזמנות ומכירות', 'וורדפרס והטמעה', 'עד 3 מפתחות חיבור'],
-      premium: ['כל מה שיש ב‑PRO', 'בונה אתר', 'WhatsApp Business', 'עד 10 מפתחות חיבור', 'תמיכה רחבה יותר בדומיינים']
+      pro: ['ניהול מוצרים', 'ניהול דומיינים', 'הזמנות ומכירות', 'Widget API Keys', 'וורדפרס והטמעה'],
+      premium: ['כל מה שיש ב‑PRO', 'בונה אתר', 'WhatsApp Business', 'עד 10 מפתחות חיבור', 'ניהול מתקדם יותר לדומיינים וחיבורים']
     };
 
     function authHeaders() {
@@ -519,7 +792,7 @@
       $('notice').textContent = '';
     }
 
-    async function get(path, options = {}) {
+    async function apiRequest(path, options = {}) {
       const response = await fetch(`${API}${path}`, {
         ...options,
         headers: {
@@ -565,15 +838,32 @@
       return state.features?.domains === true;
     }
 
+    function hasApiKeyAccess() {
+      return Number(state.features?.api_key_limit || 0) > 0;
+    }
+
+    function updateProfileDock() {
+      const profile = state.me?.profile || {};
+      const name = profile.full_name || state.me?.email || 'Profile';
+      const initial = (name || 'P').trim().charAt(0).toUpperCase();
+      $('profileDockAvatar').textContent = initial;
+      $('profileDockName').textContent = name;
+      $('profileDockPlan').textContent = currentPlan().toUpperCase();
+    }
+
     function setBusinessState() {
       const hasBusiness = Boolean(state.currentBusiness?.id);
       $('toggleProductForm').disabled = !hasBusiness;
+      $('openProductFormHero').disabled = !hasBusiness;
       $('domainInput').disabled = !hasBusiness || !canManageDomains();
       $('addDomainButton').disabled = !hasBusiness || !canManageDomains();
+      $('apiKeyName').disabled = !hasBusiness || !hasApiKeyAccess();
+      $('createApiKeyButton').disabled = !hasBusiness || !hasApiKeyAccess();
 
       if (!hasBusiness) {
         $('productsSummary').textContent = 'אין עסק פעיל כרגע. יש ליצור עסק כדי לנהל מוצרים.';
         $('domainSummary').textContent = 'אין עסק פעיל כרגע. יש ליצור עסק כדי לנהל דומיינים.';
+        $('apiKeySummary').textContent = 'אין עסק פעיל כרגע. יש ליצור עסק כדי להנפיק API Keys.';
       }
     }
 
@@ -604,9 +894,11 @@
       $('plan').textContent = plan.toUpperCase();
       $('currentPlanBadge').textContent = plan.toUpperCase();
       $('domainPlanBadge').textContent = plan.toUpperCase();
+      $('apiKeyPlanBadge').textContent = plan.toUpperCase();
       $('keyLimit').textContent = String(features.api_key_limit ?? 0);
       $('domainLimit').textContent = String(features.domain_limit ?? 0);
       $('connectedDomainsLimit').textContent = String(features.domain_limit ?? 0);
+      $('apiKeyLimitValue').textContent = String(features.api_key_limit ?? 0);
       $('revenue').textContent = money(analytics.total_revenue);
       $('deals').textContent = String(analytics.closed_deals ?? 0);
       $('conversations').textContent = String(analytics.total_conversations ?? 0);
@@ -622,46 +914,14 @@
       $('builderButton').disabled = !builderEnabled;
       $('builderButton').onclick = async () => {
         if (!builderEnabled) return;
-        const data = await get('/site-builder/access');
+        const data = await apiRequest('/site-builder/access');
         if (data.url) {
           location.href = data.url;
         }
       };
 
       renderTierCards();
-    }
-
-    function renderProducts() {
-      const root = $('products');
-      const items = state.products || [];
-      $('productsSummary').textContent = items.length
-        ? `יש כרגע ${items.length} מוצרים במערכת.`
-        : 'עדיין אין מוצרים. אפשר להתחיל עם המוצר הראשון מכאן.';
-
-      if (!items.length) {
-        root.innerHTML = '<div class="empty-state">אין מוצרים עדיין.</div>';
-        return;
-      }
-
-      root.innerHTML = items.map((product) => `
-        <article class="collection-item">
-          <div class="collection-meta">
-            <div>
-              <strong>${escapeHtml(product.name || 'מוצר')}</strong>
-              <div class="cp-muted">${escapeHtml(product.item_key || '')}</div>
-            </div>
-            <strong>${money(product.price)}</strong>
-          </div>
-          ${product.description ? `<div class="cp-muted">${escapeHtml(product.description)}</div>` : ''}
-          <div class="collection-meta">
-            <span class="cp-badge ${product.is_active ? 'good' : 'warn'}">${product.is_active ? 'פעיל' : 'לא פעיל'}</span>
-            <div class="collection-actions">
-              <button class="cp-button-secondary" type="button" onclick="startEditProduct('${product.id}')">ערוך</button>
-              <button class="cp-button-secondary" type="button" onclick="removeProduct('${product.id}')">מחק</button>
-            </div>
-          </div>
-        </article>
-      `).join('');
+      updateProfileDock();
     }
 
     function openProductForm(product = null) {
@@ -690,6 +950,39 @@
       $('productSubmit').textContent = 'שמור מוצר';
     }
 
+    function renderProducts() {
+      const root = $('products');
+      const items = state.products || [];
+      $('productsSummary').textContent = items.length
+        ? `יש כרגע ${items.length} מוצרים במערכת.`
+        : 'עדיין אין מוצרים. אפשר להתחיל עם המוצר הראשון ישירות מכאן.';
+
+      if (!items.length) {
+        root.innerHTML = '<div class="empty-state">אין מוצרים עדיין.</div>';
+        return;
+      }
+
+      root.innerHTML = items.map((product) => `
+        <article class="collection-item">
+          <div class="collection-meta">
+            <div>
+              <strong>${escapeHtml(product.name || 'מוצר')}</strong>
+              <div class="cp-muted">${escapeHtml(product.item_key || '')}</div>
+            </div>
+            <strong>${money(product.price)}</strong>
+          </div>
+          ${product.description ? `<div class="cp-muted">${escapeHtml(product.description)}</div>` : ''}
+          <div class="collection-meta">
+            <span class="cp-badge ${product.is_active ? 'good' : 'warn'}">${product.is_active ? 'פעיל' : 'לא פעיל'}</span>
+            <div class="inline-actions">
+              <button class="cp-button-secondary" type="button" onclick="startEditProduct('${product.id}')">ערוך</button>
+              <button class="cp-button-secondary" type="button" onclick="removeProduct('${product.id}')">מחק</button>
+            </div>
+          </div>
+        </article>
+      `).join('');
+    }
+
     async function loadProducts() {
       if (!state.currentBusiness?.id) {
         state.products = [];
@@ -697,7 +990,7 @@
         return;
       }
 
-      const response = await get(`/products?business_id=${encodeURIComponent(state.currentBusiness.id)}&active_only=false`);
+      const response = await apiRequest(`/products?business_id=${encodeURIComponent(state.currentBusiness.id)}&active_only=false`);
       state.products = Array.isArray(response) ? response : [];
       renderProducts();
     }
@@ -729,7 +1022,7 @@
           currency: 'ILS'
         };
 
-        await get(productId ? `/products/${productId}` : '/products', {
+        await apiRequest(productId ? `/products/${productId}` : '/products', {
           method: productId ? 'PUT' : 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -748,7 +1041,7 @@
     async function startEditProduct(productId) {
       try {
         hideNotice();
-        const product = await get(`/products/${productId}`);
+        const product = await apiRequest(`/products/${productId}`);
         openProductForm(product);
         $('productForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
       } catch (error) {
@@ -760,7 +1053,7 @@
       if (!confirm('למחוק את המוצר הזה?')) return;
       try {
         hideNotice();
-        await get(`/products/${productId}`, { method: 'DELETE' });
+        await apiRequest(`/products/${productId}`, { method: 'DELETE' });
         await loadProducts();
       } catch (error) {
         showNotice(error.message || 'לא ניתן למחוק את המוצר');
@@ -815,7 +1108,7 @@
         }
       };
 
-      const updated = await get(`/businesses/${state.currentBusiness.id}`, {
+      const updated = await apiRequest(`/businesses/${state.currentBusiness.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -873,6 +1166,141 @@
       }
     }
 
+    function renderApiKeys() {
+      const keys = state.apiKeys || [];
+      const limit = Number(state.features?.api_key_limit || 0);
+      const hasBusiness = Boolean(state.currentBusiness?.id);
+      const locked = !hasApiKeyAccess() || state.apiKeysLocked === true;
+
+      $('apiKeyCount').textContent = String(keys.length);
+      $('apiKeyLockedNotice').classList.toggle('hidden', !locked || !hasBusiness);
+      $('apiKeySummary').textContent = !hasBusiness
+        ? 'אין עסק פעיל כרגע. יש ליצור עסק כדי להנפיק API Keys.'
+        : locked
+          ? 'במסלול הנוכחי אין אפשרות ליצור API Keys.'
+          : keys.length
+            ? `יש כרגע ${keys.length} מפתחות פעילים מתוך ${limit}.`
+            : 'עדיין אין API Keys פעילים.';
+
+      if (state.latestCreatedKey) {
+        $('latestApiKeyBox').classList.remove('hidden');
+        $('latestApiKeyValue').textContent = state.latestCreatedKey;
+      } else {
+        $('latestApiKeyBox').classList.add('hidden');
+      }
+
+      if (!keys.length) {
+        $('apiKeys').innerHTML = '<div class="empty-state">אין API Keys פעילים.</div>';
+      } else {
+        $('apiKeys').innerHTML = keys.map((key) => `
+          <article class="key-item">
+            <div class="collection-meta">
+              <div>
+                <strong>${escapeHtml(key.name || 'API Key')}</strong>
+                <div class="cp-muted">${escapeHtml(key.key_prefix || '')}...</div>
+              </div>
+              <span class="cp-badge good">פעיל</span>
+            </div>
+            <div class="collection-meta">
+              <span class="cp-muted">הרשאה: widget</span>
+              <button class="cp-button-secondary" type="button" onclick="revokeApiKey('${key.id}')">בטל מפתח</button>
+            </div>
+          </article>
+        `).join('');
+      }
+
+      $('apiKeyName').disabled = !hasBusiness || locked || keys.length >= limit;
+      $('createApiKeyButton').disabled = !hasBusiness || locked || keys.length >= limit;
+
+      if (!locked && hasBusiness && limit > 0 && keys.length >= limit) {
+        $('apiKeySummary').textContent = `הגעת למגבלת ה‑API Keys של המסלול (${limit}).`;
+      }
+    }
+
+    async function loadApiKeys() {
+      if (!state.currentBusiness?.id) {
+        state.apiKeys = [];
+        state.apiKeysLocked = false;
+        renderApiKeys();
+        return;
+      }
+
+      try {
+        const data = await apiRequest(`/api-keys?business_id=${encodeURIComponent(state.currentBusiness.id)}`);
+        state.apiKeys = Array.isArray(data.keys) ? data.keys : [];
+        state.apiKeysLocked = data.locked === true;
+      } catch (error) {
+        state.apiKeys = [];
+        state.apiKeysLocked = true;
+        showNotice(error.message || 'לא ניתן לטעון API Keys');
+      }
+      renderApiKeys();
+    }
+
+    async function handleApiKeySubmit(event) {
+      event.preventDefault();
+      hideNotice();
+
+      if (!state.currentBusiness?.id) {
+        showNotice('יש ליצור עסק לפני שמנפיקים API Key.');
+        return;
+      }
+
+      const name = $('apiKeyName').value.trim();
+      if (!name) {
+        showNotice('יש להזין שם למפתח.');
+        return;
+      }
+
+      const button = $('createApiKeyButton');
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = 'יוצר...';
+
+      try {
+        const data = await apiRequest('/api-keys', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            business_id: state.currentBusiness.id
+          })
+        });
+        state.latestCreatedKey = data.key || null;
+        $('apiKeyName').value = '';
+        await loadApiKeys();
+      } catch (error) {
+        showNotice(error.message || 'לא ניתן ליצור API Key');
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    }
+
+    async function revokeApiKey(keyId) {
+      if (!confirm('לבטל את ה-API Key הזה?')) return;
+      hideNotice();
+      try {
+        await apiRequest(`/api-keys/${keyId}`, { method: 'DELETE' });
+        await loadApiKeys();
+      } catch (error) {
+        showNotice(error.message || 'לא ניתן לבטל את המפתח');
+      }
+    }
+
+    async function copyLatestApiKey() {
+      if (!state.latestCreatedKey) return;
+      try {
+        await navigator.clipboard.writeText(state.latestCreatedKey);
+        $('copyLatestApiKey').textContent = 'הועתק ✓';
+        setTimeout(() => {
+          $('copyLatestApiKey').textContent = 'העתק מפתח';
+        }, 1600);
+      } catch (_) {
+        showNotice('לא ניתן להעתיק אוטומטית.');
+      }
+    }
+
     function renderOrders() {
       const root = $('orders');
       const items = state.orders || [];
@@ -899,6 +1327,10 @@
       `).join('');
     }
 
+    function scrollToSection(id) {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
     async function load() {
       if (!state.token) {
         logout();
@@ -908,11 +1340,11 @@
       try {
         hideNotice();
         const [me, features, analytics, ordersData, businesses] = await Promise.all([
-          get('/auth/me'),
-          get('/dashboard/features'),
-          get('/dashboard/analytics'),
-          get('/dashboard/orders'),
-          get('/businesses')
+          apiRequest('/auth/me'),
+          apiRequest('/dashboard/features'),
+          apiRequest('/dashboard/analytics'),
+          apiRequest('/dashboard/orders'),
+          apiRequest('/businesses')
         ]);
 
         state.me = me;
@@ -929,22 +1361,34 @@
         setBusinessState();
         renderDomains();
         renderOrders();
-        await loadProducts();
+        await Promise.all([loadProducts(), loadApiKeys()]);
       } catch (error) {
         showNotice(error.message || 'לא ניתן לטעון את הדאשבורד');
       }
     }
 
     $('logout').onclick = logout;
-    $('toggleProductForm').onclick = () => openProductForm();
+    $('toggleProductForm').onclick = () => {
+      openProductForm();
+      scrollToSection('productsPanel');
+    };
+    $('openProductFormHero').onclick = () => {
+      openProductForm();
+      scrollToSection('productsPanel');
+    };
+    $('focusDomainsHero').onclick = () => scrollToSection('domainsPanel');
+    $('focusApiKeysHero').onclick = () => scrollToSection('apiKeysPanel');
     $('cancelProductEdit').onclick = closeProductForm;
     $('productCancelInline').onclick = closeProductForm;
     $('productForm').addEventListener('submit', handleProductSubmit);
     $('domainForm').addEventListener('submit', handleDomainSubmit);
+    $('apiKeyForm').addEventListener('submit', handleApiKeySubmit);
+    $('copyLatestApiKey').onclick = copyLatestApiKey;
 
     window.startEditProduct = startEditProduct;
     window.removeProduct = removeProduct;
     window.removeDomain = removeDomain;
+    window.revokeApiKey = revokeApiKey;
 
     load();
   </script>
