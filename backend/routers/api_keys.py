@@ -1,9 +1,13 @@
 """Tier-aware widget API key management.
 
 FREE: no widget keys. PRO: up to 3 active keys. PREMIUM: up to 10.
-Secrets are returned only once and only hashes are stored.
+Secrets are returned only once and only keyed HMAC hashes are stored.
+
+Security note: keys are hashed with HMAC-SHA256 using the server SECRET_KEY
+(a keyed hash), which defeats offline rainbow-table attacks against a leaked
+database. The stored display prefix keeps only a short, non-sensitive slice.
 """
-import hashlib, secrets
+import hashlib, hmac, secrets
 from typing import Any, Dict, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -29,7 +33,8 @@ def _limit(plan: str) -> int:
 
 
 def _hash(value: str) -> str:
-    return hashlib.sha256(value.encode()).hexdigest()
+    """Keyed HMAC-SHA256 hash. Must match backend/routers/widget.py."""
+    return hmac.new(settings.SECRET_KEY.encode(), value.encode(), hashlib.sha256).hexdigest()
 
 
 def _owned_business(business_id: str, user_id: str) -> bool:
@@ -57,7 +62,8 @@ async def create_key(payload: KeyCreate, current_user: AuthUser = Depends(requir
     if count >= limit:
         raise HTTPException(409, f"Your {plan.upper()} plan allows up to {limit} active widget keys")
     raw = "cp_live_" + secrets.token_urlsafe(32)
-    record = {"business_id": payload.business_id, "name": payload.name, "key_prefix": raw[:16], "key_hash": _hash(raw), "permissions": ["widget"], "is_active": True}
+    # Display prefix keeps only the non-secret scheme tag + 4 chars for identification.
+    record = {"business_id": payload.business_id, "name": payload.name, "key_prefix": raw[:12], "key_hash": _hash(raw), "permissions": ["widget"], "is_active": True}
     created = supabase.table("api_keys").insert(record).execute()
     if not created.data:
         raise HTTPException(500, "Failed to create API key")
