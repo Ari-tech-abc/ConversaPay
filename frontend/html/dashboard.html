@@ -1,1 +1,953 @@
-<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#07111f"><title>ConversaPay | לוח ניהול</title><link rel="stylesheet" href="/frontend/html/conversapay-ui.css"><style>.dash{display:grid;gap:20px}.dash-head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}.dash-nav{display:flex;gap:10px;flex-wrap:wrap}.dash-nav a{color:var(--cp-muted-strong);text-decoration:none}.dash-hero{display:grid;gap:14px;padding:28px;border-radius:28px;background:radial-gradient(circle at top right,rgba(55,215,255,.2),transparent 28%),linear-gradient(135deg,rgba(124,92,255,.22),rgba(7,17,31,.92));border:1px solid var(--cp-line);box-shadow:var(--cp-shadow)}.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}.dash-card{display:grid;gap:12px;padding:22px;border-radius:24px;background:var(--cp-panel);border:1px solid var(--cp-line);box-shadow:var(--cp-shadow)}.dash-card h2{margin:0;font-size:1.25rem}.dash-value{font:800 2rem 'Poppins',sans-serif}.dash-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}.builder-locked{opacity:.82}.builder-locked .cp-button{display:none}@media(max-width:640px){.dash-head{align-items:flex-start}.dash-nav{width:100%}.dash-nav>*{flex:1;text-align:center}}</style></head><body class="cp-page"><main class="cp-shell dash"><header class="dash-head"><a class="cp-brand" href="home.html"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a><nav class="dash-nav" aria-label="ניווט"><a href="upgrade.html">שדרוג מסלול</a><a href="settings.html">הגדרות</a><button class="cp-button-secondary" id="logout" type="button">יציאה</button></nav></header><section class="dash-hero"><span class="cp-kicker">לוח ניהול</span><h1 class="cp-title">שלום, <span id="name">טוען...</span></h1><p class="cp-subtitle" id="business">טוען נתוני העסק...</p><div class="cp-actions"><a class="cp-button" href="setup-guide.html">מדריך התחלה</a><a class="cp-button-secondary" href="profile.html">פרופיל</a></div></section><div id="notice" class="cp-notice error" hidden></div><section class="dash-grid" id="metrics"><article class="dash-card"><h2>הכנסות</h2><div class="dash-value" id="revenue">₪0</div><small class="cp-muted">סך הכנסות שהתקבלו</small></article><article class="dash-card"><h2>עסקאות</h2><div class="dash-value" id="deals">0</div><small class="cp-muted">עסקאות שנסגרו</small></article><article class="dash-card"><h2>שיחות</h2><div class="dash-value" id="conversations">0</div><small class="cp-muted">שיחות שנרשמו</small></article><article class="dash-card"><h2>המרה</h2><div class="dash-value" id="conversion">0%</div><small class="cp-muted">יחס המרה נוכחי</small></article></section><section class="dash-grid"><article class="dash-card" id="builderCard"><h2>בונה האתר</h2><p class="cp-muted" id="builderCopy">בודק זמינות...</p><span class="cp-badge" id="builderBadge">בודק...</span><button class="cp-button" id="builderButton" type="button">פתח את בונה האתר</button></article><article class="dash-card"><h2>המסלול שלך</h2><div class="dash-row"><span>מסלול</span><strong class="cp-badge" id="plan">FREE</strong></div><div class="dash-row"><span>מפתחות חיבור</span><strong id="keyLimit">0</strong></div><div class="dash-row"><span>חיבור לאתרים</span><strong id="domainLimit">0</strong></div></article><article class="dash-card"><h2>גישה מהירה</h2><a class="cp-button-secondary" href="setup-guide.html">מדריך הטמעה</a><a class="cp-button-secondary" href="profile.html">עריכת פרופיל</a><a class="cp-button-secondary" href="upgrade.html">ניהול מסלול</a></article></section><section class="dash-card"><h2>מוצרים</h2><div id="products" class="cp-list"><p class="cp-muted">טוען...</p></div></section><section class="dash-card"><h2>הזמנות אחרונות</h2><div id="orders" class="cp-list"><p class="cp-muted">טוען...</p></div></section></main><script>const API='/api/v1',token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token'),$=id=>document.getElementById(id);const auth=()=>token?{Authorization:`Bearer ${token}`}:{},logout=()=>{['access_token','conversapay_auth_token','conversapay_user','user_id','email'].forEach(k=>{localStorage.removeItem(k);sessionStorage.removeItem(k)});location.href='login.html'};async function get(path){const r=await fetch(`${API}${path}`,{headers:auth()});const d=await r.json().catch(()=>({}));if(r.status===401){logout();throw Error('יש להתחבר מחדש')}if(!r.ok)throw Error(d.detail||'לא ניתן לטעון את הנתונים');return d}const money=v=>'₪'+Number(v||0).toLocaleString('he-IL',{maximumFractionDigits:2}),addRow=(root,title,value)=>{const row=document.createElement('div');row.className='dash-row';const a=document.createElement('span');a.textContent=title;const b=document.createElement('strong');b.textContent=value;row.append(a,b);root.appendChild(row)};function renderList(id,items,empty){const root=$(id);root.textContent='';if(!items.length){const p=document.createElement('p');p.className='cp-muted';p.textContent=empty;root.appendChild(p);return}items.forEach(item=>addRow(root,item.title,item.value))}async function load(){if(!token){logout();return}try{const [me,features,analytics,products,orders]=await Promise.all([get('/auth/me'),get('/dashboard/features'),get('/dashboard/analytics'),get('/dashboard/products'),get('/dashboard/orders')]);const plan=String(features.plan_type||'free').toLowerCase(),profile=me.profile||{};$("name").textContent=profile.full_name||me.email||'בעלים';$("business").textContent=analytics.business_name||'אין עסק פעיל';$("plan").textContent=plan.toUpperCase();$("keyLimit").textContent=String(features.api_key_limit??0);$("domainLimit").textContent=String(features.domain_limit??0);$("revenue").textContent=money(analytics.total_revenue);$("deals").textContent=String(analytics.closed_deals??0);$("conversations").textContent=String(analytics.total_conversations??0);$("conversion").textContent=Number(analytics.conversion_rate||0).toFixed(1)+'%';const builder=features.site_builder===true;$("builderCard").classList.toggle('builder-locked',!builder);$("builderBadge").textContent=builder?'זמין ב‑PREMIUM':'נעול, PREMIUM בלבד';$("builderBadge").className=builder?'cp-badge good':'cp-badge warn';$("builderCopy").textContent=builder?'בונה האתר זמין במסלול PREMIUM שלך.':'בונה האתר אינו כלול במסלול הנוכחי.';$("builderButton").disabled=!builder;$("builderButton").onclick=async()=>{if(!builder)return;const d=await get('/site-builder/access');if(d.url)location.href=d.url};renderList('products',(products.products||[]).slice(0,8).map(x=>({title:x.name||'מוצר',value:money(x.price)})),'אין מוצרים עדיין');renderList('orders',(orders.orders||[]).slice(0,8).map(x=>({title:x.order_number||x.id||'הזמנה',value:`${x.status||'ממתין'} · ${money(x.total)}`})),'אין הזמנות עדיין')}catch(e){$("notice").textContent=e.message;$("notice").hidden=false}}$('logout').onclick=logout;load();</script></body></html>
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#07111f">
+  <title>ConversaPay | לוח ניהול</title>
+  <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+  <style>
+    .dash {
+      display: grid;
+      gap: 20px;
+    }
+
+    .dash-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .dash-nav {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .dash-nav a {
+      color: var(--cp-muted-strong);
+      text-decoration: none;
+    }
+
+    .dash-hero {
+      display: grid;
+      gap: 16px;
+      padding: 28px;
+      border-radius: 28px;
+      background:
+        radial-gradient(circle at top right, rgba(55, 215, 255, 0.2), transparent 28%),
+        linear-gradient(135deg, rgba(124, 92, 255, 0.22), rgba(7, 17, 31, 0.92));
+      border: 1px solid var(--cp-line);
+      box-shadow: var(--cp-shadow);
+    }
+
+    .dash-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .dash-card,
+    .dash-panel {
+      display: grid;
+      gap: 14px;
+      padding: 22px;
+      border-radius: 24px;
+      background: var(--cp-panel);
+      border: 1px solid var(--cp-line);
+      box-shadow: var(--cp-shadow);
+    }
+
+    .dash-card h2,
+    .dash-panel h2,
+    .dash-panel h3 {
+      margin: 0;
+    }
+
+    .dash-value {
+      font: 800 2rem 'Poppins', sans-serif;
+    }
+
+    .dash-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      flex-wrap: wrap;
+    }
+
+    .dash-row strong,
+    .dash-row span:last-child {
+      word-break: break-word;
+    }
+
+    .tiers-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .tier-card {
+      display: grid;
+      gap: 14px;
+      padding: 20px;
+      border-radius: 22px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .tier-card.current {
+      border-color: rgba(55, 215, 255, 0.4);
+      box-shadow: 0 0 0 1px rgba(55, 215, 255, 0.15) inset;
+      background: linear-gradient(135deg, rgba(55, 215, 255, 0.08), rgba(124, 92, 255, 0.08));
+    }
+
+    .tier-card ul {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+
+    .tier-card li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--cp-muted-strong);
+    }
+
+    .tier-card li::before {
+      content: '•';
+      color: #37d7ff;
+      font-size: 1.1rem;
+    }
+
+    .management-stack {
+      display: grid;
+      gap: 20px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .form-grid .full {
+      grid-column: 1 / -1;
+    }
+
+    .dash-field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .dash-field label {
+      color: var(--cp-muted-strong);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .dash-field input,
+    .dash-field textarea,
+    .dash-field select {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid var(--cp-line);
+      background: rgba(7, 17, 31, 0.75);
+      color: var(--cp-text);
+      padding: 12px 14px;
+      font: inherit;
+      resize: vertical;
+    }
+
+    .dash-field textarea {
+      min-height: 110px;
+    }
+
+    .management-header,
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .collection {
+      display: grid;
+      gap: 12px;
+    }
+
+    .collection-item {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .collection-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .collection-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .muted-box {
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      color: var(--cp-muted);
+    }
+
+    .inline-note {
+      color: var(--cp-muted);
+      font-size: 0.95rem;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .domain-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(55, 215, 255, 0.08);
+      border: 1px solid rgba(55, 215, 255, 0.16);
+      color: var(--cp-text);
+      flex-wrap: wrap;
+    }
+
+    .domain-list {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--cp-muted-strong);
+    }
+
+    .empty-state {
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px dashed rgba(255, 255, 255, 0.1);
+      color: var(--cp-muted);
+    }
+
+    .builder-locked {
+      opacity: 0.82;
+    }
+
+    .builder-locked .cp-button {
+      display: none;
+    }
+
+    @media (max-width: 640px) {
+      .dash-head {
+        align-items: flex-start;
+      }
+
+      .dash-nav {
+        width: 100%;
+      }
+
+      .dash-nav > * {
+        flex: 1;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body class="cp-page">
+  <main class="cp-shell dash">
+    <header class="dash-head">
+      <a class="cp-brand" href="home.html">
+        <span class="cp-brand-mark">CP</span>
+        <span>ConversaPay</span>
+      </a>
+
+      <nav class="dash-nav" aria-label="ניווט">
+        <a href="upgrade.html">שדרוג מסלול</a>
+        <a href="settings.html">הגדרות</a>
+        <button class="cp-button-secondary" id="logout" type="button">יציאה</button>
+      </nav>
+    </header>
+
+    <section class="dash-hero">
+      <span class="cp-kicker">לוח ניהול</span>
+      <h1 class="cp-title">שלום, <span id="name">טוען...</span></h1>
+      <p class="cp-subtitle" id="business">טוען נתוני העסק...</p>
+      <div class="cp-actions">
+        <a class="cp-button" href="setup-guide.html">מדריך התחלה</a>
+        <a class="cp-button-secondary" href="profile.html">פרופיל</a>
+      </div>
+    </section>
+
+    <div id="notice" class="cp-notice error hidden"></div>
+
+    <section class="dash-grid" id="metrics">
+      <article class="dash-card">
+        <h2>הכנסות</h2>
+        <div class="dash-value" id="revenue">₪0</div>
+        <small class="cp-muted">סך הכנסות שהתקבלו</small>
+      </article>
+      <article class="dash-card">
+        <h2>עסקאות</h2>
+        <div class="dash-value" id="deals">0</div>
+        <small class="cp-muted">עסקאות שנסגרו</small>
+      </article>
+      <article class="dash-card">
+        <h2>שיחות</h2>
+        <div class="dash-value" id="conversations">0</div>
+        <small class="cp-muted">שיחות שנרשמו</small>
+      </article>
+      <article class="dash-card">
+        <h2>המרה</h2>
+        <div class="dash-value" id="conversion">0%</div>
+        <small class="cp-muted">יחס המרה נוכחי</small>
+      </article>
+    </section>
+
+    <section class="dash-panel">
+      <div class="section-header">
+        <div>
+          <h2>המסלולים והפיצ'רים</h2>
+          <p class="cp-muted">כל Tier מסודר עם היכולות שלו, על אותו רקע ובמבט אחד.</p>
+        </div>
+        <span class="cp-badge" id="currentPlanBadge">FREE</span>
+      </div>
+      <div class="tiers-grid" id="tierCards"></div>
+    </section>
+
+    <section class="dash-grid">
+      <article class="dash-card" id="builderCard">
+        <h2>בונה האתר</h2>
+        <p class="cp-muted" id="builderCopy">בודק זמינות...</p>
+        <span class="cp-badge" id="builderBadge">בודק...</span>
+        <button class="cp-button" id="builderButton" type="button">פתח את בונה האתר</button>
+      </article>
+
+      <article class="dash-card">
+        <h2>המסלול שלך</h2>
+        <div class="dash-row"><span>מסלול</span><strong class="cp-badge" id="plan">FREE</strong></div>
+        <div class="dash-row"><span>מפתחות חיבור</span><strong id="keyLimit">0</strong></div>
+        <div class="dash-row"><span>חיבור דומיינים</span><strong id="domainLimit">0</strong></div>
+      </article>
+
+      <article class="dash-card">
+        <h2>גישה מהירה</h2>
+        <a class="cp-button-secondary" href="setup-guide.html">מדריך הטמעה</a>
+        <a class="cp-button-secondary" href="profile.html">עריכת פרופיל</a>
+        <a class="cp-button-secondary" href="upgrade.html">ניהול מסלול</a>
+      </article>
+    </section>
+
+    <section class="management-stack">
+      <article class="dash-panel">
+        <div class="management-header">
+          <div>
+            <h2>ניהול מוצרים</h2>
+            <p class="cp-muted">הוספה, עריכה ומחיקה של מוצרים מתוך אותו מסך.</p>
+          </div>
+          <div class="collection-actions">
+            <button class="cp-button" id="toggleProductForm" type="button">הוסף מוצר</button>
+            <button class="cp-button-secondary hidden" id="cancelProductEdit" type="button">בטל</button>
+          </div>
+        </div>
+
+        <form id="productForm" class="dash-card hidden">
+          <input id="productId" type="hidden">
+          <div class="form-grid">
+            <div class="dash-field">
+              <label for="productName">שם מוצר</label>
+              <input id="productName" required maxlength="255" placeholder="לדוגמה: פגישת ייעוץ">
+            </div>
+            <div class="dash-field">
+              <label for="productItemKey">מזהה מוצר</label>
+              <input id="productItemKey" required maxlength="100" placeholder="consulting_session">
+            </div>
+            <div class="dash-field">
+              <label for="productPrice">מחיר</label>
+              <input id="productPrice" type="number" min="0" step="0.01" required placeholder="0.00">
+            </div>
+            <div class="dash-field">
+              <label for="productPaymentLink">קישור תשלום</label>
+              <input id="productPaymentLink" type="url" placeholder="https://...">
+            </div>
+            <div class="dash-field full">
+              <label for="productDescription">תיאור</label>
+              <textarea id="productDescription" placeholder="תיאור קצר של המוצר"></textarea>
+            </div>
+            <div class="dash-field full">
+              <label for="productImageUrl">תמונה</label>
+              <input id="productImageUrl" type="url" placeholder="https://...">
+            </div>
+          </div>
+          <label class="checkbox-row">
+            <input id="productIsActive" type="checkbox" checked>
+            <span>המוצר פעיל להצגה ולמכירה</span>
+          </label>
+          <div class="cp-actions">
+            <button class="cp-button" id="productSubmit" type="submit">שמור מוצר</button>
+            <button class="cp-button-secondary" id="productCancelInline" type="button">סגור</button>
+          </div>
+        </form>
+
+        <div id="productsSummary" class="inline-note">טוען מוצרים...</div>
+        <div id="products" class="collection"></div>
+      </article>
+
+      <article class="dash-panel">
+        <div class="management-header">
+          <div>
+            <h2>ניהול דומיינים</h2>
+            <p class="cp-muted">לא מפוצל למסך נוסף — כל ניהול הדומיינים מרוכז כאן.</p>
+          </div>
+          <span class="cp-badge" id="domainPlanBadge">FREE</span>
+        </div>
+
+        <div class="dash-row">
+          <span>דומיינים מחוברים</span>
+          <strong><span id="connectedDomainsCount">0</span> / <span id="connectedDomainsLimit">0</span></strong>
+        </div>
+
+        <div id="domainLockedNotice" class="muted-box hidden">
+          ניהול דומיינים זמין במסלולי PRO ו‑PREMIUM. אפשר לשדרג כדי לחבר דומיינים פעילים.
+        </div>
+
+        <form id="domainForm" class="dash-card">
+          <div class="form-grid">
+            <div class="dash-field full">
+              <label for="domainInput">דומיין חדש</label>
+              <input id="domainInput" placeholder="example.com">
+            </div>
+          </div>
+          <div class="cp-actions">
+            <button class="cp-button" id="addDomainButton" type="submit">הוסף דומיין</button>
+            <a class="cp-button-secondary" href="setup-guide.html">מדריך חיבור</a>
+          </div>
+        </form>
+
+        <div id="domainSummary" class="inline-note">טוען דומיינים...</div>
+        <div id="domains" class="domain-list"></div>
+      </article>
+    </section>
+
+    <section class="dash-panel">
+      <div class="section-header">
+        <div>
+          <h2>הזמנות אחרונות</h2>
+          <p class="cp-muted">תצוגה מרוכזת של ההזמנות האחרונות מהמערכת.</p>
+        </div>
+      </div>
+      <div id="orders" class="collection"><p class="cp-muted">טוען...</p></div>
+    </section>
+  </main>
+
+  <script>
+    const API = '/api/v1';
+    const state = {
+      token: localStorage.getItem('access_token') ||
+        localStorage.getItem('conversapay_auth_token') ||
+        sessionStorage.getItem('access_token') ||
+        sessionStorage.getItem('conversapay_auth_token'),
+      me: null,
+      features: null,
+      analytics: null,
+      currentBusiness: null,
+      products: [],
+      orders: [],
+      customDomains: [],
+      editingProductId: null
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    const PLAN_FEATURES = {
+      free: ['ניהול מוצרים', 'אנליטיקות בסיסיות', 'פרופיל חשבון'],
+      pro: ['ניהול מוצרים', 'ניהול דומיינים', 'הזמנות ומכירות', 'וורדפרס והטמעה', 'עד 3 מפתחות חיבור'],
+      premium: ['כל מה שיש ב‑PRO', 'בונה אתר', 'WhatsApp Business', 'עד 10 מפתחות חיבור', 'תמיכה רחבה יותר בדומיינים']
+    };
+
+    function authHeaders() {
+      return state.token ? { Authorization: `Bearer ${state.token}` } : {};
+    }
+
+    function logout() {
+      ['access_token', 'conversapay_auth_token', 'conversapay_user', 'user_id', 'email'].forEach((key) => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      });
+      location.href = 'login.html';
+    }
+
+    function showNotice(message) {
+      const notice = $('notice');
+      notice.textContent = message;
+      notice.classList.remove('hidden');
+    }
+
+    function hideNotice() {
+      $('notice').classList.add('hidden');
+      $('notice').textContent = '';
+    }
+
+    async function get(path, options = {}) {
+      const response = await fetch(`${API}${path}`, {
+        ...options,
+        headers: {
+          ...authHeaders(),
+          ...(options.headers || {})
+        }
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (response.status === 401) {
+        logout();
+        throw new Error('יש להתחבר מחדש');
+      }
+      if (!response.ok) {
+        throw new Error(data.detail || 'לא ניתן לטעון את הנתונים');
+      }
+      return data;
+    }
+
+    function money(value) {
+      return '₪' + Number(value || 0).toLocaleString('he-IL', { maximumFractionDigits: 2 });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
+
+    function normalizeDomain(value) {
+      return String(value || '')
+        .trim()
+        .replace(/^https?:\/\//i, '')
+        .replace(/\/$/, '')
+        .toLowerCase();
+    }
+
+    function currentPlan() {
+      return String(state.features?.plan_type || 'free').toLowerCase();
+    }
+
+    function canManageDomains() {
+      return state.features?.domains === true;
+    }
+
+    function setBusinessState() {
+      const hasBusiness = Boolean(state.currentBusiness?.id);
+      $('toggleProductForm').disabled = !hasBusiness;
+      $('domainInput').disabled = !hasBusiness || !canManageDomains();
+      $('addDomainButton').disabled = !hasBusiness || !canManageDomains();
+
+      if (!hasBusiness) {
+        $('productsSummary').textContent = 'אין עסק פעיל כרגע. יש ליצור עסק כדי לנהל מוצרים.';
+        $('domainSummary').textContent = 'אין עסק פעיל כרגע. יש ליצור עסק כדי לנהל דומיינים.';
+      }
+    }
+
+    function renderTierCards() {
+      const plan = currentPlan();
+      $('currentPlanBadge').textContent = plan.toUpperCase();
+      $('tierCards').innerHTML = Object.entries(PLAN_FEATURES).map(([tier, features]) => `
+        <article class="tier-card ${tier === plan ? 'current' : ''}">
+          <div class="section-header">
+            <h3>${tier.toUpperCase()}</h3>
+            <span class="cp-badge ${tier === plan ? 'good' : ''}">${tier === plan ? 'המסלול שלך' : 'זמין'}</span>
+          </div>
+          <ul>
+            ${features.map((feature) => `<li>${escapeHtml(feature)}</li>`).join('')}
+          </ul>
+        </article>
+      `).join('');
+    }
+
+    function renderTopSection() {
+      const plan = currentPlan();
+      const profile = state.me?.profile || {};
+      const analytics = state.analytics || {};
+      const features = state.features || {};
+
+      $('name').textContent = profile.full_name || state.me?.email || 'בעלים';
+      $('business').textContent = analytics.business_name || state.currentBusiness?.business_name || 'אין עסק פעיל';
+      $('plan').textContent = plan.toUpperCase();
+      $('currentPlanBadge').textContent = plan.toUpperCase();
+      $('domainPlanBadge').textContent = plan.toUpperCase();
+      $('keyLimit').textContent = String(features.api_key_limit ?? 0);
+      $('domainLimit').textContent = String(features.domain_limit ?? 0);
+      $('connectedDomainsLimit').textContent = String(features.domain_limit ?? 0);
+      $('revenue').textContent = money(analytics.total_revenue);
+      $('deals').textContent = String(analytics.closed_deals ?? 0);
+      $('conversations').textContent = String(analytics.total_conversations ?? 0);
+      $('conversion').textContent = Number(analytics.conversion_rate || 0).toFixed(1) + '%';
+
+      const builderEnabled = features.site_builder === true;
+      $('builderCard').classList.toggle('builder-locked', !builderEnabled);
+      $('builderBadge').textContent = builderEnabled ? 'זמין ב‑PREMIUM' : 'נעול, PREMIUM בלבד';
+      $('builderBadge').className = builderEnabled ? 'cp-badge good' : 'cp-badge warn';
+      $('builderCopy').textContent = builderEnabled
+        ? 'בונה האתר זמין במסלול PREMIUM שלך.'
+        : 'בונה האתר אינו כלול במסלול הנוכחי.';
+      $('builderButton').disabled = !builderEnabled;
+      $('builderButton').onclick = async () => {
+        if (!builderEnabled) return;
+        const data = await get('/site-builder/access');
+        if (data.url) {
+          location.href = data.url;
+        }
+      };
+
+      renderTierCards();
+    }
+
+    function renderProducts() {
+      const root = $('products');
+      const items = state.products || [];
+      $('productsSummary').textContent = items.length
+        ? `יש כרגע ${items.length} מוצרים במערכת.`
+        : 'עדיין אין מוצרים. אפשר להתחיל עם המוצר הראשון מכאן.';
+
+      if (!items.length) {
+        root.innerHTML = '<div class="empty-state">אין מוצרים עדיין.</div>';
+        return;
+      }
+
+      root.innerHTML = items.map((product) => `
+        <article class="collection-item">
+          <div class="collection-meta">
+            <div>
+              <strong>${escapeHtml(product.name || 'מוצר')}</strong>
+              <div class="cp-muted">${escapeHtml(product.item_key || '')}</div>
+            </div>
+            <strong>${money(product.price)}</strong>
+          </div>
+          ${product.description ? `<div class="cp-muted">${escapeHtml(product.description)}</div>` : ''}
+          <div class="collection-meta">
+            <span class="cp-badge ${product.is_active ? 'good' : 'warn'}">${product.is_active ? 'פעיל' : 'לא פעיל'}</span>
+            <div class="collection-actions">
+              <button class="cp-button-secondary" type="button" onclick="startEditProduct('${product.id}')">ערוך</button>
+              <button class="cp-button-secondary" type="button" onclick="removeProduct('${product.id}')">מחק</button>
+            </div>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    function openProductForm(product = null) {
+      $('productForm').classList.remove('hidden');
+      $('cancelProductEdit').classList.toggle('hidden', !product);
+      state.editingProductId = product?.id || null;
+      $('productId').value = product?.id || '';
+      $('productName').value = product?.name || '';
+      $('productItemKey').value = product?.item_key || '';
+      $('productItemKey').disabled = Boolean(product?.id);
+      $('productPrice').value = product?.price ?? '';
+      $('productDescription').value = product?.description || '';
+      $('productImageUrl').value = product?.image_url || '';
+      $('productPaymentLink').value = product?.payment_link || '';
+      $('productIsActive').checked = product ? product.is_active !== false : true;
+      $('productSubmit').textContent = product ? 'עדכן מוצר' : 'שמור מוצר';
+    }
+
+    function closeProductForm() {
+      state.editingProductId = null;
+      $('productForm').reset();
+      $('productId').value = '';
+      $('productItemKey').disabled = false;
+      $('productForm').classList.add('hidden');
+      $('cancelProductEdit').classList.add('hidden');
+      $('productSubmit').textContent = 'שמור מוצר';
+    }
+
+    async function loadProducts() {
+      if (!state.currentBusiness?.id) {
+        state.products = [];
+        renderProducts();
+        return;
+      }
+
+      const response = await get(`/products?business_id=${encodeURIComponent(state.currentBusiness.id)}&active_only=false`);
+      state.products = Array.isArray(response) ? response : [];
+      renderProducts();
+    }
+
+    async function handleProductSubmit(event) {
+      event.preventDefault();
+      if (!state.currentBusiness?.id) {
+        showNotice('יש ליצור עסק לפני שמוסיפים מוצרים.');
+        return;
+      }
+
+      const submitButton = $('productSubmit');
+      submitButton.disabled = true;
+      const originalText = submitButton.textContent;
+      submitButton.textContent = 'שומר...';
+      hideNotice();
+
+      try {
+        const productId = $('productId').value;
+        const payload = {
+          business_id: state.currentBusiness.id,
+          item_key: $('productItemKey').value.trim(),
+          name: $('productName').value.trim(),
+          description: $('productDescription').value.trim() || null,
+          price: Number($('productPrice').value || 0),
+          image_url: $('productImageUrl').value.trim() || null,
+          payment_link: $('productPaymentLink').value.trim() || null,
+          is_active: $('productIsActive').checked,
+          currency: 'ILS'
+        };
+
+        await get(productId ? `/products/${productId}` : '/products', {
+          method: productId ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        closeProductForm();
+        await loadProducts();
+      } catch (error) {
+        showNotice(error.message || 'לא ניתן לשמור את המוצר');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+      }
+    }
+
+    async function startEditProduct(productId) {
+      try {
+        hideNotice();
+        const product = await get(`/products/${productId}`);
+        openProductForm(product);
+        $('productForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (error) {
+        showNotice(error.message || 'לא ניתן לטעון את פרטי המוצר');
+      }
+    }
+
+    async function removeProduct(productId) {
+      if (!confirm('למחוק את המוצר הזה?')) return;
+      try {
+        hideNotice();
+        await get(`/products/${productId}`, { method: 'DELETE' });
+        await loadProducts();
+      } catch (error) {
+        showNotice(error.message || 'לא ניתן למחוק את המוצר');
+      }
+    }
+
+    function renderDomains() {
+      const root = $('domains');
+      const domains = state.customDomains || [];
+      const limit = Number(state.features?.domain_limit || 0);
+      const hasBusiness = Boolean(state.currentBusiness?.id);
+      const locked = !canManageDomains();
+
+      $('connectedDomainsCount').textContent = String(domains.length);
+      $('domainLockedNotice').classList.toggle('hidden', !locked);
+      $('domainSummary').textContent = !hasBusiness
+        ? 'אין עסק פעיל לניהול דומיינים.'
+        : locked
+          ? 'במסלול הנוכחי אין ניהול דומיינים פעיל.'
+          : domains.length
+            ? `מחוברים כרגע ${domains.length} דומיינים.`
+            : 'עדיין לא חיברת דומיינים.';
+
+      if (!domains.length) {
+        root.innerHTML = '<div class="empty-state">אין דומיינים מחוברים עדיין.</div>';
+      } else {
+        root.innerHTML = domains.map((domain, index) => `
+          <div class="domain-pill">
+            <span>${escapeHtml(domain)}</span>
+            <button class="cp-button-secondary" type="button" onclick="removeDomain(${index})">הסר</button>
+          </div>
+        `).join('');
+      }
+
+      $('domainInput').disabled = locked || !hasBusiness || domains.length >= limit;
+      $('addDomainButton').disabled = locked || !hasBusiness || domains.length >= limit;
+
+      if (!locked && hasBusiness && limit > 0 && domains.length >= limit) {
+        $('domainSummary').textContent = `הגעת למגבלת הדומיינים של המסלול (${limit}).`;
+      }
+    }
+
+    async function saveDomains(nextDomains) {
+      if (!state.currentBusiness?.id) {
+        throw new Error('אין עסק פעיל לשמירת דומיינים.');
+      }
+
+      const payload = {
+        settings: {
+          ...(state.currentBusiness.settings || {}),
+          custom_domains: nextDomains
+        }
+      };
+
+      const updated = await get(`/businesses/${state.currentBusiness.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      state.currentBusiness = updated;
+      state.customDomains = Array.isArray(updated.settings?.custom_domains)
+        ? updated.settings.custom_domains
+        : [];
+      renderDomains();
+    }
+
+    async function handleDomainSubmit(event) {
+      event.preventDefault();
+      hideNotice();
+
+      if (!canManageDomains()) {
+        showNotice('ניהול דומיינים זמין במסלולי PRO ו‑PREMIUM.');
+        return;
+      }
+
+      const normalized = normalizeDomain($('domainInput').value);
+      if (!normalized) {
+        showNotice('יש להזין דומיין תקין.');
+        return;
+      }
+
+      const domains = state.customDomains || [];
+      const limit = Number(state.features?.domain_limit || 0);
+      if (domains.includes(normalized)) {
+        showNotice('הדומיין כבר קיים ברשימה.');
+        return;
+      }
+      if (domains.length >= limit) {
+        showNotice('הגעת למגבלת הדומיינים של המסלול שלך.');
+        return;
+      }
+
+      try {
+        await saveDomains([...domains, normalized]);
+        $('domainInput').value = '';
+      } catch (error) {
+        showNotice(error.message || 'לא ניתן לשמור את הדומיין');
+      }
+    }
+
+    async function removeDomain(index) {
+      try {
+        hideNotice();
+        const next = [...(state.customDomains || [])];
+        next.splice(index, 1);
+        await saveDomains(next);
+      } catch (error) {
+        showNotice(error.message || 'לא ניתן להסיר את הדומיין');
+      }
+    }
+
+    function renderOrders() {
+      const root = $('orders');
+      const items = state.orders || [];
+      const locked = state.ordersLocked === true;
+
+      if (!items.length) {
+        root.innerHTML = locked
+          ? '<div class="muted-box">ניהול הזמנות מלא זמין במסלולי PRO ו‑PREMIUM.</div>'
+          : '<div class="empty-state">אין הזמנות עדיין.</div>';
+        return;
+      }
+
+      root.innerHTML = items.map((order) => `
+        <article class="collection-item">
+          <div class="collection-meta">
+            <div>
+              <strong>${escapeHtml(order.order_number || order.id || 'הזמנה')}</strong>
+              <div class="cp-muted">${escapeHtml(order.status || 'ממתין')}</div>
+            </div>
+            <strong>${money(order.total)}</strong>
+          </div>
+          <div class="cp-muted">${escapeHtml(order.customer_info?.name || order.customer_info?.email || 'לקוח אנונימי')}</div>
+        </article>
+      `).join('');
+    }
+
+    async function load() {
+      if (!state.token) {
+        logout();
+        return;
+      }
+
+      try {
+        hideNotice();
+        const [me, features, analytics, productsData, ordersData, businesses] = await Promise.all([
+          get('/auth/me'),
+          get('/dashboard/features'),
+          get('/dashboard/analytics'),
+          get('/dashboard/products'),
+          get('/dashboard/orders'),
+          get('/businesses')
+        ]);
+
+        state.me = me;
+        state.features = features;
+        state.analytics = analytics;
+        state.currentBusiness = Array.isArray(businesses) && businesses.length ? businesses[0] : null;
+        state.products = Array.isArray(productsData.products) ? productsData.products : [];
+        state.orders = Array.isArray(ordersData.orders) ? ordersData.orders : [];
+        state.ordersLocked = ordersData.locked === true;
+        state.customDomains = Array.isArray(state.currentBusiness?.settings?.custom_domains)
+          ? state.currentBusiness.settings.custom_domains
+          : [];
+
+        renderTopSection();
+        setBusinessState();
+        renderProducts();
+        renderDomains();
+        renderOrders();
+      } catch (error) {
+        showNotice(error.message || 'לא ניתן לטעון את הדאשבורד');
+      }
+    }
+
+    $('logout').onclick = logout;
+    $('toggleProductForm').onclick = () => openProductForm();
+    $('cancelProductEdit').onclick = closeProductForm;
+    $('productCancelInline').onclick = closeProductForm;
+    $('productForm').addEventListener('submit', handleProductSubmit);
+    $('domainForm').addEventListener('submit', handleDomainSubmit);
+
+    window.startEditProduct = startEditProduct;
+    window.removeProduct = removeProduct;
+    window.removeDomain = removeDomain;
+
+    load();
+  </script>
+</body>
+</html>
