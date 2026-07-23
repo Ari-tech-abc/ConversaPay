@@ -67,6 +67,30 @@ def get_user_profile(user_id: str) -> Optional[dict]:
     return None
 
 
+def update_profile_row(user_id: str, changes: dict, select_fields: str = "*") -> Optional[dict]:
+    """
+    Update a profile row and reliably return the resulting row.
+
+    Some Supabase/PostgREST configurations may return an empty data payload after
+    UPDATE unless a representation is explicitly requested. This helper asks for
+    the updated row and falls back to reloading the profile if needed.
+    """
+    try:
+        result = supabase.table("profiles")\
+            .update(changes)\
+            .eq("user_id", user_id)\
+            .select(select_fields)\
+            .execute()
+
+        if result.data:
+            return result.data[0]
+
+        return get_user_profile(user_id)
+    except Exception as e:
+        logger.error(f"Error updating user profile for {user_id}: {str(e)}", exc_info=True)
+        return None
+
+
 def create_user_profile(user_id: str, email: str, full_name: str, token: str, expires_at: str) -> dict:
     """Create user profile with verification token in one insert."""
     try:
@@ -193,17 +217,16 @@ def save_verification_token(user_id: str, token: str) -> bool:
     """
     try:
         expires_at = datetime.utcnow() + timedelta(hours=24)
-        
-        result = supabase.table("profiles")\
-            .update({
+        updated_profile = update_profile_row(
+            user_id,
+            {
                 "email_verification_token": token,
                 "email_verification_expires_at": expires_at.isoformat(),
                 "email_verified": False
-            })\
-            .eq("user_id", user_id)\
-            .execute()
-        
-        return bool(result.data)
+            },
+            "user_id,email_verification_token,email_verified"
+        )
+        return bool(updated_profile and updated_profile.get("email_verification_token") == token)
     except Exception as e:
         logger.error(f"Error saving verification token: {str(e)}")
         return False
@@ -541,20 +564,21 @@ async def verify_email(token: str = Query(..., description="Email verification t
             """)
         
         # Mark email as verified
-        update_result = supabase.table("profiles")\
-            .update({
+        updated_profile = update_profile_row(
+            profile["user_id"],
+            {
                 "email_verified": True,
                 "email_verification_token": None,
                 "email_verification_expires_at": None
-            })\
-            .eq("user_id", profile["user_id"])\
-            .execute()
+            },
+            "user_id,email,email_verified"
+        )
         
-        if not update_result.data:
+        if not updated_profile or not updated_profile.get("email_verified"):
             logger.error(f"Failed to mark email as verified for user_id: {profile['user_id']}")
             raise HTTPException(status_code=500, detail="Failed to verify email")
         
-        logger.info(f"Email verified for user: {profile['email']}")
+        logger.info(f"Email verified for user: {updated_profile.get('email') or profile['email']}")
         
         # Return success HTML page
         return HTMLResponse(content="""
@@ -829,10 +853,13 @@ async def verify_identity_for_reset(
                 
                 # Store verification token temporarily
                 # In production, use Redis or similar with TTL
-                supabase.table("profiles").update({
-                    "email_verification_token": verification_token,
-                    "email_verification_expires_at": expires_at
-                }).eq("user_id", user_id).execute()
+                update_profile_row(
+                    user_id,
+                    {
+                        "email_verification_token": verification_token,
+                        "email_verification_expires_at": expires_at
+                    }
+                )
                 
                 # Send verification code email
                 email_sent = email_service.send_verification_email(
@@ -899,13 +926,17 @@ async def update_whatsapp_settings(
     if not profile or profile.get("plan_type") != "premium":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="premium_required")
 
-    result = supabase.table("profiles").update({
-        "whatsapp_phone_number_id": body.get("whatsapp_phone_number_id"),
-        "whatsapp_access_token": body.get("whatsapp_access_token"),
-        "whatsapp_verify_token": body.get("whatsapp_verify_token")
-    }).eq("user_id", current_user.user_id).execute()
+    result = update_profile_row(
+        current_user.user_id,
+        {
+            "whatsapp_phone_number_id": body.get("whatsapp_phone_number_id"),
+            "whatsapp_access_token": body.get("whatsapp_access_token"),
+            "whatsapp_verify_token": body.get("whatsapp_verify_token")
+        },
+        "user_id,whatsapp_phone_number_id,whatsapp_access_token,whatsapp_verify_token"
+    )
 
-    if not result.data:
+    if not result:
         raise HTTPException(status_code=500, detail="Failed to update WhatsApp settings")
 
     return {"message": "WhatsApp settings updated"}
@@ -930,12 +961,12 @@ async def update_current_user(
                 detail="No data to update"
             )
         
-        result = supabase.table("profiles").update(update_data).eq("user_id", current_user.user_id).execute()
+        result = update_profile_row(current_user.user_id, update_data)
         
-        if result.data:
+        if result:
             return {
                 "message": "Profile updated successfully",
-                "profile": result.data[0]
+                "profile": result
             }
         else:
             raise HTTPException(
@@ -1009,8 +1040,7 @@ async def complete_oauth_session(current_user: AuthUser = Depends(get_current_us
             )
             if profile:
                 # Google already verified this email address for us.
-                supabase.table("profiles").update({"email_verified": True}) \
-                    .eq("user_id", current_user.user_id).execute()
+                update_profile_row(current_user.user_id, {"email_verified": True}, "user_id,email_verified")
                 logger.info(f"Profile created for OAuth user: {current_user.email}")
 
         existing_business = supabase.table("businesses") \
