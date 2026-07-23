@@ -18,7 +18,7 @@ starlette
 google-genai
 google-generativeai
 google-api-core
-google-api-client
+google-api-python-client
 google-auth
 google-auth-httplib2
 googleapis-common-protos
