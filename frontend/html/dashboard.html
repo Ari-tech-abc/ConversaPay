@@ -14,24 +14,17 @@
     :root {
       color-scheme: dark;
       --bg: #07111f;
-      --bg-soft: #0b1730;
       --panel: rgba(10, 19, 38, 0.82);
-      --panel-strong: #101d38;
-      --panel-muted: rgba(255,255,255,0.04);
       --line: rgba(255,255,255,0.1);
-      --line-strong: rgba(255,255,255,0.16);
       --text: #eef4ff;
       --muted: #9eb2d4;
       --muted-strong: #bed0ef;
       --accent: #7c5cff;
-      --accent-soft: rgba(124, 92, 255, 0.18);
       --cyan: #37d7ff;
       --green: #2dd4a8;
       --yellow: #f7b955;
       --danger: #ff6b7d;
       --shadow: 0 28px 80px rgba(0, 0, 0, 0.28);
-      --radius: 24px;
-      --radius-sm: 18px;
     }
 
     * { box-sizing: border-box; }
@@ -76,7 +69,8 @@
     }
 
     .sidebar,
-    .panel {
+    .panel,
+    .hero {
       background: var(--panel);
       border: 1px solid var(--line);
       box-shadow: var(--shadow);
@@ -148,16 +142,6 @@
       overflow: hidden;
     }
 
-    .profile-card::after {
-      content: '';
-      position: absolute;
-      inset: auto -25px -40px auto;
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(55, 215, 255, 0.22), transparent 68%);
-    }
-
     .profile-head {
       display: flex;
       align-items: center;
@@ -189,16 +173,16 @@
     .muted { color: var(--muted); }
 
     .plan-pill,
-    .badge,
-    .tiny-pill,
     .status-pill,
+    .tiny-pill,
+    .badge,
     .btn {
       display: inline-flex;
       align-items: center;
       gap: 8px;
       border-radius: 999px;
-      border: 1px solid transparent;
       white-space: nowrap;
+      border: 1px solid transparent;
     }
 
     .plan-pill {
@@ -258,8 +242,7 @@
       background: rgba(255,255,255,0.06);
     }
 
-    .nav-main,
-    .nav-meta {
+    .nav-main {
       display: flex;
       align-items: center;
       gap: 10px;
@@ -267,10 +250,7 @@
       flex: 1;
     }
 
-    .nav-main span:last-child,
-    .nav-meta span:last-child {
-      white-space: nowrap;
-    }
+    .nav-main span:last-child { white-space: nowrap; }
 
     .nav-icon {
       width: 34px;
@@ -301,7 +281,6 @@
     .upgrade-card strong {
       font: 700 1.05rem 'Space Grotesk', sans-serif;
       letter-spacing: -0.03em;
-      white-space: nowrap;
     }
 
     .upgrade-card p {
@@ -310,26 +289,19 @@
       font-size: 0.94rem;
     }
 
-    .sidebar .btn {
-      justify-content: center;
-    }
-
     .main {
       display: grid;
       gap: 18px;
-      grid-auto-rows: min-content;
     }
 
     .hero {
-      position: relative;
-      overflow: hidden;
       border-radius: 30px;
       padding: 28px;
+      position: relative;
+      overflow: hidden;
       background:
         radial-gradient(circle at top right, rgba(55, 215, 255, 0.24), transparent 30%),
         linear-gradient(135deg, rgba(124, 92, 255, 0.28), rgba(6, 14, 30, 0.92));
-      border: 1px solid rgba(255,255,255,0.12);
-      box-shadow: var(--shadow);
     }
 
     .hero::after {
@@ -342,26 +314,30 @@
       pointer-events: none;
     }
 
-    .hero-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.3fr) minmax(300px, 0.7fr);
-      gap: 20px;
+    .hero-content {
       position: relative;
       z-index: 1;
-      align-items: stretch;
+      display: grid;
+      gap: 18px;
+    }
+
+    .hero-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
     .eyebrow {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 10px;
       color: var(--muted-strong);
       font-size: 0.82rem;
       font-weight: 800;
       letter-spacing: 0.12em;
       text-transform: uppercase;
-      white-space: nowrap;
     }
 
     .eyebrow::before {
@@ -383,7 +359,6 @@
     .hero h1 {
       font-size: clamp(2.4rem, 5vw, 4rem);
       line-height: 0.96;
-      margin-bottom: 10px;
       max-width: 13ch;
       text-wrap: balance;
     }
@@ -391,85 +366,74 @@
     .hero p {
       margin: 0;
       color: var(--muted-strong);
-      max-width: 62ch;
+      max-width: 72ch;
     }
 
-    .hero-actions {
+    .hero-actions,
+    .hero-summary {
       display: flex;
-      gap: 12px;
       flex-wrap: wrap;
-      margin-top: 22px;
+      gap: 12px;
       align-items: center;
     }
 
-    .hero-foot {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 18px;
-      align-items: center;
-    }
-
-    .badge {
-      padding: 8px 12px;
+    .hero-summary .badge {
+      padding: 10px 14px;
       background: rgba(255,255,255,0.08);
-      border-color: rgba(255,255,255,0.08);
       color: var(--muted-strong);
-      font-size: 0.84rem;
       font-weight: 700;
     }
 
-    .hero-spotlight {
-      display: grid;
-      gap: 14px;
-      align-content: start;
-    }
-
-    .spotlight-card {
-      border-radius: 22px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.09);
-      padding: 18px;
-      display: grid;
-      gap: 12px;
-      min-height: 0;
-    }
-
-    .spotlight-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .spotlight-value {
-      font-size: 2rem;
-      font-weight: 800;
-      letter-spacing: -0.05em;
-      white-space: nowrap;
-    }
-
-    .progress {
-      position: relative;
+    .hero-progress {
       height: 12px;
       border-radius: 999px;
       background: rgba(255,255,255,0.08);
       overflow: hidden;
+      max-width: 460px;
     }
 
-    .progress > span {
-      position: absolute;
-      inset: 0 auto 0 0;
+    .hero-progress span {
+      display: block;
       width: 0;
+      height: 100%;
       border-radius: inherit;
       background: linear-gradient(90deg, var(--cyan), var(--accent));
+    }
+
+    .notice {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(45,212,168,0.25);
+      background: rgba(45,212,168,0.12);
+      color: #adf5de;
+      flex-wrap: wrap;
+    }
+
+    .notice.show { display: flex; }
+    .notice.error {
+      border-color: rgba(255,107,125,0.28);
+      background: rgba(255,107,125,0.14);
+      color: #ffc2ca;
+    }
+
+    .section-stack {
+      display: grid;
+      gap: 18px;
     }
 
     .panel {
       border-radius: 28px;
       padding: 22px;
       min-width: 0;
+    }
+
+    .section-panel {
+      position: relative;
+      overflow: hidden;
     }
 
     .panel-head {
@@ -491,7 +455,6 @@
     .panel-title h2 {
       font-size: clamp(1.35rem, 2vw, 1.7rem);
       line-height: 1.05;
-      white-space: nowrap;
     }
 
     .panel-title p {
@@ -500,124 +463,51 @@
       font-size: 0.95rem;
     }
 
-    .grid-4,
-    .grid-3,
-    .grid-2 {
-      display: grid;
-      gap: 16px;
-      align-items: stretch;
-    }
-
-    .grid-4 { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); }
-    .grid-3 { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
-    .grid-2 { grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
-
-    .metric {
-      position: relative;
-      padding: 18px;
-      border-radius: 24px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
-      border: 1px solid var(--line);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      min-height: 168px;
-    }
-
-    .metric::before {
-      content: '';
-      position: absolute;
-      inset: auto -26px -26px auto;
-      width: 96px;
-      height: 96px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(124, 92, 255, 0.16), transparent 70%);
-      pointer-events: none;
-    }
-
-    .metric-label {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      color: var(--muted);
-      font-size: 0.9rem;
-      align-items: center;
-      flex-wrap: nowrap;
-    }
-
-    .metric-label span:first-child,
-    .metric strong {
-      white-space: nowrap;
-    }
-
-    .metric strong {
-      display: block;
-      margin-top: 10px;
-      font-size: clamp(1.6rem, 3vw, 2.3rem);
-      line-height: 1;
-      font-weight: 800;
-      letter-spacing: -0.05em;
-      font-family: 'Space Grotesk', sans-serif;
-    }
-
-    .metric small {
-      display: block;
-      margin-top: 10px;
-      color: var(--muted-strong);
-      font-size: 0.88rem;
-    }
-
-    .surface {
-      border-radius: 22px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--line);
-      overflow: hidden;
-    }
-
-    .surface-body {
-      padding: 18px;
-    }
-
-    .security-list,
-    .key-list,
+    .section-content,
+    .list-stack,
+    .metric-stack,
     .product-list,
-    .feature-list {
+    .key-list {
       display: grid;
       gap: 12px;
     }
 
-    .row-card {
+    .row-card,
+    .metric-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 14px;
-      padding: 14px 16px;
-      border-radius: 18px;
+      padding: 16px 18px;
+      border-radius: 20px;
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,255,255,0.06);
       min-width: 0;
     }
 
-    .row-card strong,
-    .row-card span,
-    .row-card code,
-    .row-card small {
-      overflow-wrap: anywhere;
-    }
-
-    .row-meta {
+    .row-meta,
+    .metric-meta {
       display: grid;
-      gap: 3px;
+      gap: 4px;
       min-width: 0;
       flex: 1;
     }
 
-    .row-meta strong {
+    .row-meta strong,
+    .metric-meta strong {
+      line-height: 1.2;
+    }
+
+    .row-meta small,
+    .metric-meta small {
+      color: var(--muted);
+    }
+
+    .metric-value,
+    .summary-value {
+      font: 800 clamp(1.4rem, 3vw, 2.2rem) 'Space Grotesk', sans-serif;
+      letter-spacing: -0.05em;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      line-height: 1.25;
     }
 
     .row-actions {
@@ -665,125 +555,92 @@
     tr:last-child td { border-bottom: 0; }
 
     .status-pill,
-    .tiny-pill {
+    .tiny-pill,
+    .badge {
       padding: 7px 11px;
       font-size: 0.8rem;
       font-weight: 700;
-      border-color: rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.05);
       color: var(--muted-strong);
+      border-color: rgba(255,255,255,0.08);
     }
 
-    .status-paid, .status-delivered, .status-active, .state-open {
+    .state-open,
+    .status-paid,
+    .status-delivered {
       background: rgba(45, 212, 168, 0.12);
       color: #9ff2d9;
       border-color: rgba(45, 212, 168, 0.25);
     }
 
-    .status-pending, .status-processing, .state-locked {
+    .state-locked,
+    .status-pending,
+    .status-processing {
       background: rgba(247, 185, 85, 0.14);
       color: #ffd793;
       border-color: rgba(247, 185, 85, 0.26);
     }
 
-    .status-canceled, .status-failed, .status-refunded, .state-critical {
+    .state-critical,
+    .status-canceled,
+    .status-failed,
+    .status-refunded {
       background: rgba(255, 107, 125, 0.14);
       color: #ffc0cb;
       border-color: rgba(255, 107, 125, 0.25);
     }
 
-    .tiny-pill {
-      padding: 6px 10px;
-      font-size: 0.76rem;
-    }
-
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 16px;
-    }
-
-    .feature-card {
-      position: relative;
-      overflow: hidden;
-      border-radius: 24px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.025));
-      border: 1px solid rgba(255,255,255,0.07);
-      padding: 18px;
-      min-height: 190px;
-      display: grid;
-      gap: 12px;
-    }
-
-    .feature-card.locked .feature-body {
-      opacity: 0.45;
-      filter: grayscale(0.4);
-      pointer-events: none;
-    }
-
-    .feature-card h3 {
-      font-size: 1.12rem;
-      line-height: 1.15;
-      white-space: nowrap;
-    }
-
-    .feature-card p { margin: 0; color: var(--muted); }
-
-    .overlay {
+    .panel-lock {
       position: absolute;
       inset: 0;
       display: none;
-      place-items: center;
-      text-align: center;
+      align-items: center;
+      justify-content: center;
       padding: 24px;
-      background: linear-gradient(180deg, rgba(5,10,20,0.86), rgba(8,14,28,0.95));
-      backdrop-filter: blur(12px);
+      text-align: center;
+      background: linear-gradient(180deg, rgba(5,10,20,0.80), rgba(8,14,28,0.94));
+      backdrop-filter: blur(10px);
+      z-index: 2;
     }
 
-    .overlay.visible { display: grid; }
+    .section-panel.locked .panel-lock { display: flex; }
+    .section-panel.locked .section-content {
+      opacity: 0.22;
+      filter: blur(2px);
+      pointer-events: none;
+      user-select: none;
+    }
 
-    .overlay-box {
-      max-width: 320px;
+    .panel-lock-box {
+      max-width: 420px;
       display: grid;
       gap: 12px;
       justify-items: center;
     }
 
-    .overlay-box strong {
-      font-size: 1.16rem;
-      letter-spacing: -0.03em;
-      line-height: 1.15;
+    .lock-kicker {
+      font-size: 0.84rem;
+      color: var(--muted-strong);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
     }
 
-    .overlay-box p {
+    .lock-title {
+      font: 700 clamp(1.35rem, 3vw, 2rem) 'Space Grotesk', sans-serif;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+    }
+
+    .lock-copy {
       margin: 0;
       color: var(--muted-strong);
+      max-width: 34ch;
     }
 
     .empty {
       padding: 24px;
       text-align: center;
       color: var(--muted);
-    }
-
-    .notice {
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 14px 16px;
-      border-radius: 18px;
-      border: 1px solid rgba(45,212,168,0.25);
-      background: rgba(45,212,168,0.12);
-      color: #adf5de;
-      flex-wrap: wrap;
-    }
-
-    .notice.show { display: flex; }
-    .notice.error {
-      border-color: rgba(255,107,125,0.28);
-      background: rgba(255,107,125,0.14);
-      color: #ffc2ca;
     }
 
     .btn {
@@ -908,65 +765,36 @@
       font-size: 0.9rem;
     }
 
-    .sr-only {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      padding: 0;
-      margin: -1px;
-      overflow: hidden;
-      clip: rect(0,0,0,0);
-      white-space: nowrap;
-      border: 0;
-    }
-
     @media (max-width: 1200px) {
       .shell { grid-template-columns: 1fr; }
       .sidebar { position: static; }
-      .hero-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 820px) {
       .app { width: min(100% - 18px, 1480px); }
       .panel-head,
+      .hero-top,
       .hero-actions,
-      .hero-foot,
+      .hero-summary,
       .notice,
       .modal-head,
       .modal-foot { align-items: flex-start; }
-      .panel-title h2,
-      .feature-card h3,
-      .row-meta strong,
-      .nav-main span:last-child,
-      .brand-sub,
-      .upgrade-card strong,
-      .eyebrow,
-      .metric-label span:first-child,
-      .metric strong {
-        white-space: normal;
-      }
-      .row-card {
-        flex-wrap: wrap;
-        align-items: flex-start;
-      }
-      .row-actions {
-        width: 100%;
-        justify-content: flex-start;
-      }
+      .row-card,
+      .metric-row { flex-wrap: wrap; align-items: flex-start; }
+      .row-actions { width: 100%; justify-content: flex-start; }
       .hero-actions .btn,
-      .hero-foot .badge,
       .panel-head .btn,
-      .panel-head .status-pill {
-        width: 100%;
-      }
+      .panel-head .status-pill,
+      .hero-summary .badge { width: 100%; }
+      .brand-sub,
+      .nav-main span:last-child,
+      .lock-title,
+      .metric-value,
+      .summary-value,
+      .hero h1 { white-space: normal; }
     }
 
     @media (max-width: 640px) {
-      .grid-2,
-      .grid-3,
-      .grid-4,
-      .feature-grid { grid-template-columns: 1fr; }
-      .metric { min-height: auto; }
       .panel,
       .hero,
       .sidebar { padding: 18px; }
@@ -1003,13 +831,14 @@
         <section class="nav-section">
           <span class="nav-label">מה תרצו לראות</span>
           <a class="nav-link" href="#overview"><span class="nav-main"><span class="nav-icon">◈</span><span>סקירה</span></span><span class="nav-chevron">←</span></a>
-          <a class="nav-link" href="#orders"><span class="nav-main"><span class="nav-icon">₪</span><span>הזמנות</span></span><span class="nav-chevron">←</span></a>
-          <a class="nav-link" href="#products"><span class="nav-main"><span class="nav-icon">□</span><span>מוצרים</span></span><span class="nav-chevron">←</span></a>
-          <a class="nav-link" href="#keys"><span class="nav-main"><span class="nav-icon">⌘</span><span>מפתחות חיבור</span></span><span class="nav-chevron">←</span></a>
+          <a class="nav-link" href="#quickActionsSection"><span class="nav-main"><span class="nav-icon">⚡</span><span>פעולות מהירות</span></span><span class="nav-chevron">←</span></a>
+          <a class="nav-link" href="#ordersSection"><span class="nav-main"><span class="nav-icon">₪</span><span>הזמנות</span></span><span class="nav-chevron">←</span></a>
+          <a class="nav-link" href="#productsSection"><span class="nav-main"><span class="nav-icon">□</span><span>מוצרים</span></span><span class="nav-chevron">←</span></a>
+          <a class="nav-link" href="#keysSection"><span class="nav-main"><span class="nav-icon">⌘</span><span>מפתחות חיבור</span></span><span class="nav-chevron">←</span></a>
         </section>
 
         <section class="nav-section">
-          <span class="nav-label">פעולות מהירות</span>
+          <span class="nav-label">קישורים מהירים</span>
           <a class="quick-action" href="/setup-guide.html"><span class="nav-main"><span class="nav-icon">↗</span><span>חיבור לאתר</span></span><span class="nav-chevron">←</span></a>
           <a class="quick-action" href="/settings.html"><span class="nav-main"><span class="nav-icon">⚙</span><span>חשבון והעדפות</span></span><span class="nav-chevron">←</span></a>
           <button class="nav-button" id="logoutBtn" type="button"><span class="nav-main"><span class="nav-icon">⇠</span><span>יציאה מהחשבון</span></span><span class="nav-chevron">←</span></button>
@@ -1017,53 +846,31 @@
 
         <section class="upgrade-card" aria-label="שדרוג">
           <strong>רוצים לפתוח עוד יכולות?</strong>
-          <p>תצוגת מכירות מלאה, חיבור לאתרים, בונה אתר ו‑WhatsApp — במסלול מתקדם אחד.</p>
+          <p>מכירות מלאות, חיבור לאתרים, בונה אתר ו‑WhatsApp — הכל במסלולים המתקדמים.</p>
           <a class="btn primary" href="/upgrade.html">שדרוג מסלול</a>
         </section>
       </aside>
 
       <main class="main">
         <section class="hero" id="overview">
-          <div class="hero-grid">
-            <div>
-              <span class="eyebrow">לוח ניהול פשוט</span>
-              <h1>כל מה שצריך כדי לנהל את העסק במקום אחד.</h1>
-              <p id="heroCopy">טוען נתוני חשבון, מכירות, מוצרים ויכולות זמינות...</p>
-              <div class="hero-actions">
-                <a class="btn secondary" href="/upgrade.html">ניהול מסלול</a>
-                <button class="btn primary" id="builderBtn" type="button" hidden>פתח את בונה האתר</button>
-                <button class="btn secondary" id="newKeyHeroBtn" type="button">צור מפתח חיבור</button>
-              </div>
-              <div class="hero-foot">
-                <span class="badge" id="businessBadge">טוען עסק...</span>
-                <span class="badge" id="featureSummary">טוען גישה...</span>
-              </div>
+          <div class="hero-content">
+            <div class="hero-top">
+              <span class="eyebrow">לוח ניהול ארוך ומסודר</span>
+              <span class="status-pill state-open" id="subscriptionState">פעיל</span>
             </div>
-
-            <div class="hero-spotlight">
-              <article class="spotlight-card">
-                <div class="spotlight-header">
-                  <div>
-                    <span class="muted">מצב החשבון</span>
-                    <div class="spotlight-value" id="securityScore">A+</div>
-                  </div>
-                  <span class="tiny-pill state-open" id="subscriptionState">פעיל</span>
-                </div>
-                <p class="muted">החשבון מוגן, והגישה ליכולות נקבעת לפי המסלול שלך.</p>
-                <div class="progress" aria-hidden="true"><span id="securityProgress"></span></div>
-              </article>
-
-              <article class="spotlight-card">
-                <div class="spotlight-header">
-                  <div>
-                    <span class="muted">מה אפשר לעשות עכשיו</span>
-                    <div class="spotlight-value" id="keyLimitSpotlight">0</div>
-                  </div>
-                  <span class="tiny-pill" id="ordersLockSummary">טוען</span>
-                </div>
-                <p class="muted" id="spotlightCopy">טוען אפשרויות זמינות בחשבון...</p>
-              </article>
+            <h1>כל מה שזמין לך יופיע קודם. כל מה שנעול נשאר ברור בהמשך הדף.</h1>
+            <p id="heroCopy">טוען נתוני חשבון, מכירות, מוצרים ויכולות זמינות...</p>
+            <div class="hero-actions">
+              <a class="btn secondary" href="/upgrade.html">ניהול מסלול</a>
+              <button class="btn primary" id="builderBtn" type="button" hidden>פתח את בונה האתר</button>
+              <button class="btn secondary" id="newKeyHeroBtn" type="button">צור מפתח חיבור</button>
             </div>
+            <div class="hero-summary">
+              <span class="badge" id="businessBadge">טוען עסק...</span>
+              <span class="badge" id="featureSummary">טוען גישה...</span>
+              <span class="badge">בריאות חשבון: <strong id="securityScore">A+</strong></span>
+            </div>
+            <div class="hero-progress" aria-hidden="true"><span id="securityProgress"></span></div>
           </div>
         </section>
 
@@ -1072,103 +879,62 @@
           <button class="btn small secondary" id="dismissNotice" type="button">סגור</button>
         </div>
 
-        <section class="panel">
-          <div class="panel-head">
-            <div class="panel-title">
-              <h2>תמונת מצב</h2>
-              <p>המספרים החשובים של הפעילות העסקית שלך.</p>
-            </div>
-          </div>
-          <div class="grid-4">
-            <article class="metric">
-              <div class="metric-label"><span>הכנסות</span><span class="tiny-pill">נכנס בפועל</span></div>
-              <strong id="revenue">₪0</strong>
-              <small>סך הכסף שהתקבל בפועל.</small>
-            </article>
-            <article class="metric">
-              <div class="metric-label"><span>עסקאות</span><span class="tiny-pill">הושלמו</span></div>
-              <strong id="deals">0</strong>
-              <small>מספר העסקאות שנסגרו בהצלחה.</small>
-            </article>
-            <article class="metric">
-              <div class="metric-label"><span>שיחות</span><span class="tiny-pill">נמדדו</span></div>
-              <strong id="conversations">0</strong>
-              <small>כמות הפניות שנרשמו במערכת.</small>
-            </article>
-            <article class="metric">
-              <div class="metric-label"><span>אחוז המרה</span><span class="tiny-pill">מתוך הפניות</span></div>
-              <strong id="conversionRate">0%</strong>
-              <small id="conversionHint">עוד אין מספיק נתונים להצגת מגמה.</small>
-            </article>
-          </div>
-        </section>
-
-        <section class="grid-3">
-          <article class="panel">
+        <div class="section-stack" id="sectionStack">
+          <article class="panel section-panel" id="quickActionsSection" data-order="10">
             <div class="panel-head">
               <div class="panel-title">
                 <h2>פעולות מהירות</h2>
-                <p>הדברים שעושים הכי הרבה, בלי לחפש.</p>
+                <p>כל הפעולות הזמינות להתחלה מהירה ממקום אחד.</p>
               </div>
             </div>
-            <div class="security-list">
-              <button class="row-card" id="quickCreateKey" type="button"><span class="row-meta"><strong>יצירת מפתח חיבור</strong><small class="muted">לחיבור האתר או מערכת חיצונית</small></span><span class="nav-chevron">+</span></button>
-              <a class="row-card" href="/setup-guide.html"><span class="row-meta"><strong>מדריך התחלה</strong><small class="muted">חיבור לאתר, WordPress וקוד מוכן</small></span><span class="nav-chevron">←</span></a>
-              <a class="row-card" href="/profile.html"><span class="row-meta"><strong>פרטי חשבון</strong><small class="muted">עדכון המשתמש והעסק</small></span><span class="nav-chevron">←</span></a>
+            <div class="section-content list-stack">
+              <button class="row-card" id="quickCreateKey" type="button">
+                <span class="row-meta"><strong>יצירת מפתח חיבור</strong><small>לחיבור האתר או מערכת חיצונית</small></span>
+                <span class="nav-chevron">+</span>
+              </button>
+              <a class="row-card" href="/pay.html">
+                <span class="row-meta"><strong>צור תשלום</strong><small>התחל גבייה חדשה מהחשבון</small></span>
+                <span class="nav-chevron">←</span>
+              </a>
+              <a class="row-card" href="/setup-guide.html">
+                <span class="row-meta"><strong>מדריך התחלה</strong><small>חיבור לאתר, WordPress וקוד מוכן</small></span>
+                <span class="nav-chevron">←</span>
+              </a>
+              <a class="row-card" href="/profile.html">
+                <span class="row-meta"><strong>פרטי חשבון</strong><small>עדכון המשתמש והעסק</small></span>
+                <span class="nav-chevron">←</span>
+              </a>
             </div>
           </article>
 
-          <article class="panel">
+          <article class="panel section-panel" id="metricsSection" data-order="20">
             <div class="panel-head">
               <div class="panel-title">
-                <h2>המסלול שלך</h2>
-                <p>מה פתוח עכשיו ומה מחכה לשדרוג.</p>
-              </div>
-              <span class="status-pill" id="planStatusBadge">FREE</span>
-            </div>
-            <div class="security-list" id="planHighlights"></div>
-          </article>
-
-          <article class="panel">
-            <div class="panel-head">
-              <div class="panel-title">
-                <h2>מצב החשבון</h2>
-                <p>בדיקות גישה, הגנה וחיבור בטוח.</p>
+                <h2>תמונת מצב</h2>
+                <p>המספרים החשובים של הפעילות העסקית שלך, אחד מתחת לשני.</p>
               </div>
             </div>
-            <div class="security-list" id="securityChecklist"></div>
-          </article>
-        </section>
-
-        <section class="grid-2">
-          <article class="panel" id="orders">
-            <div class="panel-head">
-              <div class="panel-title">
-                <h2>הזמנות אחרונות</h2>
-                <p id="ordersHint">טוען הזמנות...</p>
+            <div class="section-content metric-stack">
+              <div class="metric-row">
+                <div class="metric-meta"><strong>הכנסות</strong><small>סך הכסף שהתקבל בפועל</small></div>
+                <div class="metric-value" id="revenue">₪0</div>
               </div>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                <a class="btn secondary" href="/pay.html">צור תשלום</a>
+              <div class="metric-row">
+                <div class="metric-meta"><strong>עסקאות</strong><small>מספר העסקאות שנסגרו בהצלחה</small></div>
+                <div class="metric-value" id="deals">0</div>
               </div>
-            </div>
-            <div class="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>הזמנה</th>
-                    <th>סטטוס</th>
-                    <th>סכום</th>
-                    <th>תאריך</th>
-                  </tr>
-                </thead>
-                <tbody id="ordersBody">
-                  <tr><td colspan="4" class="empty">טוען...</td></tr>
-                </tbody>
-              </table>
+              <div class="metric-row">
+                <div class="metric-meta"><strong>שיחות</strong><small>כמות הפניות שנרשמו במערכת</small></div>
+                <div class="metric-value" id="conversations">0</div>
+              </div>
+              <div class="metric-row">
+                <div class="metric-meta"><strong>אחוז המרה</strong><small id="conversionHint">עוד אין מספיק נתונים להצגת מגמה.</small></div>
+                <div class="metric-value" id="conversionRate">0%</div>
+              </div>
             </div>
           </article>
 
-          <article class="panel" id="products">
+          <article class="panel section-panel" id="productsSection" data-order="30">
             <div class="panel-head">
               <div class="panel-title">
                 <h2>מוצרים ומחירים</h2>
@@ -1176,14 +942,46 @@
               </div>
               <a class="btn secondary" href="/setup-guide.html">איך מתחילים</a>
             </div>
-            <div class="product-list" id="productsBody">
+            <div class="section-content product-list" id="productsBody">
               <div class="empty">טוען...</div>
             </div>
           </article>
-        </section>
 
-        <section class="grid-2">
-          <article class="panel" id="keys">
+          <article class="panel section-panel" id="ordersSection" data-order="140">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h2>הזמנות אחרונות</h2>
+                <p id="ordersHint">טוען הזמנות...</p>
+              </div>
+            </div>
+            <div class="section-content">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>הזמנה</th>
+                      <th>סטטוס</th>
+                      <th>סכום</th>
+                      <th>תאריך</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ordersBody">
+                    <tr><td colspan="4" class="empty">טוען...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel-lock">
+              <div class="panel-lock-box">
+                <span class="lock-kicker">זמין במסלול <span class="lock-plan">PRO</span></span>
+                <strong class="lock-title">שדרג ל‑PRO</strong>
+                <p class="lock-copy">הזמנות מלאות, תשלומים וסטטיסטיקות מכירה זמינים במסלול PRO ומעלה.</p>
+                <a class="btn primary" href="/upgrade.html">שדרג ל‑PRO</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel section-panel" id="keysSection" data-order="150">
             <div class="panel-head">
               <div class="panel-title">
                 <h2>מפתחות חיבור</h2>
@@ -1191,93 +989,129 @@
               </div>
               <button class="btn primary" id="newKeyBtn" type="button">צור מפתח</button>
             </div>
-            <div class="key-list" id="keysBody">
-              <div class="empty">טוען...</div>
-            </div>
-          </article>
-
-          <article class="panel">
-            <div class="panel-head">
-              <div class="panel-title">
-                <h2>יכולות זמינות</h2>
-                <p>מה פתוח כבר עכשיו ומה אפשר להוסיף בהמשך.</p>
+            <div class="section-content key-list">
+              <div class="row-card">
+                <span class="row-meta"><strong>כמות מפתחות זמינה</strong><small>כמות המפתחות שאפשר להחזיק במסלול הנוכחי</small></span>
+                <span class="summary-value" id="keyAllowance">0</span>
+              </div>
+              <div class="key-list" id="keysBody">
+                <div class="empty">טוען...</div>
               </div>
             </div>
-            <div class="feature-grid">
-              <article class="feature-card" id="ordersFeature">
-                <div class="feature-body">
-                  <h3>הזמנות ומכירות</h3>
-                  <p>מעקב אחרי גבייה, עסקאות והכנסות במקום אחד.</p>
-                  <div class="feature-list">
-                    <div class="row-card"><span class="row-meta"><strong>אחוז המרה</strong><small class="muted">איך פניות הופכות לרכישה</small></span><strong id="featureConversion">0%</strong></div>
-                    <div class="row-card"><span class="row-meta"><strong>עסקאות סגורות</strong><small class="muted">כמה רכישות הושלמו</small></span><strong id="featureDeals">0</strong></div>
-                  </div>
-                </div>
-                <div class="overlay" id="ordersLock">
-                  <div class="overlay-box">
-                    <strong>אזור ההזמנות נפתח במסלול PRO</strong>
-                    <p>פתחו תצוגה מלאה של מכירות, סטטיסטיקות ותשלומים ממקום אחד.</p>
-                    <a class="btn primary" href="/upgrade.html">שדרג עכשיו</a>
-                  </div>
-                </div>
-              </article>
-
-              <article class="feature-card" id="domainsFeature">
-                <div class="feature-body">
-                  <h3>חיבור לאתרים</h3>
-                  <p>חיבור האתרים שלכם, שליטה בפריסה וגישה בטוחה לכל יעד.</p>
-                  <div class="feature-list">
-                    <div class="row-card"><span class="row-meta"><strong>מספר אתרים</strong><small class="muted">כמה אתרים אפשר לחבר</small></span><strong id="domainLimit">0</strong></div>
-                    <div class="row-card"><span class="row-meta"><strong>סטטוס חיבור</strong><small class="muted">זמינות לפי המסלול</small></span><strong id="embedState">מנוהל</strong></div>
-                  </div>
-                </div>
-                <div class="overlay" id="domainsLock">
-                  <div class="overlay-box">
-                    <strong>חיבור לאתרים זמין ב‑PRO</strong>
-                    <p>חברו את ConversaPay לאתרים חיצוניים ונהלו גישה בצורה פשוטה ובטוחה.</p>
-                    <a class="btn primary" href="/upgrade.html">שדרג ל‑PRO</a>
-                  </div>
-                </div>
-              </article>
-
-              <article class="feature-card" id="embedFeature">
-                <div class="feature-body">
-                  <h3>קוד חיבור והטמעה</h3>
-                  <p>קוד מוכן, מדריכים ברורים וזרימות פריסה פשוטות לשימוש.</p>
-                  <div class="feature-list">
-                    <div class="row-card"><span class="row-meta"><strong>מדריך הטמעה</strong><small class="muted">זמין בכל מסלול</small></span><strong>מוכן</strong></div>
-                    <div class="row-card"><span class="row-meta"><strong>קוד מוכן</strong><small class="muted">נפתח לפי המסלול שלך</small></span><strong id="embedStatus">טוען</strong></div>
-                  </div>
-                </div>
-                <div class="overlay" id="embedLock">
-                  <div class="overlay-box">
-                    <strong>חיבור מתקדם נפתח ב‑PRO</strong>
-                    <p>פתחו קוד מלא, הורדות WordPress ופריסה מבוקרת לאתר שלכם.</p>
-                    <a class="btn primary" href="/upgrade.html">שדרג ל‑PRO</a>
-                  </div>
-                </div>
-              </article>
-
-              <article class="feature-card" id="whatsappFeature">
-                <div class="feature-body">
-                  <h3>WhatsApp ובונה האתר</h3>
-                  <p>כלי פרימיום לצמיחה, תקשורת עם לקוחות ונוכחות דיגיטלית חזקה יותר.</p>
-                  <div class="feature-list">
-                    <div class="row-card"><span class="row-meta"><strong>WhatsApp</strong><small class="muted">תקשורת עם לקוחות</small></span><strong id="whatsappStatus">נעול</strong></div>
-                    <div class="row-card"><span class="row-meta"><strong>בונה האתר</strong><small class="muted">פתיחת גישה מהירה</small></span><strong id="builderStatus">נעול</strong></div>
-                  </div>
-                </div>
-                <div class="overlay" id="whatsappLock">
-                  <div class="overlay-box">
-                    <strong>כלי PREMIUM בלבד</strong>
-                    <p>WhatsApp Business ובונה האתר זמינים למנויי Premium.</p>
-                    <a class="btn primary" href="/upgrade.html">שדרג ל‑PREMIUM</a>
-                  </div>
-                </div>
-              </article>
+            <div class="panel-lock">
+              <div class="panel-lock-box">
+                <span class="lock-kicker">זמין במסלול <span class="lock-plan">PRO</span></span>
+                <strong class="lock-title">שדרג ל‑PRO</strong>
+                <p class="lock-copy">מפתחות חיבור לניהול האתר והאינטגרציות זמינים ב‑PRO וב‑PREMIUM.</p>
+                <a class="btn primary" href="/upgrade.html">שדרג ל‑PRO</a>
+              </div>
             </div>
           </article>
-        </section>
+
+          <article class="panel section-panel" id="domainsSection" data-order="160">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h2>חיבור לאתרים</h2>
+                <p>חיבור אתרים, שליטה בפריסה וגישה בטוחה לכל יעד.</p>
+              </div>
+            </div>
+            <div class="section-content list-stack">
+              <div class="row-card">
+                <span class="row-meta"><strong>מספר אתרים</strong><small>כמה אתרים אפשר לחבר במסלול הנוכחי</small></span>
+                <span class="summary-value" id="domainLimit">0</span>
+              </div>
+              <div class="row-card">
+                <span class="row-meta"><strong>מצב החיבור</strong><small>סטטוס כללי של חיבור לאתרים</small></span>
+                <span class="tiny-pill" id="embedState">מנוהל</span>
+              </div>
+            </div>
+            <div class="panel-lock">
+              <div class="panel-lock-box">
+                <span class="lock-kicker">זמין במסלול <span class="lock-plan">PRO</span></span>
+                <strong class="lock-title">שדרג ל‑PRO</strong>
+                <p class="lock-copy">חיבור לאתרים חיצוניים וניהול גישה זמין במסלול PRO ומעלה.</p>
+                <a class="btn primary" href="/upgrade.html">שדרג ל‑PRO</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel section-panel" id="embedSection" data-order="170">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h2>קוד חיבור והטמעה</h2>
+                <p>קוד מוכן, מדריכים ברורים ופריסה פשוטה לשימוש.</p>
+              </div>
+              <a class="btn secondary" href="/setup-guide.html">פתח מדריך</a>
+            </div>
+            <div class="section-content list-stack">
+              <div class="row-card">
+                <span class="row-meta"><strong>מדריך הטמעה</strong><small>גישה למסמכי ההטמעה</small></span>
+                <span class="tiny-pill state-open">מוכן</span>
+              </div>
+              <div class="row-card">
+                <span class="row-meta"><strong>קוד מוכן לשימוש</strong><small>נפתח לפי המסלול שלך</small></span>
+                <span class="tiny-pill" id="embedStatus">טוען</span>
+              </div>
+            </div>
+            <div class="panel-lock">
+              <div class="panel-lock-box">
+                <span class="lock-kicker">זמין במסלול <span class="lock-plan">PRO</span></span>
+                <strong class="lock-title">שדרג ל‑PRO</strong>
+                <p class="lock-copy">קוד חיבור מלא, הורדות WordPress והטמעה מתקדמת נפתחים במסלול PRO ומעלה.</p>
+                <a class="btn primary" href="/upgrade.html">שדרג ל‑PRO</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel section-panel" id="premiumSection" data-order="180">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h2>כלי PREMIUM</h2>
+                <p>יכולות פרימיום לצמיחה, תקשורת עם לקוחות ונוכחות דיגיטלית.</p>
+              </div>
+              <button class="btn primary" id="builderPanelBtn" type="button" hidden>פתח את בונה האתר</button>
+            </div>
+            <div class="section-content list-stack">
+              <div class="row-card">
+                <span class="row-meta"><strong>WhatsApp Business</strong><small>גישה לתקשורת עסקית מתקדמת</small></span>
+                <span class="tiny-pill" id="whatsappStatus">נעול</span>
+              </div>
+              <div class="row-card">
+                <span class="row-meta"><strong>בונה האתר</strong><small>פתיחת גישה מאובטחת מתוך החשבון</small></span>
+                <span class="tiny-pill" id="builderStatus">נעול</span>
+              </div>
+            </div>
+            <div class="panel-lock">
+              <div class="panel-lock-box">
+                <span class="lock-kicker">זמין במסלול <span class="lock-plan">PREMIUM</span></span>
+                <strong class="lock-title">שדרג ל‑PREMIUM</strong>
+                <p class="lock-copy">WhatsApp Business ובונה האתר זמינים במסלול PREMIUM בלבד.</p>
+                <a class="btn primary" href="/upgrade.html">שדרג ל‑PREMIUM</a>
+              </div>
+            </div>
+          </article>
+
+          <article class="panel section-panel" id="planSection" data-order="90">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h2>המסלול שלך</h2>
+                <p>מה פתוח עכשיו ומה מחכה לשדרוג.</p>
+              </div>
+              <span class="status-pill" id="planStatusBadge">FREE</span>
+            </div>
+            <div class="section-content list-stack" id="planHighlights"></div>
+          </article>
+
+          <article class="panel section-panel" id="securitySection" data-order="100">
+            <div class="panel-head">
+              <div class="panel-title">
+                <h2>מצב החשבון</h2>
+                <p>בדיקות גישה, הגנה וחיבור בטוח.</p>
+              </div>
+            </div>
+            <div class="section-content list-stack" id="securityChecklist"></div>
+          </article>
+        </div>
       </main>
     </div>
   </div>
@@ -1338,6 +1172,19 @@
       createdKeyValue: '',
       features: null,
       analytics: null
+    };
+
+    const PANEL_ORDER = {
+      quickActionsSection: { available: 10, locked: 10 },
+      metricsSection: { available: 20, locked: 20 },
+      productsSection: { available: 30, locked: 30 },
+      ordersSection: { available: 40, locked: 140 },
+      keysSection: { available: 50, locked: 150 },
+      domainsSection: { available: 60, locked: 160 },
+      embedSection: { available: 70, locked: 170 },
+      premiumSection: { available: 80, locked: 180 },
+      planSection: { available: 90, locked: 90 },
+      securitySection: { available: 100, locked: 100 }
     };
 
     const $ = (id) => document.getElementById(id);
@@ -1420,9 +1267,9 @@
 
     function getStatusClass(status) {
       const key = String(status || '').toLowerCase();
-      if (['paid', 'delivered', 'active'].includes(key)) return 'status-paid';
-      if (['pending', 'processing', 'locked'].includes(key)) return 'status-pending';
-      if (['canceled', 'failed', 'refunded', 'inactive'].includes(key)) return 'status-canceled';
+      if (['paid', 'delivered', 'active'].includes(key)) return 'state-open';
+      if (['pending', 'processing', 'locked'].includes(key)) return 'state-locked';
+      if (['canceled', 'failed', 'refunded', 'inactive'].includes(key)) return 'state-critical';
       return '';
     }
 
@@ -1452,50 +1299,72 @@
       const strong = document.createElement('strong');
       strong.textContent = title;
       const small = document.createElement('small');
-      small.className = 'muted';
       small.textContent = subtitle;
       meta.append(strong, small);
 
       const valueEl = document.createElement('span');
-      valueEl.className = className || '';
+      valueEl.className = className || 'tiny-pill';
       valueEl.textContent = value;
 
       wrapper.append(meta, valueEl);
       return wrapper;
     }
 
-    function setFeatureLock(featureId, overlayId, isOpen) {
-      const feature = $(featureId);
-      const overlay = $(overlayId);
-      feature.classList.toggle('locked', !isOpen);
-      overlay.classList.toggle('visible', !isOpen);
+    function setPanelLock(sectionId, isOpen, planLabel, title, copy) {
+      const section = $(sectionId);
+      const order = PANEL_ORDER[sectionId];
+      section.classList.toggle('locked', !isOpen);
+      section.dataset.order = String(isOpen ? order.available : order.locked);
+
+      const planEl = section.querySelector('.lock-plan');
+      const titleEl = section.querySelector('.lock-title');
+      const copyEl = section.querySelector('.lock-copy');
+      const buttonEl = section.querySelector('.panel-lock .btn');
+
+      if (planEl) planEl.textContent = planLabel;
+      if (titleEl) titleEl.textContent = title;
+      if (copyEl) copyEl.textContent = copy;
+      if (buttonEl) buttonEl.textContent = title;
+    }
+
+    function reorderSections() {
+      const stack = $('sectionStack');
+      const sections = Array.from(stack.children);
+      sections
+        .sort((a, b) => Number(a.dataset.order || 999) - Number(b.dataset.order || 999))
+        .forEach((section) => stack.appendChild(section));
     }
 
     function renderPlanHighlights(features) {
       const container = $('planHighlights');
       container.textContent = '';
       const rows = [
-        ['מצב המסלול', features.subscription_active === false ? 'נדרש חידוש' : `תוכנית ${state.currentPlan.toUpperCase()} פעילה`, features.subscription_active === false ? 'חידוש יחזיר את כל היכולות' : 'היכולות נקבעות לפי המסלול שלך'],
+        ['מצב המסלול', features.subscription_active === false ? 'נדרש חידוש' : `תוכנית ${state.currentPlan.toUpperCase()} פעילה`, features.subscription_active === false ? 'חידוש יחזיר את כל היכולות המלאות' : 'היכולות הזמינות נקבעות לפי המסלול שלך'],
         ['מפתחות חיבור', String(features.api_key_limit ?? 0), 'כמה מפתחות אפשר ליצור כרגע'],
-        ['חיבור לאתרים', String(features.domain_limit ?? 0), 'כמה אתרים אפשר לחבר'],
-        ['בונה האתר', features.site_builder ? 'פתוח' : 'נעול', 'גישה ישירה מתוך החשבון']
+        ['חיבור לאתרים', String(features.domain_limit ?? 0), 'כמה אתרים אפשר לחבר במסלול הנוכחי'],
+        ['בונה האתר', features.site_builder ? 'פתוח' : 'נעול', 'גישה ישירה מתוך החשבון למסלול PREMIUM']
       ];
+
       rows.forEach(([title, value, subtitle]) => {
-        const card = buildRowCard(title, subtitle, value, title === 'בונה האתר' && !features.site_builder ? 'status-pill state-locked' : '');
-        container.appendChild(card);
+        const className = value === 'פתוח' ? 'tiny-pill state-open' : value === 'נעול' ? 'tiny-pill state-locked' : 'tiny-pill';
+        container.appendChild(buildRowCard(title, subtitle, value, className));
       });
     }
 
     function renderSecurityChecklist(features) {
       const container = $('securityChecklist');
       container.textContent = '';
-      const checks = [
+      const rows = [
         ['כניסה לחשבון', 'המערכת בודקת גישה לפני כל פעולה רגישה', 'מוגן'],
         ['מפתחות חיבור', features.api_key_limit > 0 ? 'אפשר ליצור ולנהל מפתחות מתוך החשבון' : 'המפתחות ייפתחו אחרי שדרוג מסלול', features.api_key_limit > 0 ? 'זמין' : 'דורש שדרוג'],
-        ['בונה האתר', features.site_builder ? 'הגישה נפתחת בצורה מאובטחת' : 'זמין במסלול PREMIUM בלבד', features.site_builder ? 'פעיל' : 'מוגבל'],
-        ['חיבור לאתרים', features.domains ? 'אפשר לחבר אתרים ולנהל גישה' : 'החיבור עדיין נעול במסלול הנוכחי', features.domains ? 'פתוח' : 'נעול']
+        ['בונה האתר', features.site_builder ? 'הגישה נפתחת בצורה מאובטחת מתוך השרת' : 'זמין במסלול PREMIUM בלבד', features.site_builder ? 'פעיל' : 'מוגבל'],
+        ['חיבור לאתרים', features.domains ? 'אפשר לחבר אתרים ולנהל גישה לפי המסלול' : 'החיבור עדיין נעול במסלול הנוכחי', features.domains ? 'פתוח' : 'נעול']
       ];
-      checks.forEach(([title, subtitle, value]) => container.appendChild(buildRowCard(title, subtitle, value)));
+
+      rows.forEach(([title, subtitle, value]) => {
+        const className = ['מוגן', 'זמין', 'פעיל', 'פתוח'].includes(value) ? 'tiny-pill state-open' : 'tiny-pill state-locked';
+        container.appendChild(buildRowCard(title, subtitle, value, className));
+      });
     }
 
     function renderOrders(orders) {
@@ -1522,7 +1391,7 @@
 
         const statusCell = document.createElement('td');
         const pill = document.createElement('span');
-        pill.className = `status-pill ${getStatusClass(order.status)}`.trim();
+        pill.className = `tiny-pill ${getStatusClass(order.status)}`.trim();
         pill.textContent = getStatusText(order.status);
         statusCell.appendChild(pill);
 
@@ -1557,7 +1426,6 @@
         const name = document.createElement('strong');
         name.textContent = product.name || 'מוצר ללא שם';
         const details = document.createElement('small');
-        details.className = 'muted';
         const stock = product.stock < 0 ? '∞' : String(product.stock ?? 0);
         details.textContent = `מחיר ${formatCurrency(product.price)} · מלאי ${stock}`;
         meta.append(name, details);
@@ -1600,14 +1468,13 @@
         const title = document.createElement('strong');
         title.textContent = key.name || 'מפתח חיבור';
         const sub = document.createElement('small');
-        sub.className = 'muted';
         sub.textContent = `${key.key_prefix || 'key'}…`;
         meta.append(title, sub);
 
         const actions = document.createElement('div');
         actions.className = 'row-actions';
         const pill = document.createElement('span');
-        pill.className = 'tiny-pill';
+        pill.className = 'tiny-pill state-open';
         pill.textContent = 'פעיל';
         const button = document.createElement('button');
         button.className = 'btn small danger';
@@ -1625,6 +1492,9 @@
       if (!state.currentBusinessId) {
         $('keyHelp').textContent = 'לא נמצא עסק פעיל לטעינת מפתחות.';
         $('newKeyBtn').disabled = true;
+        $('newKeyHeroBtn').disabled = true;
+        $('quickCreateKey').disabled = true;
+        $('keyAllowance').textContent = '0';
         renderKeys([], true);
         return;
       }
@@ -1634,11 +1504,10 @@
       $('newKeyBtn').disabled = isLocked;
       $('newKeyHeroBtn').disabled = isLocked;
       $('quickCreateKey').disabled = isLocked;
-      $('keyLimitSpotlight').textContent = String(data.limit ?? state.features?.api_key_limit ?? 0);
-      $('ordersLockSummary').textContent = isLocked ? 'מוגבל' : 'זמין';
+      $('keyAllowance').textContent = String(data.limit ?? state.features?.api_key_limit ?? 0);
       $('keyHelp').textContent = isLocked
         ? 'מפתחות חיבור זמינים ב‑PRO וב‑PREMIUM.'
-        : `עד ${data.limit} מפתחות חיבור פעילים`;
+        : `עד ${data.limit} מפתחות חיבור פעילים במסלול שלך.`;
       renderKeys(data.keys || [], isLocked);
     }
 
@@ -1684,6 +1553,15 @@
       }
     }
 
+    function updateLockableSections(features) {
+      setPanelLock('ordersSection', !!features.orders, 'PRO', 'שדרג ל‑PRO', 'הזמנות מלאות, תשלומים וסטטיסטיקות מכירה זמינים במסלול PRO ומעלה.');
+      setPanelLock('keysSection', Number(features.api_key_limit || 0) > 0, 'PRO', 'שדרג ל‑PRO', 'מפתחות חיבור לניהול האתר והאינטגרציות זמינים ב‑PRO וב‑PREMIUM.');
+      setPanelLock('domainsSection', !!features.domains, 'PRO', 'שדרג ל‑PRO', 'חיבור לאתרים חיצוניים וניהול גישה זמין במסלול PRO ומעלה.');
+      setPanelLock('embedSection', !!features.html_embed, 'PRO', 'שדרג ל‑PRO', 'קוד חיבור מלא, הורדות WordPress והטמעה מתקדמת נפתחים במסלול PRO ומעלה.');
+      setPanelLock('premiumSection', !!features.whatsapp && !!features.site_builder, 'PREMIUM', 'שדרג ל‑PREMIUM', 'WhatsApp Business ובונה האתר זמינים במסלול PREMIUM בלבד.');
+      reorderSections();
+    }
+
     function renderOverview(me, features, analytics, businesses, orders) {
       state.currentPlan = String(features.plan_type || me.profile?.plan_type || 'free').toLowerCase();
       state.currentBusinessId = businesses[0]?.id || businesses[0]?.business_id || null;
@@ -1698,52 +1576,46 @@
       $('businessBadge').textContent = state.currentBusinessName;
       $('planPill').className = 'plan-pill';
       $('subscriptionState').textContent = features.subscription_active === false ? 'נדרש חידוש' : 'פעיל';
-      $('subscriptionState').className = features.subscription_active === false ? 'tiny-pill state-critical' : 'tiny-pill state-open';
+      $('subscriptionState').className = features.subscription_active === false ? 'status-pill state-critical' : 'status-pill state-open';
       $('securityState').textContent = state.currentPlan === 'premium' ? 'הגנה מורחבת' : 'כניסה מוגנת';
       $('heroCopy').textContent = features.subscription_active === false
-        ? 'המסלול לא פעיל כרגע. חלק מהיכולות חזרו למצב הבסיסי.'
-        : `תוכנית ${state.currentPlan.toUpperCase()} פעילה. כאן רואים מכירות, מוצרים, מפתחות חיבור וכלי צמיחה במקום אחד.`;
+        ? 'המסלול לא פעיל כרגע. חלק מהיכולות חזרו למצב הבסיסי עד לחידוש.'
+        : `תוכנית ${state.currentPlan.toUpperCase()} פעילה. כל אזור זמין יופיע בחלק העליון, ואזורים נעולים יופיעו בהמשך עם הסבר שדרוג ברור.`;
       $('featureSummary').textContent = features.subscription_active === false
         ? 'המסלול לא פעיל'
-        : `${state.currentPlan.toUpperCase()} · פעיל`;
-      $('spotlightCopy').textContent = features.orders
-        ? 'אפשר לראות הזמנות, לנהל מפתחות ולעבוד ממסך אחד.'
-        : 'הזמנות מלאות ומפתחות מתקדמים ייפתחו אחרי שדרוג.';
+        : `${state.currentPlan.toUpperCase()} · זמין עכשיו`;
       $('securityScore').textContent = features.site_builder || features.whatsapp ? 'A+' : features.orders ? 'A' : 'B+';
       $('securityProgress').style.width = features.site_builder ? '96%' : features.orders ? '84%' : '68%';
-      $('builderStatus').textContent = features.site_builder ? 'פתוח' : 'נעול';
-      $('whatsappStatus').textContent = features.whatsapp ? 'פתוח' : 'נעול';
-      $('embedStatus').textContent = features.html_embed ? 'פתוח' : 'נעול';
-      $('embedState').textContent = features.domains ? 'זמין במסלול' : 'דורש שדרוג';
-
-      setAvatar(me.profile?.full_name || me.email || 'א');
       $('revenue').textContent = formatCurrency(analytics.total_revenue);
       $('deals').textContent = String(analytics.closed_deals ?? 0);
       $('conversations').textContent = String(analytics.total_conversations ?? 0);
       $('conversionRate').textContent = `${Number(analytics.conversion_rate || 0).toFixed(1)}%`;
-      $('featureConversion').textContent = `${Number(analytics.conversion_rate || 0).toFixed(1)}%`;
-      $('featureDeals').textContent = String(analytics.closed_deals ?? 0);
       $('domainLimit').textContent = String(features.domain_limit ?? 0);
+      $('embedState').textContent = features.domains ? 'זמין במסלול' : 'דורש שדרוג';
+      $('embedState').className = features.domains ? 'tiny-pill state-open' : 'tiny-pill state-locked';
+      $('embedStatus').textContent = features.html_embed ? 'פתוח' : 'נעול';
+      $('embedStatus').className = features.html_embed ? 'tiny-pill state-open' : 'tiny-pill state-locked';
+      $('whatsappStatus').textContent = features.whatsapp ? 'פתוח' : 'נעול';
+      $('whatsappStatus').className = features.whatsapp ? 'tiny-pill state-open' : 'tiny-pill state-locked';
+      $('builderStatus').textContent = features.site_builder ? 'פתוח' : 'נעול';
+      $('builderStatus').className = features.site_builder ? 'tiny-pill state-open' : 'tiny-pill state-locked';
       $('conversionHint').textContent = Number(analytics.conversion_rate || 0) >= 10
         ? 'יחס ההמרה נראה בריא למסלול הנוכחי.'
-        : 'אפשר לשפר מסרים או תשלום כדי להגדיל המרות.';
-
-      setFeatureLock('ordersFeature', 'ordersLock', !!features.orders);
-      setFeatureLock('domainsFeature', 'domainsLock', !!features.domains);
-      setFeatureLock('embedFeature', 'embedLock', !!features.html_embed);
-      setFeatureLock('whatsappFeature', 'whatsappLock', !!features.whatsapp && !!features.site_builder);
+        : 'אפשר לשפר מסרים או תהליך תשלום כדי להגדיל המרות.';
 
       const ordersList = Array.isArray(orders.orders) ? orders.orders : [];
       $('ordersHint').textContent = orders.locked
-        ? 'מוצגות עד 5 הזמנות אחרונות. לשאר הנתונים אפשר לשדרג.'
+        ? 'מוצגות עד 5 הזמנות אחרונות. לשאר התמונה המלאה אפשר לשדרג.'
         : `מציג ${ordersList.length} הזמנות אחרונות.`;
 
+      setAvatar(me.profile?.full_name || me.email || 'א');
       renderPlanHighlights(features);
       renderSecurityChecklist(features);
+      updateLockableSections(features);
     }
 
-    async function handleBuilderAccess() {
-      const button = $('builderBtn');
+    async function handleBuilderAccess(buttonId) {
+      const button = $(buttonId);
       const originalText = button.textContent;
       button.disabled = true;
       button.textContent = 'פותח...';
@@ -1774,11 +1646,12 @@
         renderProducts(Array.isArray(products.products) ? products.products : []);
         await loadKeys();
 
-        if (features.site_builder) {
-          $('builderBtn').hidden = false;
+        const builderOpen = !!features.site_builder;
+        $('builderBtn').hidden = !builderOpen;
+        $('builderPanelBtn').hidden = !builderOpen;
+        if (builderOpen) {
           $('builderBtn').disabled = false;
-        } else {
-          $('builderBtn').hidden = true;
+          $('builderPanelBtn').disabled = false;
         }
       } catch (error) {
         if (error.message !== 'unauthorized') {
@@ -1790,7 +1663,8 @@
     function bindEvents() {
       $('dismissNotice').addEventListener('click', hideNotice);
       $('logoutBtn').addEventListener('click', logout);
-      $('builderBtn').addEventListener('click', handleBuilderAccess);
+      $('builderBtn').addEventListener('click', () => handleBuilderAccess('builderBtn'));
+      $('builderPanelBtn').addEventListener('click', () => handleBuilderAccess('builderPanelBtn'));
 
       ['newKeyBtn', 'newKeyHeroBtn', 'quickCreateKey'].forEach((id) => {
         $(id).addEventListener('click', () => {
