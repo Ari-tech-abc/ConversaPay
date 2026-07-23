@@ -23,3 +23,8 @@ create table if not exists public.site_builder_tokens (
 create index if not exists site_builder_tokens_hash_idx on public.site_builder_tokens(token_hash);
 alter table public.api_keys enable row level security;
 alter table public.site_builder_tokens enable row level security;
+
+-- The backend uses the Supabase service role client. RLS alone does not replace
+-- table privileges, so grant only the operations the backend needs.
+grant select, insert, update, delete on public.api_keys to service_role;
+grant select, insert, update, delete on public.site_builder_tokens to service_role;
