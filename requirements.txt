@@ -18,7 +18,7 @@ starlette
 google-genai
 google-generativeai
 google-api-core
-google-api-python-client
+google-api-client
 google-auth
 google-auth-httplib2
 googleapis-common-protos
@@ -27,6 +27,7 @@ grpcio-status
 protobuf
 proto-plus
 resend
+stripe
 bcrypt
 cryptography
 python-multipart
