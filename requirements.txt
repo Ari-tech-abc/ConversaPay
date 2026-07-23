@@ -27,7 +27,6 @@ grpcio-status
 protobuf
 proto-plus
 resend
-stripe
 bcrypt
 cryptography
 python-multipart

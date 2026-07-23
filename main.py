@@ -9,12 +9,12 @@ load_dotenv(); logging.basicConfig(level=logging.INFO,format="%(asctime)s - %(na
 from backend.config import settings
 from backend.routers import auth,businesses,products,chat,orders,payments,logs,webhooks,analytics,widget,admin,dashboard,api_keys,site_builder
 from backend.routers.admin_password import router as admin_password_router
-from backend.routers.payme_webhook import router as payme_webhook_router
+from backend.routers.cardcom_webhook import router as cardcom_webhook_router
 from backend.routers.whatsapp import router as whatsapp_webhook_router
 from backend.services.monitoring_service import monitoring_service
 @asynccontextmanager
 async def lifespan(app): monitoring_service.initialize(); yield
-app=FastAPI(title="ConversaPay API",version="2.0.0",lifespan=lifespan,docs_url="/docs",redoc_url="/redoc")
+app=FastAPI(title="ConversaPay API",version="2.1.0",lifespan=lifespan,docs_url="/docs",redoc_url="/redoc")
 class DualCORSMiddleware(BaseHTTPMiddleware):
  async def dispatch(self,request,call_next):
   origin=request.headers.get("origin"); path=request.url.path; public=any(path.startswith(x) for x in (f"{settings.API_PREFIX}/chat",f"{settings.API_PREFIX}/widget",f"{settings.API_PREFIX}/webhooks/",f"{settings.API_PREFIX}/orders/",f"{settings.API_PREFIX}/site-builder/verify"))
@@ -26,11 +26,11 @@ class DualCORSMiddleware(BaseHTTPMiddleware):
   response.headers["Vary"]="Origin"; return response
 app.add_middleware(DualCORSMiddleware)
 @app.get("/health")
-async def health(): return {"status":"healthy","version":"2.0.0","environment":settings.ENVIRONMENT}
+async def health(): return {"status":"healthy","version":"2.1.0","environment":settings.ENVIRONMENT}
 @app.get(f"{settings.API_PREFIX}/config/public")
 async def public_config(): return {"supabase_url":settings.SUPABASE_URL,"supabase_anon_key":settings.SUPABASE_ANON_KEY}
 prefix=settings.API_PREFIX
-for r,p,t in [(auth.router,f"{prefix}/auth","authentication"),(businesses.router,prefix,"businesses"),(products.router,prefix,"products"),(chat.router,prefix,"chat"),(orders.router,prefix,"orders"),(payments.router,prefix,"payments"),(logs.router,prefix,"logs"),(webhooks.router,prefix,"webhooks"),(analytics.router,prefix,"analytics"),(widget.router,prefix,"widget"),(dashboard.router,prefix,"dashboard"),(admin.router,prefix,"admin"),(admin_password_router,prefix,"admin-security"),(api_keys.router,prefix,"api-keys"),(site_builder.router,prefix,"site-builder"),(payme_webhook_router,prefix,"payme-webhook"),(whatsapp_webhook_router,prefix,"whatsapp-webhook")]: app.include_router(r,prefix=p,tags=[t])
+for r,p,t in [(auth.router,f"{prefix}/auth","authentication"),(businesses.router,prefix,"businesses"),(products.router,prefix,"products"),(chat.router,prefix,"chat"),(orders.router,prefix,"orders"),(payments.router,prefix,"payments"),(logs.router,prefix,"logs"),(webhooks.router,prefix,"webhooks"),(analytics.router,prefix,"analytics"),(widget.router,prefix,"widget"),(dashboard.router,prefix,"dashboard"),(admin.router,prefix,"admin"),(admin_password_router,prefix,"admin-security"),(api_keys.router,prefix,"api-keys"),(site_builder.router,prefix,"site-builder"),(cardcom_webhook_router,prefix,"cardcom-webhook"),(whatsapp_webhook_router,prefix,"whatsapp-webhook")]: app.include_router(r,prefix=p,tags=[t])
 if not settings.is_production:
  from backend.routers.dev_simulator import router as dev_simulator_router
  app.include_router(dev_simulator_router,prefix=prefix,tags=["dev-simulator"])
@@ -50,9 +50,6 @@ async def login_page(): return FileResponse(_html("login.html"))
 @app.get("/register")
 @app.get("/register.html")
 async def register_page(): return FileResponse(_html("register.html"))
-@app.get("/demo")
-@app.get("/demo.html")
-async def demo_page(): return FileResponse(_html("demo.html"))
 @app.get("/pay")
 @app.get("/pay.html")
 async def pay_page(): return FileResponse(_html("pay.html"))
