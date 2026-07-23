@@ -33,7 +33,6 @@ async def health(): return {"status":"healthy","version":"2.0.0","environment":s
 @app.get(f"{settings.API_PREFIX}/config/public")
 async def public_config(): return {"supabase_url":settings.SUPABASE_URL,"supabase_anon_key":settings.SUPABASE_ANON_KEY}
 prefix=settings.API_PREFIX
-# Routers already declare their own prefixes. Include them once under /api/v1.
 for r,t in [(auth.router,"authentication"),(businesses.router,"businesses"),(products.router,"products"),(chat.router,"chat"),(orders.router,"orders"),(payments.router,"payments"),(logs.router,"logs"),(webhooks.router,"webhooks"),(analytics.router,"analytics"),(widget.router,"widget"),(dashboard.router,"dashboard"),(admin.router,"admin"),(admin_password_router,"admin-security"),(api_keys.router,"api-keys"),(site_builder.router,"site-builder"),(payme_webhook_router,"payme-webhook"),(whatsapp_webhook_router,"whatsapp-webhook")]: app.include_router(r,prefix=prefix,tags=[t])
 if not settings.is_production:
     from backend.routers.dev_simulator import router as dev_simulator_router
@@ -58,6 +57,9 @@ async def demo_page(): return FileResponse(_html("demo.html"))
 @app.get("/pay")
 @app.get("/pay.html")
 async def pay_page(): return FileResponse(_html("pay.html"))
+@app.get("/upgrade")
+@app.get("/upgrade.html")
+async def upgrade_page(): return FileResponse(_html("upgrade.html"))
 @app.get("/admin")
 @app.get("/admin.html")
 async def admin_page(): return FileResponse(_html("admin-dashboard.html"))
