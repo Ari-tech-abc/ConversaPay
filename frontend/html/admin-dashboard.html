@@ -1279,7 +1279,8 @@
 
         function logout() {
             localStorage.removeItem('admin_token');
-            window.location.href = 'login.html';
+            localStorage.removeItem('admin_email');
+            window.location.href = 'admin-login.html';
         }
 
         function selectAll(tableId, checkbox) {
@@ -1319,16 +1320,47 @@
             }
         }
 
-        function bulkAction(action) {
-            const domainChecked = document.querySelectorAll('#domainTableBody input[type="checkbox"]:checked');
+        // Collect the restriction ids selected in the domain table.
+        function selectedDomainIds() {
+            return Array.from(document.querySelectorAll('#domainTableBody input[type="checkbox"]:checked'))
+                .map(cb => cb.getAttribute('data-id'))
+                .filter(Boolean);
+        }
+
+        // Domain bulk actions now go through the backend so the change is persisted.
+        async function bulkAction(action) {
+            const domainIds = selectedDomainIds();
             const reportChecked = document.querySelectorAll('#reportTableBody input[type="checkbox"]:checked');
-            if (domainChecked.length === 0 && reportChecked.length === 0) return;
-            const count = domainChecked.length + reportChecked.length;
-            announce(action === 'disable' ? 'השבתות ' + domainChecked.length + ' דומיינים' : action === 'delete' ? 'נמחקו ' + count + ' פריטים' : 'סומנו ' + count + ' דוחות');
-            domainChecked.forEach(cb => cb.closest('tr').remove());
-            reportChecked.forEach(cb => cb.closest('tr').remove());
-            document.getElementById('domainBulkActions').classList.remove('open');
-            document.getElementById('reportBulkActions').classList.remove('open');
+
+            if (domainIds.length) {
+                try {
+                    if (action === 'disable') {
+                        await Promise.all(domainIds.map(id => adminFetch(`/domain-restrictions/${id}`, {
+                            method: 'PUT',
+                            body: JSON.stringify({ status: 'blocked' })
+                        })));
+                        announce('הושבתו ' + domainIds.length + ' דומיינים');
+                    } else if (action === 'delete') {
+                        if (!confirm('למחוק ' + domainIds.length + ' דומיינים לצמיתות?')) return;
+                        await Promise.all(domainIds.map(id => adminFetch(`/domain-restrictions/${id}`, {
+                            method: 'DELETE'
+                        })));
+                        announce('נמחקו ' + domainIds.length + ' דומיינים');
+                    }
+                    document.getElementById('domainBulkActions').classList.remove('open');
+                    await loadDomains();
+                } catch (e) {
+                    console.error(e);
+                    announce('הפעולה נכשלה');
+                }
+            }
+
+            // Reports have no destructive backend endpoint yet: keep the visual update only.
+            if (reportChecked.length && (action === 'delete' || action === 'review')) {
+                announce(action === 'delete' ? 'הוסרו ' + reportChecked.length + ' דוחות מהתצוגה' : 'סומנו ' + reportChecked.length + ' דוחות');
+                reportChecked.forEach(cb => cb.closest('tr').remove());
+                document.getElementById('reportBulkActions').classList.remove('open');
+            }
         }
 
         function sortTable(tableId, colIndex, th) {
@@ -1423,8 +1455,6 @@
                 const text = row.getAttribute('data-search') || row.textContent;
                 row.style.display = !query || text.toLowerCase().includes(query) ? '' : 'none';
             });
-            const visible = document.querySelectorAll('#domainTableBody tr:not([style*="display: none"])');
-            document.querySelector('#domainTable + .pagination .pagination-info, #domainTable').closest('.card').querySelector('.pagination-info') || null;
         }
 
         function announce(message) {
@@ -1472,7 +1502,8 @@
             });
             if (res.status === 401 || res.status === 403) {
                 localStorage.removeItem('admin_token');
-                window.location.href = 'login.html';
+                localStorage.removeItem('admin_email');
+                window.location.href = 'admin-login.html';
                 return Promise.reject(new Error('Unauthorized'));
             }
             return res;
@@ -1515,7 +1546,7 @@
                 if (!res.ok) throw new Error('Failed');
                 const data = await res.json();
                 if (!data.length) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">אין דומיינים</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">אין דומיינים</td></tr>';
                     return;
                 }
                 tbody.innerHTML = data.map(row => {
@@ -1523,13 +1554,15 @@
                     const badgeClass = statusMap[row.status] || 'info';
                     const label = { active: 'פעיל', flagged: 'סומן', blocked: 'חסום', limited: 'מוגבל' }[row.status] || row.status;
                     return `<tr data-search="${row.domain} ${row.business_id} ${row.status}">
-                        <td>${row.domain}</td>
-                        <td>${row.business_id}</td>
-                        <td><span class="badge badge-${badgeClass}">${label}</span></td>
-                        <td>${row.max_domains_allowed}</td>
-                        <td>${row.monthly_api_calls_limit?.toLocaleString?.() || row.monthly_api_calls_limit}</td>
-                        <td>
+                        <td class="checkbox-cell"><input type="checkbox" data-id="${row.id}" aria-label="בחר דומיין" onchange="selectOne('domainTable', this)"></td>
+                        <td data-label="דומיין">${row.domain}</td>
+                        <td data-label="עסק">${row.business_id}</td>
+                        <td data-label="סטטוס"><span class="badge badge-${badgeClass}">${label}</span></td>
+                        <td data-label="מקסימום">${row.max_domains_allowed}</td>
+                        <td data-label="קריאות API חודשיות">${row.monthly_api_calls_limit?.toLocaleString?.() || row.monthly_api_calls_limit}</td>
+                        <td data-label="פעולות">
                             <button class="btn btn-danger btn-sm" onclick="toggleDomain('${row.id}', '${row.status}')">${row.status === 'blocked' ? 'הפעל' : 'השבת'}</button>
+                            <button class="btn btn-secondary btn-sm" onclick="deleteDomain('${row.id}')">מחק</button>
                         </td>
                     </tr>`;
                 }).join('');
@@ -1554,6 +1587,19 @@
             }
         }
 
+        async function deleteDomain(id) {
+            if (!confirm('למחוק את הדומיין לצמיתות?')) return;
+            try {
+                const res = await adminFetch(`/domain-restrictions/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    loadDomains();
+                    announce('הדומיין נמחק');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
         async function loadReports() {
             const tbody = document.getElementById('reportTableBody');
             if (!tbody) return;
@@ -1562,20 +1608,21 @@
                 if (!res.ok) throw new Error('Failed');
                 const data = await res.json();
                 if (!data.length) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">אין דוחות</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">אין דוחות</td></tr>';
                     return;
                 }
                 const statusMap = { open: 'danger', in_progress: 'warning', resolved: 'success' };
                 tbody.innerHTML = data.map(row => {
                     const badgeClass = statusMap[row.status] || 'info';
                     return `<tr data-search="${row.report_type} ${row.description} ${row.status}">
-                        <td>#${row.id.slice(0, 8)}</td>
-                        <td>${row.business_id || '-'}</td>
-                        <td>${row.report_type}</td>
-                        <td>${row.description || '-'}</td>
-                        <td><span class="badge badge-${badgeClass}">${row.status}</span></td>
-                        <td>${row.created_at ? new Date(row.created_at).toLocaleDateString('he-IL') : '-'}</td>
-                        <td><button class="btn btn-primary btn-sm" onclick="announce('פתיחת דוח ${row.id}')">בדוק</button></td>
+                        <td class="checkbox-cell"><input type="checkbox" data-id="${row.id}" aria-label="בחר דוח" onchange="selectOne('reportTable', this)"></td>
+                        <td data-label="מספר דוח">#${row.id.slice(0, 8)}</td>
+                        <td data-label="עסק">${row.business_id || '-'}</td>
+                        <td data-label="סוג">${row.report_type}</td>
+                        <td data-label="תיאור">${row.description || '-'}</td>
+                        <td data-label="סטטוס"><span class="badge badge-${badgeClass}">${row.status}</span></td>
+                        <td data-label="תאריך">${row.created_at ? new Date(row.created_at).toLocaleDateString('he-IL') : '-'}</td>
+                        <td data-label="פעולות"><button class="btn btn-primary btn-sm" onclick="announce('פתיחת דוח ${row.id}')">בדוק</button></td>
                     </tr>`;
                 }).join('');
             } catch (e) {
