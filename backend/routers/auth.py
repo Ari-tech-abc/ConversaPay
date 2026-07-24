@@ -70,15 +70,19 @@ def update_profile_row(user_id: str, changes: dict, select_fields: str = "*") ->
     """
     Update a profile row and reliably return the resulting row.
 
-    Some Supabase/PostgREST configurations may return an empty data payload after
-    UPDATE unless a representation is explicitly requested. This helper asks for
-    the updated row and falls back to reloading the profile if needed.
+    The Supabase Python client returns the updated representation from an UPDATE
+    by default, so we read result.data directly. (Chaining .select() onto an
+    update builder is not supported and raises, which previously broke email
+    verification.) If the payload comes back empty for any reason, we fall back
+    to reloading the profile.
+
+    select_fields is accepted for call-site compatibility but is not applied to
+    the update itself.
     """
     try:
         result = supabase.table("profiles")\
             .update(changes)\
             .eq("user_id", user_id)\
-            .select(select_fields)\
             .execute()
 
         if result.data:
