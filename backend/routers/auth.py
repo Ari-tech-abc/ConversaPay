@@ -566,22 +566,20 @@ async def verify_email(token: str = Query(..., description="Email verification t
             </html>
             """)
         
-        # Mark email as verified
-        updated_profile = update_profile_row(
-            profile["user_id"],
-            {
-                "email_verified": True,
-                "email_verification_token": None,
-                "email_verification_expires_at": None
-            },
-            "user_id,email,email_verified"
-        )
-        
-        if not updated_profile or not updated_profile.get("email_verified"):
+        # Mark email as verified via a SECURITY DEFINER RPC. A plain UPDATE here
+        # silently no-ops (PATCH 200, 0 rows changed) when the backend client is
+        # not truly service_role, because RLS has no UPDATE policy for the
+        # unauthenticated verify flow. The RPC runs as its owner and marks the
+        # row regardless of the caller's role.
+        verify_result = supabase.rpc(
+            "mark_email_verified", {"p_user_id": profile["user_id"]}
+        ).execute()
+
+        if not verify_result.data:
             logger.error(f"Failed to mark email as verified for user_id: {profile['user_id']}")
             raise HTTPException(status_code=500, detail="Failed to verify email")
-        
-        logger.info(f"Email verified for user: {updated_profile.get('email') or profile['email']}")
+
+        logger.info(f"Email verified for user: {profile['email']}")
         
         # Return success HTML page
         return HTMLResponse(content="""
@@ -1043,7 +1041,7 @@ async def complete_oauth_session(current_user: AuthUser = Depends(get_current_us
             )
             if profile:
                 # Google already verified this email address for us.
-                update_profile_row(current_user.user_id, {"email_verified": True}, "user_id,email_verified")
+                supabase.rpc("mark_email_verified", {"p_user_id": current_user.user_id}).execute()
                 logger.info(f"Profile created for OAuth user: {current_user.email}")
 
         existing_business = supabase.table("businesses") \
