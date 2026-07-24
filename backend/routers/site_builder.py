@@ -8,7 +8,7 @@ from datetime import datetime, timedelta, timezone
 from html import escape
 from typing import Any, Dict, List, Optional
 
-import google.generativeai as genai
+from google import genai
 from fastapi import APIRouter, Depends, Header, HTTPException
 from pydantic import BaseModel, Field
 from supabase import create_client
@@ -19,11 +19,9 @@ from backend.middleware.auth import AuthUser, require_auth
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/site-builder", tags=["site-builder"])
 supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
-model = None
 
-if settings.GEMINI_API_KEY:
-    genai.configure(api_key=settings.GEMINI_API_KEY)
-    model = genai.GenerativeModel("gemini-2.5-flash")
+MODEL_NAME = "gemini-2.5-flash"
+client = genai.Client(api_key=settings.GEMINI_API_KEY) if settings.GEMINI_API_KEY else None
 
 
 class GenerateRequest(BaseModel):
@@ -221,15 +219,16 @@ async def consume_builder_access(token: str):
 async def generate_builder_site(request: GenerateRequest, x_builder_token: Optional[str] = Header(None)):
     if not x_builder_token:
         raise HTTPException(401, "Premium builder token required")
-    if not model:
+    if not client:
         raise HTTPException(503, "AI service not configured")
 
     record = _get_token_record(x_builder_token, allow_used=False)
 
     try:
-        response = model.generate_content(
-            _build_prompt(request),
-            generation_config={"temperature": 0.7, "max_output_tokens": 3000},
+        response = client.models.generate_content(
+            model=MODEL_NAME,
+            contents=_build_prompt(request),
+            config={"temperature": 0.7, "max_output_tokens": 3000},
         )
         data = json.loads(_clean_json(response.text))
         html = _render(data)
