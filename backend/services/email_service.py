@@ -2,6 +2,7 @@
 Email service for sending verification and notification emails using Resend SDK.
 """
 import logging
+from datetime import datetime
 from typing import Optional
 import resend
 
