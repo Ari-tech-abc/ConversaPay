@@ -36,7 +36,8 @@ class Settings(BaseSettings):
     EMAIL_FROM_ADDRESS: str
     EMAIL_FROM_NAME: str = "ConversaPay"
 
-    CORS_ORIGINS: str = "https://conversapay.org,http://localhost:8000"
+    # Local origins must be explicitly opted into through the environment.
+    CORS_ORIGINS: str = "https://conversapay.org"
     FRONTEND_URL: str = "https://conversapay.org"
     BACKEND_URL: str = "https://conversapay.org"
     BASE_URL: str = "https://conversapay.org"
@@ -53,7 +54,7 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins_list(self) -> List[str]:
-        return [origin.strip() for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
+        return [origin.strip().rstrip("/") for origin in self.CORS_ORIGINS.split(",") if origin.strip()]
 
     @property
     def is_production(self) -> bool:
