@@ -1,6 +1,6 @@
 import os, logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from dotenv import load_dotenv
@@ -20,7 +20,13 @@ async def lifespan(app):
     monitoring_service.initialize()
     yield
 
-app = FastAPI(title="ConversaPay API", version="2.1.0", lifespan=lifespan, docs_url="/docs", redoc_url="/redoc")
+app = FastAPI(
+    title="ConversaPay API",
+    version="2.1.0",
+    lifespan=lifespan,
+    docs_url=None if settings.is_production else "/docs",
+    redoc_url=None if settings.is_production else "/redoc",
+)
 
 class DualCORSMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
