@@ -1,0 +1,50 @@
+name: PHP syntax check
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  php-lint:
+    name: PHP syntax validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - name: Lint every PHP file
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t php_files < <(find . -type f -name '*.php' \
+            -not -path './.git/*' \
+            -not -path './vendor/*' \
+            -print)
+
+          if [ "${#php_files[@]}" -eq 0 ]; then
+            echo "No PHP files found."
+            exit 0
+          fi
+
+          failed=0
+          for file in "${php_files[@]}"; do
+            echo "Linting ${file}"
+            if ! php -l "${file}"; then
+              failed=1
+            fi
+          done
+
+          exit "${failed}"
