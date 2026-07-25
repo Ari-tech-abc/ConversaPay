@@ -1,1 +1,93 @@
-(function(){'use strict';const C={API:'',BUSINESS_ID:null,API_KEY:null,ROOT:'conversapay-chat-widget'};let session=null;const valid=v=>typeof v==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);const script=()=>document.currentScript||document.querySelector('script[src*="widget.js"]');const origin=s=>{try{return new URL(s.src,location.href).origin}catch{return location.origin}};const esc=v=>{const d=document.createElement('div');d.textContent=String(v||'');return d.innerHTML};function sid(){const k='cp_session_'+C.BUSINESS_ID;let v=localStorage.getItem(k);if(!v){v='session_'+Date.now()+'_'+Math.random().toString(36).slice(2);localStorage.setItem(k,v)}return v}function add(text,kind){const x=document.getElementById('cpMessages');if(!x)return;const d=document.createElement('div');d.className='cp-message '+kind;d.textContent=String(text||'');x.appendChild(d);x.scrollTop=x.scrollHeight}function inject(cfg){if(document.getElementById(C.ROOT))return;const style=document.createElement('style');style.textContent='#conversapay-chat-widget{position:fixed;left:20px;bottom:20px;z-index:99999;font-family:system-ui;direction:rtl}.cp-toggle{width:58px;height:58px;border:0;border-radius:50%;background:#635bff;color:#fff;font-size:22px;cursor:pointer}.cp-window{display:none;position:absolute;bottom:72px;left:0;width:360px;height:520px;max-width:calc(100vw - 40px);background:#17202d;color:#f5f7fa;border:1px solid #ffffff22;border-radius:18px;overflow:hidden;flex-direction:column}.cp-window.open{display:flex}.cp-head{display:flex;justify-content:space-between;padding:15px;background:#242d3b}.cp-head button{background:none;border:0;color:#fff;font-size:20px}.cp-messages{flex:1;overflow:auto;padding:15px;display:flex;flex-direction:column;gap:9px}.cp-message{max-width:82%;padding:10px 13px;border-radius:14px;white-space:pre-wrap}.cp-message.user{align-self:flex-start;background:#4d3aa4}.cp-message.bot{align-self:flex-end;background:#263c56}.cp-input{display:flex;gap:8px;padding:12px;border-top:1px solid #ffffff18}.cp-input input{min-width:0;flex:1;padding:10px;border-radius:9px;border:1px solid #ffffff22;background:#0f1419;color:#fff}.cp-input button{border:0;border-radius:9px;background:#635bff;color:#fff;padding:10px 14px}';document.head.appendChild(style);const r=document.createElement('div');r.id=C.ROOT;r.innerHTML='<button class="cp-toggle" aria-label="פתח צ׳אט">💬</button><section class="cp-window"><header class="cp-head"><strong>'+esc(cfg.bot_name||'נציג ConversaPay')+'</strong><button type="button" aria-label="סגור">×</button></header><div id="cpMessages" class="cp-messages"></div><div class="cp-input"><input id="cpInput" maxlength="2000" placeholder="הקלד הודעה..."><button id="cpSend">שלח</button></div></section>';document.body.appendChild(r);const w=r.querySelector('.cp-window');r.querySelector('.cp-toggle').onclick=()=>w.classList.toggle('open');r.querySelector('.cp-head button').onclick=()=>w.classList.remove('open');r.querySelector('#cpSend').onclick=send;r.querySelector('#cpInput').onkeydown=e=>{if(e.key==='Enter')send()};add(cfg.greeting_message||'שלום! איך אפשר לעזור?','bot')}async function load(){const headers={'Accept':'application/json'};if(C.API_KEY)headers['X-Widget-Key']=C.API_KEY;const r=await fetch(C.API+'/api/v1/widget/config/'+encodeURIComponent(C.BUSINESS_ID),{headers});if(!r.ok)throw Error('Widget access denied');inject(await r.json())}async function send(){const i=document.getElementById('cpInput'),message=i&&i.value.trim();if(!message)return;add(message,'user');i.value='';try{const r=await fetch(C.API+'/api/v1/chat',{method:'POST',headers:{'Content-Type':'application/json','X-Widget-Key':C.API_KEY||''},body:JSON.stringify({message,business_id:C.BUSINESS_ID,session_id:session,customer_info:{}})});const d=await r.json();if(!r.ok)throw Error();add(d.response||'לא הצלחתי לענות כרגע.','bot')}catch{add('שגיאה בתקשורת עם השרת. נסה שוב.','bot')}}function init(){const s=script();C.API=origin(s||{});C.BUSINESS_ID=(window.ConversaPayWidgetConfig||{}).business_id||(s&&s.getAttribute('data-business-id'));C.API_KEY=(window.ConversaPayWidgetConfig||{}).api_key||(s&&s.getAttribute('data-api-key'));if(!valid(C.BUSINESS_ID))return;session=sid();load().catch(console.warn)}window.ConversaPayWidget={open:()=>document.querySelector('.cp-window')?.classList.add('open'),close:()=>document.querySelector('.cp-window')?.classList.remove('open')};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init):init()})();
+(function () {
+  'use strict';
+
+  const ROOT = 'conversapay-chat-widget';
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const script = () => document.currentScript || document.querySelector('script[src*="widget.js"]');
+  const source = script();
+  const origin = source ? new URL(source.src, window.location.href).origin : window.location.origin;
+  const config = window.ConversaPayWidgetConfig || {};
+  const businessId = config.business_id || source?.dataset.businessId;
+  const apiKey = config.api_key || source?.dataset.apiKey || '';
+  const position = config.position || source?.dataset.position || 'bottom-right';
+  const color = config.color || source?.dataset.color || '#635bff';
+  let sessionId;
+
+  const escapeText = (value) => String(value ?? '');
+  const session = () => {
+    const key = `cp_session_${businessId}`;
+    let value = localStorage.getItem(key);
+    if (!value) {
+      value = `session_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem(key, value);
+    }
+    return value;
+  };
+  const addMessage = (text, kind) => {
+    const messages = document.getElementById('cpMessages');
+    if (!messages) return;
+    const item = document.createElement('div');
+    item.className = `cp-message ${kind}`;
+    item.setAttribute('role', 'listitem');
+    item.textContent = escapeText(text);
+    messages.appendChild(item);
+    messages.scrollTop = messages.scrollHeight;
+  };
+
+  function inject(widget) {
+    if (document.getElementById(ROOT)) return;
+    const style = document.createElement('style');
+    style.textContent = `
+      #${ROOT}{--cp-widget-color:${color};position:fixed;${position === 'bottom-left' ? 'left:18px' : 'right:18px'};bottom:max(18px,env(safe-area-inset-bottom));z-index:99999;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;direction:rtl}
+      #${ROOT} *{box-sizing:border-box} .cp-toggle{width:58px;height:58px;border:0;border-radius:50%;background:var(--cp-widget-color);color:#fff;font-size:22px;cursor:pointer;box-shadow:0 12px 32px color-mix(in srgb,var(--cp-widget-color),transparent 60%);transition:transform .2s ease,filter .2s ease}
+      .cp-toggle:hover{transform:translateY(-2px);filter:brightness(1.08)} .cp-toggle:focus-visible,.cp-input input:focus-visible,.cp-input button:focus-visible,.cp-head button:focus-visible{outline:3px solid #fff;outline-offset:3px}
+      .cp-window{display:none;position:absolute;bottom:72px;${position === 'bottom-left' ? 'left:0' : 'right:0'};width:360px;height:min(520px,calc(100dvh - 110px));max-width:calc(100vw - 28px);background:#17202d;color:#f5f7fa;border:1px solid #ffffff22;border-radius:20px;overflow:hidden;flex-direction:column;box-shadow:0 24px 70px #0008}
+      .cp-window.open{display:flex;animation:cp-in .22s cubic-bezier(.16,1,.3,1)} .cp-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 16px;background:#242d3b}.cp-head button{background:none;border:0;color:#fff;font-size:22px;cursor:pointer;min-width:44px;min-height:44px}
+      .cp-messages{flex:1;overflow:auto;padding:15px;display:flex;flex-direction:column;gap:9px;scroll-behavior:smooth}.cp-message{max-width:82%;padding:10px 13px;border-radius:14px;white-space:pre-wrap;line-height:1.45}.cp-message.user{align-self:flex-start;background:#4d3aa4}.cp-message.bot{align-self:flex-end;background:#263c56}
+      .cp-input{display:flex;gap:8px;padding:12px;border-top:1px solid #ffffff18;background:#121a25}.cp-input input{min-width:0;flex:1;padding:11px 12px;border-radius:10px;border:1px solid #ffffff22;background:#0f1419;color:#fff;font-size:16px}.cp-input button{border:0;border-radius:10px;background:var(--cp-widget-color);color:#fff;padding:10px 14px;cursor:pointer;font-weight:700;min-width:64px}
+      @keyframes cp-in{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}} @media(max-width:480px){#${ROOT}{right:10px;left:10px;bottom:max(10px,env(safe-area-inset-bottom));display:flex;justify-content:flex-end}.cp-window{position:fixed;inset:auto 10px max(78px,calc(env(safe-area-inset-bottom) + 68px));width:auto;max-width:none;height:min(620px,calc(100dvh - 100px))}}
+    `;
+    document.head.appendChild(style);
+    const root = document.createElement('div');
+    root.id = ROOT;
+    root.innerHTML = `<button class="cp-toggle" type="button" aria-label="פתח צ׳אט" aria-expanded="false">💬</button><section class="cp-window" role="dialog" aria-label="צ׳אט עם ConversaPay"><header class="cp-head"><strong></strong><button type="button" aria-label="סגור צ׳אט">×</button></header><div id="cpMessages" class="cp-messages" role="list" aria-live="polite"></div><form class="cp-input"><input id="cpInput" maxlength="2000" autocomplete="off" placeholder="הקלד הודעה..." aria-label="הודעה"><button id="cpSend" type="submit">שלח</button></form></section>`;
+    document.body.appendChild(root);
+    root.querySelector('.cp-head strong').textContent = widget.bot_name || 'נציג ConversaPay';
+    const win = root.querySelector('.cp-window');
+    const toggle = root.querySelector('.cp-toggle');
+    const setOpen = (open) => { win.classList.toggle('open', open); toggle.setAttribute('aria-expanded', String(open)); if (open) root.querySelector('#cpInput').focus(); };
+    toggle.addEventListener('click', () => setOpen(!win.classList.contains('open')));
+    root.querySelector('.cp-head button').addEventListener('click', () => setOpen(false));
+    root.querySelector('.cp-input').addEventListener('submit', (event) => { event.preventDefault(); send(); });
+    addMessage(widget.greeting_message || 'שלום! איך אפשר לעזור?', 'bot');
+  }
+
+  async function send() {
+    const input = document.getElementById('cpInput');
+    const message = input?.value.trim();
+    if (!message) return;
+    addMessage(message, 'user');
+    input.value = '';
+    try {
+      const response = await fetch(`${origin}/api/v1/chat`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Widget-Key': apiKey }, body: JSON.stringify({ message, business_id: businessId, session_id: sessionId, customer_info: {} }) });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error('request failed');
+      addMessage(data.response || 'לא הצלחתי לענות כרגע.', 'bot');
+    } catch (_) { addMessage('שגיאה בתקשורת עם השרת. נסה שוב.', 'bot'); }
+  }
+
+  async function init() {
+    if (!UUID.test(String(businessId || ''))) return;
+    sessionId = session();
+    const headers = { Accept: 'application/json' };
+    if (apiKey) headers['X-Widget-Key'] = apiKey;
+    try {
+      const response = await fetch(`${origin}/api/v1/widget/config/${encodeURIComponent(businessId)}`, { headers });
+      if (!response.ok) throw new Error('Widget access denied');
+      inject(await response.json());
+    } catch (error) { console.warn('[ConversaPay] widget unavailable', error); }
+  }
+
+  window.ConversaPayWidget = { open: () => document.querySelector('.cp-window')?.classList.add('open'), close: () => document.querySelector('.cp-window')?.classList.remove('open') };
+  document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', init) : init();
+}());
