@@ -1,1 +1,730 @@
-<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ConversaPay | תפעול WordPress</title><link rel="stylesheet" href="/frontend/html/conversapay-ui.css"><style>body{background:#f6f8fb;color:#14213d}.cp-topbar{background:#fff;border-color:#dfe5ef}.cp-shell{max-width:1040px}.ops-hero{display:grid;gap:16px;padding:32px;border-radius:28px;background:linear-gradient(135deg,#161c38,#2d3b6c);color:#fff}.ops-hero p{max-width:62ch;color:#d6e1ff}.ops-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.ops-step,.ops-code,.ops-faq{padding:22px;border:1px solid #dfe5ef;border-radius:20px;background:#fff}.ops-step{display:grid;gap:10px}.ops-num{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:#635bff;color:#fff;font-weight:800}.ops-code{background:#101a31;color:#eaf2ff;overflow:auto;direction:ltr;text-align:left}.ops-code code{white-space:pre-wrap}.ops-faq{display:grid;gap:12px}.cp-button,.cp-button-secondary{color:inherit}@media(max-width:760px){.ops-grid{grid-template-columns:1fr}.ops-hero{padding:22px}}</style></head><body class="cp-page"><header class="cp-topbar"><a class="cp-brand" href="home.html"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a><a class="cp-button-secondary" href="dashboard.html">חזרה לדאשבורד</a></header><main class="cp-shell"><section class="ops-hero"><span class="cp-kicker">WORDPRESS OPERATIONS</span><h1>הטמעה בלי לגעת בקוד</h1><p>חברו את ConversaPay לאתר WordPress, בדקו את הווידג'ט, והחליטו בדיוק באילו עמודים הוא מופיע.</p><div><a class="cp-button" href="https://www.conversapay.org/wp-admin/options-general.php?page=conversapay-chat">פתח הגדרות באתר</a></div></section><section class="ops-grid" style="margin-top:20px"><article class="ops-step"><span class="ops-num">1</span><h2>התקנה</h2><p>העלו את תיקיית <strong>wordpress-plugin</strong> כתוסף, הפעילו אותו, ופתחו את ConversaPay Chat תחת Settings.</p></article><article class="ops-step"><span class="ops-num">2</span><h2>חיבור</h2><p>העתיקו Business ID מהדאשבורד. הוסיפו API Key אם האתר משתמש במסלול שמחייב מפתח.</p></article><article class="ops-step"><span class="ops-num">3</span><h2>שליטה</h2><p>בחרו כל האתר, דף הבית, או עמודים ספציפיים. אפשר גם להוסיף shortcode בתוך תוכן.</p></article></section><section style="margin-top:20px"><h2>הטמעה נקודתית עם shortcode</h2><pre class="ops-code"><code>[conversapay_chat]</code></pre></section><section class="ops-faq" style="margin-top:20px"><h2>בדיקת תקינות מהירה</h2><p>אם הווידג'ט לא מופיע: ודאו ש-Business ID הוא UUID, שה-URL מצביע ל-ConversaPay, ושאין cache שמגיש גרסה ישנה של JavaScript.</p><p>במובייל: הווידג'ט נצמד לאזור בטוח בתחתית, החלון מקבל רוחב מלא, וכל שדה נשאר בגודל touch תקין.</p></section></main></body></html>
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f8fafc">
+  <meta name="description" content="מדריך ההטמעה המלא של ConversaPay: תוסף WordPress, קוד HTML מותאם, פתרון תקלות וצ׳קליסט לפרודקשן.">
+  <title>ConversaPay | מדריך הטמעה - WordPress ו-HTML</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+  <style>
+    .ig-shell { display: grid; gap: 1.5rem; }
+
+    /* Hero */
+    .ig-hero { display: grid; gap: 1rem; }
+    .ig-hero h1 { margin: 0; font-size: clamp(1.9rem, 4.5vw, 3rem); letter-spacing: -.045em; }
+    .ig-hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* Personalisation bar */
+    .ig-fill { display: grid; gap: 1rem; }
+    .ig-fill-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 12px; }
+    .ig-fill-note { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+    /* Tabs */
+    .ig-tablist { display: flex; gap: 8px; flex-wrap: wrap; padding: 6px; border-radius: 999px; background: var(--cp-panel-strong); border: 1px solid var(--cp-line); }
+    .ig-tab { flex: 1 1 180px; min-height: 46px; padding: 10px 16px; border: 1px solid transparent; border-radius: 999px; background: transparent; color: var(--cp-muted); font-weight: 700; font-size: .95rem; cursor: pointer; transition: background .18s ease, color .18s ease, border-color .18s ease; }
+    .ig-tab:hover { color: var(--cp-text); background: rgba(124,58,237,.06); }
+    .ig-tab[aria-selected="true"] { color: #fff; background: linear-gradient(135deg,#7c3aed,#6d28d9); border-color: rgba(124,58,237,.35); box-shadow: 0 6px 18px rgba(124,58,237,.22); }
+    .ig-tab:focus-visible { outline: 3px solid var(--cp-focus); outline-offset: 3px; }
+    .ig-panel[hidden] { display: none; }
+    .ig-panel { display: grid; gap: 1.25rem; }
+
+    /* Steps */
+    .ig-steps { display: grid; gap: 12px; counter-reset: ig-step; }
+    .ig-step { display: grid; grid-template-columns: 38px 1fr; gap: 14px; align-items: start; padding: 16px 18px; border-radius: 1.15rem; background: var(--cp-panel-strong); border: 1px solid var(--cp-line); }
+    .ig-step-num { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: linear-gradient(135deg,#7c3aed,#6d28d9); color: #fff; font-weight: 800; font-size: .95rem; }
+    .ig-step-body { display: grid; gap: 6px; min-width: 0; }
+    .ig-step-body strong { color: var(--cp-text); font-weight: 700; }
+    .ig-step-body p { margin: 0; }
+
+    /* Code blocks */
+    .ig-code-wrap { border-radius: 1.15rem; border: 1px solid #1e293b; background: #0f172a; overflow: hidden; }
+    .ig-code-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; background: #131f38; border-bottom: 1px solid #1e293b; flex-wrap: wrap; }
+    .ig-code-name { display: inline-flex; align-items: center; gap: 8px; color: #cbd5e1; font-size: .8rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; direction: ltr; }
+    .ig-code-name::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #a78bfa; }
+    .ig-copy { min-height: 36px; padding: 6px 14px; border-radius: 9px; border: 1px solid #334155; background: #1e293b; color: #e2e8f0; font: inherit; font-size: .82rem; font-weight: 700; cursor: pointer; transition: background .18s ease, border-color .18s ease; }
+    .ig-copy:hover { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+    .ig-copy:focus-visible { outline: 3px solid var(--cp-focus); outline-offset: 2px; }
+    .ig-copy.done { background: #065f46; border-color: #047857; color: #d1fae5; }
+    .ig-code { margin: 0; padding: 16px 18px; overflow-x: auto; direction: ltr; text-align: left; unicode-bidi: isolate; color: #e2e8f0; font: 500 .875rem/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; tab-size: 2; }
+    .ig-code code { font: inherit; }
+    .tok-tag { color: #f472b6; }
+    .tok-attr { color: #7dd3fc; }
+    .tok-str { color: #86efac; }
+    .tok-com { color: #64748b; font-style: italic; }
+    .tok-kw { color: #c4b5fd; }
+    .tok-fn { color: #fcd34d; }
+    .tok-num { color: #fdba74; }
+    .tok-ph { color: #fde68a; background: rgba(253,230,138,.12); border-radius: 4px; padding: 0 3px; }
+
+    /* Inline code + tables */
+    .ig-inline { direction: ltr; display: inline-block; padding: 1px 7px; border-radius: 6px; background: var(--cp-panel-strong); border: 1px solid var(--cp-line); font: 600 .88em ui-monospace, SFMono-Regular, Menlo, monospace; color: #6d28d9; }
+    .ig-block { display: block; direction: ltr; text-align: left; padding: 12px 14px; border-radius: .9rem; background: var(--cp-panel-strong); border: 1px solid var(--cp-line); font: 600 .88rem/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; color: var(--cp-text); }
+
+    /* Troubleshooting */
+    .ig-faq { display: grid; gap: 10px; }
+    .ig-faq details { border-radius: 1.05rem; border: 1px solid var(--cp-line); background: var(--cp-panel-strong); overflow: hidden; }
+    .ig-faq details[open] { border-color: rgba(124,58,237,.35); background: var(--cp-panel); box-shadow: var(--cp-shadow); }
+    .ig-faq summary { list-style: none; cursor: pointer; padding: 15px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: 700; color: var(--cp-text); }
+    .ig-faq summary::-webkit-details-marker { display: none; }
+    .ig-faq summary::after { content: "+"; color: var(--cp-accent); font-weight: 800; font-size: 1.2rem; line-height: 1; flex-shrink: 0; }
+    .ig-faq details[open] summary::after { content: "−"; }
+    .ig-faq summary:focus-visible { outline: 3px solid var(--cp-focus); outline-offset: -3px; }
+    .ig-faq-body { display: grid; gap: 12px; padding: 0 18px 18px; }
+
+    .ig-check { display: grid; gap: 10px; }
+    .ig-check label { display: flex; align-items: flex-start; gap: 12px; padding: 13px 16px; border-radius: 1rem; background: var(--cp-panel-strong); border: 1px solid var(--cp-line); cursor: pointer; }
+    .ig-check input { width: 18px; height: 18px; margin-top: 3px; accent-color: #7c3aed; flex-shrink: 0; }
+    .ig-check span { display: grid; gap: 3px; min-width: 0; }
+    .ig-check strong { color: var(--cp-text); font-weight: 700; }
+    .ig-check small { color: var(--cp-muted); }
+
+    .ig-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 1rem; }
+
+    @media (max-width: 760px) {
+      .ig-tablist { border-radius: 1.1rem; }
+      .ig-tab { flex: 1 1 100%; border-radius: .85rem; }
+      .ig-step { grid-template-columns: 32px 1fr; gap: 12px; padding: 14px; }
+      .ig-step-num { width: 32px; height: 32px; font-size: .85rem; }
+      .ig-code { font-size: .8rem; padding: 14px; }
+      .ig-code-head { padding: 9px 12px; }
+      .ig-copy { width: 100%; }
+    }
+  </style>
+</head>
+<body class="cp-page">
+  <header class="cp-topbar">
+    <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
+    <nav class="cp-nav-toolbar" aria-label="ניווט מדריכים">
+      <a class="cp-button-secondary" href="/setup-guide">מדריך התחלה</a>
+      <a class="cp-button-secondary" href="/widget-demo">עמוד בדיקה</a>
+      <a class="cp-button" href="/dashboard">חזרה לדאשבורד</a>
+    </nav>
+  </header>
+
+  <main class="cp-shell ig-shell">
+
+    <section class="cp-panel ig-hero hero-dark-panel">
+      <span class="cp-kicker">INTEGRATION GUIDE</span>
+      <h1>הטמעת ConversaPay באתר שלכם</h1>
+      <p class="cp-subtitle">שלושה מסלולים, אותו תוצאה: וידג׳ט מכירה חי באתר. בחרו תוסף WordPress, קוד HTML מותאם, או קפצו ישר לפתרון תקלות וצ׳קליסט לפרודקשן.</p>
+      <div class="ig-hero-actions">
+        <a class="cp-button" href="/dashboard">קח Business ID מהדאשבורד</a>
+        <a class="cp-button-secondary" href="/widget-demo">בדוק את הווידג׳ט</a>
+      </div>
+    </section>
+
+    <section class="cp-panel ig-fill">
+      <div>
+        <span class="cp-kicker">התאמה אישית</span>
+        <h2 style="margin:.4rem 0 0;">מלאו פעם אחת, כל הקוד בעמוד יתעדכן</h2>
+        <p class="cp-muted">הערכים נשארים בדפדפן שלכם בלבד ולא נשלחים לשום מקום.</p>
+      </div>
+      <div class="ig-fill-grid">
+        <div class="cp-field">
+          <label class="cp-label" for="fillDomain">כתובת ConversaPay</label>
+          <input class="cp-input" id="fillDomain" type="text" dir="ltr" placeholder="https://www.conversapay.org" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="cp-field">
+          <label class="cp-label" for="fillBusiness">Business ID (UUID)</label>
+          <input class="cp-input" id="fillBusiness" type="text" dir="ltr" placeholder="00000000-0000-0000-0000-000000000000" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="cp-field">
+          <label class="cp-label" for="fillKey">Widget API Key</label>
+          <input class="cp-input" id="fillKey" type="text" dir="ltr" placeholder="cp_live_..." autocomplete="off" spellcheck="false">
+        </div>
+      </div>
+      <div class="ig-fill-note">
+        <span class="cp-badge" id="fillState">משתמש בערכי ברירת מחדל</span>
+        <button class="cp-button-secondary" id="fillReset" type="button" style="max-width:180px;">נקה ערכים</button>
+      </div>
+      <div class="cp-notice warning">ה-Widget API Key נחשף לכל מבקר באתר, וזה בסדר: זהו מפתח ציבורי המוגבל לדומיינים שלכם. אין להטמיע בקוד מפתחות שרת, סודות Stripe או Access Token של WhatsApp.</div>
+    </section>
+
+    <div class="ig-tablist" role="tablist" aria-label="שיטות הטמעה">
+      <button class="ig-tab" id="tab-wordpress" role="tab" type="button" aria-controls="panel-wordpress" aria-selected="true">תוסף WordPress</button>
+      <button class="ig-tab" id="tab-html" role="tab" type="button" aria-controls="panel-html" aria-selected="false" tabindex="-1">HTML מותאם אישית</button>
+      <button class="ig-tab" id="tab-troubleshooting" role="tab" type="button" aria-controls="panel-troubleshooting" aria-selected="false" tabindex="-1">תקלות וצ׳קליסט</button>
+    </div>
+
+    <!-- =============== WORDPRESS =============== -->
+    <section class="ig-panel" id="panel-wordpress" role="tabpanel" aria-labelledby="tab-wordpress" tabindex="0">
+
+      <article class="cp-panel cp-stack">
+        <div>
+          <span class="cp-kicker">מסלול מומלץ</span>
+          <h2 style="margin:.4rem 0 0;">התקנת התוסף ConversaPay AI Chat Assistant</h2>
+          <p class="cp-muted">חמש דקות, בלי לגעת בקובץ קוד אחד באתר.</p>
+        </div>
+
+        <div class="ig-steps">
+          <div class="ig-step">
+            <span class="ig-step-num">1</span>
+            <div class="ig-step-body">
+              <strong>ארזו את התוסף</strong>
+              <p class="cp-muted">קחו את התיקייה <span class="ig-inline">wordpress-plugin</span> מהריפו של ConversaPay וארזו אותה לקובץ ZIP בשם <span class="ig-inline">conversapay-chat.zip</span>.</p>
+            </div>
+          </div>
+          <div class="ig-step">
+            <span class="ig-step-num">2</span>
+            <div class="ig-step-body">
+              <strong>העלו והפעילו ב-WordPress</strong>
+              <p class="cp-muted">בממשק הניהול: <span class="ig-inline">Plugins → Add New → Upload Plugin</span>, העלו את ה-ZIP ולחצו <span class="ig-inline">Activate</span>.</p>
+            </div>
+          </div>
+          <div class="ig-step">
+            <span class="ig-step-num">3</span>
+            <div class="ig-step-body">
+              <strong>פתחו את מסך ההגדרות</strong>
+              <p class="cp-muted">התוסף מוסיף עמוד תחת <span class="ig-inline">Settings → ConversaPay Chat</span>, בכתובת <span class="ig-inline">/wp-admin/options-general.php?page=conversapay-chat</span>.</p>
+            </div>
+          </div>
+          <div class="ig-step">
+            <span class="ig-step-num">4</span>
+            <div class="ig-step-body">
+              <strong>מלאו את שלושת השדות החיוניים</strong>
+              <p class="cp-muted">Business ID, כתובת ConversaPay ו-Widget API Key. אחר כך בחרו מיקום, צבע והיכן להציג את הווידג׳ט.</p>
+            </div>
+          </div>
+          <div class="ig-step">
+            <span class="ig-step-num">5</span>
+            <div class="ig-step-body">
+              <strong>שמרו והפעילו</strong>
+              <p class="cp-muted">לחצו <span class="ig-inline">שמור והפעיל</span>. הכרטיס בצד ימין יעבור למצב "מוכן לטעינה באתר" ברגע שיש Business ID תקין.</p>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="cp-panel cp-stack">
+        <h2 style="margin:0;">מפת שדות ההגדרות</h2>
+        <p class="cp-muted">בדיוק מה כל שדה עושה, ומה קורה אם משאירים אותו ריק.</p>
+        <div class="cp-table-wrap">
+          <table class="cp-table">
+            <thead>
+              <tr><th>שדה</th><th>ערך</th><th>מה קורה בלעדיו</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><strong>Business ID</strong></td><td>UUID מלא מהדאשבורד</td><td>הווידג׳ט לא נטען בכלל, בלי שגיאה בקונסול</td></tr>
+              <tr><td><strong>ConversaPay URL</strong></td><td>ברירת מחדל <span class="ig-inline">https://www.conversapay.org</span></td><td>סקריפט הווידג׳ט נטען מכתובת שגויה ומחזיר 404</td></tr>
+              <tr><td><strong>Widget API Key</strong></td><td>מפתח פעיל מהדאשבורד</td><td>הטמעה חיצונית מוחזרת עם 401</td></tr>
+              <tr><td><strong>מיקום</strong></td><td><span class="ig-inline">bottom-right</span> או <span class="ig-inline">bottom-left</span></td><td>ברירת מחדל: ימין למטה</td></tr>
+              <tr><td><strong>צבע</strong></td><td>HEX, למשל <span class="ig-inline">#635bff</span></td><td>ברירת מחדל: סגול ConversaPay</td></tr>
+              <tr><td><strong>הצגה באתר</strong></td><td>כל העמודים / דף הבית / עמודים נבחרים</td><td>ברירת מחדל: כל העמודים</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="cp-panel cp-stack">
+        <h2 style="margin:0;">הטמעה נקודתית עם Shortcode</h2>
+        <p class="cp-muted">רוצים את הווידג׳ט רק בתוך עמוד או פוסט מסוים? הוסיפו את ה-shortcode בעורך. הוא עוקף את כללי "הצגה באתר".</p>
+
+        <div class="ig-code-wrap">
+          <div class="ig-code-head">
+            <span class="ig-code-name">Shortcode</span>
+            <button class="ig-copy" type="button" data-copy="code-shortcode">העתק קוד</button>
+          </div>
+          <pre class="ig-code" id="code-shortcode"><code>[conversapay_chat]</code></pre>
+        </div>
+
+        <div class="ig-code-wrap">
+          <div class="ig-code-head">
+            <span class="ig-code-name">PHP · תבנית או בלוק Gutenberg</span>
+            <button class="ig-copy" type="button" data-copy="code-do-shortcode">העתק קוד</button>
+          </div>
+          <pre class="ig-code" id="code-do-shortcode"><code><span class="tok-tag">&lt;?php</span> <span class="tok-kw">echo</span> <span class="tok-fn">do_shortcode</span>( <span class="tok-str">'[conversapay_chat]'</span> ); <span class="tok-tag">?&gt;</span></code></pre>
+        </div>
+      </article>
+
+      <article class="cp-panel cp-stack">
+        <h2 style="margin:0;">בלי תוסף: קטע קוד ל-functions.php</h2>
+        <p class="cp-muted">אם אתם מעדיפים לא להתקין תוסף, הוסיפו את הקוד הבא ל-<span class="ig-inline">functions.php</span> של תבנית הבת (child theme). הוא מזריק את אותו סקריפט בדיוק ל-footer.</p>
+
+        <div class="ig-code-wrap">
+          <div class="ig-code-head">
+            <span class="ig-code-name">PHP · child-theme/functions.php</span>
+            <button class="ig-copy" type="button" data-copy="code-functions">העתק קוד</button>
+          </div>
+          <pre class="ig-code" id="code-functions"><code><span class="tok-com">/**
+ * ConversaPay chat widget.
+ * Paste at the end of your child theme functions.php file.
+ */</span>
+<span class="tok-fn">add_action</span>( <span class="tok-str">'wp_footer'</span>, <span class="tok-kw">function</span> () {
+    <span class="tok-kw">if</span> ( <span class="tok-fn">is_admin</span>() ) {
+        <span class="tok-kw">return</span>;
+    }
+
+    <span class="tok-attr">$conversapay_url</span> = <span class="tok-str">'<span class="tok-ph" data-ph="domain">https://www.conversapay.org</span>'</span>;
+    <span class="tok-attr">$business_id</span>     = <span class="tok-str">'<span class="tok-ph" data-ph="business">YOUR_BUSINESS_UUID</span>'</span>;
+    <span class="tok-attr">$widget_api_key</span>  = <span class="tok-str">'<span class="tok-ph" data-ph="key">YOUR_WIDGET_API_KEY</span>'</span>;
+
+    <span class="tok-fn">printf</span>(
+        <span class="tok-str">'&lt;script src="%s/frontend/js/widget.js" data-business-id="%s" data-api-key="%s" data-position="bottom-right" data-color="#635bff" defer&gt;&lt;/script&gt;'</span>,
+        <span class="tok-fn">esc_url</span>( <span class="tok-fn">untrailingslashit</span>( <span class="tok-attr">$conversapay_url</span> ) ),
+        <span class="tok-fn">esc_attr</span>( <span class="tok-attr">$business_id</span> ),
+        <span class="tok-fn">esc_attr</span>( <span class="tok-attr">$widget_api_key</span> )
+    );
+}, <span class="tok-num">99</span> );</code></pre>
+        </div>
+
+        <div class="cp-notice warning">אל תערכו את <span class="ig-inline">functions.php</span> של תבנית האם. עדכון תבנית ימחק את השינוי והווידג׳ט ייעלם מהאתר.</div>
+      </article>
+
+      <article class="cp-panel cp-stack">
+        <h2 style="margin:0;">בונה עמודים (Elementor, Divi, WPBakery)</h2>
+        <p class="cp-muted">כל הבונים תומכים בווידג׳ט HTML גולמי. גררו רכיב <span class="ig-inline">HTML</span> לתחתית העמוד והדביקו את סקריפט ההטמעה מלשונית <strong>HTML מותאם אישית</strong>. אין צורך להוסיף את הרכיב יותר מפעם אחת בעמוד.</p>
+      </article>
+    </section>
+
+    <!-- =============== CUSTOM HTML =============== -->
+    <section class="ig-panel" id="panel-html" role="tabpanel" aria-labelledby="tab-html" tabindex="0" hidden>
+
+      <article class="cp-panel cp-stack">
+        <div>
+          <span class="cp-kicker">שורה אחת</span>
+          <h2 style="margin:.4rem 0 0;">סקריפט ההטמעה הבסיסי</h2>
+          <p class="cp-muted">הדביקו ממש לפני תג הסגירה <span class="ig-inline">&lt;/body&gt;</span> בכל עמוד שבו הווידג׳ט אמור להופיע. זהו.</p>
+        </div>
+
+        <div class="ig-code-wrap">
+          <div class="ig-code-head">
+            <span class="ig-code-name">HTML · לפני &lt;/body&gt;</span>
+            <button class="ig-copy" type="button" data-copy="code-embed">העתק קוד</button>
+          </div>
+          <pre class="ig-code" id="code-embed"><code><span class="tok-tag">&lt;script</span> <span class="tok-attr">src</span>=<span class="tok-str">"<span class="tok-ph" data-ph="domain">https://www.conversapay.org</span>/frontend/js/widget.js"</span>
+        <span class="tok-attr">data-business-id</span>=<span class="tok-str">"<span class="tok-ph" data-ph="business">YOUR_BUSINESS_UUID</span>"</span>
+        <span class="tok-attr">data-api-key</span>=<span class="tok-str">"<span class="tok-ph" data-ph="key">YOUR_WIDGET_API_KEY</span>"</span>
+        <span class="tok-attr">defer</span><span class="tok-tag">&gt;&lt;/script&gt;</span></code></pre>
+        </div>
+      </article>
+
+      <article class="cp-panel cp-stack">
+        <h2 style="margin:0;">גרסה מלאה עם עיצוב</h2>
+        <p class="cp-muted">אותו סקריפט, עם שליטה על מיקום וצבע הכפתור.</p>
+
+        <div class="ig-code-wrap">
+          <div class="ig-code-head">
+            <span class="ig-code-name">HTML · עם אפשרויות עיצוב</span>
+            <button class="ig-copy" type="button" data-copy="code-embed-full">העתק קוד</button>
+          </div>
+          <pre class="ig-code" id="code-embed-full"><code><span class="tok-com">&lt;!-- ConversaPay chat widget --&gt;</span>
+<span class="tok-tag">&lt;script</span> <span class="tok-attr">src</span>=<span class="tok-str">"<span class="tok-ph" data-ph="domain">https://www.conversapay.org</span>/frontend/js/widget.js"</span>
+        <span class="tok-attr">data-business-id</span>=<span class="tok-str">"<span class="tok-ph" data-ph="business">YOUR_BUSINESS_UUID</span>"</span>
+        <span class="tok-attr">data-api-key</span>=<span class="tok-str">"<span class="tok-ph" data-ph="key">YOUR_WIDGET_API_KEY</span>"</span>
+        <span class="tok-attr">data-position</span>=<span class="tok-str">"bottom-right"</span>
+        <span class="tok-attr">data-color</span>=<span class="tok-str">"#635bff"</span>
+        <span class="tok-attr">defer</span><span class="tok-tag">&gt;&lt;/script&gt;</span></code></pre>
+        </div>
+
+        <div class="cp-table-wrap">
+          <table class="cp-table">
+            <thead><tr><th>מאפיין</th><th>ערכים</th><th>חובה</th></tr></thead>
+            <tbody>
+              <tr><td><span class="ig-inline">data-business-id</span></td><td>UUID בפורמט מלא</td><td><span class="cp-badge bad">חובה</span></td></tr>
+              <tr><td><span class="ig-inline">data-api-key</span></td><td>מפתח widget פעיל</td><td><span class="cp-badge warn">חובה בהטמעה חיצונית</span></td></tr>
+              <tr><td><span class="ig-inline">data-position</span></td><td><span class="ig-inline">bottom-right</span> · <span class="ig-inline">bottom-left</span></td><td><span class="cp-badge">רשות</span></td></tr>
+              <tr><td><span class="ig-inline">data-color</span></td><td>צבע HEX לכפתור</td><td><span class="cp-badge">רשות</span></td></tr>
+              <tr><td><span class="ig-inline">defer</span></td><td>—</td><td><span class="cp-badge good">מומלץ מאוד</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="cp-panel cp-stack">
+        <h2 style="margin:0;">הגדרה דרך JavaScript</h2>
+        <p class="cp-muted">כשהערכים מגיעים דינמית מהשרת או ממערכת תבניות, הגדירו אובייקט קונפיגורציה. חשוב: הוא חייב להופיע <strong>לפני</strong> תג הסקריפט של הווידג׳ט.</p>
+
+        <div class="ig-code-wrap">
+          <div class="ig-code-head">
+            <span class="ig-code-name">JavaScript · ConversaPayWidgetConfig</span>
+            <button class="ig-copy" type="button" data-copy="code-config">העתק קוד</button>
+          </div>
+          <pre class="ig-code" id="code-config"><code><span class="tok-tag">&lt;script&gt;</span>
+  <span class="tok-kw">window</span>.<span class="tok-attr">ConversaPayWidgetConfig</span> = {
+    <span class="tok-attr">business_id</span>: <span class="tok-str">'<span class="tok-ph" data-ph="business">YOUR_BUSINESS_UUID</span>'</span>,
+    <span class="tok-attr">api_key</span>:     <span class="tok-str">'<span class="tok-ph" data-ph="key">YOUR_WIDGET_API_KEY</span>'</span>,
+    <span class="tok-attr">position</span>:    <span class="tok-str">'bottom-right'</span>,
+    <span class="tok-attr">color</span>:       <span class="tok-str">'#635bff'</span>
+  };
+<span class="tok-tag">&lt;/script&gt;</span>
+<span class="tok-tag">&lt;script</span> <span class="tok-attr">src</span>=<span class="tok-str">"<span class="tok-ph" data-ph="domain">https://www.conversapay.org</span>/frontend/js/widget.js"</span> <span class="tok-attr">defer</span><span class="tok-tag">&gt;&lt;/script&gt;</span></code></pre>
+        </div>
+      </article>
+
+      <article class="cp-panel cp-stack">
+        <h2 style="margin:0;">שליטה מהקוד שלכם</h2>
+        <p class="cp-muted">אחרי שהווידג׳ט נטען הוא חושף API קטן על <span class="ig-inline">window</span>. שימושי לכפתור "דברו איתנו" משלכם.</p>
+
+        <div class="ig-code-wrap">
+          <div class="ig-code-head">
+            <span class="ig-code-name">JavaScript · Widget API</span>
+            <button class="ig-copy" type="button" data-copy="code-api">העתק קוד</button>
+          </div>
+          <pre class="ig-code" id="code-api"><code><span class="tok-com">// Open the chat window from any element on the page.</span>
+<span class="tok-kw">document</span>.<span class="tok-fn">getElementById</span>(<span class="tok-str">'talk-to-us'</span>).<span class="tok-fn">addEventListener</span>(<span class="tok-str">'click'</span>, <span class="tok-kw">function</span> () {
+  <span class="tok-kw">window</span>.<span class="tok-attr">ConversaPayWidget</span>?.<span class="tok-fn">open</span>();
+});
+
+<span class="tok-com">// Close it again.</span>
+<span class="tok-kw">window</span>.<span class="tok-attr">ConversaPayWidget</span>?.<span class="tok-fn">close</span>();</code></pre>
+        </div>
+      </article>
+
+      <article class="cp-panel cp-stack">
+        <h2 style="margin:0;">אפליקציות SPA (React, Vue, Next.js)</h2>
+        <p class="cp-muted">הווידג׳ט מזריק את עצמו פעם אחת ומוגן מפני כפילויות. טענו אותו ברמת ה-layout או ה-<span class="ig-inline">index.html</span>, לא בתוך קומפוננטה שנטענת מחדש בכל ניווט.</p>
+
+        <div class="ig-code-wrap">
+          <div class="ig-code-head">
+            <span class="ig-code-name">JavaScript · הזרקה חד-פעמית</span>
+            <button class="ig-copy" type="button" data-copy="code-spa">העתק קוד</button>
+          </div>
+          <pre class="ig-code" id="code-spa"><code><span class="tok-kw">function</span> <span class="tok-fn">loadConversaPay</span>() {
+  <span class="tok-kw">if</span> (<span class="tok-kw">document</span>.<span class="tok-fn">querySelector</span>(<span class="tok-str">'script[data-conversapay]'</span>)) <span class="tok-kw">return</span>;
+
+  <span class="tok-kw">const</span> script = <span class="tok-kw">document</span>.<span class="tok-fn">createElement</span>(<span class="tok-str">'script'</span>);
+  script.<span class="tok-attr">src</span> = <span class="tok-str">'<span class="tok-ph" data-ph="domain">https://www.conversapay.org</span>/frontend/js/widget.js'</span>;
+  script.<span class="tok-attr">dataset</span>.<span class="tok-attr">businessId</span> = <span class="tok-str">'<span class="tok-ph" data-ph="business">YOUR_BUSINESS_UUID</span>'</span>;
+  script.<span class="tok-attr">dataset</span>.<span class="tok-attr">apiKey</span> = <span class="tok-str">'<span class="tok-ph" data-ph="key">YOUR_WIDGET_API_KEY</span>'</span>;
+  script.<span class="tok-attr">dataset</span>.<span class="tok-attr">conversapay</span> = <span class="tok-str">'true'</span>;
+  script.<span class="tok-attr">defer</span> = <span class="tok-kw">true</span>;
+  <span class="tok-kw">document</span>.<span class="tok-attr">body</span>.<span class="tok-fn">appendChild</span>(script);
+}
+
+<span class="tok-fn">loadConversaPay</span>();</code></pre>
+        </div>
+      </article>
+    </section>
+
+    <!-- =============== TROUBLESHOOTING =============== -->
+    <section class="ig-panel" id="panel-troubleshooting" role="tabpanel" aria-labelledby="tab-troubleshooting" tabindex="0" hidden>
+
+      <article class="cp-panel cp-stack">
+        <div>
+          <span class="cp-kicker">DEBUG</span>
+          <h2 style="margin:.4rem 0 0;">הווידג׳ט לא מופיע? התחילו כאן</h2>
+          <p class="cp-muted">פתחו את קונסול הדפדפן (F12) בעמוד עם ההטמעה והשוו לתסמינים למטה.</p>
+        </div>
+
+        <div class="ig-faq">
+          <details open>
+            <summary>שום דבר לא קורה, ואין אפילו שגיאה בקונסול</summary>
+            <div class="ig-faq-body">
+              <p class="cp-muted">הווידג׳ט מפסיק בשקט כאשר ה-Business ID אינו UUID תקין. זו הסיבה הנפוצה ביותר.</p>
+              <p class="cp-muted">ודאו שהערך נראה בדיוק כך, 36 תווים עם מקפים:</p>
+              <span class="ig-block">3f2b9c14-7d51-4a8e-b0c6-19ee5a77d240</span>
+              <p class="cp-muted">שם עסק, אימייל או מספר מזהה פנימי לא יעבדו. העתיקו את הערך מהדאשבורד.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>401 · Valid widget API key required</summary>
+            <div class="ig-faq-body">
+              <p class="cp-muted">כל הטמעה בדומיין חיצוני חייבת לשלוח מפתח widget פעיל. בדקו לפי הסדר:</p>
+              <p class="cp-muted">1. המפתח נוצר בדאשבורד ועדיין פעיל, לא בוטל.<br>2. המפתח שייך לאותו עסק כמו ה-Business ID.<br>3. <span class="ig-inline">data-api-key</span> אכן נמצא בתג הסקריפט ולא נחתך בהעתקה.</p>
+              <p class="cp-muted">בקשות מהדומיין של ConversaPay עצמו ומ-localhost פטורות מהמפתח, ולכן בדיקה מקומית עלולה "לעבוד" בזמן שפרודקשן נכשל.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>403 · External widget embeds require PRO or PREMIUM</summary>
+            <div class="ig-faq-body">
+              <p class="cp-muted">מסלול FREE מאפשר שיחות רק בתוך ConversaPay. הטמעה באתר חיצוני פתוחה במסלולי PRO ו-PREMIUM בלבד.</p>
+              <div class="ig-fill-note"><a class="cp-button" href="/upgrade" style="max-width:220px;">מעבר לשדרוג מסלול</a></div>
+            </div>
+          </details>
+
+          <details>
+            <summary>403 · Subscription has expired</summary>
+            <div class="ig-faq-body">
+              <p class="cp-muted">המסלול עדיין רשום כ-PRO או PREMIUM אך תאריך התפוגה עבר, והווידג׳ט נחסם מיידית בכל האתרים החיצוניים. חדשו את המנוי או בדקו ב-Stripe שהחיוב האחרון עבר.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>שגיאת CORS בקונסול</summary>
+            <div class="ig-faq-body">
+              <p class="cp-muted">נתיבי הווידג׳ט והצ׳אט פתוחים לכל דומיין, ולכן שגיאת CORS כאן כמעט תמיד מצביעה על כתובת שגויה ולא על הרשאות.</p>
+              <p class="cp-muted">הנתיבים הציבוריים:</p>
+              <span class="ig-block">/api/v1/widget/*  ·  /api/v1/chat  ·  /api/v1/orders/*  ·  /api/v1/webhooks/*</span>
+              <p class="cp-muted">אם השגיאה מופיעה על נתיב אחר, כמו <span class="ig-inline">/api/v1/auth</span>, הוא אינו מיועד להטמעה בדפדפן מדומיין זר. הדומיין שלכם צריך להיות ברשימת ה-CORS של השרת רק אם אתם קוראים ל-API הפרטי.</p>
+              <p class="cp-muted">ודאו גם שאין הפרש <span class="ig-inline">http</span> מול <span class="ig-inline">https</span> או <span class="ig-inline">www</span> מול דומיין חשוף בין הכתובת בסקריפט לכתובת האמיתית.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>אימות דומיין והגבלות מסלול</summary>
+            <div class="ig-faq-body">
+              <p class="cp-muted">הוסיפו כל דומיין שבו הווידג׳ט רץ ברשימת הדומיינים בדאשבורד. הזינו את הדומיין בלבד, בלי פרוטוקול ובלי סלאש בסוף:</p>
+              <span class="ig-block">example.com          ✔
+www.example.com      ✔  (דומיין נפרד, יש להוסיף בנפרד)
+https://example.com/ ✘</span>
+              <p class="cp-muted">מספר הדומיינים מוגבל לפי מסלול. אם הגעתם למגבלה, הסירו דומיין ישן לפני שתוסיפו חדש. תת-דומיינים כמו <span class="ig-inline">shop.example.com</span> נחשבים כרשומה נפרדת.</p>
+              <div class="ig-fill-note"><a class="cp-button-secondary" href="/dashboard" style="max-width:220px;">ניהול דומיינים</a></div>
+            </div>
+          </details>
+
+          <details>
+            <summary>Webhooks: תשלומים ו-WhatsApp</summary>
+            <div class="ig-faq-body">
+              <p class="cp-muted">כתובת ה-Webhook של WhatsApp:</p>
+              <span class="ig-block"><span class="tok-ph" data-ph="domain">https://www.conversapay.org</span>/api/v1/whatsapp/webhook</span>
+              <p class="cp-muted">ה-Verify Token ב-Meta חייב להיות זהה בתו לזה שהוזן במסך ההגדרות. אם האימות עובר אבל אין תשובות, ה-Phone Number ID וה-Access Token כנראה שייכים לשני נכסים שונים ב-Meta.</p>
+              <p class="cp-muted">בתשלומים: אם המסלול נשאר FREE אחרי תשלום מוצלח, ה-webhook של Stripe לא הגיע. בדקו את יומן ה-Webhooks ב-Stripe וודאו שהכתובת מצביעה לדומיין הפרודקשן ולא לכתובת פיתוח.</p>
+              <div class="ig-fill-note"><a class="cp-button-secondary" href="/settings" style="max-width:220px;">הגדרות WhatsApp</a></div>
+            </div>
+          </details>
+
+          <details>
+            <summary>הכל נראה תקין, אבל האתר מציג גרסה ישנה</summary>
+            <div class="ig-faq-body">
+              <p class="cp-muted">תוספי קאש ו-CDN הם החשוד המיידי. נקו את הקאש של האתר, את קאש ה-CDN (למשל Cloudflare) ואת קאש הדפדפן, ואז טענו מחדש עם <span class="ig-inline">Ctrl+Shift+R</span>.</p>
+              <p class="cp-muted">אם יש לכם Content Security Policy, הוא חייב להתיר את הדומיין של ConversaPay גם ב-<span class="ig-inline">script-src</span> וגם ב-<span class="ig-inline">connect-src</span>.</p>
+            </div>
+          </details>
+
+          <details>
+            <summary>בדיקת בריאות מהירה</summary>
+            <div class="ig-faq-body">
+              <p class="cp-muted">פתחו את הכתובות האלה בדפדפן. שתיהן צריכות להחזיר JSON עם <span class="ig-inline">"status": "healthy"</span>:</p>
+              <span class="ig-block"><span class="tok-ph" data-ph="domain">https://www.conversapay.org</span>/health
+<span class="tok-ph" data-ph="domain">https://www.conversapay.org</span>/api/v1/widget/health</span>
+            </div>
+          </details>
+        </div>
+      </article>
+
+      <article class="cp-panel cp-stack">
+        <div>
+          <span class="cp-kicker">GO LIVE</span>
+          <h2 style="margin:.4rem 0 0;">צ׳קליסט לפני פרודקשן</h2>
+          <p class="cp-muted">עברו על התשעה האלה לפני שאתם מכריזים שהאתר חי. הסימונים נשמרים בדפדפן שלכם.</p>
+        </div>
+
+        <div class="ig-check" id="checklist">
+          <label><input type="checkbox" data-check="uuid"><span><strong>Business ID הוא UUID תקין</strong><small>36 תווים, הועתק ישירות מהדאשבורד</small></span></label>
+          <label><input type="checkbox" data-check="key"><span><strong>Widget API Key פעיל ומשויך לאותו עסק</strong><small>נוצר בדאשבורד ולא בוטל</small></span></label>
+          <label><input type="checkbox" data-check="plan"><span><strong>המסלול PRO או PREMIUM והמנוי בתוקף</strong><small>הטמעה חיצונית חסומה ב-FREE ובמנוי שפג</small></span></label>
+          <label><input type="checkbox" data-check="domain"><span><strong>כל דומיין פרודקשן רשום בדאשבורד</strong><small>כולל וריאנט www אם הוא בשימוש</small></span></label>
+          <label><input type="checkbox" data-check="https"><span><strong>האתר מוגש ב-HTTPS עם תעודה תקפה</strong><small>תוכן מעורב יחסום את טעינת הסקריפט</small></span></label>
+          <label><input type="checkbox" data-check="csp"><span><strong>ה-CSP מתיר את דומיין ConversaPay</strong><small>גם ב-script-src וגם ב-connect-src</small></span></label>
+          <label><input type="checkbox" data-check="cache"><span><strong>קאש האתר וה-CDN נוקו אחרי ההטמעה</strong><small>מונע הגשת גרסה ישנה של widget.js</small></span></label>
+          <label><input type="checkbox" data-check="webhook"><span><strong>Webhooks של תשלומים ו-WhatsApp מצביעים לפרודקשן</strong><small>לא לכתובת פיתוח או ל-tunnel זמני</small></span></label>
+          <label><input type="checkbox" data-check="e2e"><span><strong>בוצעה שיחת בדיקה מקצה לקצה במובייל ובדסקטופ</strong><small>הודעה נשלחה, התקבלה תשובה, ההזמנה נרשמה</small></span></label>
+        </div>
+
+        <div class="ig-fill-note">
+          <span class="cp-badge" id="checkState">0 מתוך 9 הושלמו</span>
+          <button class="cp-button-secondary" id="checkReset" type="button" style="max-width:180px;">אפס צ׳קליסט</button>
+        </div>
+      </article>
+
+      <article class="cp-panel ig-split">
+        <div class="cp-stack">
+          <h3 style="margin:0;">עדיין תקוע?</h3>
+          <p class="cp-muted">שלחו לנו את הדומיין, את ה-Business ID ואת צילום המסך של הקונסול. זה חוסך סבב שאלות שלם.</p>
+          <a class="cp-button" href="mailto:support@conversapay.org">support@conversapay.org</a>
+        </div>
+        <div class="cp-stack">
+          <h3 style="margin:0;">קישורים שימושיים</h3>
+          <div class="cp-list">
+            <div class="cp-list-item"><div class="cp-list-meta"><strong>עמוד בדיקה לווידג׳ט</strong><small>בודק הטמעה בלי לגעת באתר שלכם</small></div><a class="cp-button-secondary" href="/widget-demo">פתח</a></div>
+            <div class="cp-list-item"><div class="cp-list-meta"><strong>מדריך WhatsApp ומפתחות</strong><small>חיבור Meta Cloud API</small></div><a class="cp-button-secondary" href="/setup-guide">פתח</a></div>
+            <div class="cp-list-item"><div class="cp-list-meta"><strong>דומיינים ו-API Keys</strong><small>ניהול מתוך הדאשבורד</small></div><a class="cp-button-secondary" href="/dashboard">פתח</a></div>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <footer class="cp-footer">
+    <p>&copy; 2026 ConversaPay</p>
+    <p><a class="cp-link" href="/privacy">מדיניות פרטיות</a> · <a class="cp-link" href="/terms">תנאי שימוש</a></p>
+  </footer>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* ---------------- Tabs ---------------- */
+      var tabs = Array.prototype.slice.call(document.querySelectorAll('.ig-tab'));
+      var panels = Array.prototype.slice.call(document.querySelectorAll('.ig-panel'));
+
+      function selectTab(tab, focus) {
+        if (!tab) return;
+        tabs.forEach(function (item) {
+          var selected = item === tab;
+          item.setAttribute('aria-selected', String(selected));
+          item.tabIndex = selected ? 0 : -1;
+        });
+        panels.forEach(function (panel) {
+          panel.hidden = panel.getAttribute('aria-labelledby') !== tab.id;
+        });
+        if (focus) tab.focus();
+        try {
+          history.replaceState(null, '', '#' + tab.id.replace('tab-', ''));
+        } catch (_) { /* file:// or restricted history */ }
+      }
+
+      tabs.forEach(function (tab, index) {
+        tab.addEventListener('click', function () { selectTab(tab, false); });
+        tab.addEventListener('keydown', function (event) {
+          var offset = event.key === 'ArrowLeft' ? 1 : event.key === 'ArrowRight' ? -1 : 0;
+          if (!offset) return;
+          event.preventDefault();
+          selectTab(tabs[(index + offset + tabs.length) % tabs.length], true);
+        });
+      });
+
+      var initialTab = document.getElementById('tab-' + (location.hash || '').replace('#', ''));
+      selectTab(initialTab || tabs[0], false);
+
+      /* ---------------- Copy buttons ---------------- */
+      function fallbackCopy(text) {
+        var area = document.createElement('textarea');
+        area.value = text;
+        area.setAttribute('readonly', '');
+        area.style.position = 'fixed';
+        area.style.opacity = '0';
+        document.body.appendChild(area);
+        area.select();
+        var ok = false;
+        try { ok = document.execCommand('copy'); } catch (_) { ok = false; }
+        document.body.removeChild(area);
+        return ok;
+      }
+
+      document.querySelectorAll('.ig-copy').forEach(function (button) {
+        button.addEventListener('click', async function () {
+          var block = document.getElementById(button.dataset.copy);
+          if (!block) return;
+          var text = block.textContent.replace(/\u00a0/g, ' ');
+          var ok = true;
+          try {
+            if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(text);
+            else ok = fallbackCopy(text);
+          } catch (_) {
+            ok = fallbackCopy(text);
+          }
+          button.textContent = ok ? 'הועתק ✓' : 'העתיקו ידנית';
+          button.classList.toggle('done', ok);
+          setTimeout(function () {
+            button.textContent = 'העתק קוד';
+            button.classList.remove('done');
+          }, 1800);
+        });
+      });
+
+      /* ---------------- Snippet personalisation ---------------- */
+      var STORAGE_KEY = 'conversapay_guide_values';
+      var DEFAULTS = {
+        domain: (location.origin && location.origin.indexOf('http') === 0) ? location.origin : 'https://www.conversapay.org',
+        business: 'YOUR_BUSINESS_UUID',
+        key: 'YOUR_WIDGET_API_KEY'
+      };
+      var inputs = {
+        domain: document.getElementById('fillDomain'),
+        business: document.getElementById('fillBusiness'),
+        key: document.getElementById('fillKey')
+      };
+      var fillState = document.getElementById('fillState');
+      var resetButton = document.getElementById('fillReset');
+
+      function readStored() {
+        try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {}; }
+        catch (_) { return {}; }
+      }
+
+      function applyPlaceholders() {
+        var values = {
+          domain: (inputs.domain && inputs.domain.value.trim().replace(/\/+$/, '')) || DEFAULTS.domain,
+          business: (inputs.business && inputs.business.value.trim()) || DEFAULTS.business,
+          key: (inputs.key && inputs.key.value.trim()) || DEFAULTS.key
+        };
+        document.querySelectorAll('[data-ph]').forEach(function (node) {
+          var value = values[node.dataset.ph];
+          if (value) node.textContent = value;
+        });
+        var filled = ['domain', 'business', 'key'].filter(function (name) {
+          return inputs[name] && inputs[name].value.trim();
+        }).length;
+        if (fillState) {
+          fillState.textContent = filled ? filled + ' מתוך 3 שדות מולאו' : 'משתמש בערכי ברירת מחדל';
+          fillState.className = filled === 3 ? 'cp-badge good' : 'cp-badge';
+        }
+      }
+
+      function persist() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            domain: inputs.domain ? inputs.domain.value : '',
+            business: inputs.business ? inputs.business.value : '',
+            key: inputs.key ? inputs.key.value : ''
+          }));
+        } catch (_) { /* private mode */ }
+      }
+
+      var stored = readStored();
+      Object.keys(inputs).forEach(function (name) {
+        var input = inputs[name];
+        if (!input) return;
+        if (stored[name]) input.value = stored[name];
+        input.addEventListener('input', function () { applyPlaceholders(); persist(); });
+      });
+
+      if (resetButton) {
+        resetButton.addEventListener('click', function () {
+          Object.keys(inputs).forEach(function (name) { if (inputs[name]) inputs[name].value = ''; });
+          try { localStorage.removeItem(STORAGE_KEY); } catch (_) { /* noop */ }
+          applyPlaceholders();
+        });
+      }
+
+      applyPlaceholders();
+
+      /* ---------------- Production checklist ---------------- */
+      var CHECK_KEY = 'conversapay_guide_checklist';
+      var boxes = Array.prototype.slice.call(document.querySelectorAll('#checklist input[type="checkbox"]'));
+      var checkState = document.getElementById('checkState');
+      var checkReset = document.getElementById('checkReset');
+
+      function renderCheckState() {
+        if (!checkState) return;
+        var done = boxes.filter(function (box) { return box.checked; }).length;
+        checkState.textContent = done + ' מתוך ' + boxes.length + ' הושלמו';
+        checkState.className = done === boxes.length && boxes.length ? 'cp-badge good' : 'cp-badge';
+      }
+
+      function persistChecks() {
+        try {
+          localStorage.setItem(CHECK_KEY, JSON.stringify(boxes.filter(function (box) {
+            return box.checked;
+          }).map(function (box) { return box.dataset.check; })));
+        } catch (_) { /* noop */ }
+      }
+
+      var savedChecks = [];
+      try { savedChecks = JSON.parse(localStorage.getItem(CHECK_KEY) || '[]') || []; } catch (_) { savedChecks = []; }
+
+      boxes.forEach(function (box) {
+        if (savedChecks.indexOf(box.dataset.check) !== -1) box.checked = true;
+        box.addEventListener('change', function () { renderCheckState(); persistChecks(); });
+      });
+
+      if (checkReset) {
+        checkReset.addEventListener('click', function () {
+          boxes.forEach(function (box) { box.checked = false; });
+          try { localStorage.removeItem(CHECK_KEY); } catch (_) { /* noop */ }
+          renderCheckState();
+        });
+      }
+
+      renderCheckState();
+    }());
+  </script>
+</body>
+</html>
