@@ -22,7 +22,7 @@ async def lifespan(app):
 
 app = FastAPI(
     title="ConversaPay API",
-    version="2.1.0",
+    version="2.2.0",
     lifespan=lifespan,
     docs_url=None if settings.is_production else "/docs",
     redoc_url=None if settings.is_production else "/redoc",
@@ -52,7 +52,7 @@ app.add_middleware(DualCORSMiddleware)
 
 @app.get("/health")
 async def health():
-    return {"status": "healthy", "version": "2.1.0", "environment": settings.ENVIRONMENT}
+    return {"status": "healthy", "version": "2.2.0", "environment": settings.ENVIRONMENT}
 
 @app.get(f"{settings.API_PREFIX}/config/public")
 async def public_config():
@@ -96,7 +96,7 @@ async def root():
 async def dashboard_page():
     with open(_html("dashboard.html"), "r", encoding="utf-8") as dashboard_file:
         page = dashboard_file.read()
-    wordpress_link = '<a class="nav-pill" href="/wordpress" aria-label="פתיחת מסך תפעול WordPress">WordPress</a>'
+    wordpress_link = '<a class="nav-pill" href="/wordpress" aria-label="\u05e4\u05ea\u05d9\u05d7\u05ea \u05de\u05e1\u05da \u05ea\u05e4\u05e2\u05d5\u05dc WordPress">WordPress</a>'
     if wordpress_link not in page and "</nav>" in page:
         page = page.replace("</nav>", f"{wordpress_link}</nav>", 1)
     return HTMLResponse(page)
@@ -134,15 +134,53 @@ async def profile_page(): return FileResponse(_html("profile.html"))
 @app.get("/settings")
 @app.get("/settings.html")
 async def settings_page(): return FileResponse(_html("settings.html"))
-@app.get("/admin")
-@app.get("/admin.html")
-async def admin_page(): return FileResponse(_html("admin-dashboard.html"))
-@app.get("/admin/login")
-@app.get("/admin-login.html")
-async def admin_login_page(): return FileResponse(_html("admin-login.html"))
-@app.get("/admin/change-password")
-@app.get("/admin-change-password.html")
-async def admin_change_password_page(): return FileResponse(_html("admin-change-password.html"))
+
+# --- Admin pages: protected behind secret path ---
+# If ADMIN_SECRET_PATH is set, admin pages are ONLY reachable at
+# /admin-{secret}/... and the old /admin routes return 404.
+_admin_secret = settings.ADMIN_SECRET_PATH.strip()
+
+if _admin_secret:
+    @app.get(f"/admin-{_admin_secret}")
+    @app.get(f"/admin-{_admin_secret}/dashboard")
+    async def admin_page_secret(): return FileResponse(_html("admin-dashboard.html"))
+
+    @app.get(f"/admin-{_admin_secret}/login")
+    async def admin_login_page_secret(): return FileResponse(_html("admin-login.html"))
+
+    @app.get(f"/admin-{_admin_secret}/change-password")
+    async def admin_change_password_page_secret(): return FileResponse(_html("admin-change-password.html"))
+
+    # Old public admin routes now return 404
+    @app.get("/admin")
+    @app.get("/admin.html")
+    async def admin_page_hidden():
+        raise HTTPException(status_code=404, detail="Not found")
+
+    @app.get("/admin/login")
+    @app.get("/admin-login.html")
+    async def admin_login_page_hidden():
+        raise HTTPException(status_code=404, detail="Not found")
+
+    @app.get("/admin/change-password")
+    @app.get("/admin-change-password.html")
+    async def admin_change_password_page_hidden():
+        raise HTTPException(status_code=404, detail="Not found")
+else:
+    # No secret configured: serve admin pages normally (dev mode)
+    @app.get("/admin")
+    @app.get("/admin.html")
+    async def admin_page(): return FileResponse(_html("admin-dashboard.html"))
+    @app.get("/admin/login")
+    @app.get("/admin-login.html")
+    async def admin_login_page(): return FileResponse(_html("admin-login.html"))
+    @app.get("/admin/change-password")
+    @app.get("/admin-change-password.html")
+    async def admin_change_password_page(): return FileResponse(_html("admin-change-password.html"))
+
+# Need to import HTTPException for admin 404
+from fastapi import HTTPException as HTTPException
+
 @app.get("/setup-guide")
 @app.get("/setup-guide.html")
 async def setup_guide_page(): return FileResponse(_html("setup-guide.html"))
@@ -159,7 +197,7 @@ async def robots(): return FileResponse(os.path.join(static_dir, "robots.txt"), 
 async def sitemap(): return FileResponse(os.path.join(static_dir, "sitemap.xml"), media_type="application/xml")
 
 @app.exception_handler(404)
-async def not_found(request, exc): return JSONResponse(status_code=404, content={"error": "Not found", "detail": str(exc.detail)})
+async def not_found(request, exc): return JSONResponse(status_code=404, content={"error": "Not found", "detail": str(exc.detail) if hasattr(exc, 'detail') else "Not found"})
 @app.exception_handler(500)
 async def internal_error(request, exc): return JSONResponse(status_code=500, content={"error": "Internal server error", "detail": "An unexpected error occurred"})
 

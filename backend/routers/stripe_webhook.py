@@ -53,6 +53,30 @@ def _claim(event_id: str, event_type: str) -> bool:
         raise
 
 
+def _lookup_user_by_stripe_customer(customer_id: str) -> str | None:
+    """Fallback: find user_id by looking up the Stripe customer email in profiles."""
+    if not customer_id:
+        return None
+    try:
+        stripe_service._ensure_configured()
+        customer = stripe.Customer.retrieve(customer_id)
+        email = customer.get("email")
+        if not email:
+            return None
+        result = (
+            supabase.table("profiles")
+            .select("user_id")
+            .eq("email", email)
+            .limit(1)
+            .execute()
+        )
+        if result.data:
+            return result.data[0]["user_id"]
+    except Exception as exc:
+        logger.warning("Fallback customer lookup failed for %s: %s", customer_id, exc)
+    return None
+
+
 def _update_profile_and_business(
     user_id: str,
     *,
@@ -140,6 +164,7 @@ def _subscription_context(subscription_id: str | None) -> dict[str, Any]:
         "metadata": dict(subscription.get("metadata") or {}),
         "status": subscription.get("status"),
         "current_period_end": _period_end_iso(subscription.get("current_period_end")),
+        "customer": subscription.get("customer"),
     }
 
 
@@ -149,7 +174,11 @@ def _apply_subscription_state(
     plan_type: str | None,
     subscription_status: str | None,
     subscription_expires_at: str | None,
+    customer_id: str | None = None,
 ) -> None:
+    if not user_id and customer_id:
+        user_id = _lookup_user_by_stripe_customer(customer_id)
+
     if not user_id:
         return
 
@@ -167,6 +196,52 @@ def _apply_subscription_state(
         subscription_expires_at=effective_expiry,
         subscription_status=effective_status,
     )
+
+
+def _handle_charge_refunded(obj: dict[str, Any]) -> None:
+    """When a charge is refunded, check if it belongs to a subscription and downgrade."""
+    invoice_id = obj.get("invoice")
+    customer_id = obj.get("customer")
+
+    if invoice_id:
+        try:
+            stripe_service._ensure_configured()
+            invoice = stripe.Invoice.retrieve(invoice_id)
+            subscription_id = invoice.get("subscription")
+            if subscription_id:
+                sub_context = _subscription_context(subscription_id)
+                sub_metadata = sub_context.get("metadata") or {}
+                user_id = sub_metadata.get("user_id")
+                if not user_id and customer_id:
+                    user_id = _lookup_user_by_stripe_customer(customer_id)
+                if user_id:
+                    _update_profile_and_business(
+                        user_id,
+                        plan_type="free",
+                        subscription_expires_at=None,
+                        subscription_status="canceled",
+                    )
+                    try:
+                        stripe.Subscription.cancel(subscription_id)
+                    except Exception as exc:
+                        logger.warning(
+                            "Auto-cancel subscription %s after refund failed: %s",
+                            subscription_id,
+                            exc,
+                        )
+                return
+        except Exception as exc:
+            logger.warning("Error processing refund invoice lookup: %s", exc)
+
+    if customer_id:
+        user_id = _lookup_user_by_stripe_customer(customer_id)
+        if user_id:
+            _update_profile_and_business(
+                user_id,
+                plan_type="free",
+                subscription_expires_at=None,
+                subscription_status="canceled",
+            )
 
 
 @router.post("")
@@ -219,6 +294,7 @@ async def stripe_webhook(request: Request) -> dict[str, Any]:
                     plan_type=metadata.get("plan_type"),
                     subscription_status="active",
                     subscription_expires_at=None,
+                    customer_id=obj.get("customer"),
                 )
 
             subscription_context = _subscription_context(obj.get("subscription"))
@@ -228,6 +304,7 @@ async def stripe_webhook(request: Request) -> dict[str, Any]:
                 plan_type=subscription_metadata.get("plan_type") or metadata.get("plan_type"),
                 subscription_status=subscription_context.get("status") or "active",
                 subscription_expires_at=subscription_context.get("current_period_end"),
+                customer_id=obj.get("customer"),
             )
 
     elif event_type == "checkout.session.async_payment_failed":
@@ -248,6 +325,7 @@ async def stripe_webhook(request: Request) -> dict[str, Any]:
 
     elif event_type.startswith("customer.subscription."):
         subscription_metadata = dict(obj.get("metadata") or {})
+        customer_id = obj.get("customer")
         _apply_subscription_state(
             user_id=subscription_metadata.get("user_id"),
             plan_type=subscription_metadata.get("plan_type"),
@@ -255,12 +333,17 @@ async def stripe_webhook(request: Request) -> dict[str, Any]:
                 "canceled" if event_type == "customer.subscription.deleted" else None
             ),
             subscription_expires_at=_period_end_iso(obj.get("current_period_end")),
+            customer_id=customer_id,
         )
+
+    elif event_type in {"charge.refunded", "charge.refund.updated"}:
+        _handle_charge_refunded(obj)
 
     elif event_type in {"invoice.payment_failed", "invoice.paid", "invoice.payment_succeeded"}:
         subscription_context = _subscription_context(obj.get("subscription"))
         subscription_metadata = subscription_context.get("metadata") or {}
         subscription_status = subscription_context.get("status")
+        customer_id = subscription_context.get("customer") or obj.get("customer")
 
         if event_type in {"invoice.paid", "invoice.payment_succeeded"}:
             _apply_subscription_state(
@@ -268,6 +351,7 @@ async def stripe_webhook(request: Request) -> dict[str, Any]:
                 plan_type=subscription_metadata.get("plan_type"),
                 subscription_status=subscription_status or "active",
                 subscription_expires_at=subscription_context.get("current_period_end"),
+                customer_id=customer_id,
             )
         else:
             if subscription_status in {"canceled", "unpaid", "incomplete_expired"}:
@@ -276,6 +360,7 @@ async def stripe_webhook(request: Request) -> dict[str, Any]:
                     plan_type=subscription_metadata.get("plan_type"),
                     subscription_status=subscription_status,
                     subscription_expires_at=None,
+                    customer_id=customer_id,
                 )
 
     return {"status": "ok", "processed": True, "event_type": event_type}

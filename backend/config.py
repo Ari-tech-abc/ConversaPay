@@ -36,6 +36,12 @@ class Settings(BaseSettings):
     EMAIL_FROM_ADDRESS: str
     EMAIL_FROM_NAME: str = "ConversaPay"
 
+    # Admin pages are hidden behind a secret path segment.
+    # Set this to a random string (e.g. a UUID) so that the admin pages
+    # are only reachable at /admin-<secret>/login etc.
+    # Anyone hitting /admin without the secret gets a 404.
+    ADMIN_SECRET_PATH: str = ""
+
     # Local origins must be explicitly opted into through the environment.
     CORS_ORIGINS: str = "https://conversapay.org"
     FRONTEND_URL: str = "https://conversapay.org"
