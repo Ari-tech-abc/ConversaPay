@@ -1,4 +1,5 @@
 -- SaaS profile fields. Apply in Supabase SQL editor before enabling the profile controls.
+-- Supports the enterprise profile tabs: organization, timezone, avatar, 2FA state and notifications.
 alter table public.profiles add column if not exists company_name text;
 alter table public.profiles add column if not exists timezone text not null default 'UTC';
 alter table public.profiles add column if not exists avatar_url text;
