@@ -5,29 +5,37 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="robots" content="noindex,nofollow">
   <title>ConversaPay | השדרוג הושלם</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
-  <style>
-    .result-shell{min-height:calc(100dvh - 92px);display:grid;place-items:center;padding:1.5rem 0 2.5rem}
-    .result-card{width:min(680px,100%);text-align:center;display:grid;gap:1.25rem;justify-items:center;min-width:0}
-    .result-icon{width:82px;height:82px;border-radius:1.5rem;display:grid;place-items:center;background:#ecfdf5;border:1px solid #a7f3d0;color:#059669;font-size:2.5rem;box-shadow:0 8px 32px rgba(5,150,105,.12)}
-    .result-copy{max-width:50ch;width:100%;min-width:0}.result-copy h1{font-size:clamp(1.9rem,5vw,3.1rem);margin:10px 0;line-height:1.1;color:var(--cp-text)}.result-copy p{overflow-wrap:anywhere}
-    .result-actions{width:min(440px,100%);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.result-actions>*{min-width:0}
-    .status-note,.result-panel{width:100%;padding:1rem;border-radius:1.1rem;text-align:right;background:var(--cp-panel-strong);border:1px solid var(--cp-line);overflow-wrap:anywhere}
-    .sandbox-note{max-width:100%;padding:10px 14px;border-radius:999px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;font-size:.84rem;font-weight:700;overflow-wrap:anywhere}
-    .status-pill{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:7px 12px;font-weight:700;max-width:100%;overflow-wrap:anywhere}
-    .status-pill.good{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46}
-    .status-pill.warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
-    .status-pill.bad{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
-    @media(max-width:560px){.result-shell{min-height:auto;padding:1.1rem 0 1.75rem}.result-card{gap:1rem}.result-icon{width:68px;height:68px;border-radius:1.25rem;font-size:2rem}.result-actions{grid-template-columns:1fr}.result-actions>*{width:100%}.status-note,.result-panel{padding:14px}}
-  </style>
 </head>
 <body class="cp-page">
   <header class="cp-topbar"><a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a><span class="cp-badge">Stripe</span></header>
-  <main class="cp-shell result-shell"><section class="cp-card result-card" aria-live="polite"><div class="result-icon" aria-hidden="true">✓</div><div class="result-copy"><span class="cp-kicker" style="justify-content:center">אימות תשלום ושדרוג</span><h1 id="title">אנחנו משלימים את השדרוג שלך</h1><p class="cp-muted" id="description">אם התשלום ב-Stripe הושלם, המערכת תעדכן אוטומטית את המסלול ואת הפרופיל שלך.</p></div><span class="sandbox-note">מצב בדיקות / Sandbox</span><div class="status-note"><div id="statusBadge" class="status-pill warn">ממתין לאימות</div><p class="cp-muted" id="statusText" style="margin-top:10px">בודק את מצב ה-session מול Stripe ומסנכרן את החשבון שלך.</p></div><div class="result-panel" id="details" hidden><strong>פרטי בדיקה</strong><div class="cp-muted" id="detailsText" style="margin-top:8px"></div></div><div class="cp-actions result-actions"><a class="cp-button" href="/dashboard">חזרה לדאשבורד</a><a class="cp-button-secondary" href="/upgrade">חזרה למסלולים</a></div></section></main>
+  <main class="cp-shell cp-result-shell">
+    <section class="cp-card cp-result-card" aria-live="polite">
+      <div class="cp-result-icon good" aria-hidden="true">✓</div>
+      <div class="cp-result-copy">
+        <span class="cp-kicker cp-center-inline">אימות תשלום ושדרוג</span>
+        <h1 id="title">אנחנו משלימים את השדרוג שלך</h1>
+        <p class="cp-muted" id="description">אם התשלום ב-Stripe הושלם, המערכת תעדכן אוטומטית את המסלול ואת הפרופיל שלך.</p>
+      </div>
+      <span class="cp-pill-note">מצב בדיקות / Sandbox</span>
+      <div class="cp-surface cp-text-start">
+        <div id="statusBadge" class="cp-status-pill warn">ממתין לאימות</div>
+        <p class="cp-muted cp-mt-md" id="statusText">בודק את מצב ה-session מול Stripe ומסנכרן את החשבון שלך.</p>
+      </div>
+      <div class="cp-surface cp-text-start" id="details" hidden>
+        <strong>פרטי בדיקה</strong>
+        <div class="cp-muted cp-break-all cp-mt-sm" id="detailsText"></div>
+      </div>
+      <div class="cp-actions cp-result-actions"><a class="cp-button" href="/dashboard">חזרה לדאשבורד</a><a class="cp-button-secondary" href="/upgrade">חזרה למסלולים</a></div>
+    </section>
+  </main>
   <script>
     const API='/api/v1',params=new URLSearchParams(location.search),sessionId=params.get('session_id'),token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token');
     const title=document.getElementById('title'),description=document.getElementById('description'),statusBadge=document.getElementById('statusBadge'),statusText=document.getElementById('statusText'),details=document.getElementById('details'),detailsText=document.getElementById('detailsText');
-    function setStatus(kind,label,text){statusBadge.className=`status-pill ${kind}`;statusBadge.textContent=label;statusText.textContent=text}function setDetails(text){details.hidden=false;detailsText.textContent=text}
+    function setStatus(kind,label,text){statusBadge.className=`cp-status-pill ${kind}`;statusBadge.textContent=label;statusText.textContent=text}function setDetails(text){details.hidden=false;detailsText.textContent=text}
     async function confirmSession(){if(!sessionId){title.textContent='התשלום הושלם';description.textContent='לא התקבל session_id בכתובת, לכן לא ניתן לאמת אוטומטית את השדרוג. אפשר לחזור לדאשבורד ולרענן בעוד רגע.';setStatus('warn','נדרש אימות ידני','לא נמצא מזהה session בכתובת.');return}setDetails(`Session ID: ${sessionId}`);if(!token){title.textContent='התשלום התקבל';description.textContent='התשלום הועבר ל-Stripe, אבל צריך להתחבר כדי לסנכרן מיידית את הפרופיל והמסלול.';setStatus('warn','נדרשת התחברות','התחבר לחשבון ואז חזור לדאשבורד כדי לראות את העדכון.');return}try{const res=await fetch(`${API}/payments/confirm-session?session_id=${encodeURIComponent(sessionId)}`,{headers:{Authorization:`Bearer ${token}`}}),data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.detail||'אימות השדרוג נכשל');if(data.confirmed&&data.plan_type){const plan=String(data.plan_type||'pro').toUpperCase();title.textContent='השדרוג שלך הופעל בהצלחה';description.textContent=`החשבון והפרופיל עודכנו למסלול ${plan}. אפשר לחזור עכשיו לדאשבורד.`;setStatus('good',`מסלול ${plan} פעיל`,'הפרופיל סונכרן בהצלחה מול Stripe.');const extra=[];if(data.subscription_status)extra.push(`מצב מנוי: ${data.subscription_status}`);if(data.subscription_expires_at)extra.push(`תוקף נוכחי: ${data.subscription_expires_at}`);if(extra.length)setDetails(`Session ID: ${sessionId} | ${extra.join(' | ')}`);return}title.textContent='התשלום נקלט, הסנכרון עדיין ממתין';description.textContent='Stripe כבר החזיר אותנו בהצלחה, אבל המנוי עדיין לא סומן כסופי. בדרך כלל זה מסתדר דרך ה-webhook תוך זמן קצר.';setStatus('warn','ממתין ל-webhook','אם הדאשבורד עדיין מראה FREE, רענן בעוד כמה שניות.')}catch(err){title.textContent='התשלום נקלט, אבל הסנכרון לא הושלם';description.textContent='קיבלנו חזרה מ-Stripe, אך הייתה בעיה באימות האוטומטי של השדרוג. אפשר לחזור לדאשבורד ולנסות שוב.';setStatus('bad','שגיאת סנכרון',err.message||'לא ניתן היה לאמת את ה-session.')}}confirmSession();
   </script>
 </body>
