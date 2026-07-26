@@ -3,32 +3,71 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0a1020">
+  <meta name="referrer" content="same-origin">
   <title>ConversaPay - כניסת מנהל</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
 </head>
-<body class="cp-page">
-  <main class="cp-shell" style="display:grid;place-items:center;min-height:100vh;padding-top:0;">
-    <section class="cp-card" style="width:min(440px,100%);">
-      <div class="cp-stack" style="margin-bottom:18px;text-align:center;">
-        <span class="cp-kicker" style="justify-content:center;">Admin Access</span>
-        <h1>כניסת מנהל</h1>
-        <p class="cp-muted">גישה ישירה לחשבון הניהול.</p>
+<body class="cp-page cp-admin-page">
+  <main class="cp-shell cp-admin-shell">
+    <section class="cp-card cp-admin-card">
+      <div class="cp-admin-layout">
+        <div class="cp-admin-hero">
+          <span class="cp-admin-eyebrow">ConversaPay admin console</span>
+          <h1 class="cp-admin-title">כניסת מנהל מאובטחת לממשק הבקרה</h1>
+          <p class="cp-admin-subtitle">גישה מרוכזת לדאשבורד הניהולי, ניהול חריגות, בקרה על דומיינים ומעקב אחר אירועים רגישים — באותה שפה עיצובית של ממשק האדמין הראשי.</p>
+
+          <div class="cp-admin-meta" aria-label="Admin interface highlights">
+            <span class="cp-admin-badge cp-admin-badge-accent">Aligned with dashboard UI</span>
+            <span class="cp-admin-badge">DM Sans + Space Grotesk</span>
+            <span class="cp-admin-badge cp-admin-badge-success">Secure admin access</span>
+          </div>
+
+          <article class="cp-admin-support-card" aria-labelledby="admin-login-guidance-title">
+            <div class="cp-admin-support-head">
+              <div>
+                <span class="cp-admin-support-label">גישה ניהולית</span>
+                <h2 id="admin-login-guidance-title">התחברות לסביבת האדמין</h2>
+              </div>
+              <span class="cp-admin-status">Protected</span>
+            </div>
+            <ul class="cp-admin-points">
+              <li>התחברו עם שם משתמש או אימייל של חשבון מנהל פעיל.</li>
+              <li>הסשן נשמר רק בדפדפן הנוכחי כדי להקטין סיכון לחשיפה.</li>
+              <li>לאחר התחברות תועברו ישירות למסך הדאשבורד.</li>
+            </ul>
+          </article>
+        </div>
+
+        <div class="cp-admin-form-card">
+          <div class="cp-admin-form-head">
+            <span class="cp-admin-kicker">Admin Access</span>
+            <h2>כניסה לחשבון מנהל</h2>
+            <p>הזינו את פרטי ההתחברות מבלי לשנות את שדות הטופס הנדרשים ל־POST של השרת.</p>
+          </div>
+
+          <div id="error" class="cp-notice error cp-admin-notice" role="alert" aria-live="polite" hidden></div>
+
+          <form id="form" class="cp-stack cp-admin-form" novalidate>
+            <div class="cp-field">
+              <label class="cp-label" for="identifier">שם משתמש או אימייל</label>
+              <input class="cp-input" id="identifier" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="admin@example.com" required>
+            </div>
+            <div class="cp-field">
+              <label class="cp-label" for="password">סיסמה</label>
+              <input class="cp-input" id="password" type="password" autocomplete="current-password" placeholder="הזינו סיסמה" required>
+            </div>
+            <button class="cp-button cp-admin-submit" id="submit" type="submit">כניסה לדאשבורד</button>
+          </form>
+
+          <div class="cp-admin-links">
+            <a class="cp-link" href="/">חזרה לאתר הראשי</a>
+          </div>
+        </div>
       </div>
-      <div id="error" class="cp-notice error" role="alert" hidden></div>
-      <form id="form" class="cp-stack">
-        <div class="cp-field">
-          <label class="cp-label" for="identifier">שם משתמש</label>
-          <input class="cp-input" id="identifier" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required>
-        </div>
-        <div class="cp-field">
-          <label class="cp-label" for="password">סיסמה</label>
-          <input class="cp-input" id="password" type="password" autocomplete="current-password" required>
-        </div>
-        <button class="cp-button" id="submit" type="submit">כניסה</button>
-      </form>
     </section>
   </main>
 
