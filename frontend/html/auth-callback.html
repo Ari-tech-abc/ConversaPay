@@ -10,10 +10,14 @@
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
 </head>
 <body class="cp-page">
-  <main class="cp-shell" style="display:grid;place-items:center;min-height:calc(100vh - 80px);">
-    <section class="cp-card" style="width:min(480px,100%);text-align:center;">
+  <header class="cp-topbar">
+    <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
+  </header>
+
+  <main class="cp-shell cp-center-shell">
+    <section class="cp-card cp-card-md cp-text-center">
       <div class="cp-spinner" aria-hidden="true"></div>
-      <h1 style="margin-bottom:10px;">מתחבר לחשבון</h1>
+      <h1 class="cp-mb-sm">מתחבר לחשבון</h1>
       <p id="status" class="cp-muted">מאמת פרטי התחברות...</p>
     </section>
   </main>
