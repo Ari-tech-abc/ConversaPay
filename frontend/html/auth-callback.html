@@ -23,44 +23,60 @@
     const API = '/api/v1';
     const DASHBOARD_ROUTE = '/dashboard';
     const LOGIN_ROUTE = '/login';
+    const statusNode = document.getElementById('status');
 
-    function fail() {
+    function setStatus(message) {
+      if (statusNode) statusNode.textContent = message;
+    }
+
+    function fail(reason) {
+      console.error('[OAuth callback failed]', reason || 'unknown reason');
       localStorage.setItem('auth_error', 'callback_error');
-      location.href = LOGIN_ROUTE;
+      if (reason) localStorage.setItem('auth_error_detail', String(reason));
+      location.replace(LOGIN_ROUTE);
     }
 
     (async () => {
       try {
+        setStatus('טוען הגדרות התחברות...');
         const cfg = await (await fetch(`${API}/config/public`)).json();
         const sb = window.supabase.createClient(cfg.supabase_url, cfg.supabase_anon_key);
         const hash = new URLSearchParams(location.hash.slice(1));
         const query = new URLSearchParams(location.search);
 
-        if (query.get('error') || hash.get('error')) return fail();
+        if (query.get('error') || hash.get('error')) {
+          return fail(query.get('error_description') || hash.get('error_description') || query.get('error') || hash.get('error'));
+        }
 
         if (query.get('code')) {
+          setStatus('משלים התחברות מול Google...');
           const x = await sb.auth.exchangeCodeForSession(location.href);
           if (x.error) throw x.error;
         }
 
+        setStatus('בודק Session...');
         const { data } = await sb.auth.getSession();
-        if (!data.session) return fail();
+        if (!data.session) return fail('Missing OAuth session after callback');
 
         const s = data.session;
         localStorage.setItem('access_token', s.access_token);
         localStorage.setItem('user_id', s.user.id);
         localStorage.setItem('email', s.user.email || '');
+        localStorage.removeItem('auth_error');
+        localStorage.removeItem('auth_error_detail');
 
+        setStatus('מסנכרן את החשבון...');
         const r = await fetch(`${API}/auth/oauth/session`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${s.access_token}` }
         });
         if (!r.ok) console.warn('OAuth provisioning failed');
 
-        location.href = DASHBOARD_ROUTE;
+        setStatus('מעביר לדאשבורד...');
+        location.replace(DASHBOARD_ROUTE);
       } catch (e) {
         console.error(e);
-        fail();
+        fail(e?.message || 'Unhandled OAuth callback error');
       }
     })();
   </script>

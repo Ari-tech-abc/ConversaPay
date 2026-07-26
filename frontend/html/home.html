@@ -178,7 +178,24 @@
 
   <script>
     const DASHBOARD_ROUTE = '/dashboard';
-    const LOGIN_ROUTE = '/login';
+    const OAUTH_CALLBACK_ROUTE = '/auth/callback';
+
+    function isOAuthReturn() {
+      const query = new URLSearchParams(location.search);
+      const hash = new URLSearchParams(location.hash.slice(1));
+      return Boolean(
+        query.get('code')
+        || query.get('error')
+        || hash.get('access_token')
+        || hash.get('error')
+      );
+    }
+
+    function redirectOAuthReturnToCallback() {
+      if (!isOAuthReturn()) return false;
+      location.replace(`${OAUTH_CALLBACK_ROUTE}${location.search}${location.hash}`);
+      return true;
+    }
 
     async function redirectAuthenticatedUser() {
       const token = localStorage.getItem('access_token')
@@ -209,7 +226,9 @@
       }
     }
 
-    redirectAuthenticatedUser();
+    if (!redirectOAuthReturnToCallback()) {
+      redirectAuthenticatedUser();
+    }
   </script>
 </body>
 </html>
