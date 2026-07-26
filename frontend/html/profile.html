@@ -13,8 +13,8 @@
   <div id="notice" class="cp-notice hidden" role="status"></div>
   <div class="profile-saas">
     <aside class="profile-sidebar" aria-label="ניווט פרופיל">
-      <div class="profile-hero" style="border:0;padding:.5rem .4rem 1rem;">
-        <div class="profile-large-avatar" id="avatar">א</div><div><strong id="nameDisplay">פרופיל</strong><small class="cp-muted" id="emailDisplay" style="display:block">טוען...</small></div>
+      <div class="profile-hero compact">
+        <div class="profile-large-avatar" id="avatar">א</div><div><strong id="nameDisplay">פרופיל</strong><small class="cp-muted profile-email" id="emailDisplay">טוען...</small></div>
       </div>
       <nav class="profile-nav">
         <button class="active" data-tab="personal">פרטים אישיים</button><button data-tab="security">אבטחה</button><button data-tab="developer">API ואינטגרציות</button><button data-tab="notifications">התראות</button><button data-tab="billing">חיוב ושימוש</button><button data-tab="danger">אזור מסוכן</button>
@@ -45,7 +45,7 @@
         <div><span class="cp-kicker">Developer tools</span><h2>API ואינטגרציות</h2><p class="cp-muted">נהל מפתחות חיבור בלי לעזוב את הפרופיל.</p></div>
         <div class="profile-grid"><div class="profile-stat"><small>מפתחות פעילים</small><strong id="keyCount">0</strong></div><div class="profile-stat"><small>מסלול נוכחי</small><strong id="devPlan">FREE</strong></div></div>
         <form id="keyForm" class="profile-grid"><div class="cp-field full"><label class="cp-label" for="keyName">שם מפתח</label><input class="cp-input" id="keyName" maxlength="100" placeholder="Main website widget"></div><div class="profile-actions full"><button class="cp-button" type="submit" id="createKey">צור מפתח סודי</button><a class="cp-button-secondary" href="/setup-guide">מדריך אינטגרציה</a></div></form>
-        <div id="keyReveal" class="profile-key-reveal hidden"><strong>שמור את המפתח עכשיו, הוא יוצג פעם אחת בלבד.</strong><div id="keyValue" style="margin-top:.5rem"></div><button class="cp-button-secondary" id="copyKey" type="button" style="margin-top:.7rem">העתק מפתח</button></div>
+        <div id="keyReveal" class="profile-key-reveal hidden"><strong>שמור את המפתח עכשיו, הוא יוצג פעם אחת בלבד.</strong><div id="keyValue" class="profile-key-value"></div><button class="cp-button-secondary" id="copyKey" type="button">העתק מפתח</button></div>
         <div id="keyList" class="profile-list"></div>
       </section>
 
@@ -67,10 +67,10 @@
   </div>
 </main>
 <script>
-const API='/api/v1',token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token');if(!token)location.href='/login';
+const API='/api/v1',LOGIN_ROUTE='/login',token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token');if(!token)location.href=LOGIN_ROUTE;
 const $=id=>document.getElementById(id),auth={Authorization:`Bearer ${token}`};
 function show(message,error=false){const n=$('notice');n.textContent=message;n.className=`cp-notice ${error?'error':''}`;n.classList.remove('hidden')}
-async function api(path,options={}){const r=await fetch(API+path,{...options,headers:{...auth,...(options.headers||{})}});const d=await r.json().catch(()=>({}));if(r.status===401){localStorage.clear();sessionStorage.clear();location.href='/login';throw Error('נדרשת התחברות')}if(!r.ok)throw Error(d.detail||'הפעולה נכשלה');return d}
+async function api(path,options={}){const r=await fetch(API+path,{...options,headers:{...auth,...(options.headers||{})}});const d=await r.json().catch(()=>({}));if(r.status===401){localStorage.clear();sessionStorage.clear();location.href=LOGIN_ROUTE;throw Error('נדרשת התחברות')}if(!r.ok)throw Error(d.detail||'הפעולה נכשלה');return d}
 function setTab(name){document.querySelectorAll('.profile-section').forEach(x=>x.classList.toggle('active',x.id===`tab-${name}`));document.querySelectorAll('.profile-nav button').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));history.replaceState(null,'',`#${name}`)}
 document.querySelectorAll('.profile-nav button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));setTab(location.hash.slice(1)||'personal');
 function initials(name){return(name||'א').trim().split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase()}
