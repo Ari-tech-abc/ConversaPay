@@ -1,231 +1,33 @@
 <!doctype html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="referrer" content="no-referrer">
-  <title>ConversaPay | Premium Site Builder</title>
-  <meta name="description" content="Premium one-time AI website builder">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="referrer" content="no-referrer">
+  <title>ConversaPay | Premium Site Builder</title><meta name="description" content="Premium one-time AI website builder">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
   <style>
-    :root {
-      --builder-soft: rgba(255,255,255,0.04);
-      --builder-line: rgba(255,255,255,0.08);
-    }
-
-    body.cp-page { min-height: 100vh; }
-    .builder-shell { display:grid; gap:22px; }
-    .builder-hero { background:radial-gradient(circle at top right,rgba(55,215,255,.22),transparent 30%), radial-gradient(circle at bottom left,rgba(139,92,246,.18),transparent 26%), linear-gradient(135deg,rgba(124,92,255,.22),rgba(7,17,31,.95)); }
-    .builder-layout { display:grid; grid-template-columns:minmax(340px,460px) 1fr; gap:22px; align-items:start; }
-    .builder-card,.preview-card,.guide-card { display:grid; gap:14px; padding:22px; border-radius:24px; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
-    .preview-card { min-height: 680px; }
-    .field-grid { display:grid; gap:14px; }
-    .builder-field { display:grid; gap:8px; }
-    .builder-field label { color:var(--cp-muted-strong); font-weight:600; }
-    .builder-field input,.builder-field textarea { width:100%; padding:12px 14px; border-radius:14px; border:1px solid var(--cp-line); background:rgba(7,17,31,.78); color:var(--cp-text); font:inherit; }
-    .builder-field textarea { min-height: 130px; resize:vertical; }
-    .vibes { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-    .vibe { border:1px solid var(--builder-line); background:var(--builder-soft); border-radius:16px; padding:14px; cursor:pointer; color:var(--cp-text); text-align:right; }
-    .vibe[aria-checked="true"] { border-color:rgba(55,215,255,.34); background:rgba(55,215,255,.08); box-shadow:0 0 0 1px rgba(55,215,255,.14) inset; }
-    .builder-actions,.preview-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    .status-box { padding:14px 16px; border-radius:16px; background:rgba(255,255,255,.03); border:1px dashed rgba(255,255,255,.12); color:var(--cp-muted); }
-    .status-box.error { background:rgba(255,120,120,.08); border-style:solid; border-color:rgba(255,120,120,.22); color:#ffd7d7; }
-    .status-box.good { background:rgba(55,215,255,.08); border-style:solid; border-color:rgba(55,215,255,.18); color:var(--cp-text); }
-    .preview-frame { min-height:560px; border-radius:18px; overflow:hidden; border:1px solid var(--builder-line); background:#fff; }
-    .preview-frame iframe { width:100%; height:560px; border:0; }
-    .empty-preview { min-height:560px; display:grid; place-items:center; text-align:center; padding:30px; color:var(--cp-muted); }
-    .guide-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:12px; }
-    .guide-step { padding:14px; border-radius:18px; background:var(--builder-soft); border:1px solid var(--builder-line); }
-    @media (max-width: 980px) { .builder-layout { grid-template-columns:1fr; } .preview-card { min-height: initial; } }
+    :root{--builder-soft:rgba(255,255,255,.04);--builder-line:rgba(255,255,255,.08)}body.cp-page{min-height:100vh}.builder-shell{display:grid;gap:22px;min-width:0}.builder-hero{background:radial-gradient(circle at top right,rgba(55,215,255,.22),transparent 30%),radial-gradient(circle at bottom left,rgba(139,92,246,.18),transparent 26%),linear-gradient(135deg,rgba(124,92,255,.22),rgba(7,17,31,.95))}.builder-layout{display:grid;grid-template-columns:minmax(0,460px) minmax(0,1fr);gap:22px;align-items:start;min-width:0}.builder-card,.preview-card,.guide-card{display:grid;gap:14px;padding:22px;border-radius:24px;background:var(--cp-panel);border:1px solid var(--cp-line);box-shadow:var(--cp-shadow);min-width:0}.preview-card{min-height:680px}.field-grid{display:grid;gap:14px;min-width:0}.builder-field{display:grid;gap:8px;min-width:0}.builder-field label{color:var(--cp-muted-strong);font-weight:600}.builder-field input,.builder-field textarea{width:100%;min-width:0;padding:12px 14px;border-radius:14px;border:1px solid var(--cp-line);background:rgba(7,17,31,.78);color:var(--cp-text);font:inherit}.builder-field textarea{min-height:130px;resize:vertical}.vibes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.vibe{border:1px solid var(--builder-line);background:var(--builder-soft);border-radius:16px;padding:14px;cursor:pointer;color:var(--cp-text);text-align:right;min-width:0}.vibe[aria-checked=true]{border-color:rgba(55,215,255,.34);background:rgba(55,215,255,.08);box-shadow:0 0 0 1px rgba(55,215,255,.14) inset}.builder-actions,.preview-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.status-box{padding:14px 16px;border-radius:16px;background:rgba(255,255,255,.03);border:1px dashed rgba(255,255,255,.12);color:var(--cp-muted);overflow-wrap:anywhere}.status-box.error{background:rgba(255,120,120,.08);border-style:solid;border-color:rgba(255,120,120,.22);color:#ffd7d7}.status-box.good{background:rgba(55,215,255,.08);border-style:solid;border-color:rgba(55,215,255,.18);color:var(--cp-text)}.preview-frame{min-height:560px;border-radius:18px;overflow:hidden;border:1px solid var(--builder-line);background:#fff;min-width:0}.preview-frame iframe{display:block;width:100%;height:560px;border:0}.empty-preview{min-height:560px;display:grid;place-items:center;text-align:center;padding:30px;color:var(--cp-muted)}.guide-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}.guide-step{padding:14px;border-radius:18px;background:var(--builder-soft);border:1px solid var(--builder-line);min-width:0}@media(max-width:980px){.builder-layout{grid-template-columns:minmax(0,1fr)}.preview-card{min-height:initial}}@media(max-width:560px){.cp-shell{width:min(100% - 20px,1180px)}.builder-card,.preview-card,.guide-card{padding:16px;border-radius:18px}.preview-frame,.empty-preview{min-height:420px}.preview-frame iframe{height:420px}.vibes{grid-template-columns:1fr}.builder-actions,.preview-actions{display:grid;grid-template-columns:1fr}.builder-actions>*{width:100%}}
   </style>
 </head>
 <body class="cp-page">
-  <header class="cp-topbar">
-    <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
-    <div class="cp-actions" style="margin:0;">
-      <a class="cp-button-secondary" href="/dashboard.html">חזרה לדאשבורד</a>
-    </div>
-  </header>
-
+  <header class="cp-topbar"><a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a><div class="cp-actions" style="margin:0;"><a class="cp-button-secondary" href="/dashboard">חזרה לדאשבורד</a></div></header>
   <main class="cp-shell builder-shell">
-    <section class="cp-panel cp-stack builder-hero">
-      <span class="cp-kicker">PREMIUM BUILDER</span>
-      <h1 class="cp-title">הופכים רעיון ברור לדף חד, מהיר ומוכן להצגה.</h1>
-      <p class="cp-subtitle">בונה האתרים של ConversaPay מותאם למסלול Premium. הגישה פעילה ל-30 דקות ויוצרת עמוד אחד לכל טוקן.</p>
-    </section>
-
+    <section class="cp-panel cp-stack builder-hero"><span class="cp-kicker">PREMIUM BUILDER</span><h1 class="cp-title">הופכים רעיון ברור לדף חד, מהיר ומוכן להצגה.</h1><p class="cp-subtitle">בונה האתרים של ConversaPay מותאם למסלול Premium. הגישה פעילה ל-30 דקות ויוצרת עמוד אחד לכל טוקן.</p></section>
     <section class="builder-layout">
-      <article class="builder-card">
-        <div>
-          <h2 style="margin:0;">פרטי הדף</h2>
-          <p class="cp-muted">תאר את העסק ואת מה שהעמוד צריך למכור או להסביר.</p>
-        </div>
-
-        <div id="status" class="status-box">בודק גישת Premium...</div>
-
-        <form id="form" class="field-grid" hidden>
-          <div class="builder-field">
-            <label for="name">שם העסק</label>
-            <input id="name" maxlength="100" required>
-          </div>
-          <div class="builder-field">
-            <label for="industry">תחום</label>
-            <input id="industry" maxlength="50" required>
-          </div>
-          <div class="builder-field">
-            <label for="description">מה האתר צריך להעביר?</label>
-            <textarea id="description" minlength="10" maxlength="1000" required></textarea>
-          </div>
-          <div class="builder-field">
-            <label>כיוון עיצובי</label>
-            <div class="vibes">
-              <button class="vibe" type="button" data-vibe="minimalist" aria-checked="true"><strong>Minimal</strong><br><span class="cp-muted">רגוע, נקי, ברור</span></button>
-              <button class="vibe" type="button" data-vibe="cyber" aria-checked="false"><strong>Cyber</strong><br><span class="cp-muted">חד, בולט, עתידני</span></button>
-              <button class="vibe" type="button" data-vibe="luxury" aria-checked="false"><strong>Luxury</strong><br><span class="cp-muted">יוקרתי, אלגנטי</span></button>
-              <button class="vibe" type="button" data-vibe="playful" aria-checked="false"><strong>Playful</strong><br><span class="cp-muted">צבעוני, קליל</span></button>
-            </div>
-          </div>
-          <div class="builder-actions">
-            <button class="cp-button" id="generate" type="submit">צור תצוגה מקדימה</button>
-          </div>
-        </form>
-
-        <div id="missingAccess" class="guide-card" hidden>
-          <strong>הגישה לבונה האתרים חסרה או פגה.</strong>
-          <span class="cp-muted">פתח את בונה האתרים מחדש מתוך הדאשבורד במסלול Premium כדי לקבל טוקן חדש.</span>
-          <div class="builder-actions">
-            <a class="cp-button" href="/dashboard.html">חזרה לדאשבורד</a>
-          </div>
-        </div>
+      <article class="builder-card"><div><h2 style="margin:0;">פרטי הדף</h2><p class="cp-muted">תאר את העסק ואת מה שהעמוד צריך למכור או להסביר.</p></div><div id="status" class="status-box">בודק גישת Premium...</div>
+        <form id="form" class="field-grid" hidden><div class="builder-field"><label for="name">שם העסק</label><input id="name" maxlength="100" required></div><div class="builder-field"><label for="industry">תחום</label><input id="industry" maxlength="50" required></div><div class="builder-field"><label for="description">מה האתר צריך להעביר?</label><textarea id="description" minlength="10" maxlength="1000" required></textarea></div><div class="builder-field"><label>כיוון עיצובי</label><div class="vibes"><button class="vibe" type="button" data-vibe="minimalist" aria-checked="true"><strong>Minimal</strong><br><span class="cp-muted">רגוע, נקי, ברור</span></button><button class="vibe" type="button" data-vibe="cyber" aria-checked="false"><strong>Cyber</strong><br><span class="cp-muted">חד, בולט, עתידני</span></button><button class="vibe" type="button" data-vibe="luxury" aria-checked="false"><strong>Luxury</strong><br><span class="cp-muted">יוקרתי, אלגנטי</span></button><button class="vibe" type="button" data-vibe="playful" aria-checked="false"><strong>Playful</strong><br><span class="cp-muted">צבעוני, קליל</span></button></div></div><div class="builder-actions"><button class="cp-button" id="generate" type="submit">צור תצוגה מקדימה</button></div></form>
+        <div id="missingAccess" class="guide-card" hidden><strong>הגישה לבונה האתרים חסרה או פגה.</strong><span class="cp-muted">פתח את בונה האתרים מחדש מתוך הדאשבורד במסלול Premium כדי לקבל טוקן חדש.</span><div class="builder-actions"><a class="cp-button" href="/dashboard">חזרה לדאשבורד</a></div></div>
       </article>
-
-      <article class="preview-card">
-        <div class="preview-actions" style="justify-content:space-between;">
-          <div>
-            <span class="cp-kicker">LIVE PREVIEW</span>
-            <h2 style="margin:6px 0 0 0;">העמוד שלך, לפני שהוא עולה לאוויר.</h2>
-          </div>
-          <button id="download" class="cp-button-secondary" hidden type="button">הורדת HTML</button>
-        </div>
-
-        <div class="preview-frame">
-          <div class="empty-preview" id="empty">כאן תופיע התצוגה המקדימה של הדף ש-ConversaPay ייצור בשבילך.</div>
-          <iframe id="frame" title="Generated site preview" sandbox="allow-scripts" referrerpolicy="no-referrer" hidden></iframe>
-        </div>
-
-        <div class="guide-grid">
-          <div class="guide-step"><strong>1. תאר ברור</strong><div class="cp-muted">מה העסק מוכר ומה המסר המרכזי.</div></div>
-          <div class="guide-step"><strong>2. בחר vibe</strong><div class="cp-muted">סגנון עיצובי שמתאים למותג שלך.</div></div>
-          <div class="guide-step"><strong>3. צור והורד</strong><div class="cp-muted">אחרי ההפקה אפשר להוריד HTML.</div></div>
-        </div>
-      </article>
+      <article class="preview-card"><div class="preview-actions" style="justify-content:space-between;"><div><span class="cp-kicker">LIVE PREVIEW</span><h2 style="margin:6px 0 0 0;">העמוד שלך, לפני שהוא עולה לאוויר.</h2></div><button id="download" class="cp-button-secondary" hidden type="button">הורדת HTML</button></div><div class="preview-frame"><div class="empty-preview" id="empty">כאן תופיע התצוגה המקדימה של הדף ש-ConversaPay ייצור בשבילך.</div><iframe id="frame" title="Generated site preview" sandbox="allow-scripts" referrerpolicy="no-referrer" hidden></iframe></div><div class="guide-grid"><div class="guide-step"><strong>1. תאר ברור</strong><div class="cp-muted">מה העסק מוכר ומה המסר המרכזי.</div></div><div class="guide-step"><strong>2. בחר vibe</strong><div class="cp-muted">סגנון עיצובי שמתאים למותג שלך.</div></div><div class="guide-step"><strong>3. צור והורד</strong><div class="cp-muted">אחרי ההפקה אפשר להוריד HTML.</div></div></div></article>
     </section>
   </main>
-
   <script>
-    const token = new URLSearchParams(location.search).get('token');
-    const apiBase = `${window.location.origin}/api/v1`;
-    let vibe = 'minimalist';
-    let generatedHtml = '';
-    let allowed = false;
-    let generated = false;
-    const $ = (id) => document.getElementById(id);
-
-    function setStatus(message, kind = '') {
-      const box = $('status');
-      box.textContent = message;
-      box.className = kind ? `status-box ${kind}` : 'status-box';
-    }
-
-    async function verifyAccess() {
-      if (!token) {
-        setStatus('הגישה לבונה האתרים חסרה. פתח אותו מחדש מתוך הדאשבורד.', 'error');
-        $('missingAccess').hidden = false;
-        return;
-      }
-
-      try {
-        const response = await fetch(`${apiBase}/site-builder/verify/${encodeURIComponent(token)}`, { referrerPolicy: 'no-referrer' });
-        if (!response.ok) throw new Error();
-        allowed = true;
-        $('form').hidden = false;
-        setStatus('הגישה אושרה. אפשר ליצור עמוד Premium אחד מתוך הטוקן הזה.', 'good');
-      } catch (_) {
-        setStatus('הקישור לבונה האתרים לא תקין או פג תוקף. פתח אותו שוב מתוך הדאשבורד.', 'error');
-        $('missingAccess').hidden = false;
-      }
-    }
-
-    document.querySelectorAll('.vibe').forEach((button) => {
-      button.onclick = () => {
-        document.querySelectorAll('.vibe').forEach((node) => node.setAttribute('aria-checked', 'false'));
-        button.setAttribute('aria-checked', 'true');
-        vibe = button.dataset.vibe;
-      };
-    });
-
-    $('form').onsubmit = async (event) => {
-      event.preventDefault();
-      if (!allowed || generated) return;
-
-      const button = $('generate');
-      button.disabled = true;
-      button.textContent = 'יוצר...';
-      setStatus('ConversaPay מייצר עבורך את הדף עכשיו...', 'good');
-
-      try {
-        const response = await fetch(`${apiBase}/site-builder/generate`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Builder-Token': token
-          },
-          body: JSON.stringify({
-            business_name: $('name').value.trim(),
-            industry: $('industry').value.trim(),
-            prompt: $('description').value.trim(),
-            vibe,
-            sections: ['hero', 'features', 'products', 'testimonials']
-          }),
-          referrerPolicy: 'no-referrer'
-        });
-
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.detail || 'הפקת הדף נכשלה');
-        if (!data.html) throw new Error('הבונה לא החזיר HTML תקין');
-
-        generatedHtml = data.html;
-        $('frame').srcdoc = generatedHtml;
-        $('frame').hidden = false;
-        $('empty').hidden = true;
-        $('download').hidden = false;
-        $('form').hidden = true;
-        generated = true;
-        setStatus('העמוד נוצר בהצלחה. אפשר לבדוק אותו ולהוריד את ה-HTML.', 'good');
-      } catch (error) {
-        setStatus(error.message || 'משהו השתבש בהפקת הדף', 'error');
-        button.disabled = false;
-        button.textContent = 'צור תצוגה מקדימה';
-        return;
-      }
-
-      button.disabled = true;
-      button.textContent = 'נוצר';
-    };
-
-    $('download').onclick = () => {
-      if (!generatedHtml) return;
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(new Blob([generatedHtml], { type: 'text/html' }));
-      link.download = 'conversapay-site.html';
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-    };
-
-    verifyAccess();
+    const token=new URLSearchParams(location.search).get('token'),apiBase=`${window.location.origin}/api/v1`;let vibe='minimalist',generatedHtml='',allowed=false,generated=false;const $=id=>document.getElementById(id);
+    function setStatus(message,kind=''){const box=$('status');box.textContent=message;box.className=kind?`status-box ${kind}`:'status-box'}
+    async function verifyAccess(){if(!token){setStatus('הגישה לבונה האתרים חסרה. פתח אותו מחדש מתוך הדאשבורד.','error');$('missingAccess').hidden=false;return}try{const response=await fetch(`${apiBase}/site-builder/verify/${encodeURIComponent(token)}`,{referrerPolicy:'no-referrer'});if(!response.ok)throw Error();allowed=true;$('form').hidden=false;setStatus('הגישה אושרה. אפשר ליצור עמוד Premium אחד מתוך הטוקן הזה.','good')}catch(_){setStatus('הקישור לבונה האתרים לא תקין או פג תוקף. פתח אותו שוב מתוך הדאשבורד.','error');$('missingAccess').hidden=false}}
+    document.querySelectorAll('.vibe').forEach(button=>button.onclick=()=>{document.querySelectorAll('.vibe').forEach(node=>node.setAttribute('aria-checked','false'));button.setAttribute('aria-checked','true');vibe=button.dataset.vibe});
+    $('form').onsubmit=async event=>{event.preventDefault();if(!allowed||generated)return;const button=$('generate');button.disabled=true;button.textContent='יוצר...';setStatus('ConversaPay מייצר עבורך את הדף עכשיו...','good');try{const response=await fetch(`${apiBase}/site-builder/generate`,{method:'POST',headers:{'Content-Type':'application/json','X-Builder-Token':token},body:JSON.stringify({business_name:$('name').value.trim(),industry:$('industry').value.trim(),prompt:$('description').value.trim(),vibe,sections:['hero','features','products','testimonials']}),referrerPolicy:'no-referrer'}),data=await response.json().catch(()=>({}));if(!response.ok)throw Error(data.detail||'הפקת הדף נכשלה');if(!data.html)throw Error('הבונה לא החזיר HTML תקין');generatedHtml=data.html;$('frame').srcdoc=generatedHtml;$('frame').hidden=false;$('empty').hidden=true;$('download').hidden=false;$('form').hidden=true;generated=true;setStatus('העמוד נוצר בהצלחה. אפשר לבדוק אותו ולהוריד את ה-HTML.','good')}catch(error){setStatus(error.message||'משהו השתבש בהפקת הדף','error');button.disabled=false;button.textContent='צור תצוגה מקדימה';return}button.disabled=true;button.textContent='נוצר'};
+    $('download').onclick=()=>{if(!generatedHtml)return;const link=document.createElement('a');link.href=URL.createObjectURL(new Blob([generatedHtml],{type:'text/html'}));link.download='conversapay-site.html';link.click();setTimeout(()=>URL.revokeObjectURL(link.href),1000)};
+    verifyAccess().catch(()=>setStatus('לא ניתן לבדוק את הגישה כרגע. נסה שוב.','error'));
   </script>
 </body>
 </html>
