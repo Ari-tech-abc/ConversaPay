@@ -46,7 +46,6 @@ app.add_middleware(DualCORSMiddleware)
 
 @app.get("/health")
 async def health(): return {"status": "healthy", "version": "2.2.0", "environment": settings.ENVIRONMENT}
-
 @app.get(f"{settings.API_PREFIX}/config/public")
 async def public_config(): return {"supabase_url": settings.SUPABASE_URL, "supabase_anon_key": settings.SUPABASE_ANON_KEY}
 
@@ -64,20 +63,20 @@ frontend_dir = os.path.join(current_dir, "frontend")
 html_dir = os.path.join(frontend_dir, "html")
 site_builder_dir = os.path.join(current_dir, "conversapay-site-builder", "frontend")
 def _html(name): return os.path.join(html_dir, name)
-
 _admin_secret = settings.ADMIN_SECRET_PATH.strip()
 
 @app.get("/admin-{secret_path}", response_class=HTMLResponse)
 @app.get("/admin-{secret_path}/dashboard", response_class=HTMLResponse)
 async def serve_admin_dashboard(secret_path: str):
     if not _admin_secret or secret_path != _admin_secret: raise HTTPException(status_code=404, detail="Not found")
-    return FileResponse(_html("admin-dashboard.html"))
+    with open(_html("admin-dashboard.html"), "r", encoding="utf-8") as page_file: page = page_file.read()
+    page = page.replace('href="/admin-change-password.html"', 'href="change-password"')
+    return HTMLResponse(page)
 
 @app.get("/admin-{secret_path}/login", response_class=HTMLResponse)
 async def serve_admin_login(secret_path: str):
     if not _admin_secret or secret_path != _admin_secret: raise HTTPException(status_code=404, detail="Not found")
     return FileResponse(_html("admin-login.html"))
-
 @app.get("/admin-{secret_path}/change-password", response_class=HTMLResponse)
 async def serve_admin_change_password(secret_path: str):
     if not _admin_secret or secret_path != _admin_secret: raise HTTPException(status_code=404, detail="Not found")
@@ -85,7 +84,6 @@ async def serve_admin_change_password(secret_path: str):
 
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 app.mount("/frontend", StaticFiles(directory=frontend_dir), name="frontend")
-
 @app.get("/conversapay-ui.css")
 async def conversapay_ui_stylesheet(): return FileResponse(_html("conversapay-ui.css"), media_type="text/css")
 @app.get("/")
@@ -185,8 +183,7 @@ async def sitemap(): return FileResponse(os.path.join(static_dir, "sitemap.xml")
 async def not_found(request: Request, exc):
     if "text/html" in request.headers.get("accept", ""):
         return FileResponse(_html("404.html"), status_code=404)
-    return JSONResponse(status_code=404, content={"error":"Not found","detail":str(exc.detail) if hasattr(exc,'detail') else "Not found"})
-
+    return JSONResponse(status_code=404, content={"error":"Not found","detail":str(exc.detail) if hasattr(exc,"detail") else "Not found"})
 @app.exception_handler(500)
 async def internal_error(request, exc): return JSONResponse(status_code=500, content={"error":"Internal server error","detail":"An unexpected error occurred"})
 if __name__ == "__main__":
