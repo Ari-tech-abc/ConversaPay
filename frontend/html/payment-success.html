@@ -2,23 +2,26 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="robots" content="noindex,nofollow">
   <title>ConversaPay | התשלום הצליח</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
-  <style>
-    .result-shell{min-height:calc(100vh - 92px);display:grid;place-items:center;padding-top:20px}.result-card{width:min(620px,100%);text-align:center;display:grid;gap:22px;justify-items:center}.result-icon{width:86px;height:86px;border-radius:28px;display:grid;place-items:center;background:rgba(45,212,168,.14);border:1px solid rgba(45,212,168,.3);color:#9ff2d9;font-size:2.6rem;box-shadow:0 18px 48px rgba(45,212,168,.16)}.result-copy{max-width:46ch}.result-copy h1{font-size:clamp(2rem,5vw,3.1rem);margin-bottom:10px}.result-actions{width:min(440px,100%)}.sandbox-note{padding:11px 14px;border-radius:999px;color:#ffd793;background:rgba(247,185,85,.12);border:1px solid rgba(247,185,85,.25);font-size:.84rem;font-weight:700}.result-meta{width:100%;display:grid;gap:10px;text-align:right}.result-meta .cp-list-item{background:rgba(255,255,255,.035)}
-  </style>
 </head>
 <body class="cp-page">
   <header class="cp-topbar"><a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a><span class="cp-badge">Sandbox</span></header>
-  <main class="cp-shell result-shell">
-    <section class="cp-card result-card" aria-live="polite">
-      <div class="result-icon" aria-hidden="true">✓</div>
-      <div class="result-copy"><span class="cp-kicker" style="justify-content:center">תשלום התקבל</span><h1>התשלום הצליח</h1><p class="cp-muted">תודה! קיבלנו את התשלום בהצלחה. במצב Sandbox זו בדיקת מערכת בלבד, ללא חיוב אמיתי.</p></div>
-      <span class="sandbox-note">מצב בדיקות בלבד</span>
-      <div class="result-meta cp-list"><div class="cp-list-item"><div class="cp-list-meta"><strong>סטטוס</strong><small>האירוע יושלם לאחר אימות ה‑Webhook</small></div><span class="cp-badge good">התקבל</span></div><div class="cp-list-item" id="reference" hidden><div class="cp-list-meta"><strong>מזהה בדיקה</strong><small id="referenceValue"></small></div></div></div>
-      <div class="cp-actions result-actions"><a class="cp-button" href="/dashboard.html">חזרה לדאשבורד</a><a class="cp-button-secondary" href="/">חזרה לדף הבית</a></div>
+  <main class="cp-shell cp-result-shell">
+    <section class="cp-card cp-result-card" aria-live="polite">
+      <div class="cp-result-icon good" aria-hidden="true">✓</div>
+      <div class="cp-result-copy"><span class="cp-kicker cp-center-inline">תשלום התקבל</span><h1>התשלום הצליח</h1><p class="cp-muted">תודה! קיבלנו את התשלום בהצלחה. במצב Sandbox זו בדיקת מערכת בלבד, ללא חיוב אמיתי.</p></div>
+      <span class="cp-pill-note">מצב בדיקות בלבד</span>
+      <div class="cp-result-meta cp-list">
+        <div class="cp-list-item"><div class="cp-list-meta"><strong>סטטוס</strong><small>האירוע יושלם לאחר אימות ה‑Webhook</small></div><span class="cp-badge good">התקבל</span></div>
+        <div class="cp-list-item" id="reference" hidden><div class="cp-list-meta"><strong>מזהה בדיקה</strong><small id="referenceValue" class="cp-break-all"></small></div></div>
+      </div>
+      <div class="cp-actions cp-result-actions"><a class="cp-button" href="/dashboard">חזרה לדאשבורד</a><a class="cp-button-secondary" href="/">חזרה לדף הבית</a></div>
     </section>
   </main>
   <script>

@@ -10,57 +10,25 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
   <style>
-    .guide-grid {
-      display: grid;
-      gap: 18px;
-    }
-
-    .guide-steps {
-      display: grid;
-      gap: 12px;
-    }
-
-    .guide-step {
-      padding: 16px;
-      border-radius: 18px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-
-    .guide-step strong {
-      display: block;
-      margin-bottom: 6px;
-    }
-
-    .guide-code {
-      margin: 0;
-      padding: 18px;
-      color: #e6e7ed;
-      direction: ltr;
-      text-align: left;
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-
-    .guide-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
+    /* Layout only. Surfaces use the shared .cp-step / .cp-code utilities. */
+    .guide-grid { display: grid; gap: 18px; }
+    .guide-steps { display: grid; gap: 12px; }
+    .guide-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .guide-actions .cp-button, .guide-actions .cp-button-secondary { flex: 0 1 auto; }
+    @media (max-width: 560px) { .guide-actions { display: grid; grid-template-columns: 1fr; } .guide-actions > * { width: 100%; } }
   </style>
 </head>
 <body class="cp-page">
   <header class="cp-topbar">
-    <a class="cp-brand" href="home.html"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
-    <a class="cp-backlink" href="dashboard.html">חזרה לדאשבורד</a>
+    <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
+    <a class="cp-backlink" href="/dashboard">חזרה לדאשבורד</a>
   </header>
 
   <main class="cp-shell cp-stack">
-    <section class="cp-panel cp-stack" style="text-align:center;">
-      <span class="cp-kicker" style="justify-content:center;">מדריך התחלה</span>
+    <section class="cp-panel cp-stack cp-text-center">
+      <span class="cp-kicker cp-center-inline">מדריך התחלה</span>
       <h1>מדריך הטמעה</h1>
-      <p class="cp-muted">כך מחברים את ConversaPay לאתר, ל-WhatsApp ולמפתחות החיבור בצורה ברורה ובטוחה.</p>
+      <p class="cp-muted cp-mi-auto">כך מחברים את ConversaPay לאתר, ל-WhatsApp ולמפתחות החיבור בצורה ברורה ובטוחה.</p>
     </section>
 
     <section class="cp-grid-3">
@@ -92,14 +60,12 @@
       <h2>2. קוד הטמעה לאתר</h2>
       <p class="cp-muted">החליפו את הערכים בקוד והכניסו אותו לפני ‎&lt;/body&gt;‎.</p>
       <div class="guide-actions">
-        <button class="cp-button" id="copy" type="button" style="max-width:220px;">העתק קוד</button>
-        <a class="cp-button-secondary" href="dashboard.html">חזרה לדאשבורד</a>
+        <button class="cp-button" id="copy" type="button">העתק קוד</button>
+        <a class="cp-button-secondary" href="/dashboard">חזרה לדאשבורד</a>
       </div>
-      <div class="cp-card" style="padding:0;overflow:auto;background:#091221;">
-        <pre id="snippet" class="guide-code">&lt;script src="https://YOUR-CONVERSAPAY-DOMAIN/frontend/js/widget.js"
+      <pre id="snippet" class="cp-code">&lt;script src="https://YOUR-CONVERSAPAY-DOMAIN/frontend/js/widget.js"
   data-business-id="YOUR_BUSINESS_UUID"
   data-api-key="YOUR_WIDGET_API_KEY" defer&gt;&lt;/script&gt;</pre>
-      </div>
       <p class="cp-muted">הטמעה חיצונית זמינה במסלולי PRO ו‑PREMIUM. בונה האתר זמין ב‑PREMIUM בלבד.</p>
     </section>
 
@@ -110,25 +76,25 @@
       </div>
 
       <div class="guide-steps">
-        <div class="guide-step">
+        <div class="cp-step">
           <strong>שלב 1 — פתח Meta / WhatsApp Cloud API</strong>
           <span class="cp-muted">צרו או פתחו אפליקציה ב-Meta for Developers והפעילו WhatsApp Business Platform.</span>
         </div>
-        <div class="guide-step">
+        <div class="cp-step">
           <strong>שלב 2 — אספו 3 נתונים</strong>
           <span class="cp-muted">צריך להעתיק את <b>Phone Number ID</b>, את <b>Access Token</b> ואת <b>Verify Token</b> שאתם בוחרים בעצמכם.</span>
         </div>
-        <div class="guide-step">
+        <div class="cp-step">
           <strong>שלב 3 — הזינו את הפרטים ב-ConversaPay</strong>
-          <span class="cp-muted">בדאשבורד עברו ל-<a class="cp-link" href="settings.html">הגדרות</a> והזינו את שלושת השדות של WhatsApp.</span>
+          <span class="cp-muted">בדאשבורד עברו ל-<a class="cp-link" href="/settings">הגדרות</a> והזינו את שלושת השדות של WhatsApp.</span>
         </div>
-        <div class="guide-step">
+        <div class="cp-step">
           <strong>שלב 4 — הגדירו Webhook ב-Meta</strong>
           <span class="cp-muted">השתמשו בכתובת ה-Webhook הזאת:</span>
-          <div class="cp-card" style="padding:12px 14px;background:#091221;direction:ltr;text-align:left;">https://YOUR-CONVERSAPAY-DOMAIN/api/v1/whatsapp/webhook</div>
+          <pre class="cp-code">https://YOUR-CONVERSAPAY-DOMAIN/api/v1/whatsapp/webhook</pre>
           <span class="cp-muted">בשדה Verify Token ב-Meta הזינו את אותו Verify Token שהכנסתם ב-ConversaPay.</span>
         </div>
-        <div class="guide-step">
+        <div class="cp-step">
           <strong>שלב 5 — בצעו בדיקה</strong>
           <span class="cp-muted">שלחו הודעת ניסיון למספר ה-WhatsApp ובדקו שההודעות נכנסות לבוט ועוברות מענה.</span>
         </div>
@@ -154,8 +120,8 @@
         <div class="cp-list-item"><div class="cp-list-meta"><strong>בדיקת WhatsApp</strong><small>שלחו הודעת ניסיון ובדקו שה-Webhook מגיב</small></div></div>
       </div>
       <div class="guide-actions">
-        <a class="cp-button" href="dashboard.html" style="max-width:240px;">חזרה לדאשבורד</a>
-        <a class="cp-button-secondary" href="settings.html">הגדרות WhatsApp</a>
+        <a class="cp-button" href="/dashboard">חזרה לדאשבורד</a>
+        <a class="cp-button-secondary" href="/settings">הגדרות WhatsApp</a>
       </div>
     </section>
   </main>
