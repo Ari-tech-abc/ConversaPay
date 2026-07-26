@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#ffffff">
   <meta name="referrer" content="same-origin">
+  <meta name="robots" content="noindex,nofollow">
   <title>ConversaPay - לוח בקרה למנהל</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -225,7 +226,7 @@
   <header class="cp-topbar">
     <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
     <div class="cp-actions">
-      <a class="cp-button-secondary" href="/admin-change-password.html">שינוי סיסמה</a>
+      <a class="cp-button-secondary" id="changePasswordLink" href="/admin/change-password">שינוי סיסמה</a>
       <button class="cp-button-secondary" id="refreshBtn" type="button">רענון נתונים</button>
       <button class="cp-button" id="logoutBtn" type="button">התנתקות</button>
     </div>
@@ -415,6 +416,19 @@
 
   <script>
     const ADMIN_KEYS = ['admin_token', 'admin_email'];
+
+    // The admin area lives behind a secret path segment (/admin-<secret>/...).
+    // Hard-coding /admin-login.html or /admin-dashboard.html produces a 404 in production,
+    // so every admin route is derived from the segment we are currently served from.
+    function adminBasePath() {
+      const first = window.location.pathname.split('/').filter(Boolean)[0] || '';
+      return first.startsWith('admin-') ? '/' + first : '/admin';
+    }
+
+    const ADMIN_BASE = adminBasePath();
+    const ADMIN_LOGIN_ROUTE = ADMIN_BASE + '/login';
+    const ADMIN_CHANGE_PASSWORD_ROUTE = ADMIN_BASE + '/change-password';
+
     const state = {
       token: null,
       adminEmail: '',
@@ -439,7 +453,7 @@
 
     function logout() {
       clearAdminSession();
-      location.href = '/admin-login.html';
+      location.href = ADMIN_LOGIN_ROUTE;
     }
 
     function showNotice(message, isError = false) {
@@ -786,9 +800,12 @@
       });
     }
 
+    const changePasswordLink = $('changePasswordLink');
+    if (changePasswordLink) changePasswordLink.setAttribute('href', ADMIN_CHANGE_PASSWORD_ROUTE);
+
     state.token = getAdminToken();
     if (!state.token) {
-      location.href = '/admin-login.html';
+      location.href = ADMIN_LOGIN_ROUTE;
     } else {
       bindEvents();
       loadAll();
