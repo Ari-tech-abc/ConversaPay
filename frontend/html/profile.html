@@ -13,18 +13,17 @@
       max-width: 760px;
       margin: auto;
       display: grid;
-      gap: 18px;
+      gap: 1.2rem;
     }
-
     .info-card {
       display: grid;
       gap: 12px;
-      padding: 18px;
-      border-radius: 20px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.08);
+      padding: 1.4rem;
+      border-radius: 1.25rem;
+      background: var(--cp-panel);
+      border: 1px solid var(--cp-line);
+      box-shadow: var(--cp-shadow);
     }
-
     .uuid-box {
       display: flex;
       gap: 10px;
@@ -33,24 +32,26 @@
       flex-wrap: wrap;
       padding: 12px 14px;
       border-radius: 14px;
-      background: rgba(7,17,31,0.78);
+      background: var(--cp-panel-strong);
       border: 1px solid var(--cp-line);
       direction: ltr;
       text-align: left;
       word-break: break-all;
+      color: var(--cp-text);
+      font-weight: 600;
     }
   </style>
 </head>
 <body class="cp-page">
   <header class="cp-topbar">
-    <a class="cp-brand" href="/dashboard.html"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
-    <a class="cp-backlink" href="/dashboard.html">חזרה לדאשבורד</a>
+    <a class="cp-brand" href="/dashboard"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
+    <a class="cp-backlink" href="/dashboard">חזרה לדאשבורד</a>
   </header>
 
   <main class="cp-shell profile-shell">
     <section class="cp-panel">
       <div class="cp-list-item" style="margin-bottom:18px;align-items:center;">
-        <div class="cp-brand-mark" id="avatar" style="width:72px;height:72px;border-radius:22px;">א</div>
+        <div class="cp-brand-mark" id="avatar" style="width:72px;height:72px;border-radius:22px;font-size:1.5rem;">א</div>
         <div class="cp-list-meta">
           <h1 id="nameDisplay">פרופיל</h1>
           <p class="cp-muted" id="emailDisplay">טוען...</p>
@@ -69,7 +70,7 @@
           <input class="cp-input" id="email" type="email" disabled>
         </div>
         <div class="cp-actions" style="margin-top:8px;">
-          <a class="cp-button-secondary" href="/dashboard.html">ביטול</a>
+          <a class="cp-button-secondary" href="/dashboard">ביטול</a>
           <button class="cp-button" type="submit" id="save">שמור שינויים</button>
         </div>
       </form>
@@ -90,9 +91,9 @@
   <script>
     const API='/api/v1';
     const token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token');
-    if(!token)location.href='/login.html';
+    if(!token)location.href='/login';
     const $=id=>document.getElementById(id),auth={Authorization:`Bearer ${token}`};
-    function clearSession(){localStorage.clear();sessionStorage.clear();location.href='/login.html'}
+    function clearSession(){localStorage.clear();sessionStorage.clear();location.href='/login'}
     function show(t,e=false){const n=$('notice');n.textContent=t;n.className=e?'cp-notice error':'cp-notice';n.hidden=false}
     async function load(){
       const [meResponse,businessesResponse]=await Promise.all([
