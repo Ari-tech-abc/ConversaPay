@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#f8fafc">
+  <title>ConversaPay | הדף לא נמצא</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+  <style>
+    .nf-shell{min-height:calc(100dvh - 92px);display:grid;place-items:center;padding:1.5rem 0 2.5rem}
+    .nf-card{width:min(640px,100%);text-align:center;display:grid;gap:1.25rem;justify-items:center;min-width:0}
+    .nf-code{width:96px;height:96px;border-radius:1.75rem;display:grid;place-items:center;background:#f5f3ff;border:1px solid #ddd6fe;color:var(--cp-accent);font:800 2rem/1 'Space Grotesk',sans-serif;box-shadow:0 8px 32px rgba(124,58,237,.12)}
+    .nf-copy{max-width:48ch;width:100%;min-width:0}
+    .nf-copy h1{font-size:clamp(1.9rem,5vw,3rem);margin:10px 0;line-height:1.1}
+    .nf-actions{width:min(440px,100%);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .nf-actions>*{min-width:0;width:100%}
+    .nf-links{width:100%;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;padding-top:.25rem}
+    @media(max-width:560px){.nf-shell{min-height:auto;padding:1.1rem 0 1.75rem}.nf-card{gap:1rem}.nf-code{width:78px;height:78px;border-radius:1.35rem;font-size:1.6rem}.nf-actions{grid-template-columns:1fr}}
+  </style>
+</head>
+<body class="cp-page">
+  <header class="cp-topbar">
+    <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
+    <a class="cp-button-secondary" href="/">חזרה לדף הבית</a>
+  </header>
+
+  <main class="cp-shell nf-shell">
+    <section class="cp-card nf-card">
+      <div class="nf-code" aria-hidden="true">404</div>
+      <div class="nf-copy">
+        <span class="cp-kicker" style="justify-content:center">הדף לא נמצא</span>
+        <h1>הכתובת הזאת לא קיימת</h1>
+        <p class="cp-muted">יכול להיות שהקישור השתנה, שהעמוד הוסר, או שנפלה טעות בהקלדה. אפשר לחזור לדף הבית או להמשיך לדאשבורד.</p>
+      </div>
+      <div class="cp-actions nf-actions">
+        <a class="cp-button" href="/">חזרה לדף הבית</a>
+        <a class="cp-button-secondary" id="backLink" href="/dashboard">מעבר לדאשבורד</a>
+      </div>
+      <div class="nf-links">
+        <a class="cp-link" href="/login">כניסה</a>
+        <a class="cp-link" href="/register">הרשמה</a>
+        <a class="cp-link" href="/wordpress">מדריך הטמעה</a>
+        <a class="cp-link" href="/setup-guide">מדריך התחלה</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="cp-footer">
+    <p>&copy; 2026 ConversaPay</p>
+    <p><a class="cp-link" href="/privacy">מדיניות פרטיות</a> · <a class="cp-link" href="/terms">תנאי שימוש</a></p>
+  </footer>
+
+  <script>
+    (function () {
+      var backLink = document.getElementById('backLink');
+      if (!backLink) return;
+      var token = localStorage.getItem('access_token')
+        || localStorage.getItem('conversapay_auth_token')
+        || sessionStorage.getItem('access_token')
+        || sessionStorage.getItem('conversapay_auth_token');
+      if (!token) {
+        backLink.setAttribute('href', '/login');
+        backLink.textContent = 'כניסה לחשבון';
+      }
+    }());
+  </script>
+</body>
+</html>

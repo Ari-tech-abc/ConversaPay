@@ -87,6 +87,9 @@ app.mount("/frontend", StaticFiles(directory=frontend_dir), name="frontend")
 async def conversapay_ui_stylesheet(): return FileResponse(_html("conversapay-ui.css"), media_type="text/css")
 @app.get("/")
 async def root(): return FileResponse(_html("home.html"))
+@app.get("/home")
+@app.get("/home.html")
+async def home_page(): return FileResponse(_html("home.html"))
 @app.get("/dashboard")
 @app.get("/dashboard.html")
 async def dashboard_page():
@@ -98,6 +101,8 @@ async def dashboard_page():
     return HTMLResponse(page)
 @app.get("/wordpress")
 @app.get("/wordpress.html")
+@app.get("/integration-guide")
+@app.get("/integration-guide.html")
 async def wordpress_operations_page(): return FileResponse(_html("wordpress.html"))
 @app.get("/login")
 @app.get("/login.html")
@@ -105,6 +110,15 @@ async def login_page(): return FileResponse(_html("login.html"))
 @app.get("/register")
 @app.get("/register.html")
 async def register_page(): return FileResponse(_html("register.html"))
+@app.get("/forgot-password")
+@app.get("/forgot-password.html")
+async def forgot_password_page(): return FileResponse(_html("forgot-password.html"))
+@app.get("/terms")
+@app.get("/terms.html")
+async def terms_page(): return FileResponse(_html("terms.html"))
+@app.get("/privacy")
+@app.get("/privacy.html")
+async def privacy_page(): return FileResponse(_html("privacy.html"))
 @app.get("/pay")
 @app.get("/pay.html")
 async def pay_page(): return FileResponse(_html("pay.html"))
@@ -164,8 +178,19 @@ async def site_builder_page(): return FileResponse(os.path.join(site_builder_dir
 async def robots(): return FileResponse(os.path.join(static_dir, "robots.txt"), media_type="text/plain")
 @app.get("/sitemap.xml", include_in_schema=False)
 async def sitemap(): return FileResponse(os.path.join(static_dir, "sitemap.xml"), media_type="application/xml")
+
+def _wants_html(request: Request) -> bool:
+    """True for real browser navigations, false for API/XHR calls."""
+    path = request.url.path
+    if path.startswith(settings.API_PREFIX) or path.startswith("/api/"): return False
+    if request.headers.get("x-requested-with") == "XMLHttpRequest": return False
+    return "text/html" in (request.headers.get("accept") or "")
+
 @app.exception_handler(404)
-async def not_found(request, exc): return JSONResponse(status_code=404, content={"error":"Not found","detail":str(exc.detail) if hasattr(exc,'detail') else "Not found"})
+async def not_found(request, exc):
+    if _wants_html(request):
+        return FileResponse(_html("404.html"), status_code=404)
+    return JSONResponse(status_code=404, content={"error":"Not found","detail":str(exc.detail) if hasattr(exc,'detail') else "Not found"})
 @app.exception_handler(500)
 async def internal_error(request, exc): return JSONResponse(status_code=500, content={"error":"Internal server error","detail":"An unexpected error occurred"})
 if __name__ == "__main__":
