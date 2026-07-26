@@ -1,53 +1,35 @@
 """Configuration management for ConversaPay backend."""
 from typing import List, Optional
-
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
 load_dotenv()
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=True,
-        extra="allow",
-    )
-
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="allow")
     SECRET_KEY: str
     ENVIRONMENT: str = "development"
     DEBUG: bool = False
     API_PREFIX: str = "/api/v1"
-
     SUPABASE_URL: str
     SUPABASE_ANON_KEY: str
     SUPABASE_SERVICE_ROLE_KEY: str
     GEMINI_API_KEY: str
-
     STRIPE_SECRET_KEY: Optional[str] = None
     STRIPE_WEBHOOK_SECRET: Optional[str] = None
     STRIPE_PRO_PRICE_ID: Optional[str] = None
     STRIPE_PREMIUM_PRICE_ID: Optional[str] = None
-    STRIPE_SUCCESS_URL: str = "https://conversapay.org"
-    STRIPE_CANCEL_URL: str = "https://conversapay.org"
-
+    STRIPE_SUCCESS_URL: Optional[str] = None
+    STRIPE_CANCEL_URL: Optional[str] = None
     RESEND_API_KEY: str
     EMAIL_FROM_ADDRESS: str
     EMAIL_FROM_NAME: str = "ConversaPay"
-
-    # Admin pages are hidden behind a secret path segment.
-    # Set this to a random string (e.g. a UUID) so that the admin pages
-    # are only reachable at /admin-<secret>/login etc.
-    # Anyone hitting /admin without the secret gets a 404.
     ADMIN_SECRET_PATH: str = ""
-
-    # Local origins must be explicitly opted into through the environment.
+    WEBHOOK_VERIFY_TOKEN: Optional[str] = None
     CORS_ORIGINS: str = "https://conversapay.org"
     FRONTEND_URL: str = "https://conversapay.org"
     BACKEND_URL: str = "https://conversapay.org"
     BASE_URL: str = "https://conversapay.org"
-
     SENTRY_DSN: Optional[str] = None
     UPTIMEROBOT_API_KEY: Optional[str] = None
 
