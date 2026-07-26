@@ -5,30 +5,30 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>ConversaPay | לדבר עם הלקוח ולסגור מכירה, במקום אחד</title>
   <meta name="description" content="ConversaPay עוזרת לעסק שלך לענות ללקוחות, להציע את המוצר הנכון ולקבל תשלום, הכל בשיחה אחת פשוטה וברורה.">
-  <meta name="theme-color" content="#07111f">
+  <meta name="theme-color" content="#f8fafc">
   <link rel="canonical" href="https://www.conversapay.org/">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
   <style>
-    .home-shell { display:grid; gap:2rem; }
+    .home-shell { display:grid; gap:2.5rem; }
     .hero-grid { display:grid; grid-template-columns:1.25fr .95fr; gap:1.4rem; align-items:stretch; }
-    .hero-panel { background:radial-gradient(circle at top right,rgba(55,215,255,.18),transparent 30%), radial-gradient(circle at bottom left,rgba(139,92,246,.14),transparent 26%), linear-gradient(135deg,rgba(124,92,255,.18),rgba(7,17,31,.96)); border-color:rgba(255,255,255,.1); }
+    .hero-panel { background:linear-gradient(135deg,#1e1b4b,#0f172a); border-color:rgba(124,58,237,.15); }
     .hero-stats { display:grid; gap:0.9rem; }
-    .stat-card { display:grid; gap:0.6rem; padding:1.4rem; border-radius:1.5rem; background:var(--cp-panel); border:1px solid var(--cp-line-strong); box-shadow:var(--cp-shadow); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
-    .feature-card,.timeline-card,.cta-card { display:grid; gap:0.6rem; padding:1.4rem; border-radius:1.5rem; background:var(--cp-panel); border:1px solid var(--cp-line-strong); box-shadow:var(--cp-shadow); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
-    .stat-value { font-size:1.8rem; font-weight:800; color:var(--cp-cyan); }
+    .stat-card { display:grid; gap:0.5rem; padding:1.4rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
+    .feature-card,.cta-card { display:grid; gap:0.5rem; padding:1.4rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
+    .stat-value { font-size:1.7rem; font-weight:800; color:var(--cp-accent); }
     .feature-grid,.timeline-grid,.proof-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:1rem; }
     .plans-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:1.1rem; }
-    .plan-card { display:grid; gap:0.75rem; padding:1.5rem; border-radius:1.6rem; background:var(--cp-panel); border:1px solid var(--cp-line-strong); box-shadow:var(--cp-shadow); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
-    .plan-card.featured { background:linear-gradient(135deg,rgba(55,215,255,.06),rgba(139,92,246,.08)); border-color:rgba(55,215,255,.28); }
-    .plan-list { margin:0; padding:0; list-style:none; display:grid; gap:0.6rem; }
+    .plan-card { display:grid; gap:0.75rem; padding:1.5rem; border-radius:1.5rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
+    .plan-card.featured { border-color:var(--cp-accent); box-shadow:0 0 0 3px rgba(124,58,237,.1),var(--cp-shadow); }
+    .plan-list { margin:0; padding:0; list-style:none; display:grid; gap:0.5rem; }
     .plan-list li { display:flex; gap:0.6rem; align-items:flex-start; color:var(--cp-muted-strong); font-weight:500; line-height:1.5; }
-    .plan-list li::before { content:'\2022'; color:#37d7ff; font-size:1.1rem; }
-    .timeline-step { display:grid; gap:0.5rem; padding:1.1rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line-strong); box-shadow:0 4px 16px rgba(0,0,0,.2); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+    .plan-list li::before { content:'\2713'; color:var(--cp-green); font-weight:700; }
+    .timeline-step { display:grid; gap:0.5rem; padding:1.1rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
     .timeline-step strong { color:var(--cp-text); font-weight:700; }
-    .proof-card { padding:1.1rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line-strong); box-shadow:0 4px 16px rgba(0,0,0,.2); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+    .proof-card { padding:1.1rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
     .proof-card strong { color:var(--cp-text); font-weight:700; }
     .section-head { text-align:center; display:grid; gap:0.5rem; }
     .section-head h2 { color:var(--cp-text); font-weight:700; }
