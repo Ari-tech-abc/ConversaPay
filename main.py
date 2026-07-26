@@ -1,6 +1,6 @@
 import os, logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from dotenv import load_dotenv
@@ -151,7 +151,7 @@ if _admin_secret:
     @app.get(f"/admin-{_admin_secret}/change-password")
     async def admin_change_password_page_secret(): return FileResponse(_html("admin-change-password.html"))
 
-    # Old public admin routes now return 404
+    # Old public admin routes now return 404 (cloaked)
     @app.get("/admin")
     @app.get("/admin.html")
     async def admin_page_hidden():
@@ -166,6 +166,11 @@ if _admin_secret:
     @app.get("/admin-change-password.html")
     async def admin_change_password_page_hidden():
         raise HTTPException(status_code=404, detail="Not found")
+
+    # Catch-all for any /admin/* path variations that scanners might try
+    @app.get("/admin/{path:path}")
+    async def admin_catchall_hidden(path: str):
+        raise HTTPException(status_code=404, detail="Not found")
 else:
     # No secret configured: serve admin pages normally (dev mode)
     @app.get("/admin")
@@ -177,9 +182,6 @@ else:
     @app.get("/admin/change-password")
     @app.get("/admin-change-password.html")
     async def admin_change_password_page(): return FileResponse(_html("admin-change-password.html"))
-
-# Need to import HTTPException for admin 404
-from fastapi import HTTPException as HTTPException
 
 @app.get("/setup-guide")
 @app.get("/setup-guide.html")
