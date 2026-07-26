@@ -117,6 +117,9 @@ if _admin_secret:
     async def admin_login_page_secret(): return FileResponse(_html("admin-login.html"))
     @app.get(f"/admin-{_admin_secret}/change-password")
     async def admin_change_password_page_secret(): return FileResponse(_html("admin-change-password.html"))
+    @app.post(f"{prefix}/admin-{_admin_secret}/login", response_model=admin.AdminLoginResponse)
+    async def admin_login_api_secret(credentials: admin.AdminLogin, request):
+        return await admin.admin_login(credentials, request)
     @app.get("/admin")
     @app.get("/admin.html")
     async def admin_page_hidden(): raise HTTPException(status_code=404, detail="Not found")
