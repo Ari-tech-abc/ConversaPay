@@ -480,7 +480,7 @@
   <main class="cp-shell dash">
     <header class="topbar">
       <div class="topbar-left">
-        <a class="cp-brand" href="home.html">
+        <a class="cp-brand" href="/">
           <span class="cp-brand-mark">CP</span>
           <span>ConversaPay</span>
         </a>
@@ -492,10 +492,10 @@
 
       <div class="topbar-right">
         <nav class="nav-pills" aria-label="ניווט מהיר">
-          <a class="nav-pill active" href="dashboard.html">Dashboard</a>
-          <a class="nav-pill" href="upgrade.html">מסלולים</a>
-          <a class="nav-pill" href="settings.html">הגדרות</a>
-          <a class="nav-pill" href="setup-guide.html">הטמעה</a>
+          <a class="nav-pill active" href="/dashboard">Dashboard</a>
+          <a class="nav-pill" href="/upgrade">מסלולים</a>
+          <a class="nav-pill" href="/settings">הגדרות</a>
+          <a class="nav-pill" href="/setup-guide">הטמעה</a>
         </nav>
         <button class="cp-button-secondary" id="logout" type="button">יציאה</button>
       </div>
@@ -569,8 +569,8 @@
           <span class="cp-badge good">מסודר</span>
         </div>
         <div class="bottom-actions">
-          <a class="cp-button-secondary" href="setup-guide.html">מדריך הטמעה</a>
-          <a class="cp-button-secondary" href="upgrade.html">ניהול מסלול</a>
+          <a class="cp-button-secondary" href="/setup-guide">מדריך הטמעה</a>
+          <a class="cp-button-secondary" href="/upgrade">ניהול מסלול</a>
         </div>
       </article>
     </section>
@@ -667,7 +667,7 @@
           </div>
           <div class="bottom-actions">
             <button class="cp-button" id="addDomainButton" type="submit">הוסף דומיין</button>
-            <a class="cp-button-secondary" href="setup-guide.html">מדריך חיבור</a>
+            <a class="cp-button-secondary" href="/setup-guide">מדריך חיבור</a>
           </div>
         </form>
 
@@ -730,7 +730,7 @@
     </section>
   </main>
 
-  <a class="profile-dock" href="profile.html" aria-label="פרופיל">
+  <a class="profile-dock" href="/profile" aria-label="פרופיל">
     <div class="profile-dock-card">
       <span class="profile-avatar" id="profileDockAvatar">C</span>
       <div class="profile-meta">
@@ -742,6 +742,7 @@
 
   <script>
     const API = '/api/v1';
+    const LOGIN_ROUTE = '/login';
     const state = {
       token: localStorage.getItem('access_token') ||
         localStorage.getItem('conversapay_auth_token') ||
@@ -778,7 +779,7 @@
         localStorage.removeItem(key);
         sessionStorage.removeItem(key);
       });
-      location.href = 'login.html';
+      location.href = LOGIN_ROUTE;
     }
 
     function showNotice(message) {
