@@ -1,50 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    <!-- Homepage / Landing Page -->
-    <url>
-        <loc>https://conversapay.org/</loc>
-        <lastmod>2026-07-18</lastmod>
-        <changefreq>daily</changefreq>
-        <priority>1.0</priority>
-    </url>
-    
-    <!-- Login Page -->
-    <url>
-        <loc>https://conversapay.org/login.html</loc>
-        <lastmod>2026-07-18</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    
-    <!-- Register Page -->
-    <url>
-        <loc>https://conversapay.org/register.html</loc>
-        <lastmod>2026-07-18</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.8</priority>
-    </url>
-    
-    <!-- Dashboard Page (authenticated) -->
-    <url>
-        <loc>https://conversapay.org/dashboard.html</loc>
-        <lastmod>2026-07-18</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.7</priority>
-    </url>
-    
-    <!-- Payment Page -->
-    <url>
-        <loc>https://conversapay.org/pay.html</loc>
-        <lastmod>2026-07-18</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.6</priority>
-    </url>
-    
-    <!-- Chat Interface -->
-    <url>
-        <loc>https://conversapay.org/index.html</loc>
-        <lastmod>2026-07-18</lastmod>
-        <changefreq>monthly</changefreq>
-        <priority>0.7</priority>
-    </url>
+  <url>
+    <loc>https://conversapay.org/</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://conversapay.org/terms</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://conversapay.org/privacy</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://conversapay.org/setup-guide</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://conversapay.org/widget-demo</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
 </urlset>
