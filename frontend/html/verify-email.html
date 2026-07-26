@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#f8fafc">
+  <title>ConversaPay | אימות אימייל</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+  <style>
+    .verify-card{width:min(620px,100%);display:grid;gap:1.1rem;justify-items:center;text-align:center;min-width:0}
+    .verify-icon{width:82px;height:82px;border-radius:1.5rem;display:grid;place-items:center;background:#f5f3ff;border:1px solid #c4b5fd;color:var(--cp-accent);font-size:2.2rem}
+    .verify-actions{width:min(440px,100%);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .verify-actions>*{min-width:0}
+    @media(max-width:560px){.verify-actions{grid-template-columns:1fr}.verify-actions>*{width:100%}}
+  </style>
+</head>
+<body class="cp-page">
+  <header class="cp-topbar">
+    <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
+    <a class="cp-backlink" href="/login">חזרה לכניסה</a>
+  </header>
+
+  <main class="cp-shell cp-center-shell">
+    <section class="cp-card verify-card" aria-live="polite">
+      <div class="verify-icon" aria-hidden="true">✉</div>
+      <span class="cp-kicker cp-center-inline">אימות חשבון</span>
+      <h1 class="cp-flush" id="title">בדקו את תיבת הדואר</h1>
+      <p class="cp-muted" id="description">שלחנו קישור אימות לכתובת שאיתה נרשמתם. לחיצה על הקישור תפעיל את החשבון ותעביר אתכם ישירות לדאשבורד.</p>
+      <div class="cp-notice warning" id="notice" hidden></div>
+      <div class="cp-list cp-full">
+        <div class="cp-list-item"><div class="cp-list-meta"><strong>לא רואים את האימייל?</strong><small>בדקו גם בתיקיית הספאם או במקודם וקידומי מכירות</small></div></div>
+        <div class="cp-list-item"><div class="cp-list-meta"><strong>הקישור פג תוקף?</strong><small>אפשר להירשם שוב עם אותה כתובת כדי לקבל קישור חדש</small></div></div>
+      </div>
+      <div class="cp-actions verify-actions">
+        <a class="cp-button" href="/login">מעבר לכניסה</a>
+        <a class="cp-button-secondary" href="/register">הרשמה מחדש</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const API = '/api/v1';
+    const DASHBOARD_ROUTE = '/dashboard';
+    const LOGIN_ROUTE = '/login';
+    const title = document.getElementById('title');
+    const description = document.getElementById('description');
+    const notice = document.getElementById('notice');
+
+    function warn(message) {
+      notice.textContent = message;
+      notice.hidden = false;
+    }
+
+    (async () => {
+      const hash = new URLSearchParams(location.hash.slice(1));
+      const query = new URLSearchParams(location.search);
+
+      if (query.get('error') || hash.get('error')) {
+        title.textContent = 'האימות לא הושלם';
+        description.textContent = 'קישור האימות פג תוקף או כבר נוצל. אפשר לנסות להיכנס או לבקש קישור חדש.';
+        warn(query.get('error_description') || hash.get('error_description') || 'קישור אימות לא תקין.');
+        return;
+      }
+
+      const isVerificationReturn = Boolean(query.get('code')) || hash.get('type') === 'signup' || Boolean(hash.get('access_token'));
+      if (!isVerificationReturn) return;
+
+      title.textContent = 'מאמת את החשבון...';
+      description.textContent = 'רגע אחד, משלימים את האימות ומעבירים אתכם לדאשבורד.';
+
+      try {
+        const cfg = await (await fetch(`${API}/config/public`)).json();
+        const sb = window.supabase.createClient(cfg.supabase_url, cfg.supabase_anon_key);
+
+        if (query.get('code')) {
+          const exchanged = await sb.auth.exchangeCodeForSession(location.href);
+          if (exchanged.error) throw exchanged.error;
+        }
+
+        const { data } = await sb.auth.getSession();
+        if (!data.session) throw new Error('missing session');
+
+        const s = data.session;
+        localStorage.setItem('access_token', s.access_token);
+        localStorage.setItem('user_id', s.user.id);
+        localStorage.setItem('email', s.user.email || '');
+
+        await fetch(`${API}/auth/oauth/session`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${s.access_token}` }
+        }).catch(() => {});
+
+        location.replace(DASHBOARD_ROUTE);
+      } catch (error) {
+        console.error('[verify-email]', error);
+        title.textContent = 'האימות לא הושלם';
+        description.textContent = 'לא הצלחנו לאמת אוטומטית. נסו להיכנס עם האימייל והסיסמה שלכם.';
+        warn('אם הבעיה חוזרת, בקשו קישור אימות חדש ממסך ההרשמה.');
+        setTimeout(() => { location.href = LOGIN_ROUTE; }, 4000);
+      }
+    })();
+  </script>
+</body>
+</html>

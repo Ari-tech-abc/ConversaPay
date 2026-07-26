@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#f8fafc">
+  <title>ConversaPay | הדף לא נמצא</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+  <style>
+    .error-card{width:min(620px,100%);text-align:center;display:grid;gap:1.25rem;justify-items:center;min-width:0}
+    .error-code{font:800 clamp(4rem,14vw,7rem)/1 'Space Grotesk',sans-serif;letter-spacing:-.06em;color:var(--cp-accent)}
+    .error-actions{width:min(440px,100%);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .error-actions>*{min-width:0}
+    @media(max-width:560px){.error-actions{grid-template-columns:1fr}.error-actions>*{width:100%}}
+  </style>
+</head>
+<body class="cp-page">
+  <header class="cp-topbar">
+    <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
+    <a class="cp-backlink" href="/">חזרה לדף הבית</a>
+  </header>
+
+  <main class="cp-shell cp-center-shell">
+    <section class="cp-card error-card">
+      <span class="cp-kicker cp-center-inline">Error 404</span>
+      <div class="error-code" aria-hidden="true">404</div>
+      <h1 class="cp-flush">הדף שחיפשת לא קיים</h1>
+      <p class="cp-muted">יכול להיות שהכתובת השתנתה, שהקישור שבור או שאין לך הרשאה לעמוד הזה.</p>
+      <div class="cp-actions error-actions">
+        <a class="cp-button" href="/">דף הבית</a>
+        <a class="cp-button-secondary" href="/dashboard">הדאשבורד</a>
+      </div>
+      <div class="cp-links">
+        <a class="cp-link" href="/login">כניסה</a>
+        <a class="cp-link" href="/setup-guide">מדריך הטמעה</a>
+        <a class="cp-link" href="/upgrade">מסלולים</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="cp-footer">
+    <p>&copy; 2026 ConversaPay</p>
+  </footer>
+</body>
+</html>
