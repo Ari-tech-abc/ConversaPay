@@ -1,6 +1,6 @@
 import os, logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from dotenv import load_dotenv
@@ -118,7 +118,7 @@ if _admin_secret:
     @app.get(f"/admin-{_admin_secret}/change-password")
     async def admin_change_password_page_secret(): return FileResponse(_html("admin-change-password.html"))
     @app.post(f"{prefix}/admin-{_admin_secret}/login", response_model=admin.AdminLoginResponse)
-    async def admin_login_api_secret(credentials: admin.AdminLogin, request):
+    async def admin_login_api_secret(credentials: admin.AdminLogin, request: Request):
         return await admin.admin_login(credentials, request)
     @app.get("/admin")
     @app.get("/admin.html")
