@@ -9,7 +9,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 from backend.config import settings
-from backend.routers import auth, businesses, products, chat, orders, payments, logs, webhooks, analytics, widget, admin, dashboard, api_keys, site_builder, profile
+from backend.routers import auth, onboarding, businesses, products, chat, orders, payments, logs, webhooks, analytics, widget, admin, dashboard, api_keys, site_builder, profile
 from backend.routers.admin_password import router as admin_password_router
 from backend.routers.stripe_webhook import router as stripe_webhook_router
 from backend.routers.whatsapp import router as whatsapp_webhook_router
@@ -51,7 +51,7 @@ async def public_config(): return {"supabase_url": settings.SUPABASE_URL, "supab
 
 prefix = settings.API_PREFIX
 for router, route_prefix, tag in [
-    (auth.router, f"{prefix}/auth", "authentication"), (profile.router, f"{prefix}/profile", "profile"), (businesses.router, prefix, "businesses"), (products.router, prefix, "products"), (chat.router, prefix, "chat"), (orders.router, prefix, "orders"), (payments.router, prefix, "payments"), (logs.router, prefix, "logs"), (webhooks.router, prefix, "webhooks"), (analytics.router, prefix, "analytics"), (widget.router, prefix, "widget"), (dashboard.router, prefix, "dashboard"), (admin.router, prefix, "admin"), (admin_password_router, prefix, "admin-security"), (api_keys.router, prefix, "api-keys"), (site_builder.router, prefix, "site-builder"), (stripe_webhook_router, prefix, "stripe-webhook"), (whatsapp_webhook_router, prefix, "whatsapp-webhook")
+    (onboarding.router, f"{prefix}/auth", "authentication-onboarding"), (auth.router, f"{prefix}/auth", "authentication"), (profile.router, f"{prefix}/profile", "profile"), (businesses.router, prefix, "businesses"), (products.router, prefix, "products"), (chat.router, prefix, "chat"), (orders.router, prefix, "orders"), (payments.router, prefix, "payments"), (logs.router, prefix, "logs"), (webhooks.router, prefix, "webhooks"), (analytics.router, prefix, "analytics"), (widget.router, prefix, "widget"), (dashboard.router, prefix, "dashboard"), (admin.router, prefix, "admin"), (admin_password_router, prefix, "admin-security"), (api_keys.router, prefix, "api-keys"), (site_builder.router, prefix, "site-builder"), (stripe_webhook_router, prefix, "stripe-webhook"), (whatsapp_webhook_router, prefix, "whatsapp-webhook")
 ]: app.include_router(router, prefix=route_prefix, tags=[tag])
 if not settings.is_production:
     from backend.routers.dev_simulator import router as dev_simulator_router
@@ -96,6 +96,8 @@ async def dashboard_page():
     if wordpress_link not in page and "</nav>" in page: page = page.replace("</nav>", f"{wordpress_link}</nav>", 1)
     style_link = '<link rel="stylesheet" href="/frontend/html/saas-overrides.css">'
     if style_link not in page: page = page.replace('</head>', f'{style_link}</head>', 1)
+    onboarding_script = '<script src="/frontend/js/business-onboarding.js" defer></script>'
+    if onboarding_script not in page: page = page.replace('</head>', f'{onboarding_script}</head>', 1)
     return HTMLResponse(page)
 @app.get("/wordpress")
 @app.get("/wordpress.html")
