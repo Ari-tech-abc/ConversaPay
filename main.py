@@ -26,7 +26,7 @@ class DualCORSMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         origin = request.headers.get("origin")
         path = request.url.path
-        public = any(path.startswith(x) for x in (f"{settings.API_PREFIX}/chat", f"{settings.API_PREFIX}/widget", f"{settings.API_PREFIX}/webhooks/", f"{settings.API_PREFIX}/orders/", f"{settings.API_PREFIX}/site-builder/verify"))
+        public = any(path.startswith(x) for x in (f"{settings.API_PREFIX}/chat", f"{settings.API_PREFIX}/widget", f"{settings.API_PREFIX}/webhooks/", f"{settings.API_PREFIX}/orders/", f"{settings.API_PREFIX}/site-builder/"))
         if request.method == "OPTIONS":
             response = Response()
             response.headers["Access-Control-Allow-Origin"] = "*" if public else (origin if origin in settings.cors_origins_list else "")
