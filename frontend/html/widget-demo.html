@@ -3,57 +3,57 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f8fafc">
   <title>ConversaPay Widget Demo</title>
   <meta name="description" content="Simple public page for testing the ConversaPay widget embed.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
   <style>
-    :root { color-scheme: light; --ink: #18212f; --muted: #64748b; --line: #e2e8f0; --surface: #ffffff; --wash: #f6f8fb; --accent: #635bff; }
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; color: var(--ink); background: var(--wash); font: 16px/1.6 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    .site { width: min(920px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 80px; }
-    header { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 0 48px; }
-    .brand { color: var(--ink); font-weight: 800; text-decoration: none; letter-spacing: -.03em; }
-    .tag { color: var(--muted); font-size: .9rem; }
-    main { display: grid; gap: 24px; }
-    .hero, .setup { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: clamp(22px, 5vw, 44px); }
-    .hero { min-height: 320px; display: grid; align-content: center; gap: 16px; }
-    h1 { max-width: 14ch; margin: 0; font-size: clamp(2.2rem, 8vw, 4.8rem); line-height: 1; letter-spacing: -.07em; }
-    h2 { margin: 0; font-size: 1.15rem; }
-    p { max-width: 62ch; margin: 0; color: var(--muted); }
-    .button { display: inline-flex; width: fit-content; min-height: 44px; align-items: center; padding: 10px 16px; border: 0; border-radius: 10px; background: var(--accent); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
-    .button.secondary { background: #eef2ff; color: #3730a3; }
-    .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
-    .setup { display: grid; gap: 16px; }
-    .code { margin: 0; padding: 16px; overflow: auto; border-radius: 12px; background: #111827; color: #e5e7eb; direction: ltr; text-align: left; white-space: pre-wrap; overflow-wrap: anywhere; font: .9rem/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
-    .note { padding: 12px 14px; border-radius: 10px; background: #fff7ed; color: #9a3412; font-size: .92rem; }
-    .status { min-height: 24px; color: var(--muted); font-size: .92rem; }
-    @media (max-width: 560px) { .site { width: min(100% - 20px, 920px); padding-top: 14px; } header { padding-bottom: 28px; align-items: flex-start; flex-direction: column; gap: 4px; } .hero, .setup { border-radius: 14px; padding: 22px 18px; } h1 { max-width: 11ch; } .actions, .button { width: 100%; } .button { justify-content: center; } }
+    .demo-shell { display: grid; gap: 1.5rem; max-width: 920px; margin-inline: auto; }
+    .demo-hero { min-height: 300px; display: grid; align-content: center; gap: 1rem; }
+    .demo-setup { display: grid; gap: 1rem; }
+    .demo-status { min-height: 24px; color: var(--cp-muted); font-size: .92rem; }
+    .demo-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    @media (max-width: 560px) {
+      .demo-actions { display: grid; grid-template-columns: 1fr; }
+      .demo-actions > * { width: 100%; }
+    }
   </style>
 </head>
-<body>
-  <div class="site">
-    <header><a class="brand" href="/">ConversaPay</a><span class="tag">Widget integration demo</span></header>
-    <main>
-      <section class="hero">
-        <span class="tag">A plain test page</span>
-        <h1>Talk to this demo.</h1>
-        <p>This page exists only to test the ConversaPay chat widget. Add your business ID and widget API key in the URL, then open the chat button in the corner.</p>
-        <div class="actions"><button class="button" id="loadWidget" type="button">Load widget</button><button class="button secondary" id="copyUrl" type="button">Copy test URL</button></div>
-        <div class="status" id="status" aria-live="polite"></div>
-      </section>
-      <section class="setup">
-        <h2>Quick setup</h2>
-        <p>Open this page with your values:</p>
-        <pre class="code" id="urlCode">/widget-demo.html?business_id=YOUR_BUSINESS_UUID&amp;api_key=YOUR_WIDGET_API_KEY</pre>
-        <div class="note">For a real external embed, use a PRO or PREMIUM business and its active widget API key. This demo page has no extra login or app layer.</div>
-        <p>Console option:</p>
-        <pre class="code">window.ConversaPayWidgetConfig = {
+<body class="cp-page">
+  <header class="cp-topbar">
+    <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
+    <span class="cp-badge">Widget integration demo</span>
+  </header>
+
+  <main class="cp-shell demo-shell">
+    <section class="cp-panel cp-stack demo-hero">
+      <span class="cp-kicker">A plain test page</span>
+      <h1 class="cp-title">Talk to this demo.</h1>
+      <p class="cp-subtitle">This page exists only to test the ConversaPay chat widget. Add your business ID and widget API key in the URL, then open the chat button in the corner.</p>
+      <div class="demo-actions">
+        <button class="cp-button" id="loadWidget" type="button">Load widget</button>
+        <button class="cp-button-secondary" id="copyUrl" type="button">Copy test URL</button>
+      </div>
+      <div class="demo-status" id="status" aria-live="polite"></div>
+    </section>
+
+    <section class="cp-panel demo-setup">
+      <h2>Quick setup</h2>
+      <p class="cp-muted">Open this page with your values:</p>
+      <pre class="cp-code" id="urlCode">/widget-demo?business_id=YOUR_BUSINESS_UUID&amp;api_key=YOUR_WIDGET_API_KEY</pre>
+      <div class="cp-notice warning">For a real external embed, use a PRO or PREMIUM business and its active widget API key. This demo page has no extra login or app layer.</div>
+      <p class="cp-muted">Console option:</p>
+      <pre class="cp-code">window.ConversaPayWidgetConfig = {
   business_id: 'YOUR_BUSINESS_UUID',
   api_key: 'YOUR_WIDGET_API_KEY'
 };
 location.reload();</pre>
-      </section>
-    </main>
-  </div>
+    </section>
+  </main>
+
   <script>
     const params = new URLSearchParams(location.search);
     const state = {
@@ -62,7 +62,7 @@ location.reload();</pre>
     };
     const status = document.getElementById('status');
     const urlCode = document.getElementById('urlCode');
-    const demoUrl = () => `${location.origin}/widget-demo.html?business_id=${encodeURIComponent(state.businessId || 'YOUR_BUSINESS_UUID')}&api_key=${encodeURIComponent(state.apiKey || 'YOUR_WIDGET_API_KEY')}`;
+    const demoUrl = () => `${location.origin}/widget-demo?business_id=${encodeURIComponent(state.businessId || 'YOUR_BUSINESS_UUID')}&api_key=${encodeURIComponent(state.apiKey || 'YOUR_WIDGET_API_KEY')}`;
     const setStatus = (message) => { status.textContent = message; };
     function loadWidget() {
       if (!state.businessId || !state.apiKey) {
