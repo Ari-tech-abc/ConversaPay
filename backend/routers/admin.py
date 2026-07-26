@@ -5,12 +5,13 @@ requests, completely hiding the existence of admin routes from scanners.
 """
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
-import hashlib, secrets
+import hashlib, logging, secrets
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 from supabase import create_client
 from backend.config import settings
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/admin", tags=["admin"])
 supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
 
@@ -27,6 +28,10 @@ class AbuseReportCreate(BaseModel):
     business_id: str; domain: Optional[str] = None; report_type: str; severity: str = "medium"; description: str; evidence: Optional[Dict[str, Any]] = None
 
 _NOT_FOUND = HTTPException(status_code=404, detail="Not found")
+
+def _fail(reason: str):
+    logger.error("[ADMIN LOGIN FAILED] Reason: %s", reason)
+    raise HTTPException(status_code=404, detail="Not found")
 
 def hash_password(password: str) -> str:
     salt = secrets.token_hex(32); digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100000)
@@ -49,50 +54,66 @@ def verify_admin_token(token: str):
 async def require_admin(request: Request):
     """Verify admin JWT. Returns 404 on failure to hide endpoint existence."""
     header = request.headers.get("Authorization", "")
-    if not header.startswith("Bearer "): raise _NOT_FOUND
+    if not header.startswith("Bearer "): raise _fail("missing bearer token")
     payload = verify_admin_token(header.split(" ", 1)[1])
-    if not payload: raise _NOT_FOUND
+    if not payload: raise _fail("invalid or expired admin token")
     try:
         result = supabase.table("admin_users").select("id,role,status").eq("id", payload["admin_id"]).limit(1).execute()
-        if not result.data or result.data[0].get("status") != "active": raise _NOT_FOUND
-        if result.data[0].get("role") not in ("admin", "super_admin"): raise _NOT_FOUND
+        if not result.data or result.data[0].get("status") != "active": raise _fail("admin record missing or inactive")
+        if result.data[0].get("role") not in ("admin", "super_admin"): raise _fail("admin role rejected")
     except HTTPException: raise
-    except Exception: raise _NOT_FOUND
+    except Exception as exc:
+        logger.exception("[ADMIN LOGIN FAILED] Reason: admin token database lookup failed: %s", exc)
+        raise HTTPException(status_code=404, detail="Not found") from exc
     return payload
 
 def _find_admin(identifier: str):
-    result = supabase.table("admin_users").select("*").eq("username", identifier).execute()
-    if result.data: return result.data[0]
-    result = supabase.table("admin_users").select("*").eq("email", identifier).execute()
-    return result.data[0] if result.data else None
+    try:
+        result = supabase.table("admin_users").select("*").eq("username", identifier).execute()
+        if result.data:
+            logger.info("[ADMIN LOGIN] admin_users lookup by username found=True")
+            return result.data[0]
+        result = supabase.table("admin_users").select("*").eq("email", identifier).execute()
+        found = bool(result.data)
+        logger.info("[ADMIN LOGIN] admin_users lookup by email found=%s", found)
+        return result.data[0] if result.data else None
+    except Exception as exc:
+        logger.exception("[ADMIN LOGIN] admin_users lookup failed: %s", exc)
+        return None
+
 def _audit(admin_id, action, request, resource_type=None, resource_id=None, business_id=None, details=None):
     supabase.table("admin_audit_logs").insert({"admin_id": admin_id, "action": action, "resource_type": resource_type, "resource_id": resource_id, "business_id": business_id, "details": details or {}, "ip_address": request.client.host if request.client else None, "user_agent": request.headers.get("user-agent")}).execute()
 
-def _login_response(credentials: AdminLogin, request: Request):
+def _login_response(credentials: AdminLogin, request: Request, secret_path: str | None = None):
+    safe_secret = secret_path if secret_path is not None else "<legacy-route>"
+    logger.info("[ADMIN LOGIN] received_secret_path=%s expected_secret_path=%s", safe_secret, settings.ADMIN_SECRET_PATH.strip() or "<unset>")
     admin = _find_admin(credentials.identifier.strip())
-    if not admin: raise _NOT_FOUND
+    if not admin: _fail("admin user not found")
     if admin.get("locked_until"):
         locked = datetime.fromisoformat(str(admin["locked_until"]).replace("Z", "+00:00")); locked = locked if locked.tzinfo else locked.replace(tzinfo=timezone.utc)
-        if locked > datetime.now(timezone.utc): raise _NOT_FOUND
-    if admin.get("status") != "active": raise _NOT_FOUND
-    if not verify_password(credentials.password, admin["password_hash"]):
+        if locked > datetime.now(timezone.utc): _fail("admin account locked")
+    if admin.get("status") != "active": _fail("admin account inactive")
+    password_valid = verify_password(credentials.password, admin.get("password_hash", ""))
+    logger.info("[ADMIN LOGIN] password verification result=%s", password_valid)
+    if not password_valid:
         attempts = (admin.get("login_attempts") or 0) + 1; lock = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat() if attempts >= 5 else None
         supabase.table("admin_users").update({"login_attempts": attempts, "locked_until": lock}).eq("id", admin["id"]).execute()
-        raise _NOT_FOUND
+        _fail("password verification failed")
     supabase.table("admin_users").update({"login_attempts": 0, "locked_until": None, "last_login": datetime.now(timezone.utc).isoformat()}).eq("id", admin["id"]).execute()
     token = create_admin_token(admin["id"], admin["email"]); _audit(admin["id"], "admin_login", request)
+    logger.info("[ADMIN LOGIN] success admin_id=%s", admin["id"])
     return {"access_token": token, "token_type": "bearer", "admin_id": admin["id"], "email": admin["email"], "role": admin["role"]}
 
 @router.post("/login", response_model=AdminLoginResponse)
 async def admin_login(credentials: AdminLogin, request: Request):
     return _login_response(credentials, request)
 
-# The router is mounted at /api/v1, so this becomes /api/v1/admin-{secret_path}/login.
-# It intentionally does not repeat /api/v1 or the /admin prefix.
 @router.post("-{secret_path}/login", response_model=AdminLoginResponse)
 async def admin_login_secret(secret_path: str, credentials: AdminLogin, request: Request):
-    if not settings.ADMIN_SECRET_PATH or secret_path != settings.ADMIN_SECRET_PATH.strip(): raise _NOT_FOUND
-    return _login_response(credentials, request)
+    logger.info("[ADMIN LOGIN] secret_path received=%s expected=%s", secret_path, settings.ADMIN_SECRET_PATH.strip() or "<unset>")
+    if not settings.ADMIN_SECRET_PATH: _fail("ADMIN_SECRET_PATH is unset")
+    if secret_path != settings.ADMIN_SECRET_PATH.strip(): _fail("secret path mismatch")
+    return _login_response(credentials, request, secret_path)
 
 @router.get("/dashboard")
 async def admin_dashboard(admin: dict = Depends(require_admin)):
