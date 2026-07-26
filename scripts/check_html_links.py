@@ -33,6 +33,12 @@ ROUTES = {
     "/login.html": "frontend/html/login.html",
     "/register": "frontend/html/register.html",
     "/register.html": "frontend/html/register.html",
+    "/forgot-password": "frontend/html/forgot-password.html",
+    "/forgot-password.html": "frontend/html/forgot-password.html",
+    "/terms": "frontend/html/terms.html",
+    "/terms.html": "frontend/html/terms.html",
+    "/privacy": "frontend/html/privacy.html",
+    "/privacy.html": "frontend/html/privacy.html",
     "/pay": "frontend/html/pay.html",
     "/pay.html": "frontend/html/pay.html",
     "/upgrade": "frontend/html/upgrade.html",
@@ -49,6 +55,8 @@ ROUTES = {
     "/admin-change-password.html": "frontend/html/admin-change-password.html",
     "/setup-guide": "frontend/html/setup-guide.html",
     "/setup-guide.html": "frontend/html/setup-guide.html",
+    "/widget-demo": "frontend/html/widget-demo.html",
+    "/widget-demo.html": "frontend/html/widget-demo.html",
     "/auth/callback": "frontend/html/auth-callback.html",
     "/site-builder": "conversapay-site-builder/frontend/index.html",
     "/frontend/html/conversapay-ui.css": "frontend/html/conversapay-ui.css",
@@ -76,9 +84,12 @@ def target_for(raw: str, source: Path) -> tuple[Path | None, str | None]:
     if path in SKIP_PREFIXES or any(path.startswith(prefix) for prefix in ("/api/", "/docs", "/redoc")):
         return None, None
     if path.startswith("/"):
-        repo_path = ROUTES.get(path)
-        if repo_path is None:
-            repo_path = path.lstrip("/")
+        if path.startswith("/images/"):
+            repo_path = f"frontend{path}"
+        else:
+            repo_path = ROUTES.get(path)
+            if repo_path is None:
+                repo_path = path.lstrip("/")
     else:
         repo_path = str((source.parent / path).relative_to(ROOT))
     return ROOT / repo_path, fragment
