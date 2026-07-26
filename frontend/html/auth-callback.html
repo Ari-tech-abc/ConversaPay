@@ -1,84 +1,14 @@
 <!doctype html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>ConversaPay - מתחבר...</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ConversaPay - מתחבר...</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
 </head>
-<body class="cp-page">
-  <main class="cp-shell" style="display:grid;place-items:center;min-height:calc(100vh - 80px);">
-    <section class="cp-card" style="width:min(480px,100%);text-align:center;">
-      <div class="cp-spinner" aria-hidden="true"></div>
-      <h1 style="margin-bottom:10px;">מתחבר לחשבון</h1>
-      <p id="status" class="cp-muted">מאמת פרטי התחברות...</p>
-    </section>
-  </main>
-
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-  <script>
-    const API = '/api/v1';
-    const DASHBOARD_ROUTE = '/dashboard';
-    const LOGIN_ROUTE = '/login';
-    const statusNode = document.getElementById('status');
-
-    function setStatus(message) {
-      if (statusNode) statusNode.textContent = message;
-    }
-
-    function fail(reason) {
-      console.error('[OAuth callback failed]', reason || 'unknown reason');
-      localStorage.setItem('auth_error', 'callback_error');
-      if (reason) localStorage.setItem('auth_error_detail', String(reason));
-      location.replace(LOGIN_ROUTE);
-    }
-
-    (async () => {
-      try {
-        setStatus('טוען הגדרות התחברות...');
-        const cfg = await (await fetch(`${API}/config/public`)).json();
-        const sb = window.supabase.createClient(cfg.supabase_url, cfg.supabase_anon_key);
-        const hash = new URLSearchParams(location.hash.slice(1));
-        const query = new URLSearchParams(location.search);
-
-        if (query.get('error') || hash.get('error')) {
-          return fail(query.get('error_description') || hash.get('error_description') || query.get('error') || hash.get('error'));
-        }
-
-        if (query.get('code')) {
-          setStatus('משלים התחברות מול Google...');
-          const x = await sb.auth.exchangeCodeForSession(location.href);
-          if (x.error) throw x.error;
-        }
-
-        setStatus('בודק Session...');
-        const { data } = await sb.auth.getSession();
-        if (!data.session) return fail('Missing OAuth session after callback');
-
-        const s = data.session;
-        localStorage.setItem('access_token', s.access_token);
-        localStorage.setItem('user_id', s.user.id);
-        localStorage.setItem('email', s.user.email || '');
-        localStorage.removeItem('auth_error');
-        localStorage.removeItem('auth_error_detail');
-
-        setStatus('מסנכרן את החשבון...');
-        const r = await fetch(`${API}/auth/oauth/session`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${s.access_token}` }
-        });
-        if (!r.ok) console.warn('OAuth provisioning failed');
-
-        setStatus('מעביר לדאשבורד...');
-        location.replace(DASHBOARD_ROUTE);
-      } catch (e) {
-        console.error(e);
-        fail(e?.message || 'Unhandled OAuth callback error');
-      }
-    })();
-  </script>
-</body>
-</html>
+<body class="cp-page"><main class="cp-shell" style="display:grid;place-items:center;min-height:calc(100vh - 80px);"><section class="cp-card" style="width:min(480px,100%);text-align:center;"><div class="cp-spinner" aria-hidden="true"></div><h1 style="margin-bottom:10px;">מתחבר לחשבון</h1><p id="status" class="cp-muted">מאמת פרטי התחברות...</p></section></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+const API='/api/v1',DASHBOARD_ROUTE='/dashboard',LOGIN_ROUTE='/login',statusNode=document.getElementById('status');
+function setStatus(message){if(statusNode)statusNode.textContent=message}
+function fail(reason){console.error('[OAuth callback failed]',reason||'unknown reason');localStorage.setItem('auth_error','callback_error');if(reason)localStorage.setItem('auth_error_detail',String(reason));location.replace(LOGIN_ROUTE)}
+(async()=>{try{setStatus('טוען הגדרות התחברות...');const configResponse=await fetch(`${API}/config/public`);if(!configResponse.ok)throw Error('לא ניתן לטעון את הגדרות ההתחברות');const cfg=await configResponse.json();const sb=window.supabase.createClient(cfg.supabase_url,cfg.supabase_anon_key),hash=new URLSearchParams(location.hash.slice(1)),query=new URLSearchParams(location.search);if(query.get('error')||hash.get('error'))return fail(query.get('error_description')||hash.get('error_description')||query.get('error')||hash.get('error'));if(query.get('code')){setStatus('משלים התחברות מול Google...');const exchange=await sb.auth.exchangeCodeForSession(location.href);if(exchange.error)throw exchange.error}setStatus('בודק Session...');const{data}=await sb.auth.getSession();if(!data.session)return fail('Missing OAuth session after callback');const s=data.session;localStorage.setItem('access_token',s.access_token);localStorage.setItem('user_id',s.user.id);localStorage.setItem('email',s.user.email||'');localStorage.removeItem('auth_error');localStorage.removeItem('auth_error_detail');setStatus('מסנכרן את החשבון...');const response=await fetch(`${API}/auth/oauth/session`,{method:'POST',headers:{Authorization:`Bearer ${s.access_token}`}}),onboarding=await response.json().catch(()=>({}));if(!response.ok)throw Error(onboarding.detail||'OAuth provisioning failed');sessionStorage.setItem('requires_business_onboarding',String(onboarding.requires_business_onboarding===true));setStatus('מעביר לדאשבורד...');location.replace(DASHBOARD_ROUTE)}catch(error){console.error(error);fail(error?.message||'Unhandled OAuth callback error')}})();
+</script></body></html>

@@ -16,6 +16,11 @@ from supabase import create_client
 from backend.config import settings
 from backend.middleware.auth import AuthUser, require_auth
 
+try:
+    from google.genai import errors as genai_errors
+except ImportError:  # SDK versions without the public errors module
+    genai_errors = None
+
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/site-builder", tags=["site-builder"])
 supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
@@ -37,6 +42,7 @@ class GenerateResponse(BaseModel):
     config: Optional[Dict[str, Any]] = None
     html: Optional[str] = None
     error: Optional[str] = None
+    fallback: bool = False
 
 
 def _hash(token: str) -> str:
@@ -72,7 +78,7 @@ def _mark_token_used(token_id: str) -> None:
 
 
 def _clean_json(text: str) -> str:
-    cleaned = re.sub(r"```(?:json)?", "", text, flags=re.I).strip()
+    cleaned = re.sub(r"```(?:json)?", "", text or "", flags=re.I).strip()
     match = re.search(r"\{.*\}", cleaned, re.S)
     return match.group(0) if match else cleaned
 
@@ -86,6 +92,51 @@ def _build_prompt(request: GenerateRequest) -> str:
         "Include hero, features, products, testimonials, theme and seo. "
         "Make the tone persuasive and production-ready."
     )
+
+
+def _fallback_config(request: GenerateRequest) -> Dict[str, Any]:
+    """Return a valid site config when the configured AI provider is unavailable."""
+    return {
+        "hero": {
+            "badge": request.business_name,
+            "headline": f"{request.business_name}, ברור יותר מהמתחרים",
+            "subheadline": request.prompt,
+            "primaryCTA": {"text": "בואו נדבר", "link": "#contact"},
+        },
+        "features": [
+            {"title": "מסר חד", "description": f"הצעה ברורה לעסק בתחום {request.industry}."},
+            {"title": "חוויה פשוטה", "description": "עמוד מהיר, נגיש ונוח לקריאה בכל מסך."},
+            {"title": "מוכן לצמיחה", "description": "מבנה גמיש שאפשר להמשיך לשפר אחרי ההשקה."},
+        ],
+        "products": [],
+        "testimonials": [],
+        "theme": {
+            "primaryColor": "#635bff",
+            "backgroundColor": "#111827",
+            "textColor": "#f8fafc",
+            "secondaryColor": "#cbd5e1",
+            "surfaceColor": "#1f2937",
+        },
+        "seo": {
+            "title": request.business_name,
+            "description": request.prompt,
+        },
+    }
+
+
+def _is_location_restriction_error(error: Exception) -> bool:
+    client_error = getattr(genai_errors, "ClientError", None) if genai_errors else None
+    is_client_error = bool(client_error and isinstance(error, client_error))
+    message = str(error).lower()
+    markers = (
+        "user location is not supported",
+        "location is not supported",
+        "region is not supported",
+        "not available in your country",
+        "geographic restriction",
+        "unsupported location",
+    )
+    return is_client_error and any(marker in message for marker in markers) or any(marker in message for marker in markers)
 
 
 def _render(data: Dict[str, Any]) -> str:
@@ -112,25 +163,19 @@ def _render(data: Dict[str, Any]) -> str:
     def render_feature_cards(items: List[Dict[str, Any]]) -> str:
         cards = []
         for item in items:
-            cards.append(
-                f"<article class='tile'><span class='mini-badge'>FEATURE</span><h3>{escape(item.get('title') or '')}</h3><p>{escape(item.get('description') or '')}</p></article>"
-            )
+            cards.append(f"<article class='tile'><span class='mini-badge'>FEATURE</span><h3>{escape(item.get('title') or '')}</h3><p>{escape(item.get('description') or '')}</p></article>")
         return "".join(cards)
 
     def render_product_cards(items: List[Dict[str, Any]]) -> str:
         cards = []
         for item in items:
-            cards.append(
-                f"<article class='tile'><h3>{escape(item.get('title') or '')}</h3><strong>{escape(item.get('pricePlaceholder') or '')}</strong><p>{escape(item.get('description') or '')}</p></article>"
-            )
+            cards.append(f"<article class='tile'><h3>{escape(item.get('title') or '')}</h3><strong>{escape(item.get('pricePlaceholder') or '')}</strong><p>{escape(item.get('description') or '')}</p></article>")
         return "".join(cards)
 
     def render_testimonials(items: List[Dict[str, Any]]) -> str:
         cards = []
         for item in items:
-            cards.append(
-                f"<figure class='quote'><blockquote>“{escape(item.get('quote') or '')}”</blockquote><figcaption>{escape(item.get('author') or '')} · {escape(item.get('role') or '')}</figcaption></figure>"
-            )
+            cards.append(f"<figure class='quote'><blockquote>“{escape(item.get('quote') or '')}”</blockquote><figcaption>{escape(item.get('author') or '')} · {escape(item.get('role') or '')}</figcaption></figure>")
         return "".join(cards)
 
     sections = []
@@ -189,14 +234,7 @@ async def create_builder_access(current_user: AuthUser = Depends(require_auth)):
     _ensure_premium(current_user.user_id)
     raw = secrets.token_urlsafe(36)
     expires = datetime.now(timezone.utc) + timedelta(minutes=30)
-    result = supabase.table("site_builder_tokens").insert(
-        {
-            "user_id": current_user.user_id,
-            "token_hash": _hash(raw),
-            "expires_at": expires.isoformat(),
-            "used_at": None,
-        }
-    ).execute()
+    result = supabase.table("site_builder_tokens").insert({"user_id": current_user.user_id, "token_hash": _hash(raw), "expires_at": expires.isoformat(), "used_at": None}).execute()
     if not result.data:
         raise HTTPException(500, "Could not create builder access")
     return {"token": raw, "expires_at": expires.isoformat(), "url": f"/site-builder?token={raw}"}
@@ -219,23 +257,34 @@ async def consume_builder_access(token: str):
 async def generate_builder_site(request: GenerateRequest, x_builder_token: Optional[str] = Header(None)):
     if not x_builder_token:
         raise HTTPException(401, "Premium builder token required")
-    if not client:
-        raise HTTPException(503, "AI service not configured")
 
     record = _get_token_record(x_builder_token, allow_used=False)
+    fallback = False
+    fallback_message = None
 
     try:
-        response = client.models.generate_content(
-            model=MODEL_NAME,
-            contents=_build_prompt(request),
-            config={"temperature": 0.7, "max_output_tokens": 3000},
-        )
-        data = json.loads(_clean_json(response.text))
+        if not client:
+            raise RuntimeError("Gemini client is not configured")
+        response = client.models.generate_content(model=MODEL_NAME, contents=_build_prompt(request), config={"temperature": 0.7, "max_output_tokens": 3000})
+        data = json.loads(_clean_json(getattr(response, "text", "") or ""))
+        if not isinstance(data, dict):
+            raise ValueError("Gemini returned an invalid site configuration")
+    except Exception as exc:
+        fallback = True
+        if _is_location_restriction_error(exc):
+            fallback_message = "AI generation is unavailable in this region, so a production-safe starter template was created instead."
+            logger.warning("Gemini location restriction, using builder fallback: %s", exc)
+        else:
+            fallback_message = "AI generation is temporarily unavailable, so a production-safe starter template was created instead."
+            logger.exception("Site generation provider failed, using builder fallback")
+        data = _fallback_config(request)
+
+    try:
         html = _render(data)
         _mark_token_used(record["id"])
-        return GenerateResponse(success=True, config=data, html=html)
+        return GenerateResponse(success=True, config=data, html=html, error=fallback_message, fallback=fallback)
     except HTTPException:
         raise
-    except Exception:
-        logger.exception("Site generation failed")
-        raise HTTPException(500, "Failed to generate site")
+    except Exception as exc:
+        logger.exception("Site template rendering failed")
+        raise HTTPException(500, "Failed to render site template") from exc
