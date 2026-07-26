@@ -64,32 +64,21 @@ def _html(name): return os.path.join(html_dir, name)
 
 _admin_secret = settings.ADMIN_SECRET_PATH.strip()
 
-# These parameterized handlers are intentionally registered before StaticFiles
-# mounts. They validate the secret segment, then serve the real HTML file.
 @app.get("/admin-{secret_path}", response_class=HTMLResponse)
 @app.get("/admin-{secret_path}/dashboard", response_class=HTMLResponse)
 async def serve_admin_dashboard(secret_path: str):
-    if not _admin_secret or secret_path != _admin_secret:
-        raise HTTPException(status_code=404, detail="Not found")
+    if not _admin_secret or secret_path != _admin_secret: raise HTTPException(status_code=404, detail="Not found")
     return FileResponse(_html("admin-dashboard.html"))
 
 @app.get("/admin-{secret_path}/login", response_class=HTMLResponse)
 async def serve_admin_login(secret_path: str):
-    if not _admin_secret or secret_path != _admin_secret:
-        raise HTTPException(status_code=404, detail="Not found")
+    if not _admin_secret or secret_path != _admin_secret: raise HTTPException(status_code=404, detail="Not found")
     return FileResponse(_html("admin-login.html"))
 
 @app.get("/admin-{secret_path}/change-password", response_class=HTMLResponse)
 async def serve_admin_change_password(secret_path: str):
-    if not _admin_secret or secret_path != _admin_secret:
-        raise HTTPException(status_code=404, detail="Not found")
+    if not _admin_secret or secret_path != _admin_secret: raise HTTPException(status_code=404, detail="Not found")
     return FileResponse(_html("admin-change-password.html"))
-
-@app.post(f"{prefix}/admin-{{secret_path}}/login", response_model=admin.AdminLoginResponse)
-async def serve_admin_login_api(secret_path: str, credentials: admin.AdminLogin, request: Request):
-    if not _admin_secret or secret_path != _admin_secret:
-        raise HTTPException(status_code=404, detail="Not found")
-    return await admin.admin_login(credentials, request)
 
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 app.mount("/frontend", StaticFiles(directory=frontend_dir), name="frontend")
@@ -139,7 +128,6 @@ async def profile_page(): return FileResponse(_html("profile.html"))
 @app.get("/settings.html")
 async def settings_page(): return FileResponse(_html("settings.html"))
 
-# Legacy routes stay cloaked. The parameterized handlers above own valid secret routes.
 if _admin_secret:
     @app.get("/admin")
     @app.get("/admin.html")
