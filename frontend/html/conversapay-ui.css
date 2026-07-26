@@ -188,3 +188,30 @@ button,input,textarea,select{font:inherit;max-width:100%}
   .cp-button,.cp-button-secondary,.cp-button-danger{min-height:48px;font-size:.92rem}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ─────────────────────────────────────────────
+   Utilities — replace page-level inline styles
+   ───────────────────────────────────────────── */
+.cp-center{text-align:center}
+.cp-center-inline{justify-content:center}
+.cp-flush{margin:0}
+.cp-block{display:block}
+.cp-full{width:100%}
+.cp-mt-xs{margin-top:8px}
+.cp-mt-sm{margin-top:10px}
+.cp-mt-md{margin-top:12px}
+.cp-mt-lg{margin-top:18px}
+.cp-mb-lg{margin-bottom:18px}
+.cp-gap-sm{gap:8px}
+.cp-gap-md{gap:12px}
+.cp-gap-lg{gap:14px}
+.cp-measure{max-width:720px}
+.cp-narrow{max-width:220px}
+.cp-min-160{min-width:160px}
+.cp-center-shell{display:grid;place-items:center;min-height:calc(100vh - 90px);padding-top:0}
+.cp-card-sm{width:min(440px,100%)}
+.cp-card-md{width:min(520px,100%)}
+.cp-card-lg{width:min(620px,100%)}
+.cp-figure{font:800 2rem/1 'Space Grotesk',sans-serif;color:var(--cp-text);text-align:start}
+.cp-code-surface{margin:0;padding:16px;border-radius:1rem;background:var(--cp-panel-strong);border:1px solid var(--cp-line);color:var(--cp-text);font:.9rem/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;direction:ltr;text-align:left;overflow:auto;overflow-wrap:anywhere;white-space:pre-wrap}
+@media(max-width:760px){.cp-center-shell{min-height:calc(100dvh - 80px)}}
