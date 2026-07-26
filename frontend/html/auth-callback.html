@@ -20,29 +20,45 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script>
-    const API='/api/v1';
-    function fail(){localStorage.setItem('auth_error','callback_error');location.href='login.html'}
-    ;(async()=>{
-      try{
-        const cfg=await (await fetch(`${API}/config/public`)).json();
-        const sb=window.supabase.createClient(cfg.supabase_url,cfg.supabase_anon_key);
-        const hash=new URLSearchParams(location.hash.slice(1));
-        const query=new URLSearchParams(location.search);
-        if(query.get('error')||hash.get('error'))return fail();
-        if(query.get('code')){
-          const x=await sb.auth.exchangeCodeForSession(location.href);
-          if(x.error)throw x.error;
+    const API = '/api/v1';
+    const DASHBOARD_ROUTE = '/dashboard';
+    const LOGIN_ROUTE = '/login';
+
+    function fail() {
+      localStorage.setItem('auth_error', 'callback_error');
+      location.href = LOGIN_ROUTE;
+    }
+
+    (async () => {
+      try {
+        const cfg = await (await fetch(`${API}/config/public`)).json();
+        const sb = window.supabase.createClient(cfg.supabase_url, cfg.supabase_anon_key);
+        const hash = new URLSearchParams(location.hash.slice(1));
+        const query = new URLSearchParams(location.search);
+
+        if (query.get('error') || hash.get('error')) return fail();
+
+        if (query.get('code')) {
+          const x = await sb.auth.exchangeCodeForSession(location.href);
+          if (x.error) throw x.error;
         }
-        const {data}=await sb.auth.getSession();
-        if(!data.session)return fail();
-        const s=data.session;
-        localStorage.setItem('access_token',s.access_token);
-        localStorage.setItem('user_id',s.user.id);
-        localStorage.setItem('email',s.user.email||'');
-        const r=await fetch(`${API}/auth/oauth/session`,{method:'POST',headers:{Authorization:`Bearer ${s.access_token}`}});
-        if(!r.ok)console.warn('OAuth provisioning failed');
-        location.href='dashboard.html';
-      }catch(e){
+
+        const { data } = await sb.auth.getSession();
+        if (!data.session) return fail();
+
+        const s = data.session;
+        localStorage.setItem('access_token', s.access_token);
+        localStorage.setItem('user_id', s.user.id);
+        localStorage.setItem('email', s.user.email || '');
+
+        const r = await fetch(`${API}/auth/oauth/session`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${s.access_token}` }
+        });
+        if (!r.ok) console.warn('OAuth provisioning failed');
+
+        location.href = DASHBOARD_ROUTE;
+      } catch (e) {
         console.error(e);
         fail();
       }

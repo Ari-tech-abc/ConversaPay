@@ -25,7 +25,7 @@
     .plan-card.featured { border-color:var(--cp-accent); box-shadow:0 0 0 3px rgba(124,58,237,.1),var(--cp-shadow); }
     .plan-list { margin:0; padding:0; list-style:none; display:grid; gap:0.5rem; }
     .plan-list li { display:flex; gap:0.6rem; align-items:flex-start; color:var(--cp-muted-strong); font-weight:500; line-height:1.5; }
-    .plan-list li::before { content:'\2713'; color:var(--cp-green); font-weight:700; }
+    .plan-list li::before { content:'✓'; color:var(--cp-green); font-weight:700; }
     .timeline-step { display:grid; gap:0.5rem; padding:1.1rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
     .timeline-step strong { color:var(--cp-text); font-weight:700; }
     .proof-card { padding:1.1rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
@@ -175,5 +175,41 @@
     <p>&copy; 2026 ConversaPay</p>
     <p>הדרך הפשוטה לדבר עם לקוחות ולסגור מכירות, במקום אחד.</p>
   </footer>
+
+  <script>
+    const DASHBOARD_ROUTE = '/dashboard';
+    const LOGIN_ROUTE = '/login';
+
+    async function redirectAuthenticatedUser() {
+      const token = localStorage.getItem('access_token')
+        || localStorage.getItem('conversapay_auth_token')
+        || sessionStorage.getItem('access_token')
+        || sessionStorage.getItem('conversapay_auth_token');
+
+      if (!token) return;
+
+      try {
+        const response = await fetch('/api/v1/auth/me', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          location.replace(DASHBOARD_ROUTE);
+          return;
+        }
+
+        if (response.status === 401 || response.status === 403) {
+          ['access_token', 'conversapay_auth_token', 'conversapay_user', 'user_id', 'email'].forEach((key) => {
+            localStorage.removeItem(key);
+            sessionStorage.removeItem(key);
+          });
+        }
+      } catch (_) {
+        // Stay on the landing page if the auth check fails due to network issues.
+      }
+    }
+
+    redirectAuthenticatedUser();
+  </script>
 </body>
 </html>
