@@ -1,7 +1,8 @@
 """Admin authentication and protected management endpoints.
 
-Security: All admin API endpoints return 404 (not 401/403) to unauthorized
-requests, completely hiding the existence of admin routes from scanners.
+Security: Protected admin API endpoints still return 404 to unauthorized
+requests, but admin login failures now return explicit auth errors so they
+no longer masquerade as missing routes.
 """
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional
@@ -29,9 +30,17 @@ class AbuseReportCreate(BaseModel):
 
 _NOT_FOUND = HTTPException(status_code=404, detail="Not found")
 
-def _fail(reason: str):
-    logger.error("[ADMIN LOGIN FAILED] Reason: %s", reason)
-    raise HTTPException(status_code=404, detail="Not found")
+def _fail(reason: str, *, status_code: int = 404, detail: str = "Not found"):
+    if status_code >= 500:
+        logger.error("[ADMIN AUTH FAILED] Reason: %s", reason)
+    elif status_code >= 400:
+        logger.warning("[ADMIN AUTH FAILED] Reason: %s", reason)
+    else:
+        logger.info("[ADMIN AUTH FAILED] Reason: %s", reason)
+    raise HTTPException(status_code=status_code, detail=detail)
+
+def _login_fail(reason: str, detail: str, *, status_code: int = 401):
+    _fail(reason, status_code=status_code, detail=detail)
 
 def hash_password(password: str) -> str:
     salt = secrets.token_hex(32); digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100000)
@@ -88,17 +97,17 @@ def _login_response(credentials: AdminLogin, request: Request, secret_path: str 
     safe_secret = secret_path if secret_path is not None else "<legacy-route>"
     logger.info("[ADMIN LOGIN] received_secret_path=%s expected_secret_path=%s", safe_secret, settings.ADMIN_SECRET_PATH.strip() or "<unset>")
     admin = _find_admin(credentials.identifier.strip())
-    if not admin: _fail("admin user not found")
+    if not admin: _login_fail("admin user not found", "Invalid admin credentials")
     if admin.get("locked_until"):
         locked = datetime.fromisoformat(str(admin["locked_until"]).replace("Z", "+00:00")); locked = locked if locked.tzinfo else locked.replace(tzinfo=timezone.utc)
-        if locked > datetime.now(timezone.utc): _fail("admin account locked")
-    if admin.get("status") != "active": _fail("admin account inactive")
+        if locked > datetime.now(timezone.utc): _login_fail("admin account locked", "Admin account is temporarily locked")
+    if admin.get("status") != "active": _login_fail("admin account inactive", "Admin account is inactive")
     password_valid = verify_password(credentials.password, admin.get("password_hash", ""))
     logger.info("[ADMIN LOGIN] password verification result=%s", password_valid)
     if not password_valid:
         attempts = (admin.get("login_attempts") or 0) + 1; lock = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat() if attempts >= 5 else None
         supabase.table("admin_users").update({"login_attempts": attempts, "locked_until": lock}).eq("id", admin["id"]).execute()
-        _fail("password verification failed")
+        _login_fail("password verification failed", "Invalid admin credentials")
     supabase.table("admin_users").update({"login_attempts": 0, "locked_until": None, "last_login": datetime.now(timezone.utc).isoformat()}).eq("id", admin["id"]).execute()
     token = create_admin_token(admin["id"], admin["email"]); _audit(admin["id"], "admin_login", request)
     logger.info("[ADMIN LOGIN] success admin_id=%s", admin["id"])
@@ -111,8 +120,8 @@ async def admin_login(credentials: AdminLogin, request: Request):
 @router.post("-{secret_path}/login", response_model=AdminLoginResponse)
 async def admin_login_secret(secret_path: str, credentials: AdminLogin, request: Request):
     logger.info("[ADMIN LOGIN] secret_path received=%s expected=%s", secret_path, settings.ADMIN_SECRET_PATH.strip() or "<unset>")
-    if not settings.ADMIN_SECRET_PATH: _fail("ADMIN_SECRET_PATH is unset")
-    if secret_path != settings.ADMIN_SECRET_PATH.strip(): _fail("secret path mismatch")
+    if not settings.ADMIN_SECRET_PATH: _fail("ADMIN_SECRET_PATH is unset", status_code=500, detail="Admin login is not configured")
+    if secret_path != settings.ADMIN_SECRET_PATH.strip(): _login_fail("secret path mismatch", "Invalid admin login path")
     return _login_response(credentials, request, secret_path)
 
 @router.get("/dashboard")
