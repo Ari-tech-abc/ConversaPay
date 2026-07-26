@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#f8fafc">
   <meta name="referrer" content="same-origin">
+  <meta name="robots" content="noindex,nofollow">
   <title>ConversaPay - לוח בקרה למנהל</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,6 +41,10 @@
     }
     .meta-row {
       justify-content: flex-start;
+    }
+    .hero-copy-block {
+      gap: 12px;
+      max-width: 720px;
     }
     .summary-grid {
       display: grid;
@@ -85,6 +90,18 @@
     .row-meta {
       display: grid;
       gap: 12px;
+    }
+    .risk-stack {
+      gap: 14px;
+    }
+    .risk-value-col {
+      gap: 8px;
+      min-width: 160px;
+    }
+    .big-number {
+      font: 800 2rem/1 'Space Grotesk',sans-serif;
+      color: var(--cp-text);
+      text-align: left;
     }
     .risk-grid {
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -218,6 +235,13 @@
         align-items: flex-start;
         flex-direction: column;
       }
+      .risk-value-col {
+        min-width: 0;
+        width: 100%;
+      }
+      .big-number {
+        text-align: start;
+      }
     }
   </style>
 </head>
@@ -225,7 +249,7 @@
   <header class="cp-topbar">
     <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
     <div class="cp-actions">
-      <a class="cp-button-secondary" href="/admin-change-password.html">שינוי סיסמה</a>
+      <a class="cp-button-secondary" id="changePasswordLink" href="/admin/change-password">שינוי סיסמה</a>
       <button class="cp-button-secondary" id="refreshBtn" type="button">רענון נתונים</button>
       <button class="cp-button" id="logoutBtn" type="button">התנתקות</button>
     </div>
@@ -234,7 +258,7 @@
   <main class="cp-shell dashboard-shell">
     <section class="cp-card dashboard-hero">
       <div class="hero-row">
-        <div class="cp-stack" style="gap:12px;max-width:720px;">
+        <div class="cp-stack hero-copy-block">
           <span class="cp-kicker">לוח בקרה למנהל</span>
           <h1>ניהול דומיינים, דוחות ופעילות במקום אחד</h1>
           <p class="cp-muted">מעקב אחר עסקים, חריגות ושימוש יומי דרך ממשק ניהולי נקי, ברור ורספונסיבי.</p>
@@ -344,14 +368,14 @@
               <p>סיכום מצב לפי חריגות, חסימות ודוחות.</p>
             </div>
           </div>
-          <div class="stack" style="gap:14px;">
+          <div class="stack risk-stack">
             <div class="row-card">
               <div class="row-meta">
                 <strong>מדד סיכון</strong>
                 <small class="muted">תמונת מצב לפי חסימות ודוחות פתוחים.</small>
               </div>
-              <div class="stack" style="gap:8px;min-width:160px;">
-                <strong id="riskScore" style="font:800 2rem/1 'Space Grotesk',sans-serif;color:var(--cp-text);text-align:left;">0</strong>
+              <div class="stack risk-value-col">
+                <strong id="riskScore" class="big-number">0</strong>
                 <span class="status-pill" id="riskLabel">Calculating</span>
               </div>
             </div>
@@ -360,8 +384,8 @@
                 <strong>תור טיפול</strong>
                 <small class="muted" id="queueCopy">טוען נתוני חריגות, דומיינים ואירועים פתוחים...</small>
               </div>
-              <div class="stack" style="gap:8px;min-width:160px;">
-                <strong id="actionQueue" style="font:800 2rem/1 'Space Grotesk',sans-serif;color:var(--cp-text);text-align:left;">0</strong>
+              <div class="stack risk-value-col">
+                <strong id="actionQueue" class="big-number">0</strong>
                 <span class="status-pill" id="queueState">Ready</span>
               </div>
             </div>
@@ -426,6 +450,22 @@
 
     const $ = (id) => document.getElementById(id);
 
+    /*
+     * When ADMIN_SECRET_PATH is configured the admin UI is served from
+     * /admin-<secret>/... and every /admin-*.html path returns 404.
+     * Derive the base from the current URL so navigation never breaks.
+     */
+    function adminBase() {
+      const firstSegment = window.location.pathname.split('/').filter(Boolean)[0] || '';
+      return firstSegment.startsWith('admin-') ? `/${firstSegment}` : '/admin';
+    }
+
+    function adminRoute(page) {
+      const base = adminBase();
+      if (page === 'dashboard') return base === '/admin' ? '/admin' : `${base}/dashboard`;
+      return `${base}/${page}`;
+    }
+
     function getAdminToken() {
       return sessionStorage.getItem('admin_token') || localStorage.getItem('admin_token');
     }
@@ -439,7 +479,7 @@
 
     function logout() {
       clearAdminSession();
-      location.href = '/admin-login.html';
+      location.href = adminRoute('login');
     }
 
     function showNotice(message, isError = false) {
@@ -786,9 +826,11 @@
       });
     }
 
+    $('changePasswordLink').href = adminRoute('change-password');
+
     state.token = getAdminToken();
     if (!state.token) {
-      location.href = '/admin-login.html';
+      location.href = adminRoute('login');
     } else {
       bindEvents();
       loadAll();
