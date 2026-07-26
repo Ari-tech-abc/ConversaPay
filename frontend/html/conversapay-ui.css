@@ -10,6 +10,9 @@
   --cp-muted:#334155;
   --cp-muted-strong:#1e293b;
   --cp-accent:#7c3aed;
+  --cp-accent-strong:#6d28d9;
+  --cp-accent-soft:#ede9fe;
+  --cp-accent-ink:#5b21b6;
   --cp-cyan:#0891b2;
   --cp-green:#059669;
   --cp-yellow:#d97706;
@@ -152,6 +155,8 @@ button,input,textarea,select{font:inherit;max-width:100%}
 .modal-foot{display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--cp-line);flex-wrap:wrap}
 .cp-nav-toolbar{display:flex;gap:6px;align-items:center;flex-wrap:nowrap;overflow:hidden;max-width:calc(100vw - 160px)}
 .cp-nav-toolbar .cp-button,.cp-nav-toolbar .cp-button-secondary{min-height:34px;padding:6px 12px;font-size:.82rem;white-space:nowrap;flex:0 0 auto;border-radius:10px}
+/* Code / monospace surface, light system compliant */
+.cp-code{margin:0;padding:16px;border-radius:1rem;background:var(--cp-panel-strong);border:1px solid var(--cp-line);color:var(--cp-text);direction:ltr;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere;overflow:auto;font:.9rem/1.55 ui-monospace,SFMono-Regular,Menlo,monospace}
 /* Hero accent panel (dark gradient for visual pop) */
 .hero-dark-panel{color:#fff;background:linear-gradient(135deg,#1e1b4b,#0f172a);border-color:rgba(124,58,237,.2)}
 .hero-dark-panel .cp-title,.hero-dark-panel h1,.hero-dark-panel h2{color:#fff}
@@ -161,6 +166,30 @@ button,input,textarea,select{font:inherit;max-width:100%}
 .hero-dark-panel .cp-button{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border-color:rgba(124,58,237,.4)}
 .hero-dark-panel .cp-button-secondary{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.2)}
 .hero-dark-panel .cp-button-secondary:hover{background:rgba(255,255,255,.18)}
+/* ---------------------------------------------------------------
+   Layout utilities.
+   These exist so pages never need inline style attributes.
+   --------------------------------------------------------------- */
+.cp-m0{margin:0}
+.cp-mb-sm{margin-bottom:10px}
+.cp-mb-md{margin-bottom:18px}
+.cp-mb-lg{margin-bottom:1.2rem}
+.cp-mt-sm{margin-top:12px}
+.cp-mt-md{margin-top:18px}
+.cp-mt-lg{margin-top:20px}
+.cp-full{width:100%}
+.cp-inline-center{margin-inline:auto}
+.cp-text-center{text-align:center}
+.cp-text-start{text-align:start}
+.cp-kicker-center{justify-content:center}
+.cp-actions-center{justify-content:center}
+.cp-center-shell{display:grid;place-items:center;min-height:calc(100vh - 90px);padding-top:0}
+.cp-card-sm{width:min(440px,100%)}
+.cp-card-md{width:min(620px,100%)}
+.cp-card-lg{width:min(760px,100%)}
+.cp-break-all{word-break:break-all}
+.cp-consent{display:flex;gap:10px;align-items:flex-start;color:var(--cp-muted);font-weight:500;line-height:1.55}
+.cp-consent input[type=checkbox]{width:auto;min-width:auto;margin-top:4px;accent-color:var(--cp-accent)}
 /* Mobile responsive */
 @media(max-width:760px){
   .cp-topbar{position:sticky;top:0;flex-direction:row;flex-wrap:nowrap;padding:10px 12px;gap:8px;max-width:100vw;overflow:hidden}
@@ -186,5 +215,6 @@ button,input,textarea,select{font:inherit;max-width:100%}
   .modal-foot>*{width:100%}
   .cp-table th,.cp-table td{padding:12px}
   .cp-button,.cp-button-secondary,.cp-button-danger{min-height:48px;font-size:.92rem}
+  .cp-center-shell{min-height:auto;padding:1.25rem 0}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
