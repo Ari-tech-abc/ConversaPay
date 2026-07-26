@@ -1,4 +1,4 @@
-"""Premium site builder access, CRO generation, visual-save persistence, and fallbacks."""
+"""Premium site builder access, generation, visual-save persistence, and fallbacks."""
 from __future__ import annotations
 
 import hashlib
@@ -53,7 +53,7 @@ class GenerateResponse(BaseModel):
 
 
 def _hash(token: str) -> str:
-    return hashlib.sha256(token.encode()).hexdigest()
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
 def _expiry(value: str) -> datetime:
@@ -67,20 +67,29 @@ def _ensure_premium(user_id: str) -> None:
         raise HTTPException(403, "The site builder is available only on PREMIUM")
 
 
-def _get_token_record(token: str, allow_used: bool = False) -> Dict[str, Any]:
+def _get_token_record(token: str, allow_used: bool = True) -> Dict[str, Any]:
+    """Validate the hash and expiry, but keep a token usable for its 30-minute session.
+
+    used_at is retained as an audit field only. Refreshing the builder, generating a
+    page, and saving visual edits must not invalidate the active token.
+    """
     result = supabase.table("site_builder_tokens").select("id,user_id,expires_at,used_at").eq("token_hash", _hash(token)).maybe_single().execute()
     record = result.data or {}
     if not record:
         raise HTTPException(401, "Invalid builder token")
-    if record.get("used_at") and not allow_used:
-        raise HTTPException(401, "Builder token already used")
-    if _expiry(record["expires_at"]) <= datetime.now(timezone.utc):
+    try:
+        expired = _expiry(record["expires_at"]) <= datetime.now(timezone.utc)
+    except (KeyError, TypeError, ValueError) as exc:
+        logger.warning("Malformed site builder token expiry: %s", exc)
+        raise HTTPException(401, "Invalid builder token") from exc
+    if expired:
         raise HTTPException(401, "Builder token expired")
     _ensure_premium(record["user_id"])
     return record
 
 
 def _mark_token_used(token_id: str) -> None:
+    """Keep the audit timestamp without making the session unusable."""
     supabase.table("site_builder_tokens").update({"used_at": datetime.now(timezone.utc).isoformat()}).eq("id", token_id).execute()
 
 
@@ -97,26 +106,17 @@ def _build_prompt(request: GenerateRequest) -> str:
 תחום: {request.industry}
 הקשר עסקי: {request.prompt}
 סגנון: {request.vibe}
-החזר את המבנה המדויק הבא, עם תוכן בעברית טבעית:
-hero {{ badge, headline, subheadline, primaryCTA {{ text, link }}, secondaryCTA {{ text, link }}, imageUrl }}
-features: 3-4 אובייקטים {{ title, description, benefit }}
-proofStats: 3 אובייקטים {{ value, label }}
-products: 2-3 אובייקטים {{ title, pricePlaceholder, description, ctaText, ctaLink }}
-faq: 3-5 אובייקטים {{ question, answer }}
-contact {{ title, description, whatsappNumber }}
-seo {{ title, description }}
-theme {{ primaryColor, accentColor, backgroundColor, textColor, secondaryColor, surfaceColor }}
-כל קישור חייב להיות #contact, #products או כתובת https:// פעילה. CTA ראשי צריך להוביל ל-#contact או ל-#products. אין להשתמש ב-placeholder כמו lorem ipsum."""
+החזר hero, features, proofStats, products, faq, contact, seo ו-theme. כל קישור חייב להיות #contact, #products או כתובת https:// פעילה. אין להשתמש ב-placeholder כמו lorem ipsum."""
 
 
 def _fallback_config(request: GenerateRequest) -> Dict[str, Any]:
     return {
-        "hero": {"badge": request.business_name, "headline": f"{request.business_name}, הדרך הברורה לבחור נכון", "subheadline": f"פתרון מקצועי בתחום {request.industry}, עם חוויה פשוטה שמובילה את הלקוח מהשאלה הראשונה לפעולה.", "primaryCTA": {"text": "בואו נדבר", "link": "#contact"}, "secondaryCTA": {"text": "מה מקבלים", "link": "#products"}, "imageUrl": ""},
+        "hero": {"badge": request.business_name, "headline": f"{request.business_name}, הדרך הברורה לבחור נכון", "subheadline": f"פתרון מקצועי בתחום {request.industry}, עם חוויה פשוטה שמובילה את הלקוח לפעולה.", "primaryCTA": {"text": "בואו נדבר", "link": "#contact"}, "secondaryCTA": {"text": "מה מקבלים", "link": "#products"}, "imageUrl": ""},
         "features": [{"title": "מסר חד", "description": "כל מה שהלקוח צריך לדעת, בלי רעש מיותר.", "benefit": "הבנה מהירה"}, {"title": "חוויה נעימה", "description": "מבנה רגוע, ברור ונוח בכל מסך.", "benefit": "יותר ביטחון"}, {"title": "פעולה ברורה", "description": "כל שלב מוביל בעדינות לצעד הבא.", "benefit": "יותר פניות"}],
         "proofStats": [{"value": "24/7", "label": "זמינים כשצריך"}, {"value": "3 צעדים", "label": "מתחילים מהר"}, {"value": "100%", "label": "מותאם למובייל"}],
-        "products": [{"title": "שיחת התאמה", "pricePlaceholder": "מתחילים בשיחה", "description": "נבין מה חשוב לכם ונבנה את הצעד הבא.", "ctaText": "דברו איתנו", "ctaLink": "#contact"}, {"title": "הפתרון המלא", "pricePlaceholder": "לפי התאמה", "description": "מסלול מסודר שמחבר בין צורך, ערך ותוצאה.", "ctaText": "קבלו פרטים", "ctaLink": "#contact"}],
-        "faq": [{"question": "למי זה מתאים?", "answer": f"לעסקים וללקוחות שמחפשים פתרון ברור בתחום {request.industry}."}, {"question": "איך מתחילים?", "answer": "משאירים פרטים, ואנחנו חוזרים עם תשובה ממוקדת."}, {"question": "מה קורה אחרי הפנייה?", "answer": "נבין את הצורך, נציג אפשרויות ונמליץ על הצעד הנכון."}],
-        "contact": {"title": "מוכנים להתקדם?", "description": "השאירו פרטים, ונחזור אליכם עם תשובה עניינית.", "whatsappNumber": ""},
+        "products": [{"title": "שיחת התאמה", "pricePlaceholder": "מתחילים בשיחה", "description": "נבין מה חשוב לכם ונבנה את הצעד הבא.", "ctaText": "דברו איתנו", "ctaLink": "#contact"}],
+        "faq": [{"question": "איך מתחילים?", "answer": "משאירים פרטים, ואנחנו חוזרים עם תשובה ממוקדת."}],
+        "contact": {"title": "מוכנים להתקדם?", "description": "השאירו פרטים, ונחזור אליכם.", "whatsappNumber": ""},
         "theme": {"primaryColor": "#635bff", "accentColor": "#22c55e", "backgroundColor": "#111827", "textColor": "#f8fafc", "secondaryColor": "#cbd5e1", "surfaceColor": "#1f2937"},
         "seo": {"title": request.business_name, "description": request.prompt},
     }
@@ -134,9 +134,7 @@ def _safe_link(value: Any, default: str = "#contact") -> str:
     if link in {"#contact", "#products"}:
         return link
     parsed = urlparse(link)
-    if parsed.scheme == "https" and parsed.netloc:
-        return link
-    return default
+    return link if parsed.scheme == "https" and parsed.netloc else default
 
 
 def _render(data: Dict[str, Any]) -> str:
@@ -148,35 +146,37 @@ def _render(data: Dict[str, Any]) -> str:
     products = data.get("products") or []
     faqs = data.get("faq") or []
     contact = data.get("contact") or {}
-    primary = escape(theme.get("primaryColor", "#635bff"))
-    accent = escape(theme.get("accentColor", "#22c55e"))
-    background = escape(theme.get("backgroundColor", "#111827"))
-    text = escape(theme.get("textColor", "#f8fafc"))
-    muted = escape(theme.get("secondaryColor", "#cbd5e1"))
-    surface = escape(theme.get("surfaceColor", "#1f2937"))
-    title = escape(seo.get("title") or hero.get("headline") or "האתר שלך")
-    description = escape(seo.get("description") or hero.get("subheadline") or "")
-    badge = escape(hero.get("badge") or "ConversaPay")
-    headline = escape(hero.get("headline") or "בונים אמון, מניעים פעולה")
-    subheadline = escape(hero.get("subheadline") or "עמוד ברור ומקצועי לעסק שלך.")
-    primary_text = escape((hero.get("primaryCTA") or {}).get("text") or "בואו נדבר")
-    primary_link = escape(_safe_link((hero.get("primaryCTA") or {}).get("link")))
-    secondary_text = escape((hero.get("secondaryCTA") or {}).get("text") or "לגלות עוד")
-    secondary_link = escape(_safe_link((hero.get("secondaryCTA") or {}).get("link"), "#products"))
+    values = {
+        "TITLE": escape(seo.get("title") or hero.get("headline") or "האתר שלך"),
+        "DESCRIPTION": escape(seo.get("description") or hero.get("subheadline") or ""),
+        "PRIMARY": escape(theme.get("primaryColor", "#635bff")),
+        "ACCENT": escape(theme.get("accentColor", "#22c55e")),
+        "BACKGROUND": escape(theme.get("backgroundColor", "#111827")),
+        "TEXT": escape(theme.get("textColor", "#f8fafc")),
+        "MUTED": escape(theme.get("secondaryColor", "#cbd5e1")),
+        "SURFACE": escape(theme.get("surfaceColor", "#1f2937")),
+        "BADGE": escape(hero.get("badge") or "ConversaPay"),
+        "HEADLINE": escape(hero.get("headline") or "בונים אמון, מניעים פעולה"),
+        "SUBHEADLINE": escape(hero.get("subheadline") or "עמוד ברור ומקצועי לעסק שלך."),
+        "PRIMARY_LINK": escape(_safe_link((hero.get("primaryCTA") or {}).get("link")), quote=True),
+        "PRIMARY_TEXT": escape((hero.get("primaryCTA") or {}).get("text") or "בואו נדבר"),
+        "SECONDARY_LINK": escape(_safe_link((hero.get("secondaryCTA") or {}).get("link"), "#products"), quote=True),
+        "SECONDARY_TEXT": escape((hero.get("secondaryCTA") or {}).get("text") or "לגלות עוד"),
+    }
     image_url = str(hero.get("imageUrl") or "").strip()
-    image_markup = f"<img class='hero-image' data-editable-image src='{escape(image_url, quote=True)}' alt='תמונה של {badge}'>" if image_url and urlparse(image_url).scheme in {"http", "https"} else "<div class='hero-orb' aria-hidden='true'></div>"
-    feature_html = "".join(f"<article class='feature-card' data-editable-block><span class='eyebrow'>BENEFIT</span><h3 data-editable>{escape(item.get('title') or '')}</h3><p data-editable>{escape(item.get('description') or '')}</p><strong data-editable>{escape(item.get('benefit') or '')}</strong></article>" for item in features)
-    stats_html = "".join(f"<div class='stat' data-editable-block><strong data-editable>{escape(item.get('value') or '')}</strong><span data-editable>{escape(item.get('label') or '')}</span></div>" for item in stats)
-    product_html = "".join(f"<article class='product-card' data-editable-block><span class='eyebrow'>SERVICE</span><h3 data-editable>{escape(item.get('title') or '')}</h3><strong class='price' data-editable>{escape(item.get('pricePlaceholder') or '')}</strong><p data-editable>{escape(item.get('description') or '')}</p><a class='cta secondary' data-editable href='{escape(_safe_link(item.get('ctaLink')), quote=True)}'>{escape(item.get('ctaText') or 'קבלו פרטים')}</a></article>" for item in products)
-    faq_html = "".join(f"<details data-editable-block><summary data-editable>{escape(item.get('question') or '')}</summary><p data-editable>{escape(item.get('answer') or '')}</p></details>" for item in faqs)
-    whatsapp = str(contact.get("whatsappNumber") or "").replace("+", "").replace(" ", "").replace("-", "")
-    whatsapp_link = f"https://wa.me/{escape(whatsapp)}" if whatsapp.isdigit() and len(whatsapp) >= 8 else "#contact"
-    template = """<!doctype html><html lang='he' dir='rtl'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>__TITLE__</title><meta name='description' content='__DESCRIPTION__'><style>
-:root{--primary:__PRIMARY__;--accent:__ACCENT__;--bg:__BACKGROUND__;--text:__TEXT__;--muted:__MUTED__;--surface:__SURFACE__;--line:color-mix(in srgb,var(--text) 14%,transparent);--shadow:0 24px 80px color-mix(in srgb,var(--bg) 70%,transparent)}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:500 16px/1.7 system-ui,-apple-system,'Segoe UI',sans-serif}body::before{content:'';position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 85% 5%,color-mix(in srgb,var(--primary) 20%,transparent),transparent 35%),radial-gradient(circle at 15% 55%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 28%);z-index:-1}main{width:min(1160px,calc(100% - 40px));margin:auto}header{display:flex;justify-content:space-between;align-items:center;padding:24px 0;gap:16px}.brand{font-weight:800;letter-spacing:-.04em}.nav-link,.cta{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 17px;border-radius:12px;text-decoration:none;font-weight:800;transition:transform .2s cubic-bezier(.16,1,.3,1),filter .2s ease}.nav-link{color:var(--muted)}.cta{background:var(--primary);color:#f8fafc;box-shadow:0 12px 26px color-mix(in srgb,var(--primary) 30%,transparent)}.cta.secondary{background:color-mix(in srgb,var(--surface) 80%,transparent);border:1px solid var(--line);color:var(--text);box-shadow:none}.cta:hover,.nav-link:hover{transform:translateY(-2px);filter:brightness(1.08)}.hero{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(260px,.9fr);gap:48px;align-items:center;padding:72px 0 92px}.eyebrow{color:var(--primary);font-size:.75rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase}h1,h2,h3{margin:0;text-wrap:balance;line-height:1.1;letter-spacing:-.045em}h1{font-size:clamp(2.8rem,7vw,6rem);max-width:11ch}h2{font-size:clamp(2rem,4vw,3rem)}h3{font-size:1.25rem}p{color:var(--muted);max-width:68ch}.hero-copy{display:grid;gap:20px}.hero-copy p{font-size:1.15rem;max-width:55ch}.actions{display:flex;gap:10px;flex-wrap:wrap}.hero-visual{min-height:360px;position:relative;display:grid;place-items:center;border:1px solid var(--line);border-radius:32px;background:color-mix(in srgb,var(--surface) 75%,transparent);box-shadow:var(--shadow);backdrop-filter:blur(14px);overflow:hidden}.hero-orb{width:220px;height:220px;border-radius:50%;background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--accent) 82%,white),var(--primary) 42%,color-mix(in srgb,var(--primary) 30%,var(--bg)));box-shadow:0 30px 90px color-mix(in srgb,var(--primary) 35%,transparent)}.hero-image{max-width:88%;max-height:320px;border-radius:24px;object-fit:cover;box-shadow:var(--shadow)}section{padding:72px 0;border-top:1px solid var(--line)}.section-head{display:grid;gap:10px;margin-bottom:28px}.feature-grid,.product-grid,.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.feature-card,.product-card,.stat,details,.contact-card{padding:22px;border:1px solid var(--line);border-radius:20px;background:color-mix(in srgb,var(--surface) 72%,transparent);box-shadow:0 16px 48px color-mix(in srgb,var(--bg) 35%,transparent);backdrop-filter:blur(10px)}.feature-card{display:grid;gap:10px}.feature-card strong{color:var(--accent)}.stat{display:grid;gap:4px}.stat strong{font-size:2.4rem;color:var(--primary);letter-spacing:-.06em}.product-card{display:grid;gap:12px}.price{font-size:1.6rem}.faq-list{display:grid;gap:10px;max-width:820px}details summary{cursor:pointer;font-weight:800}details p{margin-bottom:0}.contact-card{display:grid;gap:14px;max-width:760px}.contact-form{display:grid;gap:12px}.contact-form input,.contact-form textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:color-mix(in srgb,var(--bg) 70%,transparent);color:var(--text);font:inherit}.contact-form textarea{min-height:120px;resize:vertical}.form-status{min-height:24px;color:var(--accent)}footer{padding:34px 0 64px;color:var(--muted)}[contenteditable=true]{outline:2px dashed transparent;outline-offset:4px}[contenteditable=true]:focus{outline-color:var(--primary)}.edit-highlight{outline:2px dashed var(--primary)!important;outline-offset:4px}@media(max-width:760px){main{width:min(100% - 24px,1160px)}header{padding:16px 0;align-items:flex-start}.hero{grid-template-columns:1fr;padding:46px 0 64px;gap:26px}.hero-visual{min-height:260px}h1{font-size:clamp(2.5rem,15vw,4.2rem)}.actions,.nav{display:grid;grid-template-columns:1fr}.cta,.nav-link{width:100%}section{padding:48px 0}}
-</style></head><body><main><header><div class='brand' data-editable>__BADGE__</div><nav class='nav'><a class='nav-link' href='#products'>שירותים</a><a class='cta' href='#contact' data-editable>דברו איתנו</a></nav></header><section class='hero'><div class='hero-copy'><span class='eyebrow' data-editable>__BADGE__</span><h1 data-editable>__HEADLINE__</h1><p data-editable>__SUBHEADLINE__</p><div class='actions'><a class='cta' data-editable href='__PRIMARY_LINK__'>__PRIMARY_TEXT__</a><a class='cta secondary' data-editable href='__SECONDARY_LINK__'>__SECONDARY_TEXT__</a></div></div><div class='hero-visual'>__IMAGE_MARKUP__</div></section><section id='features'><div class='section-head'><span class='eyebrow'>WHY US</span><h2 data-editable>מה הופך את הבחירה לפשוטה</h2></div><div class='feature-grid'>__FEATURES__</div></section><section id='proof'><div class='stats-grid'>__STATS__</div></section><section id='products'><div class='section-head'><span class='eyebrow'>SERVICES</span><h2 data-editable>הצעד הבא שלכם</h2><p data-editable>בחרו את הדרך שמתאימה לכם, או השאירו פרטים ונכוון אתכם.</p></div><div class='product-grid'>__PRODUCTS__</div></section><section id='faq'><div class='section-head'><span class='eyebrow'>FAQ</span><h2 data-editable>שאלות נפוצות</h2></div><div class='faq-list'>__FAQ__</div></section><section id='contact'><div class='contact-card'><span class='eyebrow'>CONTACT</span><h2 data-editable>__CONTACT_TITLE__</h2><p data-editable>__CONTACT_DESCRIPTION__</p><form class='contact-form' id='contactForm'><input name='name' required placeholder='שם מלא' aria-label='שם מלא'><input name='email' type='email' required placeholder='אימייל' aria-label='אימייל'><textarea name='message' required placeholder='איך אפשר לעזור?' aria-label='איך אפשר לעזור?'></textarea><button class='cta' type='submit'>שלחו פנייה</button><div class='form-status' id='formStatus' role='status' aria-live='polite'></div></form><a class='cta secondary' href='__WHATSAPP_LINK__' target='_blank' rel='noopener'>WhatsApp</a></div></section><footer data-editable>נבנה עם ConversaPay Site Builder</footer></main><script>document.querySelectorAll('a[href^="#"]').forEach(function(a){a.addEventListener('click',function(e){var target=document.querySelector(a.getAttribute('href'));if(target){e.preventDefault();target.scrollIntoView({behavior:'smooth',block:'start'});}});});document.getElementById('contactForm')?.addEventListener('submit',function(e){e.preventDefault();var status=document.getElementById('formStatus');status.textContent='תודה, קיבלנו את הפרטים ונחזור אליכם בהקדם.';e.currentTarget.reset();});</script></body></html>"""
-    replacements = {"__TITLE__": title, "__DESCRIPTION__": description, "__PRIMARY__": primary, "__ACCENT__": accent, "__BACKGROUND__": background, "__TEXT__": text, "__MUTED__": muted, "__SURFACE__": surface, "__BADGE__": badge, "__HEADLINE__": headline, "__SUBHEADLINE__": subheadline, "__PRIMARY_LINK__": primary_link, "__PRIMARY_TEXT__": primary_text, "__SECONDARY_LINK__": secondary_link, "__SECONDARY_TEXT__": secondary_text, "__IMAGE_MARKUP__": image_markup, "__FEATURES__": feature_html, "__STATS__": stats_html, "__PRODUCTS__": product_html, "__FAQ__": faq_html, "__CONTACT_TITLE__": escape(contact.get("title") or "מוכנים להתקדם?"), "__CONTACT_DESCRIPTION__": escape(contact.get("description") or "השאירו פרטים ונחזור אליכם."), "__WHATSAPP_LINK__": escape(whatsapp_link, quote=True)}
-    for placeholder, value in replacements.items():
-        template = template.replace(placeholder, value)
+    values["IMAGE_MARKUP"] = f"<img class='hero-image' data-editable-image src='{escape(image_url, quote=True)}' alt='תמונה של {values['BADGE']}'>" if image_url and urlparse(image_url).scheme in {"http", "https"} else "<div class='hero-orb' aria-hidden='true'></div>"
+    values["FEATURES"] = "".join(f"<article class='feature-card' data-editable-block><h3 data-editable>{escape(item.get('title') or '')}</h3><p data-editable>{escape(item.get('description') or '')}</p><strong data-editable>{escape(item.get('benefit') or '')}</strong></article>" for item in features)
+    values["STATS"] = "".join(f"<div class='stat' data-editable-block><strong data-editable>{escape(item.get('value') or '')}</strong><span data-editable>{escape(item.get('label') or '')}</span></div>" for item in stats)
+    values["PRODUCTS"] = "".join(f"<article class='product-card' data-editable-block><h3 data-editable>{escape(item.get('title') or '')}</h3><strong data-editable>{escape(item.get('pricePlaceholder') or '')}</strong><p data-editable>{escape(item.get('description') or '')}</p><a class='cta secondary' data-editable href='{escape(_safe_link(item.get('ctaLink')), quote=True)}'>{escape(item.get('ctaText') or 'קבלו פרטים')}</a></article>" for item in products)
+    values["FAQ"] = "".join(f"<details data-editable-block><summary data-editable>{escape(item.get('question') or '')}</summary><p data-editable>{escape(item.get('answer') or '')}</p></details>" for item in faqs)
+    values["CONTACT_TITLE"] = escape(contact.get("title") or "מוכנים להתקדם?")
+    values["CONTACT_DESCRIPTION"] = escape(contact.get("description") or "השאירו פרטים ונחזור אליכם.")
+    phone = str(contact.get("whatsappNumber") or "").replace("+", "").replace(" ", "").replace("-", "")
+    values["WHATSAPP_LINK"] = escape(f"https://wa.me/{phone}" if phone.isdigit() and len(phone) >= 8 else "#contact", quote=True)
+
+    template = """<!doctype html><html lang='he' dir='rtl'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>__TITLE__</title><meta name='description' content='__DESCRIPTION__'><style>:root{--primary:__PRIMARY__;--accent:__ACCENT__;--bg:__BACKGROUND__;--text:__TEXT__;--muted:__MUTED__;--surface:__SURFACE__}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:500 16px/1.7 system-ui,-apple-system,'Segoe UI',sans-serif}main{width:min(1160px,calc(100% - 40px));margin:auto}header{display:flex;justify-content:space-between;align-items:center;padding:24px 0;gap:16px}.brand{font-weight:800}.cta{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 17px;border-radius:12px;text-decoration:none;font-weight:800;background:var(--primary);color:#f8fafc}.cta.secondary{background:var(--surface);color:var(--text);border:1px solid color-mix(in srgb,var(--text) 16%,transparent)}.hero{display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center;padding:72px 0 92px}.hero-copy{display:grid;gap:20px}.eyebrow{color:var(--primary);font-size:.75rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase}h1,h2,h3{margin:0;line-height:1.1;letter-spacing:-.045em}h1{font-size:clamp(2.8rem,7vw,6rem);max-width:11ch}h2{font-size:clamp(2rem,4vw,3rem)}p{color:var(--muted);max-width:68ch}.actions{display:flex;gap:10px;flex-wrap:wrap}.hero-visual{min-height:360px;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--text) 14%,transparent);border-radius:32px;background:var(--surface)}.hero-orb{width:220px;height:220px;border-radius:50%;background:var(--primary)}.hero-image{max-width:88%;max-height:320px;border-radius:24px;object-fit:cover}section{padding:72px 0;border-top:1px solid color-mix(in srgb,var(--text) 14%,transparent)}.feature-grid,.product-grid,.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.feature-card,.product-card,.stat,details,.contact-card{padding:22px;border:1px solid color-mix(in srgb,var(--text) 14%,transparent);border-radius:20px;background:var(--surface)}.feature-card{display:grid;gap:10px}.feature-card strong{color:var(--accent)}.stat{display:grid;gap:4px}.stat strong{font-size:2.4rem;color:var(--primary)}.product-card{display:grid;gap:12px}.faq-list{display:grid;gap:10px;max-width:820px}.contact-card{display:grid;gap:14px;max-width:760px}.contact-form{display:grid;gap:12px}.contact-form input,.contact-form textarea{width:100%;padding:12px 14px;border-radius:12px;border:1px solid color-mix(in srgb,var(--text) 18%,transparent);background:var(--bg);color:var(--text);font:inherit}.contact-form textarea{min-height:120px}footer{padding:34px 0 64px;color:var(--muted)}[contenteditable=true]{outline:2px dashed transparent;outline-offset:4px}[contenteditable=true]:focus{outline-color:var(--primary)}@media(max-width:760px){main{width:min(100% - 24px,1160px)}.hero{grid-template-columns:1fr;padding:46px 0 64px}.actions,.nav{display:grid;grid-template-columns:1fr}.cta{width:100%}section{padding:48px 0}}</style></head><body><main><header><div class='brand' data-editable>__BADGE__</div><nav class='nav'><a class='cta secondary' href='#products'>שירותים</a><a class='cta' href='#contact' data-editable>דברו איתנו</a></nav></header><section class='hero'><div class='hero-copy'><span class='eyebrow' data-editable>__BADGE__</span><h1 data-editable>__HEADLINE__</h1><p data-editable>__SUBHEADLINE__</p><div class='actions'><a class='cta' data-editable href='__PRIMARY_LINK__'>__PRIMARY_TEXT__</a><a class='cta secondary' data-editable href='__SECONDARY_LINK__'>__SECONDARY_TEXT__</a></div></div><div class='hero-visual'>__IMAGE_MARKUP__</div></section><section id='features'><h2 data-editable>מה הופך את הבחירה לפשוטה</h2><div class='feature-grid'>__FEATURES__</div></section><section id='proof'><div class='stats-grid'>__STATS__</div></section><section id='products'><h2 data-editable>הצעד הבא שלכם</h2><p data-editable>בחרו את הדרך שמתאימה לכם, או השאירו פרטים ונכוון אתכם.</p><div class='product-grid'>__PRODUCTS__</div></section><section id='faq'><h2 data-editable>שאלות נפוצות</h2><div class='faq-list'>__FAQ__</div></section><section id='contact'><div class='contact-card'><h2 data-editable>__CONTACT_TITLE__</h2><p data-editable>__CONTACT_DESCRIPTION__</p><form class='contact-form' id='contactForm'><input name='name' required placeholder='שם מלא'><input name='email' type='email' required placeholder='אימייל'><textarea name='message' required placeholder='איך אפשר לעזור?'></textarea><button class='cta' type='submit'>שלחו פנייה</button><div id='formStatus' role='status' aria-live='polite'></div></form><a class='cta secondary' href='__WHATSAPP_LINK__' target='_blank' rel='noopener'>WhatsApp</a></div></section><footer data-editable>נבנה עם ConversaPay Site Builder</footer></main><script>document.querySelectorAll('a[href^="#"]').forEach(function(a){a.addEventListener('click',function(e){var target=document.querySelector(a.getAttribute('href'));if(target){e.preventDefault();target.scrollIntoView({behavior:'smooth',block:'start');}}});});document.getElementById('contactForm')?.addEventListener('submit',function(e){e.preventDefault();document.getElementById('formStatus').textContent='תודה, קיבלנו את הפרטים ונחזור אליכם בהקדם.';e.currentTarget.reset();});</script></body></html>"""
+    for key, value in values.items():
+        template = template.replace(f"__{key}__", value)
     return template
 
 
@@ -193,13 +193,12 @@ async def create_builder_access(current_user: AuthUser = Depends(require_auth)):
 
 @router.get("/verify/{token}")
 async def verify_builder_access(token: str):
-    record = _get_token_record(token, allow_used=False)
-    return {"valid": True, "user_id": record["user_id"]}
+    return {"valid": True, "user_id": _get_token_record(token, allow_used=True)["user_id"]}
 
 
 @router.post("/consume/{token}")
 async def consume_builder_access(token: str):
-    record = _get_token_record(token, allow_used=False)
+    record = _get_token_record(token, allow_used=True)
     _mark_token_used(record["id"])
     return {"valid": True, "user_id": record["user_id"]}
 
@@ -208,7 +207,7 @@ async def consume_builder_access(token: str):
 async def generate_builder_site(request: GenerateRequest, x_builder_token: Optional[str] = Header(None)):
     if not x_builder_token:
         raise HTTPException(401, "Premium builder token required")
-    record = _get_token_record(x_builder_token, allow_used=False)
+    record = _get_token_record(x_builder_token, allow_used=True)
     fallback = False
     fallback_message = None
     try:
