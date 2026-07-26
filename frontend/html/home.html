@@ -12,37 +12,41 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
   <style>
-    .home-shell { display:grid; gap:28px; }
-    .hero-grid { display:grid; grid-template-columns:1.25fr .95fr; gap:22px; align-items:stretch; }
-    .hero-panel { background:radial-gradient(circle at top right,rgba(55,215,255,.18),transparent 30%), radial-gradient(circle at bottom left,rgba(139,92,246,.14),transparent 26%), linear-gradient(135deg,rgba(124,92,255,.18),rgba(7,17,31,.96)); border-color:rgba(255,255,255,.08); }
-    .hero-stats { display:grid; gap:14px; }
-    .stat-card { display:grid; gap:10px; padding:22px; border-radius:24px; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
-    .feature-card,.timeline-card,.cta-card { display:grid; gap:10px; padding:22px; border-radius:24px; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+    .home-shell { display:grid; gap:2rem; }
+    .hero-grid { display:grid; grid-template-columns:1.25fr .95fr; gap:1.4rem; align-items:stretch; }
+    .hero-panel { background:radial-gradient(circle at top right,rgba(55,215,255,.18),transparent 30%), radial-gradient(circle at bottom left,rgba(139,92,246,.14),transparent 26%), linear-gradient(135deg,rgba(124,92,255,.18),rgba(7,17,31,.96)); border-color:rgba(255,255,255,.1); }
+    .hero-stats { display:grid; gap:0.9rem; }
+    .stat-card { display:grid; gap:0.6rem; padding:1.4rem; border-radius:1.5rem; background:var(--cp-panel); border:1px solid var(--cp-line-strong); box-shadow:var(--cp-shadow); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+    .feature-card,.timeline-card,.cta-card { display:grid; gap:0.6rem; padding:1.4rem; border-radius:1.5rem; background:var(--cp-panel); border:1px solid var(--cp-line-strong); box-shadow:var(--cp-shadow); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
     .stat-value { font-size:1.8rem; font-weight:800; color:var(--cp-cyan); }
-    .feature-grid,.timeline-grid,.proof-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; }
-    .plans-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:18px; }
-    .plan-card { display:grid; gap:12px; padding:24px; border-radius:26px; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
-    .plan-card.featured { background:linear-gradient(135deg,rgba(55,215,255,.06),rgba(139,92,246,.08)); border-color:rgba(55,215,255,.24); }
-    .plan-list { margin:0; padding:0; list-style:none; display:grid; gap:10px; }
-    .plan-list li { display:flex; gap:10px; align-items:flex-start; color:var(--cp-muted-strong); }
+    .feature-grid,.timeline-grid,.proof-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:1rem; }
+    .plans-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:1.1rem; }
+    .plan-card { display:grid; gap:0.75rem; padding:1.5rem; border-radius:1.6rem; background:var(--cp-panel); border:1px solid var(--cp-line-strong); box-shadow:var(--cp-shadow); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+    .plan-card.featured { background:linear-gradient(135deg,rgba(55,215,255,.06),rgba(139,92,246,.08)); border-color:rgba(55,215,255,.28); }
+    .plan-list { margin:0; padding:0; list-style:none; display:grid; gap:0.6rem; }
+    .plan-list li { display:flex; gap:0.6rem; align-items:flex-start; color:var(--cp-muted-strong); font-weight:500; line-height:1.5; }
     .plan-list li::before { content:'\2022'; color:#37d7ff; font-size:1.1rem; }
-    .timeline-step { display:grid; gap:8px; padding:18px; border-radius:20px; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:0 4px 16px rgba(0,0,0,.2); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
-    .timeline-step strong { color:var(--cp-text); }
-    .proof-card { padding:18px; border-radius:20px; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:0 4px 16px rgba(0,0,0,.2); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
-    .proof-card strong { color:var(--cp-text); }
-    .section-head { text-align:center; display:grid; gap:8px; }
-    .section-head h2 { color:var(--cp-text); }
-    .hero-actions,.inline-actions { display:flex; gap:10px; flex-wrap:wrap; }
+    .timeline-step { display:grid; gap:0.5rem; padding:1.1rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line-strong); box-shadow:0 4px 16px rgba(0,0,0,.2); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+    .timeline-step strong { color:var(--cp-text); font-weight:700; }
+    .proof-card { padding:1.1rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line-strong); box-shadow:0 4px 16px rgba(0,0,0,.2); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
+    .proof-card strong { color:var(--cp-text); font-weight:700; }
+    .section-head { text-align:center; display:grid; gap:0.5rem; }
+    .section-head h2 { color:var(--cp-text); font-weight:700; }
+    .hero-actions,.inline-actions { display:flex; gap:0.6rem; flex-wrap:wrap; }
     @media (max-width: 980px) { .hero-grid { grid-template-columns:1fr; } }
+    @media (max-width: 480px) {
+      .hero-actions { flex-direction:column; }
+      .hero-actions a { width:100%; }
+    }
   </style>
 </head>
 <body class="cp-page">
   <header class="cp-topbar">
-    <a class="cp-brand" href="home.html"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
-    <nav class="cp-nav-toolbar">
+    <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
+    <nav class="cp-nav-toolbar" aria-label="ניווט ראשי">
       <a class="cp-button-secondary" href="#plans">מסלולים</a>
       <a class="cp-button-secondary" href="#how">איך זה עובד</a>
-      <a class="cp-button" href="login.html">כניסה</a>
+      <a class="cp-button" href="/login">כניסה</a>
     </nav>
   </header>
 
@@ -53,7 +57,7 @@
         <h1 class="cp-title">מהשאלה הראשונה של הלקוח ועד לתשלום — הכל במקום אחד.</h1>
         <p class="cp-subtitle">ConversaPay עונה ללקוחות, מתאימה להם את המוצר הנכון, סוגרת תשלום ושומרת את כל הסדר העסקי שלך בדאשבורד אחד ברור.</p>
         <div class="hero-actions">
-          <a class="cp-button" href="register.html">בואו נתחיל, בחינם</a>
+          <a class="cp-button" href="/register">בואו נתחיל, בחינם</a>
           <a class="cp-button-secondary" href="#how">איך זה עובד</a>
         </div>
         <p class="cp-muted" style="margin:0;">פתיחת חשבון תוך דקה, בלי כרטיס אשראי, עם מסלולי PRO ו‑PREMIUM כשתרצה לגדול.</p>
@@ -118,7 +122,7 @@
             <li>אנליטיקות בסיסיות</li>
             <li>פרופיל ועסק</li>
           </ul>
-          <a class="cp-button-secondary" href="register.html">פתיחת חשבון</a>
+          <a class="cp-button-secondary" href="/register">פתיחת חשבון</a>
         </article>
         <article class="plan-card featured">
           <div class="cp-badge good">PRO</div>
@@ -129,7 +133,7 @@
             <li>חיבור דומיינים</li>
             <li>API Keys והטמעה לאתר</li>
           </ul>
-          <a class="cp-button" href="register.html">בחירת מסלול</a>
+          <a class="cp-button" href="/register">בחירת מסלול</a>
         </article>
         <article class="plan-card">
           <div class="cp-badge">PREMIUM</div>
@@ -140,7 +144,7 @@
             <li>WhatsApp Business</li>
             <li>עד 10 API Keys</li>
           </ul>
-          <a class="cp-button-secondary" href="register.html">בחירת מסלול</a>
+          <a class="cp-button-secondary" href="/register">בחירת מסלול</a>
         </article>
       </div>
     </section>
@@ -161,8 +165,8 @@
       <h2 style="margin:0;">מוכנים להתחיל?</h2>
       <p class="cp-muted">פתחו חשבון בחינם ותנו ל-ConversaPay לעזור לכם לענות, להציע ולסגור.</p>
       <div class="inline-actions" style="justify-content:center;">
-        <a class="cp-button" href="register.html">פתיחת חשבון</a>
-        <a class="cp-button-secondary" href="login.html">יש לי כבר חשבון</a>
+        <a class="cp-button" href="/register">פתיחת חשבון</a>
+        <a class="cp-button-secondary" href="/login">יש לי כבר חשבון</a>
       </div>
     </section>
   </main>
