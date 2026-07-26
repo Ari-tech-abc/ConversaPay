@@ -1,4 +1,8 @@
-"""Admin authentication and protected management endpoints."""
+"""Admin authentication and protected management endpoints.
+
+Security: All admin API endpoints return 404 (not 401/403) to unauthorized
+requests, completely hiding the existence of admin routes from scanners.
+"""
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 import hashlib, secrets
@@ -23,6 +27,10 @@ class AbuseReportCreate(BaseModel):
     business_id: str; domain: Optional[str] = None; report_type: str; severity: str = "medium"; description: str; evidence: Optional[Dict[str, Any]] = None
 
 
+# --- 404 cloaking: generic "Not found" error for any auth failure ---
+_NOT_FOUND = HTTPException(status_code=404, detail="Not found")
+
+
 def hash_password(password: str) -> str:
     salt = secrets.token_hex(32); digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100000)
     return f"{salt}${digest.hex()}"
@@ -40,12 +48,29 @@ def verify_admin_token(token: str):
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
         return payload if payload.get("type") == "admin" else None
     except Exception: return None
+
+
 async def require_admin(request: Request):
+    """Verify admin JWT. Returns 404 on failure to hide endpoint existence."""
     header = request.headers.get("Authorization", "")
-    if not header.startswith("Bearer "): raise HTTPException(401, "Missing or invalid authorization header")
+    if not header.startswith("Bearer "):
+        raise _NOT_FOUND
     payload = verify_admin_token(header.split(" ", 1)[1])
-    if not payload: raise HTTPException(401, "Invalid or expired token")
+    if not payload:
+        raise _NOT_FOUND
+    # Verify the admin still exists and is active in the database
+    try:
+        result = supabase.table("admin_users").select("id,role,status").eq("id", payload["admin_id"]).limit(1).execute()
+        if not result.data or result.data[0].get("status") != "active":
+            raise _NOT_FOUND
+        if result.data[0].get("role") not in ("admin", "super_admin"):
+            raise _NOT_FOUND
+    except HTTPException:
+        raise
+    except Exception:
+        raise _NOT_FOUND
     return payload
+
 
 def _find_admin(identifier: str):
     result = supabase.table("admin_users").select("*").eq("username", identifier).execute()
@@ -58,15 +83,15 @@ def _audit(admin_id, action, request, resource_type=None, resource_id=None, busi
 @router.post("/login", response_model=AdminLoginResponse)
 async def admin_login(credentials: AdminLogin, request: Request):
     admin = _find_admin(credentials.identifier.strip())
-    if not admin: raise HTTPException(401, "Invalid credentials")
+    if not admin: raise _NOT_FOUND
     if admin.get("locked_until"):
         locked = datetime.fromisoformat(str(admin["locked_until"]).replace("Z", "+00:00")); locked = locked if locked.tzinfo else locked.replace(tzinfo=timezone.utc)
-        if locked > datetime.now(timezone.utc): raise HTTPException(429, "Account is temporarily locked")
-    if admin.get("status") != "active": raise HTTPException(403, "Account is not active")
+        if locked > datetime.now(timezone.utc): raise _NOT_FOUND
+    if admin.get("status") != "active": raise _NOT_FOUND
     if not verify_password(credentials.password, admin["password_hash"]):
         attempts = (admin.get("login_attempts") or 0) + 1; lock = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat() if attempts >= 5 else None
         supabase.table("admin_users").update({"login_attempts": attempts, "locked_until": lock}).eq("id", admin["id"]).execute()
-        raise HTTPException(401, "Invalid credentials")
+        raise _NOT_FOUND
     supabase.table("admin_users").update({"login_attempts": 0, "locked_until": None, "last_login": datetime.now(timezone.utc).isoformat()}).eq("id", admin["id"]).execute()
     token = create_admin_token(admin["id"], admin["email"]); _audit(admin["id"], "admin_login", request)
     return {"access_token": token, "token_type": "bearer", "admin_id": admin["id"], "email": admin["email"], "role": admin["role"]}
@@ -93,7 +118,7 @@ async def create_domain_restriction(data: DomainRestrictionCreate, request: Requ
 @router.put("/domain-restrictions/{restriction_id}")
 async def update_domain_restriction(restriction_id: str, data: DomainRestrictionUpdate, request: Request, admin: dict = Depends(require_admin)):
     current = supabase.table("domain_restrictions").select("*").eq("id", restriction_id).execute()
-    if not current.data: raise HTTPException(404, "Domain restriction not found")
+    if not current.data: raise _NOT_FOUND
     updates = {k: v for k, v in data.model_dump().items() if v is not None}
     if updates.get("status") == "blocked": updates.update({"blocked_at": datetime.now(timezone.utc).isoformat(), "blocked_by_admin_id": admin["admin_id"]})
     r = supabase.table("domain_restrictions").update(updates).eq("id", restriction_id).execute()
@@ -101,7 +126,7 @@ async def update_domain_restriction(restriction_id: str, data: DomainRestriction
 @router.delete("/domain-restrictions/{restriction_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_domain_restriction(restriction_id: str, request: Request, admin: dict = Depends(require_admin)):
     current = supabase.table("domain_restrictions").select("id,business_id,domain").eq("id", restriction_id).execute()
-    if not current.data: raise HTTPException(404, "Domain restriction not found")
+    if not current.data: raise _NOT_FOUND
     row = current.data[0]; supabase.table("domain_restrictions").delete().eq("id", restriction_id).execute(); _audit(admin["admin_id"], "domain_restriction_deleted", request, "domain_restriction", restriction_id, row.get("business_id"), {"domain": row.get("domain")})
 
 @router.get("/abuse-reports")
