@@ -61,6 +61,36 @@ frontend_dir = os.path.join(current_dir, "frontend")
 html_dir = os.path.join(frontend_dir, "html")
 site_builder_dir = os.path.join(current_dir, "conversapay-site-builder", "frontend")
 def _html(name): return os.path.join(html_dir, name)
+
+_admin_secret = settings.ADMIN_SECRET_PATH.strip()
+
+# These parameterized handlers are intentionally registered before StaticFiles
+# mounts. They validate the secret segment, then serve the real HTML file.
+@app.get("/admin-{secret_path}", response_class=HTMLResponse)
+@app.get("/admin-{secret_path}/dashboard", response_class=HTMLResponse)
+async def serve_admin_dashboard(secret_path: str):
+    if not _admin_secret or secret_path != _admin_secret:
+        raise HTTPException(status_code=404, detail="Not found")
+    return FileResponse(_html("admin-dashboard.html"))
+
+@app.get("/admin-{secret_path}/login", response_class=HTMLResponse)
+async def serve_admin_login(secret_path: str):
+    if not _admin_secret or secret_path != _admin_secret:
+        raise HTTPException(status_code=404, detail="Not found")
+    return FileResponse(_html("admin-login.html"))
+
+@app.get("/admin-{secret_path}/change-password", response_class=HTMLResponse)
+async def serve_admin_change_password(secret_path: str):
+    if not _admin_secret or secret_path != _admin_secret:
+        raise HTTPException(status_code=404, detail="Not found")
+    return FileResponse(_html("admin-change-password.html"))
+
+@app.post(f"{prefix}/admin-{{secret_path}}/login", response_model=admin.AdminLoginResponse)
+async def serve_admin_login_api(secret_path: str, credentials: admin.AdminLogin, request: Request):
+    if not _admin_secret or secret_path != _admin_secret:
+        raise HTTPException(status_code=404, detail="Not found")
+    return await admin.admin_login(credentials, request)
+
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 app.mount("/frontend", StaticFiles(directory=frontend_dir), name="frontend")
 
@@ -108,18 +138,9 @@ async def profile_page(): return FileResponse(_html("profile.html"))
 @app.get("/settings")
 @app.get("/settings.html")
 async def settings_page(): return FileResponse(_html("settings.html"))
-_admin_secret = settings.ADMIN_SECRET_PATH.strip()
+
+# Legacy routes stay cloaked. The parameterized handlers above own valid secret routes.
 if _admin_secret:
-    @app.get(f"/admin-{_admin_secret}")
-    @app.get(f"/admin-{_admin_secret}/dashboard")
-    async def admin_page_secret(): return FileResponse(_html("admin-dashboard.html"))
-    @app.get(f"/admin-{_admin_secret}/login")
-    async def admin_login_page_secret(): return FileResponse(_html("admin-login.html"))
-    @app.get(f"/admin-{_admin_secret}/change-password")
-    async def admin_change_password_page_secret(): return FileResponse(_html("admin-change-password.html"))
-    @app.post(f"{prefix}/admin-{_admin_secret}/login", response_model=admin.AdminLoginResponse)
-    async def admin_login_api_secret(credentials: admin.AdminLogin, request: Request):
-        return await admin.admin_login(credentials, request)
     @app.get("/admin")
     @app.get("/admin.html")
     async def admin_page_hidden(): raise HTTPException(status_code=404, detail="Not found")
