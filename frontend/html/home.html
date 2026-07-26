@@ -12,12 +12,11 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
   <style>
+    /* Layout only. The hero gradient comes from the shared .hero-dark-panel. */
     .home-shell { display:grid; gap:2.5rem; }
     .hero-grid { display:grid; grid-template-columns:1.25fr .95fr; gap:1.4rem; align-items:stretch; }
-    .hero-panel { background:linear-gradient(135deg,#1e1b4b,#0f172a); border-color:rgba(124,58,237,.15); }
     .hero-stats { display:grid; gap:0.9rem; }
-    .stat-card { display:grid; gap:0.5rem; padding:1.4rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
-    .feature-card,.cta-card { display:grid; gap:0.5rem; padding:1.4rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
+    .stat-card,.feature-card,.cta-card { display:grid; gap:0.5rem; padding:1.4rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
     .stat-value { font-size:1.7rem; font-weight:800; color:var(--cp-accent); }
     .feature-grid,.timeline-grid,.proof-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:1rem; }
     .plans-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:1.1rem; }
@@ -26,12 +25,11 @@
     .plan-list { margin:0; padding:0; list-style:none; display:grid; gap:0.5rem; }
     .plan-list li { display:flex; gap:0.6rem; align-items:flex-start; color:var(--cp-muted-strong); font-weight:500; line-height:1.5; }
     .plan-list li::before { content:'✓'; color:var(--cp-green); font-weight:700; }
-    .timeline-step { display:grid; gap:0.5rem; padding:1.1rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
-    .timeline-step strong { color:var(--cp-text); font-weight:700; }
-    .proof-card { padding:1.1rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
-    .proof-card strong { color:var(--cp-text); font-weight:700; }
+    .timeline-step,.proof-card { display:grid; gap:0.5rem; padding:1.1rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
+    .timeline-step strong,.proof-card strong { color:var(--cp-text); font-weight:700; }
     .section-head { text-align:center; display:grid; gap:0.5rem; }
-    .section-head h2 { color:var(--cp-text); font-weight:700; }
+    .section-head h2 { color:var(--cp-text); font-weight:700; margin:0; }
+    .section-head .cp-muted { margin-inline:auto; }
     .hero-actions,.inline-actions { display:flex; gap:0.6rem; flex-wrap:wrap; }
     @media (max-width: 980px) { .hero-grid { grid-template-columns:1fr; } }
     @media (max-width: 480px) {
@@ -52,7 +50,7 @@
 
   <main class="cp-shell home-shell">
     <section class="hero-grid">
-      <article class="cp-panel cp-stack hero-panel hero-dark-panel">
+      <article class="cp-panel cp-stack hero-dark-panel">
         <span class="cp-kicker">מכירה מתוך שיחה</span>
         <h1 class="cp-title">מהשאלה הראשונה של הלקוח ועד לתשלום — הכל במקום אחד.</h1>
         <p class="cp-subtitle">ConversaPay עונה ללקוחות, מתאימה להם את המוצר הנכון, סוגרת תשלום ושומרת את כל הסדר העסקי שלך בדאשבורד אחד ברור.</p>
@@ -60,7 +58,7 @@
           <a class="cp-button" href="/register">בואו נתחיל, בחינם</a>
           <a class="cp-button-secondary" href="#how">איך זה עובד</a>
         </div>
-        <p class="cp-muted" style="margin:0;">פתיחת חשבון תוך דקה, בלי כרטיס אשראי, עם מסלולי PRO ו‑PREMIUM כשתרצה לגדול.</p>
+        <p class="cp-muted cp-m0">פתיחת חשבון תוך דקה, בלי כרטיס אשראי, עם מסלולי PRO ו‑PREMIUM כשתרצה לגדול.</p>
       </article>
 
       <aside class="hero-stats">
@@ -84,7 +82,7 @@
 
     <section class="cp-stack" id="how">
       <div class="section-head">
-        <h2 style="margin:0;">איך זה עובד</h2>
+        <h2>איך זה עובד</h2>
         <p class="cp-muted">שלושה צעדים ברורים כדי לעבור משיחה למכירה.</p>
       </div>
       <div class="timeline-grid">
@@ -96,20 +94,20 @@
 
     <section class="cp-stack">
       <div class="section-head">
-        <h2 style="margin:0;">למה עסקים בוחרים ב-ConversaPay</h2>
+        <h2>למה עסקים בוחרים ב-ConversaPay</h2>
         <p class="cp-muted">כלים שמחברים בין שיחה, מכירה ותפעול עסקי במקום אחד.</p>
       </div>
       <div class="feature-grid">
-        <article class="feature-card"><h3 style="margin:0;">דאשבורד אחיד</h3><p class="cp-muted">מוצרים, דומיינים, API Keys, הזמנות ופרופיל — בלי בלגן ובלי קפיצות מיותרות.</p></article>
-        <article class="feature-card"><h3 style="margin:0;">הטמעה מהירה</h3><p class="cp-muted">מדריך הטמעה ברור, חיבור וידג׳ט, חיבור WhatsApp ומפתחות API מתוך המערכת.</p></article>
-        <article class="feature-card"><h3 style="margin:0;">בונה אתרים ל-Premium</h3><p class="cp-muted">יוצרים דף נחיתה מהיר מתוך רעיון ברור, עם גישה ייעודית מתוך הדאשבורד.</p></article>
-        <article class="feature-card"><h3 style="margin:0;">גדל עם העסק</h3><p class="cp-muted">מתחילים חינם, משדרגים ל-PRO כשצריך מסחר והטמעות, ול-PREMIUM עבור Builder ו-WhatsApp.</p></article>
+        <article class="feature-card"><h3 class="cp-m0">דאשבורד אחיד</h3><p class="cp-muted">מוצרים, דומיינים, API Keys, הזמנות ופרופיל — בלי בלגן ובלי קפיצות מיותרות.</p></article>
+        <article class="feature-card"><h3 class="cp-m0">הטמעה מהירה</h3><p class="cp-muted">מדריך הטמעה ברור, חיבור וידג׳ט, חיבור WhatsApp ומפתחות API מתוך המערכת.</p></article>
+        <article class="feature-card"><h3 class="cp-m0">בונה אתרים ל-Premium</h3><p class="cp-muted">יוצרים דף נחיתה מהיר מתוך רעיון ברור, עם גישה ייעודית מתוך הדאשבורד.</p></article>
+        <article class="feature-card"><h3 class="cp-m0">גדל עם העסק</h3><p class="cp-muted">מתחילים חינם, משדרגים ל-PRO כשצריך מסחר והטמעות, ול-PREMIUM עבור Builder ו-WhatsApp.</p></article>
       </div>
     </section>
 
     <section class="cp-stack" id="plans">
       <div class="section-head">
-        <h2 style="margin:0;">מסלול שמתאים לקצב שלכם</h2>
+        <h2>מסלול שמתאים לקצב שלכם</h2>
         <p class="cp-muted">מתחילים בחינם ומשדרגים כשמגיע הזמן להוסיף מסחר, API או WhatsApp.</p>
       </div>
       <div class="plans-grid">
@@ -151,7 +149,7 @@
 
     <section class="cp-stack">
       <div class="section-head">
-        <h2 style="margin:0;">מה כבר מוכן לך בפנים</h2>
+        <h2>מה כבר מוכן לך בפנים</h2>
         <p class="cp-muted">המערכת נבנית כך שתוכל להרגיש מקצועי מהרגע הראשון.</p>
       </div>
       <div class="proof-grid">
@@ -161,10 +159,10 @@
       </div>
     </section>
 
-    <section class="cp-panel cta-card" style="text-align:center;">
-      <h2 style="margin:0;">מוכנים להתחיל?</h2>
-      <p class="cp-muted">פתחו חשבון בחינם ותנו ל-ConversaPay לעזור לכם לענות, להציע ולסגור.</p>
-      <div class="inline-actions" style="justify-content:center;">
+    <section class="cp-panel cta-card cp-text-center">
+      <h2 class="cp-m0">מוכנים להתחיל?</h2>
+      <p class="cp-muted cp-mi-auto">פתחו חשבון בחינם ותנו ל-ConversaPay לעזור לכם לענות, להציע ולסגור.</p>
+      <div class="inline-actions cp-center-inline">
         <a class="cp-button" href="/register">פתיחת חשבון</a>
         <a class="cp-button-secondary" href="/login">יש לי כבר חשבון</a>
       </div>
@@ -174,6 +172,7 @@
   <footer class="cp-footer">
     <p>&copy; 2026 ConversaPay</p>
     <p>הדרך הפשוטה לדבר עם לקוחות ולסגור מכירות, במקום אחד.</p>
+    <p><a class="cp-link" href="/terms">תנאי שימוש</a> · <a class="cp-link" href="/privacy">מדיניות פרטיות</a></p>
   </footer>
 
   <script>

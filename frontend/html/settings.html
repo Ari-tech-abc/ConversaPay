@@ -9,20 +9,19 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
   <style>
+    /* Layout only. Inputs use the shared .cp-field/.cp-input/.cp-label components. */
     .settings-shell { display:grid; gap:1.2rem; max-width:860px; margin:auto; }
     .summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)); gap:1rem; }
     .summary-card,.settings-card { display:grid; gap:12px; padding:1.4rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
     .summary-value { font-size:1.5rem; font-weight:800; color:var(--cp-accent); }
     .field-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:14px; }
     .field-grid .full { grid-column:1/-1; }
-    .settings-field { display:grid; gap:8px; }
-    .settings-field label { color:var(--cp-muted-strong); font-weight:700; font-size:.92rem; }
-    .settings-field input,.webhook-box { width:100%; border-radius:13px; border:1px solid var(--cp-line-strong); background:var(--cp-bg); color:var(--cp-text); padding:12px 14px; font:inherit; box-sizing:border-box; font-weight:500; }
-    .webhook-box { direction:ltr; text-align:left; word-break:break-all; background:var(--cp-panel-strong); }
+    .webhook-box { width:100%; border-radius:13px; border:1px solid var(--cp-line-strong); background:var(--cp-panel-strong); color:var(--cp-text); padding:12px 14px; font:inherit; font-weight:500; direction:ltr; text-align:left; word-break:break-all; }
     .settings-actions,.inline-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .help-list { display:grid; gap:10px; }
     .help-item { padding:14px 16px; border-radius:1rem; background:var(--cp-panel-strong); border:1px solid var(--cp-line); }
     .help-item strong { color:var(--cp-text); font-weight:700; }
+    @media (max-width: 560px) { .settings-actions { display:grid; grid-template-columns:1fr; } .settings-actions > * { width:100%; } }
   </style>
 </head>
 <body class="cp-page">
@@ -68,20 +67,20 @@
 
       <form id="whatsappForm" class="cp-stack">
         <div class="field-grid">
-          <div class="settings-field">
-            <label for="phoneNumberId">Phone Number ID</label>
-            <input id="phoneNumberId" placeholder="לדוגמה: 123456789012345">
+          <div class="cp-field">
+            <label class="cp-label" for="phoneNumberId">Phone Number ID</label>
+            <input class="cp-input" id="phoneNumberId" placeholder="לדוגמה: 123456789012345">
           </div>
-          <div class="settings-field">
-            <label for="verifyToken">Verify Token</label>
-            <input id="verifyToken" placeholder="בחר טוקן משלך לאימות ה-Webhook">
+          <div class="cp-field">
+            <label class="cp-label" for="verifyToken">Verify Token</label>
+            <input class="cp-input" id="verifyToken" placeholder="בחר טוקן משלך לאימות ה-Webhook">
           </div>
-          <div class="settings-field full">
-            <label for="accessToken">Access Token</label>
-            <input id="accessToken" placeholder="Paste Meta access token here">
+          <div class="cp-field full">
+            <label class="cp-label" for="accessToken">Access Token</label>
+            <input class="cp-input" id="accessToken" placeholder="Paste Meta access token here">
           </div>
-          <div class="settings-field full">
-            <label>Webhook URL</label>
+          <div class="cp-field full">
+            <label class="cp-label">Webhook URL</label>
             <div class="webhook-box" id="webhookUrl">טוען...</div>
           </div>
         </div>
@@ -109,12 +108,13 @@
 
   <script>
     const API='/api/v1';
+    const LOGIN_ROUTE='/login';
     const token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token');
     const auth=token?{Authorization:`Bearer ${token}`}:null;
     const $=(id)=>document.getElementById(id);
-    if(!token){location.href='/login';}
+    if(!token){location.href=LOGIN_ROUTE;}
     function showNotice(message,isError=false){const notice=$('notice');notice.textContent=message;notice.className=isError?'cp-notice error':'cp-notice';notice.hidden=false}
-    function clearSessionAndRedirect(){['access_token','conversapay_auth_token','conversapay_user','user_id','email'].forEach((key)=>{localStorage.removeItem(key);sessionStorage.removeItem(key)});location.href='/login'}
+    function clearSessionAndRedirect(){['access_token','conversapay_auth_token','conversapay_user','user_id','email'].forEach((key)=>{localStorage.removeItem(key);sessionStorage.removeItem(key)});location.href=LOGIN_ROUTE}
     function setWebhookUrl(){$('webhookUrl').textContent=`${window.location.origin}/api/v1/whatsapp/webhook`}
     async function loadSettings(){setWebhookUrl();try{const response=await fetch(`${API}/dashboard/settings`,{headers:auth});if(response.status===401){clearSessionAndRedirect();return}if(!response.ok)throw new Error('לא ניתן לטעון את ההגדרות');const data=await response.json();$('paymeStatus').textContent=data.payme_id?'מחובר':'לא מוגדר';$('whatsappStatus').textContent=data.whatsapp_phone?'מחובר':'מוכן לחיבור';$('domainLimit').textContent=String(Number(data.domain_limit||0));$('apiKeyLimit').textContent=String(Number(data.api_key_limit||0));$('phoneNumberId').value=data.whatsapp_phone||''}catch(error){showNotice(error.message||'שגיאה בטעינת ההגדרות',true)}}
     async function loadProfileSettings(){try{const response=await fetch(`${API}/auth/me`,{headers:auth});if(response.status===401){clearSessionAndRedirect();return}if(!response.ok)return;const data=await response.json();const profile=data.profile||{};$('phoneNumberId').value=profile.whatsapp_phone_number_id||$('phoneNumberId').value;$('accessToken').value=profile.whatsapp_access_token||'';$('verifyToken').value=profile.whatsapp_verify_token||''}catch(_){}}
