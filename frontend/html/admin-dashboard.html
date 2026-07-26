@@ -5,12 +5,14 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#ffffff">
   <meta name="referrer" content="same-origin">
+  <meta name="robots" content="noindex,nofollow">
   <title>ConversaPay - לוח בקרה למנהל</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
   <style>
+    /* Admin layout only. Every colour resolves to a conversapay-ui.css token. */
     .dashboard-shell {
       display: grid;
       gap: 18px;
@@ -85,6 +87,23 @@
     .row-meta {
       display: grid;
       gap: 12px;
+    }
+    .stack-lg {
+      gap: 14px;
+    }
+    .stack-figure {
+      gap: 8px;
+      min-width: 160px;
+    }
+    .hero-intro {
+      gap: 12px;
+      max-width: 720px;
+    }
+    .figure-value {
+      font: 800 2rem/1 'Space Grotesk',sans-serif;
+      color: var(--cp-text);
+      letter-spacing: -.05em;
+      text-align: left;
     }
     .risk-grid {
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -218,6 +237,12 @@
         align-items: flex-start;
         flex-direction: column;
       }
+      .stack-figure {
+        min-width: 0;
+      }
+      .figure-value {
+        text-align: start;
+      }
     }
   </style>
 </head>
@@ -225,7 +250,7 @@
   <header class="cp-topbar">
     <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
     <div class="cp-actions">
-      <a class="cp-button-secondary" href="/admin-change-password.html">שינוי סיסמה</a>
+      <a class="cp-button-secondary" id="changePasswordLink" href="/admin/change-password">שינוי סיסמה</a>
       <button class="cp-button-secondary" id="refreshBtn" type="button">רענון נתונים</button>
       <button class="cp-button" id="logoutBtn" type="button">התנתקות</button>
     </div>
@@ -234,7 +259,7 @@
   <main class="cp-shell dashboard-shell">
     <section class="cp-card dashboard-hero">
       <div class="hero-row">
-        <div class="cp-stack" style="gap:12px;max-width:720px;">
+        <div class="cp-stack hero-intro">
           <span class="cp-kicker">לוח בקרה למנהל</span>
           <h1>ניהול דומיינים, דוחות ופעילות במקום אחד</h1>
           <p class="cp-muted">מעקב אחר עסקים, חריגות ושימוש יומי דרך ממשק ניהולי נקי, ברור ורספונסיבי.</p>
@@ -284,12 +309,12 @@
       </div>
       <div class="field-grid">
         <div class="field">
-          <label for="search">חיפוש חופשי</label>
-          <input id="search" type="search" placeholder="חיפוש לפי דומיין, עסק או סטטוס">
+          <label class="cp-label" for="search">חיפוש חופשי</label>
+          <input class="cp-input" id="search" type="search" placeholder="חיפוש לפי דומיין, עסק או סטטוס">
         </div>
         <div class="field">
-          <label for="domainStatusFilter">סטטוס דומיינים</label>
-          <select id="domainStatusFilter">
+          <label class="cp-label" for="domainStatusFilter">סטטוס דומיינים</label>
+          <select class="cp-input" id="domainStatusFilter">
             <option value="">הכל</option>
             <option value="active">פעיל</option>
             <option value="flagged">מסומן</option>
@@ -297,8 +322,8 @@
           </select>
         </div>
         <div class="field">
-          <label for="reportSeverityFilter">חומרת דוחות</label>
-          <select id="reportSeverityFilter">
+          <label class="cp-label" for="reportSeverityFilter">חומרת דוחות</label>
+          <select class="cp-input" id="reportSeverityFilter">
             <option value="">הכל</option>
             <option value="low">נמוכה</option>
             <option value="medium">בינונית</option>
@@ -344,14 +369,14 @@
               <p>סיכום מצב לפי חריגות, חסימות ודוחות.</p>
             </div>
           </div>
-          <div class="stack" style="gap:14px;">
+          <div class="stack stack-lg">
             <div class="row-card">
               <div class="row-meta">
                 <strong>מדד סיכון</strong>
                 <small class="muted">תמונת מצב לפי חסימות ודוחות פתוחים.</small>
               </div>
-              <div class="stack" style="gap:8px;min-width:160px;">
-                <strong id="riskScore" style="font:800 2rem/1 'Space Grotesk',sans-serif;color:var(--cp-text);text-align:left;">0</strong>
+              <div class="stack stack-figure">
+                <strong id="riskScore" class="figure-value">0</strong>
                 <span class="status-pill" id="riskLabel">Calculating</span>
               </div>
             </div>
@@ -360,8 +385,8 @@
                 <strong>תור טיפול</strong>
                 <small class="muted" id="queueCopy">טוען נתוני חריגות, דומיינים ואירועים פתוחים...</small>
               </div>
-              <div class="stack" style="gap:8px;min-width:160px;">
-                <strong id="actionQueue" style="font:800 2rem/1 'Space Grotesk',sans-serif;color:var(--cp-text);text-align:left;">0</strong>
+              <div class="stack stack-figure">
+                <strong id="actionQueue" class="figure-value">0</strong>
                 <span class="status-pill" id="queueState">Ready</span>
               </div>
             </div>
@@ -415,6 +440,15 @@
 
   <script>
     const ADMIN_KEYS = ['admin_token', 'admin_email'];
+
+    // The admin area is served from /admin-<secret>/... when ADMIN_SECRET_PATH is
+    // set, and from /admin/... when it is not. Derive the base from the current
+    // URL so no redirect ever points at a hard-coded, non-existent path.
+    const adminSegment = window.location.pathname.split('/').filter(Boolean)[0];
+    const ADMIN_BASE = adminSegment && adminSegment.startsWith('admin-') ? `/${adminSegment}` : '/admin';
+    const ADMIN_LOGIN_ROUTE = `${ADMIN_BASE}/login`;
+    const ADMIN_CHANGE_PASSWORD_ROUTE = `${ADMIN_BASE}/change-password`;
+
     const state = {
       token: null,
       adminEmail: '',
@@ -425,6 +459,8 @@
     };
 
     const $ = (id) => document.getElementById(id);
+
+    $('changePasswordLink').href = ADMIN_CHANGE_PASSWORD_ROUTE;
 
     function getAdminToken() {
       return sessionStorage.getItem('admin_token') || localStorage.getItem('admin_token');
@@ -439,7 +475,7 @@
 
     function logout() {
       clearAdminSession();
-      location.href = '/admin-login.html';
+      location.href = ADMIN_LOGIN_ROUTE;
     }
 
     function showNotice(message, isError = false) {
@@ -788,7 +824,7 @@
 
     state.token = getAdminToken();
     if (!state.token) {
-      location.href = '/admin-login.html';
+      location.href = ADMIN_LOGIN_ROUTE;
     } else {
       bindEvents();
       loadAll();
