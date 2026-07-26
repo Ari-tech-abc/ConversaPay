@@ -1,1 +1,73 @@
-<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ConversaPay | תפעול WordPress</title><link rel="stylesheet" href="/frontend/html/conversapay-ui.css"><style>body{background:#f6f8fb;color:#14213d}.cp-topbar{background:#fff;border-color:#dfe5ef}.cp-shell{max-width:1040px}.ops-hero{display:grid;gap:16px;padding:32px;border-radius:28px;background:linear-gradient(135deg,#161c38,#2d3b6c);color:#fff}.ops-hero p{max-width:62ch;color:#d6e1ff}.ops-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.ops-step,.ops-code,.ops-faq{padding:22px;border:1px solid #dfe5ef;border-radius:20px;background:#fff}.ops-step{display:grid;gap:10px}.ops-num{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:#635bff;color:#fff;font-weight:800}.ops-code{background:#101a31;color:#eaf2ff;overflow:auto;direction:ltr;text-align:left}.ops-code code{white-space:pre-wrap}.ops-faq{display:grid;gap:12px}.cp-button,.cp-button-secondary{color:inherit}@media(max-width:760px){.ops-grid{grid-template-columns:1fr}.ops-hero{padding:22px}}</style></head><body class="cp-page"><header class="cp-topbar"><a class="cp-brand" href="home.html"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a><a class="cp-button-secondary" href="dashboard.html">חזרה לדאשבורד</a></header><main class="cp-shell"><section class="ops-hero"><span class="cp-kicker">WORDPRESS OPERATIONS</span><h1>הטמעה בלי לגעת בקוד</h1><p>חברו את ConversaPay לאתר WordPress, בדקו את הווידג'ט, והחליטו בדיוק באילו עמודים הוא מופיע.</p><div><a class="cp-button" href="https://www.conversapay.org/wp-admin/options-general.php?page=conversapay-chat">פתח הגדרות באתר</a></div></section><section class="ops-grid" style="margin-top:20px"><article class="ops-step"><span class="ops-num">1</span><h2>התקנה</h2><p>העלו את תיקיית <strong>wordpress-plugin</strong> כתוסף, הפעילו אותו, ופתחו את ConversaPay Chat תחת Settings.</p></article><article class="ops-step"><span class="ops-num">2</span><h2>חיבור</h2><p>העתיקו Business ID מהדאשבורד. הוסיפו API Key אם האתר משתמש במסלול שמחייב מפתח.</p></article><article class="ops-step"><span class="ops-num">3</span><h2>שליטה</h2><p>בחרו כל האתר, דף הבית, או עמודים ספציפיים. אפשר גם להוסיף shortcode בתוך תוכן.</p></article></section><section style="margin-top:20px"><h2>הטמעה נקודתית עם shortcode</h2><pre class="ops-code"><code>[conversapay_chat]</code></pre></section><section class="ops-faq" style="margin-top:20px"><h2>בדיקת תקינות מהירה</h2><p>אם הווידג'ט לא מופיע: ודאו ש-Business ID הוא UUID, שה-URL מצביע ל-ConversaPay, ושאין cache שמגיש גרסה ישנה של JavaScript.</p><p>במובייל: הווידג'ט נצמד לאזור בטוח בתחתית, החלון מקבל רוחב מלא, וכל שדה נשאר בגודל touch תקין.</p></section></main></body></html>
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f8fafc">
+  <title>ConversaPay | תפעול WordPress</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+  <style>
+    .ops-shell{display:grid;gap:20px;max-width:1040px;margin:0 auto;width:100%}
+    .ops-hero{display:grid;gap:16px;padding:32px;border-radius:1.75rem}
+    .ops-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px}
+    .ops-step{display:grid;gap:10px;padding:22px;border:1px solid var(--cp-line);border-radius:1.25rem;background:var(--cp-panel);box-shadow:var(--cp-shadow);min-width:0}
+    .ops-num{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:var(--cp-accent);color:#fff;font-weight:800}
+    .ops-faq{display:grid;gap:12px;padding:22px;border:1px solid var(--cp-line);border-radius:1.25rem;background:var(--cp-panel);box-shadow:var(--cp-shadow)}
+    @media(max-width:760px){.ops-hero{padding:22px}}
+  </style>
+</head>
+<body class="cp-page">
+  <header class="cp-topbar">
+    <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
+    <a class="cp-button-secondary" href="/dashboard">חזרה לדאשבורד</a>
+  </header>
+
+  <main class="cp-shell ops-shell">
+    <section class="cp-panel cp-stack ops-hero hero-dark-panel">
+      <span class="cp-kicker">WORDPRESS OPERATIONS</span>
+      <h1 class="cp-flush">הטמעה בלי לגעת בקוד</h1>
+      <p class="cp-subtitle">חברו את ConversaPay לאתר WordPress, בדקו את הווידג'ט, והחליטו בדיוק באילו עמודים הוא מופיע.</p>
+      <div class="cp-actions">
+        <a class="cp-button" href="https://www.conversapay.org/wp-admin/options-general.php?page=conversapay-chat" target="_blank" rel="noopener">פתח הגדרות באתר</a>
+      </div>
+    </section>
+
+    <section class="ops-grid">
+      <article class="ops-step">
+        <span class="ops-num">1</span>
+        <h2 class="cp-flush">התקנה</h2>
+        <p class="cp-muted">העלו את תיקיית <strong>wordpress-plugin</strong> כתוסף, הפעילו אותו, ופתחו את ConversaPay Chat תחת Settings.</p>
+      </article>
+      <article class="ops-step">
+        <span class="ops-num">2</span>
+        <h2 class="cp-flush">חיבור</h2>
+        <p class="cp-muted">העתיקו Business ID מהדאשבורד. הוסיפו API Key אם האתר משתמש במסלול שמחייב מפתח.</p>
+      </article>
+      <article class="ops-step">
+        <span class="ops-num">3</span>
+        <h2 class="cp-flush">שליטה</h2>
+        <p class="cp-muted">בחרו כל האתר, דף הבית, או עמודים ספציפיים. אפשר גם להוסיף shortcode בתוך תוכן.</p>
+      </article>
+    </section>
+
+    <section class="cp-panel cp-stack">
+      <h2 class="cp-flush">הטמעה נקודתית עם shortcode</h2>
+      <pre class="cp-code-surface"><code>[conversapay_chat]</code></pre>
+    </section>
+
+    <section class="ops-faq">
+      <h2 class="cp-flush">בדיקת תקינות מהירה</h2>
+      <p class="cp-muted">אם הווידג'ט לא מופיע: ודאו ש-Business ID הוא UUID, שה-URL מצביע ל-ConversaPay, ושאין cache שמגיש גרסה ישנה של JavaScript.</p>
+      <p class="cp-muted">במובייל: הווידג'ט נצמד לאזור בטוח בתחתית, החלון מקבל רוחב מלא, וכל שדה נשאר בגודל touch תקין.</p>
+    </section>
+  </main>
+
+  <footer class="cp-footer">
+    <p>&copy; 2026 ConversaPay</p>
+    <p><a class="cp-link" href="/setup-guide">מדריך הטמעה</a> · <a class="cp-link" href="/dashboard">דאשבורד</a></p>
+  </footer>
+</body>
+</html>
