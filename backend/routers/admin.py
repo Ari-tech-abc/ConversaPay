@@ -4,7 +4,7 @@ Security: All admin API endpoints return 404 (not 401/403) to unauthorized
 requests, completely hiding the existence of admin routes from scanners.
 """
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 import hashlib, secrets
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
@@ -26,10 +26,7 @@ class DomainRestrictionUpdate(BaseModel):
 class AbuseReportCreate(BaseModel):
     business_id: str; domain: Optional[str] = None; report_type: str; severity: str = "medium"; description: str; evidence: Optional[Dict[str, Any]] = None
 
-
-# --- 404 cloaking: generic "Not found" error for any auth failure ---
 _NOT_FOUND = HTTPException(status_code=404, detail="Not found")
-
 
 def hash_password(password: str) -> str:
     salt = secrets.token_hex(32); digest = hashlib.pbkdf2_hmac("sha256", password.encode(), salt.encode(), 100000)
@@ -49,28 +46,19 @@ def verify_admin_token(token: str):
         return payload if payload.get("type") == "admin" else None
     except Exception: return None
 
-
 async def require_admin(request: Request):
     """Verify admin JWT. Returns 404 on failure to hide endpoint existence."""
     header = request.headers.get("Authorization", "")
-    if not header.startswith("Bearer "):
-        raise _NOT_FOUND
+    if not header.startswith("Bearer "): raise _NOT_FOUND
     payload = verify_admin_token(header.split(" ", 1)[1])
-    if not payload:
-        raise _NOT_FOUND
-    # Verify the admin still exists and is active in the database
+    if not payload: raise _NOT_FOUND
     try:
         result = supabase.table("admin_users").select("id,role,status").eq("id", payload["admin_id"]).limit(1).execute()
-        if not result.data or result.data[0].get("status") != "active":
-            raise _NOT_FOUND
-        if result.data[0].get("role") not in ("admin", "super_admin"):
-            raise _NOT_FOUND
-    except HTTPException:
-        raise
-    except Exception:
-        raise _NOT_FOUND
+        if not result.data or result.data[0].get("status") != "active": raise _NOT_FOUND
+        if result.data[0].get("role") not in ("admin", "super_admin"): raise _NOT_FOUND
+    except HTTPException: raise
+    except Exception: raise _NOT_FOUND
     return payload
-
 
 def _find_admin(identifier: str):
     result = supabase.table("admin_users").select("*").eq("username", identifier).execute()
@@ -80,8 +68,7 @@ def _find_admin(identifier: str):
 def _audit(admin_id, action, request, resource_type=None, resource_id=None, business_id=None, details=None):
     supabase.table("admin_audit_logs").insert({"admin_id": admin_id, "action": action, "resource_type": resource_type, "resource_id": resource_id, "business_id": business_id, "details": details or {}, "ip_address": request.client.host if request.client else None, "user_agent": request.headers.get("user-agent")}).execute()
 
-@router.post("/login", response_model=AdminLoginResponse)
-async def admin_login(credentials: AdminLogin, request: Request):
+def _login_response(credentials: AdminLogin, request: Request):
     admin = _find_admin(credentials.identifier.strip())
     if not admin: raise _NOT_FOUND
     if admin.get("locked_until"):
@@ -95,6 +82,17 @@ async def admin_login(credentials: AdminLogin, request: Request):
     supabase.table("admin_users").update({"login_attempts": 0, "locked_until": None, "last_login": datetime.now(timezone.utc).isoformat()}).eq("id", admin["id"]).execute()
     token = create_admin_token(admin["id"], admin["email"]); _audit(admin["id"], "admin_login", request)
     return {"access_token": token, "token_type": "bearer", "admin_id": admin["id"], "email": admin["email"], "role": admin["role"]}
+
+@router.post("/login", response_model=AdminLoginResponse)
+async def admin_login(credentials: AdminLogin, request: Request):
+    return _login_response(credentials, request)
+
+# The router is mounted at /api/v1, so this becomes /api/v1/admin-{secret_path}/login.
+# It intentionally does not repeat /api/v1 or the /admin prefix.
+@router.post("-{secret_path}/login", response_model=AdminLoginResponse)
+async def admin_login_secret(secret_path: str, credentials: AdminLogin, request: Request):
+    if not settings.ADMIN_SECRET_PATH or secret_path != settings.ADMIN_SECRET_PATH.strip(): raise _NOT_FOUND
+    return _login_response(credentials, request)
 
 @router.get("/dashboard")
 async def admin_dashboard(admin: dict = Depends(require_admin)):
