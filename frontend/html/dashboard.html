@@ -3,17 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#07111f">
+  <meta name="theme-color" content="#f8fafc">
   <title>ConversaPay | DASHBOARD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
   <style>
-    :root {
-      --dash-accent: #37d7ff;
-      --dash-accent-2: #8b5cf6;
-      --dash-panel-soft: rgba(255, 255, 255, 0.035);
-      --dash-panel-strong: rgba(255, 255, 255, 0.06);
-    }
-
+    /* Dashboard layout only. Every colour resolves to a conversapay-ui.css token. */
     .dash {
       display: grid;
       gap: 20px;
@@ -30,10 +27,11 @@
       gap: 14px;
       padding: 14px 18px;
       border-radius: 24px;
-      background: rgba(7, 17, 31, 0.78);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--cp-line);
       box-shadow: var(--cp-shadow);
-      backdrop-filter: blur(18px);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       flex-wrap: wrap;
     }
 
@@ -53,6 +51,7 @@
     .topbar-title strong {
       font-size: 1rem;
       letter-spacing: 0.08em;
+      color: var(--cp-text);
     }
 
     .topbar-title span {
@@ -73,17 +72,24 @@
       padding: 10px 14px;
       border-radius: 999px;
       text-decoration: none;
+      font-weight: 700;
+      font-size: 0.9rem;
       color: var(--cp-muted-strong);
-      background: rgba(255, 255, 255, 0.045);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--cp-panel-strong);
+      border: 1px solid var(--cp-line);
       transition: 0.2s ease;
     }
 
     .nav-pill.active,
     .nav-pill:hover {
-      color: var(--cp-text);
-      border-color: rgba(55, 215, 255, 0.3);
-      background: rgba(55, 215, 255, 0.08);
+      color: var(--cp-accent-ink);
+      background: var(--cp-accent-soft);
+      border-color: #c4b5fd;
+    }
+
+    .nav-pill:focus-visible {
+      outline: 3px solid var(--cp-focus);
+      outline-offset: 3px;
     }
 
     .hero {
@@ -91,10 +97,7 @@
       gap: 16px;
       padding: 30px;
       border-radius: 30px;
-      background:
-        radial-gradient(circle at top right, rgba(55, 215, 255, 0.22), transparent 30%),
-        radial-gradient(circle at bottom left, rgba(139, 92, 246, 0.18), transparent 28%),
-        linear-gradient(135deg, rgba(124, 92, 255, 0.22), rgba(7, 17, 31, 0.95));
+      background: linear-gradient(135deg, #f5f3ff, #ffffff);
       border: 1px solid var(--cp-line);
       box-shadow: var(--cp-shadow);
     }
@@ -118,8 +121,8 @@
       gap: 8px;
       padding: 8px 12px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.08);
-      color: #d8f7ff;
+      background: var(--cp-accent-soft);
+      color: var(--cp-accent-ink);
       width: fit-content;
       letter-spacing: 0.14em;
       font-size: 0.8rem;
@@ -129,11 +132,12 @@
     .hero h1 {
       margin: 0;
       font-size: clamp(2rem, 4vw, 3rem);
+      color: var(--cp-text);
     }
 
     .hero-copy {
       max-width: 760px;
-      color: var(--cp-muted-strong);
+      color: var(--cp-muted);
       line-height: 1.7;
     }
 
@@ -158,16 +162,15 @@
     .overview-grid,
     .tools-grid,
     .tiers-grid {
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
     }
 
     .panel-grid {
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
     }
 
     .card,
-    .panel,
-    .subpanel {
+    .panel {
       display: grid;
       gap: 14px;
       padding: 22px;
@@ -175,12 +178,18 @@
       background: var(--cp-panel);
       border: 1px solid var(--cp-line);
       box-shadow: var(--cp-shadow);
+      min-width: 0;
     }
 
     .subpanel {
-      background: var(--dash-panel-soft);
-      border-color: rgba(255, 255, 255, 0.08);
+      display: grid;
+      gap: 14px;
+      padding: 22px;
+      border-radius: 24px;
+      background: var(--cp-panel-strong);
+      border: 1px solid var(--cp-line);
       box-shadow: none;
+      min-width: 0;
     }
 
     .card h2,
@@ -189,17 +198,21 @@
     .subpanel h3,
     .subpanel h4 {
       margin: 0;
+      color: var(--cp-text);
     }
 
     .metric-value {
-      font: 800 2rem 'Poppins', sans-serif;
+      font: 800 2rem/1 'Space Grotesk', sans-serif;
+      letter-spacing: -0.04em;
+      color: var(--cp-text);
     }
 
     .dash-row {
       padding: 13px 14px;
       border-radius: 16px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      background: var(--cp-panel-strong);
+      border: 1px solid var(--cp-line);
+      color: var(--cp-text);
     }
 
     .dash-row strong,
@@ -210,15 +223,16 @@
     .tool-card {
       padding: 18px;
       border-radius: 22px;
-      background: var(--dash-panel-soft);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--cp-panel-strong);
+      border: 1px solid var(--cp-line);
       display: grid;
       gap: 12px;
+      min-width: 0;
     }
 
     .tool-card.highlight {
-      background: linear-gradient(135deg, rgba(55, 215, 255, 0.08), rgba(139, 92, 246, 0.08));
-      border-color: rgba(55, 215, 255, 0.22);
+      background: linear-gradient(135deg, #f5f3ff, #ecfeff);
+      border-color: #c4b5fd;
     }
 
     .tier-card {
@@ -226,14 +240,15 @@
       gap: 14px;
       padding: 20px;
       border-radius: 22px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: var(--dash-panel-soft);
+      border: 1px solid var(--cp-line);
+      background: var(--cp-panel-strong);
+      min-width: 0;
     }
 
     .tier-card.current {
-      border-color: rgba(55, 215, 255, 0.4);
-      box-shadow: 0 0 0 1px rgba(55, 215, 255, 0.15) inset;
-      background: linear-gradient(135deg, rgba(55, 215, 255, 0.08), rgba(124, 92, 255, 0.08));
+      border-color: var(--cp-accent);
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+      background: linear-gradient(135deg, #f5f3ff, #ffffff);
     }
 
     .tier-card ul {
@@ -249,17 +264,18 @@
       align-items: center;
       gap: 10px;
       color: var(--cp-muted-strong);
+      font-weight: 500;
     }
 
     .tier-card li::before {
       content: '•';
-      color: var(--dash-accent);
+      color: var(--cp-accent);
       font-size: 1.1rem;
     }
 
     .form-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
       gap: 14px;
     }
 
@@ -267,31 +283,11 @@
       grid-column: 1 / -1;
     }
 
-    .field {
-      display: grid;
-      gap: 8px;
-    }
-
-    .field label {
-      color: var(--cp-muted-strong);
-      font-size: 0.95rem;
-      font-weight: 600;
-    }
-
-    .field input,
-    .field textarea {
-      width: 100%;
-      border-radius: 14px;
-      border: 1px solid var(--cp-line);
-      background: rgba(7, 17, 31, 0.78);
-      color: var(--cp-text);
-      padding: 12px 14px;
-      font: inherit;
-      resize: vertical;
-    }
-
+    /* .field, .field label and .field input/textarea/select are owned by
+       conversapay-ui.css so inputs stay identical across every page. */
     .field textarea {
       min-height: 110px;
+      resize: vertical;
     }
 
     .checkbox-row {
@@ -299,6 +295,12 @@
       align-items: center;
       gap: 10px;
       color: var(--cp-muted-strong);
+      font-weight: 500;
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: auto;
+      accent-color: var(--cp-accent);
     }
 
     .collection,
@@ -313,8 +315,9 @@
       gap: 12px;
       padding: 16px;
       border-radius: 18px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--cp-panel-strong);
+      border: 1px solid var(--cp-line);
+      min-width: 0;
     }
 
     .muted-box,
@@ -322,15 +325,15 @@
     .raw-key-box {
       padding: 16px;
       border-radius: 18px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px dashed rgba(255, 255, 255, 0.12);
+      background: var(--cp-panel-strong);
+      border: 1px dashed var(--cp-line-strong);
       color: var(--cp-muted);
     }
 
     .raw-key-box {
-      background: rgba(55, 215, 255, 0.08);
+      background: var(--cp-accent-soft);
       border-style: solid;
-      border-color: rgba(55, 215, 255, 0.2);
+      border-color: #c4b5fd;
       color: var(--cp-text);
     }
 
@@ -339,19 +342,16 @@
       font-size: 0.95rem;
     }
 
-    .hidden {
-      display: none !important;
-    }
-
     .domain-pill {
       display: inline-flex;
       align-items: center;
       gap: 8px;
       padding: 10px 14px;
       border-radius: 999px;
-      background: rgba(55, 215, 255, 0.08);
-      border: 1px solid rgba(55, 215, 255, 0.16);
-      color: var(--cp-text);
+      background: var(--cp-accent-soft);
+      border: 1px solid #c4b5fd;
+      color: var(--cp-accent-ink);
+      font-weight: 600;
       flex-wrap: wrap;
     }
 
@@ -376,10 +376,11 @@
     .profile-dock-card {
       padding: 8px 10px 8px 8px;
       border-radius: 999px;
-      background: rgba(7, 17, 31, 0.88);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid var(--cp-line);
       box-shadow: var(--cp-shadow);
       backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
     }
 
     .profile-avatar {
@@ -389,8 +390,8 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, var(--dash-accent), var(--dash-accent-2));
-      color: #07111f;
+      background: linear-gradient(135deg, #7c3aed, #0891b2);
+      color: #ffffff;
       font-weight: 800;
       font-size: 1rem;
       flex-shrink: 0;
@@ -402,15 +403,19 @@
       min-width: 0;
     }
 
-    .profile-meta strong,
+    .profile-meta strong {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 160px;
+      color: var(--cp-text);
+    }
+
     .profile-meta span {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       max-width: 160px;
-    }
-
-    .profile-meta span {
       color: var(--cp-muted);
       font-size: 0.82rem;
     }
@@ -443,6 +448,11 @@
     }
 
     @media (max-width: 640px) {
+      .topbar {
+        padding: 12px 14px;
+        border-radius: 20px;
+      }
+
       .topbar-left,
       .topbar-right,
       .hero-top,
@@ -451,6 +461,18 @@
       .inline-actions,
       .bottom-actions {
         width: 100%;
+      }
+
+      .hero {
+        padding: 20px;
+        border-radius: 22px;
+      }
+
+      .card,
+      .panel,
+      .subpanel {
+        padding: 16px;
+        border-radius: 20px;
       }
 
       .nav-pills,
@@ -710,8 +732,8 @@
         <div id="apiKeySummary" class="inline-note">טוען מפתחות...</div>
         <div id="latestApiKeyBox" class="raw-key-box hidden">
           <strong>המפתח החדש שלך</strong>
-          <div id="latestApiKeyValue" style="word-break:break-all;margin-top:8px;"></div>
-          <div class="bottom-actions" style="margin-top:12px;">
+          <div id="latestApiKeyValue" class="cp-secret cp-break-all cp-mt-sm"></div>
+          <div class="bottom-actions cp-mt-md">
             <button class="cp-button-secondary" id="copyLatestApiKey" type="button">העתק מפתח</button>
           </div>
         </div>
