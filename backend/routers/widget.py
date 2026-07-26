@@ -1,9 +1,10 @@
 """Public widget configuration with domain and API-key enforcement."""
-from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import JSONResponse
+from datetime import datetime, timezone
 import hashlib
 import hmac
 import logging
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import JSONResponse
 from supabase import create_client
 from backend.config import settings
 from backend.middleware.auth import active_plan
@@ -13,8 +14,7 @@ router = APIRouter(tags=["widget"])
 
 
 def host(value):
-    value = (value or "").strip()
-    value = value.split("://", 1)[-1]
+    value = (value or "").strip().split("://", 1)[-1]
     return value.split("/", 1)[0].split(":", 1)[0].lower().rstrip(".")
 
 
@@ -27,9 +27,8 @@ def plan_info(business_id, client):
     if not business.data:
         return {"plan_type": "free", "active": False}
     profile = client.table("profiles").select("plan_type,subscription_expires_at").eq("user_id", business.data["owner_id"]).maybe_single().execute()
-    row = profile.data or {}
-    plan = active_plan(row)
-    return {"plan_type": plan, "active": plan in ("pro", "premium") or plan == "free"}
+    plan = active_plan(profile.data or {})
+    return {"plan_type": plan, "active": True}
 
 
 def valid_key(client, business_id, raw):
@@ -38,7 +37,7 @@ def valid_key(client, business_id, raw):
     row = client.table("api_keys").select("id").eq("business_id", business_id).eq("key_hash", _key_hash(raw)).eq("is_active", True).maybe_single().execute()
     if not row.data:
         return False
-    client.table("api_keys").update({"last_used_at": __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()}).eq("id", row.data["id"]).execute()
+    client.table("api_keys").update({"last_used_at": datetime.now(timezone.utc).isoformat()}).eq("id", row.data["id"]).execute()
     return True
 
 
@@ -47,7 +46,7 @@ async def get_widget_config(business_id: str, request: Request):
     try:
         client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
         demo = business_id == "conversapay"
-        query = client.table("businesses").select("id,settings,bot_name,greeting_message,theme_colors") if demo else client.table("businesses").select("id,settings,bot_name,greeting_message,theme_colors")
+        query = client.table("businesses").select("id,settings,bot_name,greeting_message,theme_colors")
         result = (query.eq("business_id", business_id) if demo else query.eq("id", business_id)).maybe_single().execute()
         if not result.data:
             raise HTTPException(404, "Business not found")
@@ -57,20 +56,11 @@ async def get_widget_config(business_id: str, request: Request):
         origin = host(request.headers.get("origin") or request.headers.get("referer") or request.headers.get("host"))
         own = host(settings.BASE_URL)
         internal = origin in {"localhost", "127.0.0.1", own, "conversapay.org"} or origin.endswith(".conversapay.org")
-        if plan["plan_type"] in ("pro", "premium") and not plan["active"]:
-            raise HTTPException(403, "Subscription has expired")
         if not internal and plan["plan_type"] == "free":
             raise HTTPException(403, "External widget embeds require PRO or PREMIUM")
         if not internal and not valid_key(client, actual_id, request.headers.get("X-Widget-Key")):
             raise HTTPException(401, "Valid widget API key required")
-        return JSONResponse(content={
-            "business_id": business_id,
-            "bot_name": business.get("bot_name", "AI Assistant"),
-            "greeting_message": business.get("greeting_message", "Hello! How can I help you today?"),
-            "avatar_url": None,
-            "theme_colors": business.get("theme_colors") or {"primary": "#A855F7", "secondary": "#00D9FF", "background": "#0B0F19"},
-            "features": {"checkout": plan["plan_type"] in ("pro", "premium"), "product_catalog": True, "plan_type": plan["plan_type"]},
-        })
+        return JSONResponse(content={"business_id": business_id, "bot_name": business.get("bot_name", "AI Assistant"), "greeting_message": business.get("greeting_message", "Hello! How can I help you today?"), "avatar_url": None, "theme_colors": business.get("theme_colors") or {"primary": "#A855F7", "secondary": "#00D9FF", "background": "#0B0F19"}, "features": {"checkout": plan["plan_type"] in ("pro", "premium"), "product_catalog": True, "plan_type": plan["plan_type"]}})
     except HTTPException:
         raise
     except Exception as exc:
