@@ -33,7 +33,7 @@
     .ig-panel { display: grid; gap: 1.25rem; }
 
     /* Steps */
-    .ig-steps { display: grid; gap: 12px; counter-reset: ig-step; }
+    .ig-steps { display: grid; gap: 12px; }
     .ig-step { display: grid; grid-template-columns: 38px 1fr; gap: 14px; align-items: start; padding: 16px 18px; border-radius: 1.15rem; background: var(--cp-panel-strong); border: 1px solid var(--cp-line); }
     .ig-step-num { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: linear-gradient(135deg,#7c3aed,#6d28d9); color: #fff; font-weight: 800; font-size: .95rem; }
     .ig-step-body { display: grid; gap: 6px; min-width: 0; }
@@ -51,18 +51,22 @@
     .ig-copy.done { background: #065f46; border-color: #047857; color: #d1fae5; }
     .ig-code { margin: 0; padding: 16px 18px; overflow-x: auto; direction: ltr; text-align: left; unicode-bidi: isolate; color: #e2e8f0; font: 500 .875rem/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; tab-size: 2; }
     .ig-code code { font: inherit; }
+
+    /* Syntax tokens (tuned for the dark code surface) */
     .tok-tag { color: #f472b6; }
     .tok-attr { color: #7dd3fc; }
     .tok-str { color: #86efac; }
-    .tok-com { color: #64748b; font-style: italic; }
+    .tok-com { color: #94a3b8; font-style: italic; }
     .tok-kw { color: #c4b5fd; }
     .tok-fn { color: #fcd34d; }
     .tok-num { color: #fdba74; }
-    .tok-ph { color: #fde68a; background: rgba(253,230,138,.12); border-radius: 4px; padding: 0 3px; }
+    .tok-ph { color: #fde68a; background: rgba(253,230,138,.14); border-radius: 4px; padding: 0 3px; }
 
-    /* Inline code + tables */
+    /* Inline code on light surfaces */
     .ig-inline { direction: ltr; display: inline-block; padding: 1px 7px; border-radius: 6px; background: var(--cp-panel-strong); border: 1px solid var(--cp-line); font: 600 .88em ui-monospace, SFMono-Regular, Menlo, monospace; color: #6d28d9; }
-    .ig-block { display: block; direction: ltr; text-align: left; padding: 12px 14px; border-radius: .9rem; background: var(--cp-panel-strong); border: 1px solid var(--cp-line); font: 600 .88rem/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; color: var(--cp-text); }
+    .ig-block { display: block; direction: ltr; text-align: left; white-space: pre-wrap; padding: 12px 14px; border-radius: .9rem; background: var(--cp-panel-strong); border: 1px solid var(--cp-line); font: 600 .88rem/1.7 ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; color: var(--cp-text); }
+    /* Placeholders need a light-surface variant, the amber one is for dark blocks only */
+    .ig-block .tok-ph { color: #6d28d9; background: rgba(124,58,237,.12); }
 
     /* Troubleshooting */
     .ig-faq { display: grid; gap: 10px; }
@@ -92,6 +96,7 @@
       .ig-code { font-size: .8rem; padding: 14px; }
       .ig-code-head { padding: 9px 12px; }
       .ig-copy { width: 100%; }
+      .ig-block { font-size: .82rem; }
     }
   </style>
 </head>
@@ -110,7 +115,7 @@
     <section class="cp-panel ig-hero hero-dark-panel">
       <span class="cp-kicker">INTEGRATION GUIDE</span>
       <h1>הטמעת ConversaPay באתר שלכם</h1>
-      <p class="cp-subtitle">שלושה מסלולים, אותו תוצאה: וידג׳ט מכירה חי באתר. בחרו תוסף WordPress, קוד HTML מותאם, או קפצו ישר לפתרון תקלות וצ׳קליסט לפרודקשן.</p>
+      <p class="cp-subtitle">שלושה מסלולים, אותה תוצאה: וידג׳ט מכירה חי באתר. בחרו תוסף WordPress, קוד HTML מותאם, או קפצו ישר לפתרון תקלות וצ׳קליסט לפרודקשן.</p>
       <div class="ig-hero-actions">
         <a class="cp-button" href="/dashboard">קח Business ID מהדאשבורד</a>
         <a class="cp-button-secondary" href="/widget-demo">בדוק את הווידג׳ט</a>
@@ -460,9 +465,9 @@
             <summary>אימות דומיין והגבלות מסלול</summary>
             <div class="ig-faq-body">
               <p class="cp-muted">הוסיפו כל דומיין שבו הווידג׳ט רץ ברשימת הדומיינים בדאשבורד. הזינו את הדומיין בלבד, בלי פרוטוקול ובלי סלאש בסוף:</p>
-              <span class="ig-block">example.com          ✔
-www.example.com      ✔  (דומיין נפרד, יש להוסיף בנפרד)
-https://example.com/ ✘</span>
+              <span class="ig-block">example.com            ✔
+www.example.com        ✔   דומיין נפרד, יש להוסיף בנפרד
+https://example.com/   ✘   בלי פרוטוקול ובלי סלאש</span>
               <p class="cp-muted">מספר הדומיינים מוגבל לפי מסלול. אם הגעתם למגבלה, הסירו דומיין ישן לפני שתוסיפו חדש. תת-דומיינים כמו <span class="ig-inline">shop.example.com</span> נחשבים כרשומה נפרדת.</p>
               <div class="ig-fill-note"><a class="cp-button-secondary" href="/dashboard" style="max-width:220px;">ניהול דומיינים</a></div>
             </div>
@@ -502,7 +507,7 @@ https://example.com/ ✘</span>
         <div>
           <span class="cp-kicker">GO LIVE</span>
           <h2 style="margin:.4rem 0 0;">צ׳קליסט לפני פרודקשן</h2>
-          <p class="cp-muted">עברו על התשעה האלה לפני שאתם מכריזים שהאתר חי. הסימונים נשמרים בדפדפן שלכם.</p>
+          <p class="cp-muted">עברו על תשעת הסעיפים האלה לפני שאתם מכריזים שהאתר חי. הסימונים נשמרים בדפדפן שלכם.</p>
         </div>
 
         <div class="ig-check" id="checklist">
@@ -567,7 +572,7 @@ https://example.com/ ✘</span>
         if (focus) tab.focus();
         try {
           history.replaceState(null, '', '#' + tab.id.replace('tab-', ''));
-        } catch (_) { /* file:// or restricted history */ }
+        } catch (_) { /* restricted history */ }
       }
 
       tabs.forEach(function (tab, index) {
