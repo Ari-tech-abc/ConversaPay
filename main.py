@@ -128,6 +128,30 @@ async def profile_page(): return FileResponse(_html("profile.html"))
 @app.get("/settings.html")
 async def settings_page(): return FileResponse(_html("settings.html"))
 
+# --- Static pages that previously had no route -------------------------------
+# terms.html, privacy.html and forgot-password.html shipped in frontend/html but
+# were never routed, so absolute links to /terms, /privacy and /forgot-password
+# returned 404. reset-password, verify-email and 404 are new pages.
+@app.get("/terms")
+@app.get("/terms.html")
+async def terms_page(): return FileResponse(_html("terms.html"))
+@app.get("/privacy")
+@app.get("/privacy.html")
+async def privacy_page(): return FileResponse(_html("privacy.html"))
+@app.get("/forgot-password")
+@app.get("/forgot-password.html")
+async def forgot_password_page(): return FileResponse(_html("forgot-password.html"))
+@app.get("/reset-password")
+@app.get("/reset-password.html")
+async def reset_password_page(): return FileResponse(_html("reset-password.html"))
+@app.get("/verify-email")
+@app.get("/verify-email.html")
+async def verify_email_page(): return FileResponse(_html("verify-email.html"))
+@app.get("/404")
+@app.get("/404.html")
+async def not_found_page(): return FileResponse(_html("404.html"), status_code=404)
+# -----------------------------------------------------------------------------
+
 if _admin_secret:
     @app.get("/admin")
     @app.get("/admin.html")
@@ -165,7 +189,15 @@ async def robots(): return FileResponse(os.path.join(static_dir, "robots.txt"), 
 @app.get("/sitemap.xml", include_in_schema=False)
 async def sitemap(): return FileResponse(os.path.join(static_dir, "sitemap.xml"), media_type="application/xml")
 @app.exception_handler(404)
-async def not_found(request, exc): return JSONResponse(status_code=404, content={"error":"Not found","detail":str(exc.detail) if hasattr(exc,'detail') else "Not found"})
+async def not_found(request: Request, exc):
+    detail = str(exc.detail) if hasattr(exc, 'detail') else "Not found"
+    # API clients keep the exact same JSON contract. Only browser navigations
+    # outside the API prefix get the styled 404 page.
+    wants_html = "text/html" in request.headers.get("accept", "")
+    is_api = request.url.path.startswith(settings.API_PREFIX)
+    if wants_html and not is_api:
+        return FileResponse(_html("404.html"), status_code=404)
+    return JSONResponse(status_code=404, content={"error": "Not found", "detail": detail})
 @app.exception_handler(500)
 async def internal_error(request, exc): return JSONResponse(status_code=500, content={"error":"Internal server error","detail":"An unexpected error occurred"})
 if __name__ == "__main__":
