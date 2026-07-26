@@ -35,8 +35,10 @@ class DualCORSMiddleware(BaseHTTPMiddleware):
             response.headers["Vary"] = "Origin"
             return response
         response = await call_next(request)
-        if public: response.headers["Access-Control-Allow-Origin"] = "*"
-        elif origin in settings.cors_origins_list: response.headers.update({"Access-Control-Allow-Origin": origin, "Access-Control-Allow-Credentials": "true"})
+        if public:
+            response.headers["Access-Control-Allow-Origin"] = "*"
+        elif origin in settings.cors_origins_list:
+            response.headers.update({"Access-Control-Allow-Origin": origin, "Access-Control-Allow-Credentials": "true"})
         response.headers["Vary"] = "Origin"
         return response
 
@@ -61,20 +63,20 @@ frontend_dir = os.path.join(current_dir, "frontend")
 html_dir = os.path.join(frontend_dir, "html")
 site_builder_dir = os.path.join(current_dir, "conversapay-site-builder", "frontend")
 def _html(name): return os.path.join(html_dir, name)
-
 _admin_secret = settings.ADMIN_SECRET_PATH.strip()
 
 @app.get("/admin-{secret_path}", response_class=HTMLResponse)
 @app.get("/admin-{secret_path}/dashboard", response_class=HTMLResponse)
 async def serve_admin_dashboard(secret_path: str):
     if not _admin_secret or secret_path != _admin_secret: raise HTTPException(status_code=404, detail="Not found")
-    return FileResponse(_html("admin-dashboard.html"))
+    with open(_html("admin-dashboard.html"), "r", encoding="utf-8") as page_file: page = page_file.read()
+    page = page.replace('href="/admin-change-password.html"', 'href="change-password"')
+    return HTMLResponse(page)
 
 @app.get("/admin-{secret_path}/login", response_class=HTMLResponse)
 async def serve_admin_login(secret_path: str):
     if not _admin_secret or secret_path != _admin_secret: raise HTTPException(status_code=404, detail="Not found")
     return FileResponse(_html("admin-login.html"))
-
 @app.get("/admin-{secret_path}/change-password", response_class=HTMLResponse)
 async def serve_admin_change_password(secret_path: str):
     if not _admin_secret or secret_path != _admin_secret: raise HTTPException(status_code=404, detail="Not found")
@@ -82,7 +84,6 @@ async def serve_admin_change_password(secret_path: str):
 
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 app.mount("/frontend", StaticFiles(directory=frontend_dir), name="frontend")
-
 @app.get("/conversapay-ui.css")
 async def conversapay_ui_stylesheet(): return FileResponse(_html("conversapay-ui.css"), media_type="text/css")
 @app.get("/")
@@ -91,7 +92,7 @@ async def root(): return FileResponse(_html("home.html"))
 @app.get("/dashboard.html")
 async def dashboard_page():
     with open(_html("dashboard.html"), "r", encoding="utf-8") as dashboard_file: page = dashboard_file.read()
-    wordpress_link = '<a class="nav-pill" href="/wordpress" aria-label="\u05e4\u05ea\u05d9\u05d7\u05ea \u05de\u05e1\u05da \u05ea\u05e4\u05e2\u05d5\u05dc WordPress">WordPress</a>'
+    wordpress_link = '<a class="nav-pill" href="/wordpress" aria-label="פתיחת מסך תפעול WordPress">WordPress</a>'
     if wordpress_link not in page and "</nav>" in page: page = page.replace("</nav>", f"{wordpress_link}</nav>", 1)
     style_link = '<link rel="stylesheet" href="/frontend/html/saas-overrides.css">'
     if style_link not in page: page = page.replace('</head>', f'{style_link}</head>', 1)
@@ -105,6 +106,18 @@ async def login_page(): return FileResponse(_html("login.html"))
 @app.get("/register")
 @app.get("/register.html")
 async def register_page(): return FileResponse(_html("register.html"))
+@app.get("/forgot-password")
+@app.get("/forgot-password.html")
+async def forgot_password_page(): return FileResponse(_html("forgot-password.html"))
+@app.get("/terms")
+@app.get("/terms.html")
+async def terms_page(): return FileResponse(_html("terms.html"))
+@app.get("/privacy")
+@app.get("/privacy.html")
+async def privacy_page(): return FileResponse(_html("privacy.html"))
+@app.get("/404")
+@app.get("/404.html")
+async def not_found_page(): return FileResponse(_html("404.html"), status_code=404)
 @app.get("/pay")
 @app.get("/pay.html")
 async def pay_page(): return FileResponse(_html("pay.html"))
@@ -159,13 +172,18 @@ async def widget_demo_page(): return FileResponse(_html("widget-demo.html"))
 @app.get("/auth/callback")
 async def auth_callback_page(): return FileResponse(_html("auth-callback.html"))
 @app.get("/site-builder")
+@app.get("/site-builder.html")
 async def site_builder_page(): return FileResponse(os.path.join(site_builder_dir, "index.html"))
 @app.get("/robots.txt")
 async def robots(): return FileResponse(os.path.join(static_dir, "robots.txt"), media_type="text/plain")
 @app.get("/sitemap.xml", include_in_schema=False)
 async def sitemap(): return FileResponse(os.path.join(static_dir, "sitemap.xml"), media_type="application/xml")
+
 @app.exception_handler(404)
-async def not_found(request, exc): return JSONResponse(status_code=404, content={"error":"Not found","detail":str(exc.detail) if hasattr(exc,'detail') else "Not found"})
+async def not_found(request: Request, exc):
+    if "text/html" in request.headers.get("accept", ""):
+        return FileResponse(_html("404.html"), status_code=404)
+    return JSONResponse(status_code=404, content={"error":"Not found","detail":str(exc.detail) if hasattr(exc,"detail") else "Not found"})
 @app.exception_handler(500)
 async def internal_error(request, exc): return JSONResponse(status_code=500, content={"error":"Internal server error","detail":"An unexpected error occurred"})
 if __name__ == "__main__":

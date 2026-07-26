@@ -1,9 +1,14 @@
 """Public AI chat router with three-tier plan enforcement and widget key checks."""
-import hashlib, logging, re, uuid
+import hashlib
+import hmac
+import logging
+import re
+import uuid
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, Request
 from supabase import create_client, Client
 from backend.config import settings
+from backend.middleware.auth import active_plan
 from backend.middleware.rate_limiter import check_rate_limit
 from backend.models.schemas import ChatRequest, ChatResponse
 from backend.services.gemini_service import gemini_service
@@ -27,10 +32,14 @@ def _is_internal_origin(request: Request) -> bool:
     return origin in {"localhost", "127.0.0.1", own, "conversapay.org"} or origin.endswith(".conversapay.org")
 
 
+def _key_hash(raw_key: str) -> str:
+    return hmac.new(settings.SECRET_KEY.encode("utf-8"), raw_key.encode("utf-8"), hashlib.sha256).hexdigest()
+
+
 def _valid_widget_key(business_id: str, raw_key: str | None) -> bool:
     if not raw_key:
         return False
-    hashed = hashlib.sha256(raw_key.encode("utf-8")).hexdigest()
+    hashed = _key_hash(raw_key)
     result = supabase.table("api_keys").select("id").eq("business_id", business_id).eq("key_hash", hashed).eq("is_active", True).maybe_single().execute()
     if not result.data:
         return False
@@ -48,8 +57,8 @@ async def chat(request: ChatRequest, request_obj: Request):
         if not business_result.data:
             raise HTTPException(status_code=404, detail="Business not found")
         business = business_result.data[0]
-        profile = supabase.table("profiles").select("plan_type").eq("user_id", business["owner_id"]).maybe_single().execute()
-        plan_type = (profile.data or {}).get("plan_type", "free")
+        profile = supabase.table("profiles").select("plan_type,subscription_expires_at").eq("user_id", business["owner_id"]).maybe_single().execute()
+        plan_type = active_plan(profile.data or {})
         if not _is_internal_origin(request_obj):
             if plan_type == "free":
                 raise HTTPException(status_code=403, detail="External widget access requires PRO or PREMIUM")
@@ -74,17 +83,17 @@ async def chat(request: ChatRequest, request_obj: Request):
         response = ChatResponse(intent=answer.get("intent", "chat"), response=answer.get("response", ""), session_id=conversation["session_id"], conversation_id=conversation["id"])
         action = answer.get("action_data")
         if answer.get("intent") == "checkout" and action and can_checkout:
-            product = next((p for p in products if p.get("item_key") == action.get("item_key")), None)
+            product = next((p for p in products if str(p.get("item_key", "")).upper() == str(action.get("item_key", "")).upper()), None)
             if product and product.get("payment_link"):
                 response.payment_url = product["payment_link"]
             elif product:
-                quantity = max(1, int(action.get("quantity", 1)))
+                quantity = max(1, min(100, int(action.get("quantity", 1))))
                 price = float(product.get("price", 0))
                 order_data = {"business_id": business["id"], "customer_id": customer.get("id") if customer else None, "conversation_id": conversation["id"], "order_number": f"ORD-{datetime.utcnow():%Y%m%d}-{uuid.uuid4().hex[:8].upper()}", "status": "pending", "payment_status": "pending", "subtotal": round(price * quantity, 2), "tax": 0, "total": round(price * quantity, 2), "currency": product.get("currency", "ILS"), "items": [{"product_id": product.get("id"), "item_key": product.get("item_key"), "name": product.get("name"), "quantity": quantity, "price": price}], "customer_info": request.customer_info or {}, "created_at": datetime.utcnow().isoformat()}
                 created = supabase.table("orders").insert(order_data).execute()
                 if created.data:
                     action.update({"order_id": created.data[0]["id"], "order_number": created.data[0]["order_number"]})
-                    response.payment_url = f"/pay.html?order_id={created.data[0]['id']}"
+                    response.payment_url = f"/pay?order_id={created.data[0]['id']}"
             response.action_data = action
         return response
     except HTTPException:

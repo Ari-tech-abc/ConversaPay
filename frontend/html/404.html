@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>ConversaPay | הדף לא נמצא</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+  <style>
+    .not-found-shell{min-height:calc(100dvh - 92px);display:grid;place-items:center;padding:1.5rem 0 2.5rem}
+    .not-found-card{width:min(620px,100%);display:grid;gap:1.25rem;text-align:center;justify-items:center}
+    .not-found-mark{width:84px;height:84px;border-radius:1.5rem;display:grid;place-items:center;background:#f3e8ff;border:1px solid #d8b4fe;color:#6d28d9;font:800 2rem/1 'Space Grotesk',sans-serif}
+    .not-found-copy{max-width:48ch}.not-found-copy h1{margin:10px 0;font-size:clamp(2rem,5vw,3.2rem);line-height:1.08}
+    @media(max-width:560px){.not-found-shell{min-height:auto;padding:1.1rem 0 1.75rem}.not-found-card{gap:1rem}.not-found-mark{width:68px;height:68px;border-radius:1.25rem;font-size:1.7rem}}
+  </style>
+</head>
+<body class="cp-page">
+  <header class="cp-topbar">
+    <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
+    <a class="cp-backlink" href="/login">כניסה</a>
+  </header>
+  <main class="cp-shell not-found-shell">
+    <section class="cp-card not-found-card" aria-labelledby="not-found-title">
+      <div class="not-found-mark" aria-hidden="true">404</div>
+      <div class="not-found-copy">
+        <span class="cp-kicker" style="justify-content:center">הכתובת השתנתה</span>
+        <h1 id="not-found-title">הדף הזה לא נמצא</h1>
+        <p class="cp-muted">הקישור אולי ישן, או שהדף עבר למקום אחר. בואו נחזיר אותך למסלול.</p>
+      </div>
+      <div class="cp-actions" style="width:min(420px,100%);">
+        <a class="cp-button" href="/">חזרה לדף הבית</a>
+        <a class="cp-button-secondary" href="/dashboard">פתיחת הדאשבורד</a>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
