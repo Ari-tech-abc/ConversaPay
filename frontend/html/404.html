@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <title>ConversaPay | הדף לא נמצא</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+</head>
+<body class="cp-page">
+  <header class="cp-topbar">
+    <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
+    <a class="cp-backlink" href="/">חזרה לדף הבית</a>
+  </header>
+
+  <main class="cp-shell cp-result-shell">
+    <section class="cp-card cp-result-card">
+      <div class="cp-result-icon warn" aria-hidden="true">?</div>
+      <div class="cp-result-copy">
+        <span class="cp-kicker cp-center-inline">שגיאה 404</span>
+        <h1>הדף הזה לא קיים</h1>
+        <p class="cp-muted">ייתכן שהקישור השתנה, פג תוקפו, או שהוקלד לא נכון. אפשר לחזור לדף הבית או להמשיך לדאשבורד.</p>
+      </div>
+      <div class="cp-surface cp-text-start">
+        <strong>הכתובת שביקשת</strong>
+        <span class="cp-muted cp-code-inline cp-break-all" id="requestedPath">—</span>
+      </div>
+      <div class="cp-actions cp-result-actions">
+        <a class="cp-button" href="/">חזרה לדף הבית</a>
+        <a class="cp-button-secondary" id="secondaryAction" href="/login">כניסה לחשבון</a>
+      </div>
+      <div class="cp-links">
+        <a class="cp-link" href="/setup-guide">מדריך הטמעה</a>
+        <a class="cp-link" href="/terms">תנאי שימוש</a>
+        <a class="cp-link" href="/privacy">מדיניות פרטיות</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="cp-footer"><p>&copy; 2026 ConversaPay</p></footer>
+
+  <script>
+    document.getElementById('requestedPath').textContent = location.pathname + location.search;
+    const hasSession = Boolean(
+      localStorage.getItem('access_token') ||
+      localStorage.getItem('conversapay_auth_token') ||
+      sessionStorage.getItem('access_token') ||
+      sessionStorage.getItem('conversapay_auth_token')
+    );
+    if (hasSession) {
+      const secondary = document.getElementById('secondaryAction');
+      secondary.href = '/dashboard';
+      secondary.textContent = 'חזרה לדאשבורד';
+    }
+  </script>
+</body>
+</html>

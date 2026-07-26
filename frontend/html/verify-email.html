@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>ConversaPay - אימות אימייל</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+</head>
+<body class="cp-page">
+  <header class="cp-topbar">
+    <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
+    <a class="cp-backlink" href="/login">חזרה לכניסה</a>
+  </header>
+
+  <main class="cp-shell cp-auth-shell">
+    <section class="cp-card">
+      <div class="cp-stack cp-mb-lg">
+        <span class="cp-kicker">אימות חשבון</span>
+        <h1 id="title">מאמתים את האימייל שלך</h1>
+        <p class="cp-muted" id="description">רק רגע, בודקים את קישור האימות.</p>
+      </div>
+
+      <div class="cp-surface cp-text-start">
+        <div id="statusBadge" class="cp-status-pill warn">בבדיקה</div>
+        <p class="cp-muted cp-mt-md" id="statusText">אם פתחתם את הדף בלי קישור אימות, אפשר לבקש שליחה חוזרת.</p>
+      </div>
+
+      <form id="resendForm" class="cp-stack cp-mt-lg">
+        <div class="cp-field">
+          <label class="cp-label" for="email">כתובת דוא״ל</label>
+          <input class="cp-input" id="email" type="email" autocomplete="email" required>
+        </div>
+        <button class="cp-button-secondary" id="resend" type="submit">שלח לי אימייל אימות מחדש</button>
+      </form>
+
+      <div id="notice" class="cp-notice" hidden></div>
+
+      <div class="cp-links cp-mt-lg">
+        <a class="cp-link" href="/login">כניסה לחשבון</a>
+        <a class="cp-link" href="/register">פתיחת חשבון חדש</a>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    const API = '/api/v1';
+    const LOGIN_ROUTE = '/login';
+    const DASHBOARD_ROUTE = '/dashboard';
+    const VERIFY_ROUTE = '/verify-email';
+
+    const query = new URLSearchParams(location.search);
+    const hash = new URLSearchParams(location.hash.slice(1));
+
+    const $ = (id) => document.getElementById(id);
+    const note = (message, isError = false) => {
+      $('notice').textContent = message;
+      $('notice').className = isError ? 'cp-notice error' : 'cp-notice';
+      $('notice').hidden = false;
+    };
+    const setStatus = (kind, label, text) => {
+      $('statusBadge').className = `cp-status-pill ${kind}`;
+      $('statusBadge').textContent = label;
+      $('statusText').textContent = text;
+    };
+
+    function pending(message) {
+      $('title').textContent = 'אימות האימייל';
+      $('description').textContent = 'שלחנו אליכם קישור אימות. אפשר לפתוח אותו מהמייל, או לבקש שליחה חוזרת.';
+      setStatus('warn', 'ממתין לאימות', message);
+    }
+
+    (async () => {
+      const errorText = query.get('error_description') || hash.get('error_description') || query.get('error') || hash.get('error');
+      if (errorText) {
+        $('title').textContent = 'קישור האימות אינו תקין';
+        $('description').textContent = 'ייתכן שהקישור פג תוקף או שכבר נעשה בו שימוש. אפשר לבקש קישור חדש.';
+        setStatus('bad', 'האימות נכשל', String(errorText));
+        return;
+      }
+
+      const code = query.get('code');
+      const accessToken = hash.get('access_token');
+      if (!code && !accessToken) {
+        pending('לא נמצא קישור אימות בכתובת.');
+        return;
+      }
+
+      try {
+        const cfg = await (await fetch(`${API}/config/public`)).json();
+        const sb = window.supabase.createClient(cfg.supabase_url, cfg.supabase_anon_key);
+        if (code) {
+          const exchanged = await sb.auth.exchangeCodeForSession(location.href);
+          if (exchanged.error) throw exchanged.error;
+        }
+        const { data } = await sb.auth.getSession();
+        if (!data.session) throw new Error('missing_session');
+
+        const session = data.session;
+        localStorage.setItem('access_token', session.access_token);
+        localStorage.setItem('user_id', session.user.id);
+        localStorage.setItem('email', session.user.email || '');
+        history.replaceState({}, document.title, VERIFY_ROUTE);
+
+        await fetch(`${API}/auth/oauth/session`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${session.access_token}` }
+        }).catch(() => {});
+
+        $('title').textContent = 'האימייל אומת בהצלחה';
+        $('description').textContent = 'החשבון פעיל. מעבירים אתכם לדאשבורד.';
+        setStatus('good', 'מאומת', 'אפשר להתחיל להשתמש ב-ConversaPay.');
+        $('resendForm').hidden = true;
+        setTimeout(() => { location.replace(DASHBOARD_ROUTE); }, 1600);
+      } catch (_) {
+        $('title').textContent = 'לא הצלחנו להשלים את האימות';
+        $('description').textContent = 'הקישור אולי פג תוקף. בקשו קישור חדש ונסו שוב.';
+        setStatus('bad', 'האימות נכשל', 'אפשר לבקש אימייל אימות חדש למטה.');
+      }
+    })();
+
+    $('resendForm').onsubmit = async (event) => {
+      event.preventDefault();
+      const button = $('resend');
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = 'שולח...';
+      try {
+        await fetch(`${API}/auth/resend-verification`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: $('email').value.trim() })
+        });
+        note('אם קיים חשבון שלא אומת, נשלח אליו אימייל חדש. בדקו גם בספאם.');
+      } catch (_) {
+        note('לא ניתן לשלוח כרגע. נסו שוב בעוד רגע.', true);
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    };
+  </script>
+</body>
+</html>
