@@ -33,6 +33,12 @@
   </main>
 
   <script>
+    const pathSegments = window.location.pathname.split('/').filter(Boolean);
+    const adminRoutePrefix = pathSegments[0];
+    const adminLoginEndpoint = adminRoutePrefix && adminRoutePrefix.startsWith('admin-')
+      ? `/api/v1/${encodeURIComponent(adminRoutePrefix)}/login`
+      : '/api/v1/admin/login';
+
     document.getElementById('form').onsubmit = async (event) => {
       event.preventDefault();
       const button = document.getElementById('submit');
@@ -45,7 +51,7 @@
       message.textContent = '';
 
       try {
-        const response = await fetch('/api/v1/admin/login', {
+        const response = await fetch(adminLoginEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -55,17 +61,14 @@
         });
 
         const data = await response.json().catch(() => ({}));
-        if (!response.ok) {
-          throw new Error(data.detail || 'הכניסה נכשלה');
-        }
+        if (!response.ok) throw new Error(data.detail || 'הכניסה נכשלה');
 
         localStorage.removeItem('admin_token');
         localStorage.removeItem('admin_email');
         sessionStorage.setItem('admin_token', data.access_token);
         sessionStorage.setItem('admin_email', data.email || '');
-        // Navigate to admin dashboard using the same secret path
-        const currentPath = location.pathname.replace('/login', '');
-        location.href = currentPath + '/dashboard';
+        const currentPath = window.location.pathname.replace(/\/login\/?$/, '');
+        window.location.assign(`${currentPath}/dashboard`);
       } catch (error) {
         message.hidden = false;
         message.textContent = error.message;
