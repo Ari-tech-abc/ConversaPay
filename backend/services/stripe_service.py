@@ -1,11 +1,8 @@
 """Stripe Checkout service for one-time payments and subscriptions."""
 from __future__ import annotations
-
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Any
-
 import stripe
-
 from backend.config import settings
 
 
@@ -38,37 +35,21 @@ class StripeService:
         value = Decimal(str(amount))
         if value <= 0:
             raise ValueError("Amount must be greater than zero")
-        zero_decimal = {
-            "BIF",
-            "CLP",
-            "DJF",
-            "GNF",
-            "JPY",
-            "KMF",
-            "KRW",
-            "MGA",
-            "PYG",
-            "RWF",
-            "UGX",
-            "VND",
-            "VUV",
-            "XAF",
-            "XOF",
-            "XPF",
-        }
+        zero_decimal = {"BIF", "CLP", "DJF", "GNF", "JPY", "KMF", "KRW", "MGA", "PYG", "RWF", "UGX", "VND", "VUV", "XAF", "XOF", "XPF"}
         factor = Decimal("1") if currency.upper() in zero_decimal else Decimal("100")
         return int((value * factor).quantize(Decimal("1"), rounding=ROUND_HALF_UP))
 
     @staticmethod
     def _currency(currency: str) -> str:
-        value = currency.lower()
+        value = currency.lower().strip()
         if len(value) != 3 or not value.isalpha():
             raise ValueError("Currency must be a 3-letter ISO code")
         return value
 
     @staticmethod
     def _success_url() -> str:
-        url = settings.STRIPE_SUCCESS_URL
+        configured = (settings.STRIPE_SUCCESS_URL or "").strip()
+        url = configured if configured and configured.rstrip("/") not in {"https://conversapay.org", "https://www.conversapay.org"} else f"{settings.BASE_URL.rstrip('/')}/payment/success"
         if "{CHECKOUT_SESSION_ID}" in url:
             return url
         separator = "&" if "?" in url else "?"
@@ -76,88 +57,47 @@ class StripeService:
 
     @staticmethod
     def _cancel_url() -> str:
-        return settings.STRIPE_CANCEL_URL
+        configured = (settings.STRIPE_CANCEL_URL or "").strip()
+        return configured if configured and configured.rstrip("/") not in {"https://conversapay.org", "https://www.conversapay.org"} else f"{settings.BASE_URL.rstrip('/')}/payment/canceled"
 
     @staticmethod
     def _serialize_session(session: Any) -> dict[str, Any]:
-        return {
-            "session_id": session.id,
-            "url": session.url,
-            "mode": session.mode,
-            "payment_status": session.payment_status,
-        }
+        return {"session_id": session.id, "url": session.url, "mode": session.mode, "payment_status": session.payment_status}
 
-    def create_checkout_session(
-        self,
-        *,
-        amount: Decimal | int | float | str,
-        product_name: str,
-        currency: str = "ILS",
-        mode: str = "payment",
-        customer_email: str | None = None,
-        metadata: dict[str, str] | None = None,
-    ) -> dict[str, Any]:
+    def create_checkout_session(self, *, amount: Decimal | int | float | str, product_name: str, currency: str = "ILS", mode: str = "payment", customer_email: str | None = None, metadata: dict[str, str] | None = None) -> dict[str, Any]:
         self._ensure_configured()
         if mode not in {"payment", "subscription"}:
             raise ValueError("Mode must be payment or subscription")
         if not product_name.strip():
             raise ValueError("Product name is required")
-
         unit_amount = self._minor_units(amount, currency)
-        price_data: dict[str, Any] = {
-            "currency": self._currency(currency),
-            "product_data": {"name": product_name.strip()},
-            "unit_amount": unit_amount,
-        }
+        price_data: dict[str, Any] = {"currency": self._currency(currency), "product_data": {"name": product_name.strip()}, "unit_amount": unit_amount}
         if mode == "subscription":
             price_data["recurring"] = {"interval": "month"}
-
-        params: dict[str, Any] = {
-            "mode": mode,
-            "line_items": [{"price_data": price_data, "quantity": 1}],
-            "success_url": self._success_url(),
-            "cancel_url": self._cancel_url(),
-            "metadata": metadata or {},
-        }
+        params: dict[str, Any] = {"mode": mode, "line_items": [{"price_data": price_data, "quantity": 1}], "success_url": self._success_url(), "cancel_url": self._cancel_url(), "metadata": metadata or {}}
         if customer_email:
             params["customer_email"] = customer_email
         if mode == "payment":
             params["payment_intent_data"] = {"metadata": metadata or {}}
         else:
             params["subscription_data"] = {"metadata": metadata or {}}
-
         try:
             session = stripe.checkout.Session.create(**params)
         except stripe.error.StripeError as exc:
             raise StripeServiceError("Stripe Checkout session creation failed") from exc
         return self._serialize_session(session)
 
-    def create_checkout_session_with_price(
-        self,
-        *,
-        price_id: str,
-        mode: str,
-        metadata: dict[str, str] | None = None,
-        customer_email: str | None = None,
-    ) -> dict[str, Any]:
+    def create_checkout_session_with_price(self, *, price_id: str, mode: str, metadata: dict[str, str] | None = None, customer_email: str | None = None) -> dict[str, Any]:
         self._ensure_configured()
         if not price_id.strip() or mode not in {"payment", "subscription"}:
             raise ValueError("Valid price_id and mode are required")
-
-        params: dict[str, Any] = {
-            "mode": mode,
-            "line_items": [{"price": price_id, "quantity": 1}],
-            "success_url": self._success_url(),
-            "cancel_url": self._cancel_url(),
-            "metadata": metadata or {},
-        }
+        params: dict[str, Any] = {"mode": mode, "line_items": [{"price": price_id, "quantity": 1}], "success_url": self._success_url(), "cancel_url": self._cancel_url(), "metadata": metadata or {}}
         if customer_email:
             params["customer_email"] = customer_email
         if mode == "payment":
             params["payment_intent_data"] = {"metadata": metadata or {}}
         else:
             params["subscription_data"] = {"metadata": metadata or {}}
-
         try:
             session = stripe.checkout.Session.create(**params)
         except stripe.error.StripeError as exc:
@@ -169,10 +109,7 @@ class StripeService:
         if not session_id:
             raise ValueError("session_id is required")
         try:
-            session = stripe.checkout.Session.retrieve(
-                session_id,
-                expand=["subscription", "payment_intent"],
-            )
+            session = stripe.checkout.Session.retrieve(session_id, expand=["subscription", "payment_intent"])
         except stripe.error.StripeError as exc:
             raise StripeServiceError("Stripe checkout session retrieval failed") from exc
         return self.serialize_stripe_object(session)
