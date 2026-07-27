@@ -1,33 +1,27 @@
--- Billing foundations for usage metering and dunning.
-create table if not exists public.usage_events (
-  id uuid primary key default gen_random_uuid(),
-  business_id uuid not null,
-  user_id uuid,
-  metric text not null,
-  quantity integer not null default 1 check (quantity > 0),
-  source text not null,
-  idempotency_key text,
-  occurred_at timestamptz not null default now(),
-  unique(business_id, idempotency_key)
+-- Phase 3 billing foundations. Additive and replay-safe.
+CREATE TABLE IF NOT EXISTS public.usage_events (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  business_id uuid NOT NULL REFERENCES public.businesses(id) ON DELETE CASCADE,
+  metric text NOT NULL,
+  quantity integer NOT NULL DEFAULT 1 CHECK (quantity > 0),
+  source text NOT NULL,
+  source_event_id text,
+  occurred_at timestamptz NOT NULL DEFAULT now(),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (business_id, metric, source, source_event_id)
 );
-create index if not exists usage_events_business_metric_idx
-  on public.usage_events(business_id, metric, occurred_at desc);
-
-create table if not exists public.billing_dunning_attempts (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid not null,
-  provider text not null,
-  provider_event_id text,
-  attempt_number integer not null default 1,
-  status text not null default 'scheduled',
-  next_attempt_at timestamptz,
-  last_error text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique(provider, provider_event_id)
+CREATE INDEX IF NOT EXISTS usage_events_business_metric_idx ON public.usage_events(business_id, metric, occurred_at DESC);
+CREATE TABLE IF NOT EXISTS public.billing_reconciliation_runs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  provider text NOT NULL,
+  started_at timestamptz NOT NULL DEFAULT now(),
+  finished_at timestamptz,
+  status text NOT NULL DEFAULT 'running',
+  scanned_count integer NOT NULL DEFAULT 0,
+  drift_count integer NOT NULL DEFAULT 0,
+  details jsonb NOT NULL DEFAULT '{}'::jsonb
 );
-
-alter table public.usage_events enable row level security;
-alter table public.billing_dunning_attempts enable row level security;
-revoke all on public.usage_events, public.billing_dunning_attempts from anon, authenticated;
-grant all on public.usage_events, public.billing_dunning_attempts to service_role;
+ALTER TABLE public.usage_events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.billing_reconciliation_runs ENABLE ROW LEVEL SECURITY;
+GRANT ALL ON public.usage_events TO service_role;
+GRANT ALL ON public.billing_reconciliation_runs TO service_role;
