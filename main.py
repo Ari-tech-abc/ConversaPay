@@ -1,4 +1,4 @@
-import os, logging
+import os, re, logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
@@ -66,22 +66,68 @@ site_builder_dir = os.path.join(current_dir, "conversapay-site-builder", "fronte
 def _html(name): return os.path.join(html_dir, name)
 _admin_secret = settings.ADMIN_SECRET_PATH.strip()
 
+BRAND_LOGO_SRC = "/frontend/images/conversapay_logo_whitebg.png"
+FAVICON_SRC = "/frontend/images/favicon-32x32.png"
+_BRANDING_STYLE = f"""
+<style id=\"conversapay-branding\">
+  .cp-brand, .brand, .legal-header > a {{ display:inline-flex; align-items:center; min-height:38px; }}
+  .cp-brand-logo, .brand-logo, .legal-header .cp-brand-logo {{ height:38px; width:auto; max-width:min(220px,55vw); object-fit:contain; display:block; }}
+  @media (max-width:760px) {{ .cp-brand-logo, .brand-logo, .legal-header .cp-brand-logo {{ height:32px; max-width:180px; }} }}
+</style>
+"""
+
+def _brand_markup(page: str) -> str:
+    """Replace legacy text/mark headers and inject one canonical app icon."""
+    def replace_cp_brand(match):
+        tag = match.group(0)
+        href_match = re.search(r'href=[\"\']([^\"\']+)', tag, re.IGNORECASE)
+        href = href_match.group(1) if href_match else "/"
+        return f'<a class="cp-brand" href="{href}"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="ConversaPay"></a>'
+
+    page = re.sub(
+        r'<a\b[^>]*class=[\"\'][^\"\']*\bcp-brand\b[^\"\']*[\"\'][^>]*>.*?</a>',
+        replace_cp_brand,
+        page,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    page = re.sub(
+        r'<a\b(?P<attrs>[^>]*class=[\"\'][^\"\']*\bbrand\b[^\"\']*[\"\'][^>]*)>\s*ConversaPay\s*</a>',
+        lambda match: f'<a{match.group("attrs")}><img class="brand-logo" src="{BRAND_LOGO_SRC}" alt="ConversaPay"></a>',
+        page,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    page = re.sub(
+        r'(<header\b[^>]*class=[\"\'][^\"\']*\blegal-header\b[^\"\']*[\"\'][^>]*>\s*)<a\s+href=[\"\']/[\"\']>\s*ConversaPay\s*</a>',
+        lambda match: f'{match.group(1)}<a href="/"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="ConversaPay"></a>',
+        page,
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    if 'rel="icon"' not in page.lower():
+        page = page.replace("</head>", f'<link rel="icon" type="image/png" href="{FAVICON_SRC}">\n</head>', 1)
+    if "id=\"conversapay-branding\"" not in page:
+        page = page.replace("</head>", f"{_BRANDING_STYLE}</head>", 1)
+    return page
+
+def _branded_file(path: str, status_code: int = 200):
+    with open(path, "r", encoding="utf-8") as page_file:
+        return HTMLResponse(_brand_markup(page_file.read()), status_code=status_code)
+
 @app.get("/admin-{secret_path}", response_class=HTMLResponse)
 @app.get("/admin-{secret_path}/dashboard", response_class=HTMLResponse)
 async def serve_admin_dashboard(secret_path: str):
     if not _admin_secret or secret_path != _admin_secret: raise HTTPException(status_code=404, detail="Not found")
     with open(_html("admin-dashboard.html"), "r", encoding="utf-8") as page_file: page = page_file.read()
     page = page.replace('href="/admin-change-password.html"', 'href="change-password"')
-    return HTMLResponse(page)
+    return HTMLResponse(_brand_markup(page))
 
 @app.get("/admin-{secret_path}/login", response_class=HTMLResponse)
 async def serve_admin_login(secret_path: str):
     if not _admin_secret or secret_path != _admin_secret: raise HTTPException(status_code=404, detail="Not found")
-    return FileResponse(_html("admin-login.html"))
+    return _branded_file(_html("admin-login.html"))
 @app.get("/admin-{secret_path}/change-password", response_class=HTMLResponse)
 async def serve_admin_change_password(secret_path: str):
     if not _admin_secret or secret_path != _admin_secret: raise HTTPException(status_code=404, detail="Not found")
-    return FileResponse(_html("admin-change-password.html"))
+    return _branded_file(_html("admin-change-password.html"))
 
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 app.mount("/images", StaticFiles(directory=images_dir), name="images")
@@ -89,7 +135,7 @@ app.mount("/frontend", StaticFiles(directory=frontend_dir), name="frontend")
 @app.get("/conversapay-ui.css")
 async def conversapay_ui_stylesheet(): return FileResponse(_html("conversapay-ui.css"), media_type="text/css")
 @app.get("/")
-async def root(): return FileResponse(_html("home.html"))
+async def root(): return _branded_file(_html("home.html"))
 @app.get("/dashboard")
 @app.get("/dashboard.html")
 async def dashboard_page():
@@ -100,50 +146,50 @@ async def dashboard_page():
     if style_link not in page: page = page.replace('</head>', f'{style_link}</head>', 1)
     onboarding_script = '<script src="/frontend/js/business-onboarding.js" defer></script>'
     if onboarding_script not in page: page = page.replace('</head>', f'{onboarding_script}</head>', 1)
-    return HTMLResponse(page)
+    return HTMLResponse(_brand_markup(page))
 @app.get("/wordpress")
 @app.get("/wordpress.html")
-async def wordpress_operations_page(): return FileResponse(_html("wordpress.html"))
+async def wordpress_operations_page(): return _branded_file(_html("wordpress.html"))
 @app.get("/login")
 @app.get("/login.html")
-async def login_page(): return FileResponse(_html("login.html"))
+async def login_page(): return _branded_file(_html("login.html"))
 @app.get("/register")
 @app.get("/register.html")
-async def register_page(): return FileResponse(_html("register.html"))
+async def register_page(): return _branded_file(_html("register.html"))
 @app.get("/forgot-password")
 @app.get("/forgot-password.html")
-async def forgot_password_page(): return FileResponse(_html("forgot-password.html"))
+async def forgot_password_page(): return _branded_file(_html("forgot-password.html"))
 @app.get("/terms")
 @app.get("/terms.html")
-async def terms_page(): return FileResponse(_html("terms.html"))
+async def terms_page(): return _branded_file(_html("terms.html"))
 @app.get("/privacy")
 @app.get("/privacy.html")
-async def privacy_page(): return FileResponse(_html("privacy.html"))
+async def privacy_page(): return _branded_file(_html("privacy.html"))
 @app.get("/404")
 @app.get("/404.html")
-async def not_found_page(): return FileResponse(_html("404.html"), status_code=404)
+async def not_found_page(): return _branded_file(_html("404.html"), status_code=404)
 @app.get("/pay")
 @app.get("/pay.html")
-async def pay_page(): return FileResponse(_html("pay.html"))
+async def pay_page(): return _branded_file(_html("pay.html"))
 @app.get("/payment/success")
 @app.get("/payment-success.html")
 @app.get("/success")
 @app.get("/success.html")
-async def payment_success_page(): return FileResponse(_html("success.html"))
+async def payment_success_page(): return _branded_file(_html("success.html"))
 @app.get("/payment/canceled")
 @app.get("/payment-canceled.html")
 @app.get("/canceled")
 @app.get("/canceled.html")
-async def payment_canceled_page(): return FileResponse(_html("canceled.html"))
+async def payment_canceled_page(): return _branded_file(_html("canceled.html"))
 @app.get("/upgrade")
 @app.get("/upgrade.html")
-async def upgrade_page(): return FileResponse(_html("upgrade.html"))
+async def upgrade_page(): return _branded_file(_html("upgrade.html"))
 @app.get("/profile")
 @app.get("/profile.html")
-async def profile_page(): return FileResponse(_html("profile.html"))
+async def profile_page(): return _branded_file(_html("profile.html"))
 @app.get("/settings")
 @app.get("/settings.html")
-async def settings_page(): return FileResponse(_html("settings.html"))
+async def settings_page(): return _branded_file(_html("settings.html"))
 
 if _admin_secret:
     @app.get("/admin")
@@ -160,24 +206,24 @@ if _admin_secret:
 else:
     @app.get("/admin")
     @app.get("/admin.html")
-    async def admin_page(): return FileResponse(_html("admin-dashboard.html"))
+    async def admin_page(): return _branded_file(_html("admin-dashboard.html"))
     @app.get("/admin/login")
     @app.get("/admin-login.html")
-    async def admin_login_page(): return FileResponse(_html("admin-login.html"))
+    async def admin_login_page(): return _branded_file(_html("admin-login.html"))
     @app.get("/admin/change-password")
     @app.get("/admin-change-password.html")
-    async def admin_change_password_page(): return FileResponse(_html("admin-change-password.html"))
+    async def admin_change_password_page(): return _branded_file(_html("admin-change-password.html"))
 @app.get("/setup-guide")
 @app.get("/setup-guide.html")
-async def setup_guide_page(): return FileResponse(_html("setup-guide.html"))
+async def setup_guide_page(): return _branded_file(_html("setup-guide.html"))
 @app.get("/widget-demo")
 @app.get("/widget-demo.html")
-async def widget_demo_page(): return FileResponse(_html("widget-demo.html"))
+async def widget_demo_page(): return _branded_file(_html("widget-demo.html"))
 @app.get("/auth/callback")
-async def auth_callback_page(): return FileResponse(_html("auth-callback.html"))
+async def auth_callback_page(): return _branded_file(_html("auth-callback.html"))
 @app.get("/site-builder")
 @app.get("/site-builder.html")
-async def site_builder_page(): return FileResponse(os.path.join(site_builder_dir, "index.html"))
+async def site_builder_page(): return _branded_file(os.path.join(site_builder_dir, "index.html"))
 @app.get("/robots.txt")
 async def robots(): return FileResponse(os.path.join(static_dir, "robots.txt"), media_type="text/plain")
 @app.get("/sitemap.xml", include_in_schema=False)
@@ -186,7 +232,7 @@ async def sitemap(): return FileResponse(os.path.join(static_dir, "sitemap.xml")
 @app.exception_handler(404)
 async def not_found(request: Request, exc):
     if "text/html" in request.headers.get("accept", ""):
-        return FileResponse(_html("404.html"), status_code=404)
+        return _branded_file(_html("404.html"), status_code=404)
     return JSONResponse(status_code=404, content={"error":"Not found","detail":str(exc.detail) if hasattr(exc,"detail") else "Not found"})
 @app.exception_handler(500)
 async def internal_error(request, exc): return JSONResponse(status_code=500, content={"error":"Internal server error","detail":"An unexpected error occurred"})
