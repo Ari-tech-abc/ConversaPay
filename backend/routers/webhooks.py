@@ -1,15 +1,15 @@
 """Webhooks router for external integrations."""
 from fastapi import APIRouter, HTTPException, status, Depends, Request
 from fastapi.responses import JSONResponse
-from typing import Optional, Dict, Any, List
+from typing import List
 import logging
 import hmac
-import hashlib
 from datetime import datetime
 from supabase import create_client, Client
 from backend.config import settings
 from backend.middleware.auth import AuthUser, require_auth
 from backend.models.schemas import WebhookCreate, WebhookUpdate, WebhookResponse
+from backend.services.webhook_security import require_signed_request
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/webhooks", tags=["webhooks"])
@@ -93,9 +93,11 @@ async def delete_webhook(webhook_id: str, current_user: AuthUser = Depends(requi
 @router.post("/whatsapp/{business_id}")
 async def whatsapp_webhook(business_id: str, request: Request):
     try:
-        payload = await request.json()
+        payload = await require_signed_request(request)
         logger.info("WhatsApp webhook received for business %s", business_id)
-        return {"status": "received"}
+        return {"status": "received", "bytes": len(payload)}
+    except HTTPException:
+        raise
     except Exception as exc:
         logger.error("WhatsApp webhook error: %s", exc, exc_info=True)
         raise HTTPException(status_code=400, detail="Invalid webhook payload")
@@ -104,9 +106,11 @@ async def whatsapp_webhook(business_id: str, request: Request):
 @router.post("/telegram/{business_id}")
 async def telegram_webhook(business_id: str, request: Request):
     try:
-        payload = await request.json()
+        payload = await require_signed_request(request)
         logger.info("Telegram webhook received for business %s", business_id)
-        return {"status": "received"}
+        return {"status": "received", "bytes": len(payload)}
+    except HTTPException:
+        raise
     except Exception as exc:
         logger.error("Telegram webhook error: %s", exc, exc_info=True)
         raise HTTPException(status_code=400, detail="Invalid webhook payload")
@@ -123,18 +127,13 @@ async def custom_webhook(webhook_id: str, request: Request):
         secret = str(config.get("secret") or "")
         if not secret:
             raise HTTPException(status_code=503, detail="Webhook secret is not configured")
-        signature = request.headers.get("X-Webhook-Signature", "")
-        payload = await request.body()
-        expected = hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
-        if not signature or not hmac.compare_digest(signature, expected):
-            raise HTTPException(status_code=401, detail="Invalid webhook signature")
+        payload = await require_signed_request(request, secret=secret)
         try:
             await request.json()
         except ValueError as exc:
             raise HTTPException(status_code=400, detail="Invalid webhook payload") from exc
-        current_count = int(config.get("failure_count") or 0)
         supabase.table("webhooks").update({"last_triggered_at": datetime.utcnow().isoformat(), "failure_count": 0}).eq("id", webhook_id).execute()
-        return {"status": "success"}
+        return {"status": "success", "bytes": len(payload)}
     except HTTPException:
         raise
     except Exception as exc:
