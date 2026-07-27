@@ -181,7 +181,7 @@ async def security_status(current_user: AuthUser = Depends(get_current_user)):
 async def toggle_2fa(current_user: AuthUser = Depends(get_current_user)):
     row = get_user_profile(current_user.user_id) or {}
     enabled = not bool(row.get("two_factor_enabled", False))
-    return {"two_factor_enabled": enabled, "profile": _safe_update(current_user.user_id, {"two_factor_enabled": enabled})}
+    return {"two_factor_enabled": enabled, "profile": _profile_view(_safe_update(current_user.user_id, {"two_factor_enabled": enabled}))}
 
 
 @router.post("/sessions/revoke-others")
