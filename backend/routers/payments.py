@@ -1,7 +1,7 @@
 """Stripe-backed payment and subscription routes."""
 from __future__ import annotations
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -29,9 +29,28 @@ def _period_end_iso(timestamp: Any) -> str | None:
     return datetime.fromtimestamp(int(timestamp), timezone.utc).isoformat()
 
 
-def _update_profile_plan(user_id: str, *, plan_type: str, subscription_expires_at: str | None) -> None:
-    now = _utc_now_iso()
-    supabase.table("profiles").update({"plan_type": plan_type, "subscription_expires_at": subscription_expires_at, "updated_at": now}).eq("user_id", user_id).execute()
+def _update_profile_plan(
+    user_id: str,
+    *,
+    plan_type: str,
+    subscription_expires_at: str | None,
+    subscription_id: str | None = None,
+) -> None:
+    now_dt = datetime.now(timezone.utc)
+    now = now_dt.isoformat()
+    end_date = subscription_expires_at or (now_dt + timedelta(days=30)).isoformat()
+    payload: dict[str, Any] = {
+        "plan_type": plan_type,
+        "subscription_status": "active",
+        "subscription_start_date": now,
+        "subscription_end_date": end_date,
+        "subscription_expires_at": end_date,
+        "auto_renew": True,
+        "updated_at": now,
+    }
+    if subscription_id:
+        payload["stripe_subscription_id"] = subscription_id
+    supabase.table("profiles").update(payload).eq("user_id", user_id).execute()
     try:
         supabase.table("businesses").update({"subscription_tier": plan_type, "subscription_status": "active"}).eq("owner_id", user_id).execute()
     except Exception as exc:
@@ -94,20 +113,23 @@ async def confirm_checkout_session(session_id: str = Query(..., min_length=1), c
     response: dict[str, Any] = {"session_id": session.get("id"), "mode": session.get("mode"), "status": session.get("status"), "payment_status": session.get("payment_status"), "confirmed": False}
     if session.get("mode") == "subscription":
         plan = (metadata.get("plan_type") or "pro").lower(); plan = plan if plan in PLAN_PRICES else "pro"
-        subscription_obj = session.get("subscription"); subscription_status = None; subscription_expires_at = None
+        subscription_obj = session.get("subscription"); subscription_status = None; subscription_expires_at = None; subscription_id = None
         try:
-            if isinstance(subscription_obj, str): subscription_obj = stripe_service.retrieve_subscription(subscription_obj)
+            if isinstance(subscription_obj, str):
+                subscription_id = subscription_obj
+                subscription_obj = stripe_service.retrieve_subscription(subscription_obj)
             if subscription_obj:
+                subscription_id = subscription_obj.get("id") or subscription_id
                 subscription_status = subscription_obj.get("status"); subscription_expires_at = _period_end_iso(subscription_obj.get("current_period_end"))
         except (StripeServiceError, ValueError, AttributeError) as exc:
             logger.warning("Unable to load Stripe subscription details for session %s: %s", session_id, exc)
         if session.get("payment_status") in {"paid", "no_payment_required"} or session.get("status") == "complete" or subscription_status in {"active", "trialing"}:
             try:
-                _update_profile_plan(current_user.user_id, plan_type=plan, subscription_expires_at=subscription_expires_at)
+                _update_profile_plan(current_user.user_id, plan_type=plan, subscription_expires_at=subscription_expires_at, subscription_id=subscription_id)
             except Exception as exc:
                 logger.error("Failed to sync upgraded plan for user %s from session %s: %s", current_user.user_id, session_id, exc, exc_info=True)
                 raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Failed to sync upgraded plan to the user profile") from exc
-            response.update({"confirmed": True, "plan_type": plan, "subscription_status": subscription_status or "active", "subscription_expires_at": subscription_expires_at})
+            response.update({"confirmed": True, "plan_type": plan, "subscription_status": subscription_status or "active", "subscription_expires_at": subscription_expires_at or (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()})
         else:
             response.update({"plan_type": plan, "subscription_status": subscription_status, "subscription_expires_at": subscription_expires_at})
     elif session.get("mode") == "payment":
