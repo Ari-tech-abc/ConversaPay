@@ -6,26 +6,26 @@
   <title>ConversaPay Widget Demo</title>
   <meta name="description" content="Simple public page for testing the ConversaPay widget embed.">
   <style>
-    :root { color-scheme: light; --ink: #18212f; --muted: #64748b; --line: #e2e8f0; --surface: #ffffff; --wash: #f6f8fb; --accent: #635bff; }
+    :root { color-scheme: light; --ink: #0f172a; --muted: #334155; --line: #cbd5e1; --surface: #ffffff; --wash: #f8fafc; --accent: #4c1d95; }
     * { box-sizing: border-box; }
     body { margin: 0; min-height: 100vh; color: var(--ink); background: var(--wash); font: 16px/1.6 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     .site { width: min(920px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 80px; }
     header { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 12px 0 48px; }
     .brand { color: var(--ink); font-weight: 800; text-decoration: none; letter-spacing: -.03em; }
-    .tag { color: var(--muted); font-size: .9rem; }
+    .tag { color: var(--muted); font-size: .9rem; font-weight: 600; }
     main { display: grid; gap: 24px; }
     .hero, .setup { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; padding: clamp(22px, 5vw, 44px); }
     .hero { min-height: 320px; display: grid; align-content: center; gap: 16px; }
-    h1 { max-width: 14ch; margin: 0; font-size: clamp(2.2rem, 8vw, 4.8rem); line-height: 1; letter-spacing: -.07em; }
-    h2 { margin: 0; font-size: 1.15rem; }
+    h1 { max-width: 14ch; margin: 0; font-size: clamp(2.2rem, 8vw, 4.8rem); line-height: 1; letter-spacing: -.07em; color: #020617; }
+    h2 { margin: 0; font-size: 1.15rem; color: #020617; }
     p { max-width: 62ch; margin: 0; color: var(--muted); }
     .button { display: inline-flex; width: fit-content; min-height: 44px; align-items: center; padding: 10px 16px; border: 0; border-radius: 10px; background: var(--accent); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
-    .button.secondary { background: #eef2ff; color: #3730a3; }
+    .button.secondary { background: #e0e7ff; color: #312e81; }
     .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
     .setup { display: grid; gap: 16px; }
-    .code { margin: 0; padding: 16px; overflow: auto; border-radius: 12px; background: #111827; color: #e5e7eb; direction: ltr; text-align: left; white-space: pre-wrap; overflow-wrap: anywhere; font: .9rem/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
-    .note { padding: 12px 14px; border-radius: 10px; background: #fff7ed; color: #9a3412; font-size: .92rem; }
-    .status { min-height: 24px; color: var(--muted); font-size: .92rem; }
+    .code { margin: 0; padding: 16px; overflow: auto; border-radius: 12px; background: #0f172a; color: #f8fafc; border: 1px solid #475569; direction: ltr; text-align: left; white-space: pre-wrap; overflow-wrap: anywhere; font: .9rem/1.55 ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .note { padding: 12px 14px; border-radius: 10px; background: #fffbeb; border: 1px solid #f59e0b; color: #78350f; font-size: .92rem; font-weight: 600; }
+    .status { min-height: 24px; color: #334155; font-size: .92rem; font-weight: 600; }
     @media (max-width: 560px) { .site { width: min(100% - 20px, 920px); padding-top: 14px; } header { padding-bottom: 28px; align-items: flex-start; flex-direction: column; gap: 4px; } .hero, .setup { border-radius: 14px; padding: 22px 18px; } h1 { max-width: 11ch; } .actions, .button { width: 100%; } .button { justify-content: center; } }
   </style>
 </head>
@@ -56,34 +56,14 @@ location.reload();</pre>
   </div>
   <script>
     const params = new URLSearchParams(location.search);
-    const state = {
-      businessId: params.get('business_id') || '',
-      apiKey: params.get('api_key') || ''
-    };
+    const state = { businessId: params.get('business_id') || '', apiKey: params.get('api_key') || '' };
     const status = document.getElementById('status');
     const urlCode = document.getElementById('urlCode');
     const demoUrl = () => `${location.origin}/widget-demo.html?business_id=${encodeURIComponent(state.businessId || 'YOUR_BUSINESS_UUID')}&api_key=${encodeURIComponent(state.apiKey || 'YOUR_WIDGET_API_KEY')}`;
     const setStatus = (message) => { status.textContent = message; };
-    function loadWidget() {
-      if (!state.businessId || !state.apiKey) {
-        setStatus('Add business_id and api_key in the URL first.');
-        return;
-      }
-      window.ConversaPayWidgetConfig = { business_id: state.businessId, api_key: state.apiKey };
-      if (!document.querySelector('script[data-widget-demo]')) {
-        const script = document.createElement('script');
-        script.src = `${location.origin}/frontend/js/widget.js`;
-        script.dataset.widgetDemo = 'true';
-        script.defer = true;
-        document.body.appendChild(script);
-        setStatus('Widget script loaded. Open the chat button in the corner.');
-      }
-    }
+    function loadWidget() { if (!state.businessId || !state.apiKey) { setStatus('Add business_id and api_key in the URL first.'); return; } window.ConversaPayWidgetConfig = { business_id: state.businessId, api_key: state.apiKey }; if (!document.querySelector('script[data-widget-demo]')) { const script = document.createElement('script'); script.src = `${location.origin}/frontend/js/widget.js`; script.dataset.widgetDemo = 'true'; script.defer = true; document.body.appendChild(script); setStatus('Widget script loaded. Open the chat button in the corner.'); } }
     document.getElementById('loadWidget').onclick = loadWidget;
-    document.getElementById('copyUrl').onclick = async () => {
-      try { await navigator.clipboard.writeText(demoUrl()); setStatus('Test URL copied.'); }
-      catch { setStatus('Copy failed. Select the URL manually.'); }
-    };
+    document.getElementById('copyUrl').onclick = async () => { try { await navigator.clipboard.writeText(demoUrl()); setStatus('Test URL copied.'); } catch { setStatus('Copy failed. Select the URL manually.'); } };
     urlCode.textContent = demoUrl();
     if (state.businessId && state.apiKey) loadWidget();
   </script>
