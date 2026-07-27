@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from typing import Any
 import logging
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from supabase import create_client
 from backend.config import settings
 from backend.middleware.auth import AuthUser, get_current_user
@@ -16,10 +16,14 @@ supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_K
 
 
 class ProfileUpdatePayload(BaseModel):
-    full_name: str | None = Field(None, max_length=255)
-    company_name: str | None = Field(None, max_length=255)
-    timezone: str | None = Field(None, max_length=80)
-    avatar_url: str | None = Field(None, max_length=2048)
+    """Allow a safe partial update without requiring unrelated profile fields."""
+    model_config = ConfigDict(extra="forbid")
+
+    full_name: str | None = Field(default=None, max_length=255)
+    company_name: str | None = Field(default=None, max_length=255)
+    phone: str | None = Field(default=None, max_length=40)
+    timezone: str | None = Field(default=None, max_length=80)
+    avatar_url: str | None = Field(default=None, max_length=2048)
 
 
 class PasswordPayload(BaseModel):
@@ -41,13 +45,24 @@ def _now():
 def _safe_update(user_id: str, changes: dict[str, Any]) -> dict[str, Any]:
     result = update_profile_row(user_id, changes)
     if result is None:
-        raise HTTPException(500, "Profile update failed")
+        raise HTTPException(status_code=500, detail="Profile update failed")
     return result
 
 
 def _profile_view(row: dict[str, Any] | None) -> dict[str, Any]:
     row = row or {}
-    return {"full_name": row.get("full_name") or "", "company_name": row.get("company_name") or "", "timezone": row.get("timezone") or "UTC", "avatar_url": row.get("avatar_url") or "", "notification_preferences": row.get("notification_preferences") or {"payment_success": True, "weekly_digest": True, "security_alerts": True, "product_updates": False}, "two_factor_enabled": bool(row.get("two_factor_enabled", False)), "plan_type": row.get("plan_type") or "free", "subscription_status": row.get("subscription_status") or "active", "subscription_expires_at": row.get("subscription_expires_at")}
+    return {
+        "full_name": row.get("full_name") or "",
+        "company_name": row.get("company_name") or "",
+        "phone": row.get("phone") or "",
+        "timezone": row.get("timezone") or "UTC",
+        "avatar_url": row.get("avatar_url") or "",
+        "notification_preferences": row.get("notification_preferences") or {"payment_success": True, "weekly_digest": True, "security_alerts": True, "product_updates": False},
+        "two_factor_enabled": bool(row.get("two_factor_enabled", False)),
+        "plan_type": row.get("plan_type") or "free",
+        "subscription_status": row.get("subscription_status") or "active",
+        "subscription_expires_at": row.get("subscription_expires_at"),
+    }
 
 
 @router.get("")
@@ -57,7 +72,17 @@ async def get_profile(current_user: AuthUser = Depends(get_current_user)):
 
 @router.patch("")
 async def update_profile(payload: ProfileUpdatePayload, current_user: AuthUser = Depends(get_current_user)):
-    return {"profile": _profile_view(_safe_update(current_user.user_id, payload.model_dump(exclude_none=True)))}
+    # exclude_unset preserves true partial-update semantics and still lets the UI
+    # clear nullable values by explicitly sending null.
+    changes = payload.model_dump(exclude_unset=True)
+    if not changes:
+        raise HTTPException(status_code=400, detail="No profile fields to update")
+
+    for key, value in changes.items():
+        if isinstance(value, str):
+            changes[key] = value.strip()
+
+    return {"profile": _profile_view(_safe_update(current_user.user_id, changes))}
 
 
 @router.post("/password")
