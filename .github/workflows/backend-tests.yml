@@ -1,29 +1,28 @@
-name: backend-tests
+name: Backend tests
 
 on:
   pull_request:
-    branches: [main]
   push:
     branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-    env:
-      SECRET_KEY: ci-secret
-      SUPABASE_URL: https://example.supabase.co
-      SUPABASE_ANON_KEY: ci-anon
-      SUPABASE_SERVICE_ROLE_KEY: ci-service
-      GEMINI_API_KEY: ci-gemini
-      RESEND_API_KEY: ci-resend
-      EMAIL_FROM_ADDRESS: ci@example.com
-      ENVIRONMENT: test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-      - run: python -m pip install --upgrade pip
+          python-version: '3.11'
       - run: pip install -r requirements.txt pytest
-      - run: python -m compileall -q backend main.py
-      - run: pytest -q
+      - name: Compile Python sources
+        run: python -m compileall -q backend main.py
+      - name: Run unit tests
+        env:
+          SECRET_KEY: ci-secret
+          SUPABASE_URL: https://example.supabase.co
+          SUPABASE_ANON_KEY: ci-anon
+          SUPABASE_SERVICE_ROLE_KEY: ci-service
+          GEMINI_API_KEY: ci-gemini
+          RESEND_API_KEY: ci-resend
+          EMAIL_FROM_ADDRESS: ci@example.com
+        run: pytest -q
