@@ -14,13 +14,16 @@ from backend.routers.admin_password import router as admin_password_router
 from backend.routers.stripe_webhook import router as stripe_webhook_router
 from backend.routers.whatsapp import router as whatsapp_webhook_router
 from backend.services.monitoring_service import monitoring_service
+from backend.services.observability import initialize_error_tracking
+from backend.middleware.correlation import CorrelationIdMiddleware
 
 @asynccontextmanager
 async def lifespan(app):
     monitoring_service.initialize()
+    initialize_error_tracking()
     yield
 
-app = FastAPI(title="ConversaPay API", version="2.2.0", lifespan=lifespan, docs_url=None if settings.is_production else "/docs", redoc_url=None if settings.is_production else "/redoc")
+app = FastAPI(title="Talk2Pay API", version="2.2.0", lifespan=lifespan, docs_url=None if settings.is_production else "/docs", redoc_url=None if settings.is_production else "/redoc")
 
 class DualCORSMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
@@ -31,7 +34,7 @@ class DualCORSMiddleware(BaseHTTPMiddleware):
             response = Response()
             response.headers["Access-Control-Allow-Origin"] = "*" if public else (origin if origin in settings.cors_origins_list else "")
             response.headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,PATCH,DELETE,OPTIONS"
-            response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization,X-Builder-Token,X-Widget-Key"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type,Authorization,X-Builder-Token,X-Widget-Key,X-Webhook-Signature,X-Correlation-ID"
             response.headers["Vary"] = "Origin"
             return response
         response = await call_next(request)
@@ -42,10 +45,18 @@ class DualCORSMiddleware(BaseHTTPMiddleware):
         response.headers["Vary"] = "Origin"
         return response
 
+app.add_middleware(CorrelationIdMiddleware)
 app.add_middleware(DualCORSMiddleware)
 
 @app.get("/health")
-async def health(): return {"status": "healthy", "version": "2.2.0", "environment": settings.ENVIRONMENT}
+async def health():
+    return {"status": "healthy", "version": "2.2.0", "environment": settings.ENVIRONMENT}
+
+@app.get("/ready")
+async def readiness():
+    """Lightweight readiness signal; dependency-specific probes belong in deployment checks."""
+    return {"status": "ready", "environment": settings.ENVIRONMENT}
+
 @app.get(f"{settings.API_PREFIX}/config/public")
 async def public_config(): return {"supabase_url": settings.SUPABASE_URL, "supabase_anon_key": settings.SUPABASE_ANON_KEY}
 
@@ -81,10 +92,10 @@ def _brand_markup(page: str) -> str:
         tag = match.group(0)
         href_match = re.search(r'href=[\"\']([^\"\']+)', tag, re.IGNORECASE)
         href = href_match.group(1) if href_match else "/"
-        return f'<a class="cp-brand" href="{href}"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="ConversaPay"></a>'
+        return f'<a class="cp-brand" href="{href}"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="Talk2Pay"></a>'
     page = re.sub(r'<a\b[^>]*class=[\"\'][^\"\']*\bcp-brand\b[^\"\']*[\"\'][^>]*>.*?</a>', replace_cp_brand, page, flags=re.IGNORECASE | re.DOTALL)
-    page = re.sub(r'<a\b(?P<attrs>[^>]*class=[\"\'][^\"\']*\bbrand\b[^\"\']*[\"\'][^>]*)>\s*ConversaPay\s*</a>', lambda match: f'<a{match.group("attrs")}><img class="brand-logo" src="{BRAND_LOGO_SRC}" alt="ConversaPay"></a>', page, flags=re.IGNORECASE | re.DOTALL)
-    page = re.sub(r'(<header\b[^>]*class=[\"\'][^\"\']*\blegal-header\b[^\"\']*[\"\'][^>]*>\s*)<a\s+href=[\"\']/[\"\']>\s*ConversaPay\s*</a>', lambda match: f'{match.group(1)}<a href="/"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="ConversaPay"></a>', page, flags=re.IGNORECASE | re.DOTALL)
+    page = re.sub(r'<a\b(?P<attrs>[^>]*class=[\"\'][^\"\']*\bbrand\b[^\"\']*[\"\'][^>]*)>\s*ConversaPay\s*</a>', lambda match: f'<a{match.group("attrs")}><img class="brand-logo" src="{BRAND_LOGO_SRC}" alt="Talk2Pay"></a>', page, flags=re.IGNORECASE | re.DOTALL)
+    page = re.sub(r'(<header\b[^>]*class=[\"\'][^\"\']*\blegal-header\b[^\"\']*[\"\'][^>]*>\s*)<a\s+href=[\"\']/[\"\']>\s*ConversaPay\s*</a>', lambda match: f'{match.group(1)}<a href="/"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="Talk2Pay"></a>', page, flags=re.IGNORECASE | re.DOTALL)
     if 'rel="icon"' not in page.lower(): page = page.replace("</head>", f'<link rel="icon" type="image/png" href="{FAVICON_SRC}">\n</head>', 1)
     if 'id="conversapay-branding"' not in page: page = page.replace("</head>", f"{_BRANDING_STYLE}</head>", 1)
     return page
