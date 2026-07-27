@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from supabase import create_client
 from backend.config import settings
 from backend.middleware.auth import AuthUser, get_current_user
-from backend.routers.auth import get_user_profile, update_profile_row
+from backend.routers.auth import get_user_profile
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=["profile"])
@@ -42,11 +42,74 @@ def _now():
     return datetime.now(timezone.utc).isoformat()
 
 
+def _profile_update_error(user_id: str, exc: Exception) -> None:
+    """Translate Supabase/PostgREST failures into stable API responses."""
+    error_code = str(getattr(exc, "code", "") or "").upper()
+    error_message = str(
+        getattr(exc, "message", "") or exc
+    )
+    normalized = error_message.lower()
+    schema_error = (
+        error_code == "PGRST204"
+        or "schema cache" in normalized
+        or "could not find column" in normalized
+        or "column" in normalized and "does not exist" in normalized
+    )
+
+    logger.error(
+        "Profile update failed for %s (%s): %s",
+        user_id,
+        error_code or "database_error",
+        error_message,
+        exc_info=True,
+    )
+
+    if schema_error:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "code": "profile_schema_unavailable",
+                "message": "Profile storage is missing a required field. Apply the latest profile schema migration.",
+            },
+        ) from exc
+
+    raise HTTPException(
+        status_code=502,
+        detail={
+            "code": "profile_update_failed",
+            "message": "The profile could not be saved right now.",
+        },
+    ) from exc
+
+
 def _safe_update(user_id: str, changes: dict[str, Any]) -> dict[str, Any]:
-    result = update_profile_row(user_id, changes)
-    if result is None:
-        raise HTTPException(status_code=500, detail="Profile update failed")
-    return result
+    """Update only the supplied fields and return a predictable profile row."""
+    try:
+        result = (
+            supabase.table("profiles")
+            .update(changes)
+            .eq("user_id", user_id)
+            .execute()
+        )
+    except Exception as exc:
+        _profile_update_error(user_id, exc)
+
+    if getattr(result, "data", None):
+        return result.data[0]
+
+    # An empty update response can happen with a restrictive policy. Reload so
+    # callers still receive the canonical row when the write did succeed.
+    profile = get_user_profile(user_id)
+    if profile is not None:
+        return profile
+
+    raise HTTPException(
+        status_code=404,
+        detail={
+            "code": "profile_not_found",
+            "message": "Profile not found.",
+        },
+    )
 
 
 def _profile_view(row: dict[str, Any] | None) -> dict[str, Any]:
@@ -76,11 +139,20 @@ async def update_profile(payload: ProfileUpdatePayload, current_user: AuthUser =
     # clear nullable values by explicitly sending null.
     changes = payload.model_dump(exclude_unset=True)
     if not changes:
-        raise HTTPException(status_code=400, detail="No profile fields to update")
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "code": "no_profile_fields",
+                "message": "Provide at least one profile field to update.",
+            },
+        )
 
-    for key, value in changes.items():
-        if isinstance(value, str):
-            changes[key] = value.strip()
+    # Normalize only values the client actually sent. None remains None so a
+    # caller can intentionally clear a nullable profile field.
+    changes = {
+        key: value.strip() if isinstance(value, str) else value
+        for key, value in changes.items()
+    }
 
     return {"profile": _profile_view(_safe_update(current_user.user_id, changes))}
 
@@ -109,7 +181,7 @@ async def security_status(current_user: AuthUser = Depends(get_current_user)):
 async def toggle_2fa(current_user: AuthUser = Depends(get_current_user)):
     row = get_user_profile(current_user.user_id) or {}
     enabled = not bool(row.get("two_factor_enabled", False))
-    return {"two_factor_enabled": enabled, "profile": _profile_view(_safe_update(current_user.user_id, {"two_factor_enabled": enabled}))}
+    return {"two_factor_enabled": enabled, "profile": _safe_update(current_user.user_id, {"two_factor_enabled": enabled})}
 
 
 @router.post("/sessions/revoke-others")
