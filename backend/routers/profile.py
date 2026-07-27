@@ -14,6 +14,14 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["profile"])
 supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
 
+PROFILE_UPDATE_FIELDS = frozenset({
+    "full_name",
+    "company_name",
+    "phone",
+    "timezone",
+    "avatar_url",
+})
+
 
 class ProfileUpdatePayload(BaseModel):
     """Allow a safe partial update without requiring unrelated profile fields."""
@@ -137,7 +145,11 @@ async def get_profile(current_user: AuthUser = Depends(get_current_user)):
 async def update_profile(payload: ProfileUpdatePayload, current_user: AuthUser = Depends(get_current_user)):
     # exclude_unset preserves true partial-update semantics and still lets the UI
     # clear nullable values by explicitly sending null.
-    changes = payload.model_dump(exclude_unset=True)
+    changes = {
+        key: value
+        for key, value in payload.model_dump(exclude_unset=True).items()
+        if key in PROFILE_UPDATE_FIELDS
+    }
     if not changes:
         raise HTTPException(
             status_code=400,
@@ -147,12 +159,14 @@ async def update_profile(payload: ProfileUpdatePayload, current_user: AuthUser =
             },
         )
 
-    # Normalize only values the client actually sent. None remains None so a
-    # caller can intentionally clear a nullable profile field.
+    # Normalize only values the client actually sent. None remains None for
+    # nullable fields, while a blank timezone falls back to the DB default.
     changes = {
         key: value.strip() if isinstance(value, str) else value
         for key, value in changes.items()
     }
+    if "timezone" in changes and not changes["timezone"]:
+        changes["timezone"] = "UTC"
 
     return {"profile": _profile_view(_safe_update(current_user.user_id, changes))}
 

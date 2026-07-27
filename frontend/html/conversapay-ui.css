@@ -7,6 +7,13 @@
 .metric-value{font-family:'Heebo',sans-serif!important}
 @media(max-width:760px){.cp-topbar{position:sticky;top:0;flex-direction:row;flex-wrap:nowrap;padding:10px 12px;gap:8px;max-width:100vw;overflow:hidden}.cp-topbar .cp-brand{flex:0 0 auto}.cp-topbar .cp-brand span:not(.cp-brand-mark){display:none}.cp-topbar .cp-nav-toolbar{flex:1 1 auto;justify-content:flex-end;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:4px;max-width:none}.cp-topbar .cp-nav-toolbar::-webkit-scrollbar{display:none}.cp-topbar .cp-nav-toolbar .cp-button,.cp-topbar .cp-nav-toolbar .cp-button-secondary{min-height:36px;padding:6px 12px;font-size:.8rem}.cp-topbar .cp-actions{width:100%;display:grid;grid-template-columns:1fr}.cp-shell{width:min(100% - 20px,1180px);padding:1.25rem 0 2rem}.cp-card,.cp-panel{padding:1.1rem;border-radius:1.25rem}.cp-title{font-size:clamp(1.8rem,8vw,2.8rem)}.cp-actions,.cp-links{gap:8px}.cp-actions>*{flex-basis:100%;width:100%}.cp-list-item,.cp-info-row{align-items:flex-start;flex-direction:column}.cp-list-item>.cp-badge,.cp-list-item>a,.cp-list-item>button{width:100%}.cp-plan{padding:1.1rem}.cp-footer{width:min(100% - 20px,1180px);margin-bottom:20px}.modal-shell{padding:10px}.modal{border-radius:1.1rem;max-height:calc(100dvh - 20px)}.modal-head,.modal-body,.modal-foot{padding:15px 16px}.modal-foot{display:grid;grid-template-columns:1fr}.modal-foot>*{width:100%}.cp-table th,.cp-table td{padding:12px}.cp-button,.cp-button-secondary,.cp-button-danger{min-height:48px;font-size:.92rem}}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
-/* Force a readable light profile avatar over dark dashboard/theme inheritance. */
-.user-avatar,#user-avatar,.profile-avatar-badge,.avatar-container,.profile-avatar,.profile-large-avatar{background-color:#e0e7ff!important;color:#3730a3!important;font-weight:700!important;border:1px solid #c7d2fe!important}
-.user-avatar *,#user-avatar *,.profile-avatar-badge *,.avatar-container *,.profile-avatar *,.profile-large-avatar *{color:#3730a3!important;fill:#3730a3!important}
+/* Exact bottom-right profile trigger on dashboard and mobile layouts. */
+.profile-dock{color:#3730a3!important}
+.profile-dock,.profile-dock-card,#profileDockAvatar{background-color:#e0e7ff!important;color:#3730a3!important;border-color:#c7d2fe!important}
+.profile-dock-card{box-shadow:0 6px 20px rgba(55,48,163,.18)!important}
+.profile-dock *,#profileDockAvatar *{color:#3730a3!important;fill:#3730a3!important;stroke:#3730a3!important}
+.profile-dock .profile-meta span{color:#3730a3!important}
+
+/* Fallback for other fixed profile/avatar triggers without recoloring panels. */
+[class*="avatar"], [id*="avatar"], [class*="profile"], [id*="profile"] { color:#3730a3!important; }
+[class*="avatar"] *, [id*="avatar"] *, [class*="profile"] *, [id*="profile"] * { color:#3730a3!important; fill:#3730a3!important; stroke:#3730a3!important; }

@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     full_name TEXT,
     phone TEXT,
     avatar_url TEXT,
+    timezone TEXT DEFAULT 'UTC',
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -32,15 +33,23 @@ ALTER TABLE public.profiles
     ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 
 ALTER TABLE public.profiles
+    ADD COLUMN IF NOT EXISTS timezone TEXT DEFAULT 'UTC';
+
+ALTER TABLE public.profiles
     ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ;
 
 ALTER TABLE public.profiles
     ALTER COLUMN id SET DEFAULT gen_random_uuid(),
+    ALTER COLUMN timezone SET DEFAULT 'UTC',
     ALTER COLUMN updated_at SET DEFAULT NOW();
 
 UPDATE public.profiles
 SET id = gen_random_uuid()
 WHERE id IS NULL;
+
+UPDATE public.profiles
+SET timezone = 'UTC'
+WHERE timezone IS NULL OR BTRIM(timezone) = '';
 
 UPDATE public.profiles
 SET updated_at = NOW()
