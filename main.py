@@ -9,7 +9,7 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 from backend.config import settings
-from backend.routers import auth, onboarding, businesses, products, chat, orders, payments, logs, webhooks, analytics, widget, admin, dashboard, api_keys, site_builder, profile
+from backend.routers import auth, onboarding, businesses, products, chat, orders, payments, logs, webhooks, analytics, widget, admin, dashboard, api_keys, site_builder, profile, subscription
 from backend.routers.admin_password import router as admin_password_router
 from backend.routers.stripe_webhook import router as stripe_webhook_router
 from backend.routers.whatsapp import router as whatsapp_webhook_router
@@ -51,7 +51,7 @@ async def public_config(): return {"supabase_url": settings.SUPABASE_URL, "supab
 
 prefix = settings.API_PREFIX
 for router, route_prefix, tag in [
-    (onboarding.router, prefix, "authentication-onboarding"), (auth.router, f"{prefix}/auth", "authentication"), (profile.router, f"{prefix}/profile", "profile"), (businesses.router, prefix, "businesses"), (products.router, prefix, "products"), (chat.router, prefix, "chat"), (orders.router, prefix, "orders"), (payments.router, prefix, "payments"), (logs.router, prefix, "logs"), (webhooks.router, prefix, "webhooks"), (analytics.router, prefix, "analytics"), (widget.router, prefix, "widget"), (dashboard.router, prefix, "dashboard"), (admin.router, prefix, "admin"), (admin_password_router, prefix, "admin-security"), (api_keys.router, prefix, "api-keys"), (site_builder.router, prefix, "site-builder"), (stripe_webhook_router, prefix, "stripe-webhook"), (whatsapp_webhook_router, prefix, "whatsapp-webhook")
+    (onboarding.router, prefix, "authentication-onboarding"), (auth.router, f"{prefix}/auth", "authentication"), (profile.router, f"{prefix}/profile", "profile"), (subscription.router, prefix, "subscription"), (businesses.router, prefix, "businesses"), (products.router, prefix, "products"), (chat.router, prefix, "chat"), (orders.router, prefix, "orders"), (payments.router, prefix, "payments"), (logs.router, prefix, "logs"), (webhooks.router, prefix, "webhooks"), (analytics.router, prefix, "analytics"), (widget.router, prefix, "widget"), (dashboard.router, prefix, "dashboard"), (admin.router, prefix, "admin"), (admin_password_router, prefix, "admin-security"), (api_keys.router, prefix, "api-keys"), (site_builder.router, prefix, "site-builder"), (stripe_webhook_router, prefix, "stripe-webhook"), (whatsapp_webhook_router, prefix, "whatsapp-webhook")
 ]: app.include_router(router, prefix=route_prefix, tags=[tag])
 if not settings.is_production:
     from backend.routers.dev_simulator import router as dev_simulator_router
@@ -77,40 +77,20 @@ _BRANDING_STYLE = f"""
 """
 
 def _brand_markup(page: str) -> str:
-    """Replace legacy text/mark headers and inject one canonical app icon."""
     def replace_cp_brand(match):
         tag = match.group(0)
         href_match = re.search(r'href=[\"\']([^\"\']+)', tag, re.IGNORECASE)
         href = href_match.group(1) if href_match else "/"
         return f'<a class="cp-brand" href="{href}"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="ConversaPay"></a>'
-
-    page = re.sub(
-        r'<a\b[^>]*class=[\"\'][^\"\']*\bcp-brand\b[^\"\']*[\"\'][^>]*>.*?</a>',
-        replace_cp_brand,
-        page,
-        flags=re.IGNORECASE | re.DOTALL,
-    )
-    page = re.sub(
-        r'<a\b(?P<attrs>[^>]*class=[\"\'][^\"\']*\bbrand\b[^\"\']*[\"\'][^>]*)>\s*ConversaPay\s*</a>',
-        lambda match: f'<a{match.group("attrs")}><img class="brand-logo" src="{BRAND_LOGO_SRC}" alt="ConversaPay"></a>',
-        page,
-        flags=re.IGNORECASE | re.DOTALL,
-    )
-    page = re.sub(
-        r'(<header\b[^>]*class=[\"\'][^\"\']*\blegal-header\b[^\"\']*[\"\'][^>]*>\s*)<a\s+href=[\"\']/[\"\']>\s*ConversaPay\s*</a>',
-        lambda match: f'{match.group(1)}<a href="/"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="ConversaPay"></a>',
-        page,
-        flags=re.IGNORECASE | re.DOTALL,
-    )
-    if 'rel="icon"' not in page.lower():
-        page = page.replace("</head>", f'<link rel="icon" type="image/png" href="{FAVICON_SRC}">\n</head>', 1)
-    if "id=\"conversapay-branding\"" not in page:
-        page = page.replace("</head>", f"{_BRANDING_STYLE}</head>", 1)
+    page = re.sub(r'<a\b[^>]*class=[\"\'][^\"\']*\bcp-brand\b[^\"\']*[\"\'][^>]*>.*?</a>', replace_cp_brand, page, flags=re.IGNORECASE | re.DOTALL)
+    page = re.sub(r'<a\b(?P<attrs>[^>]*class=[\"\'][^\"\']*\bbrand\b[^\"\']*[\"\'][^>]*)>\s*ConversaPay\s*</a>', lambda match: f'<a{match.group("attrs")}><img class="brand-logo" src="{BRAND_LOGO_SRC}" alt="ConversaPay"></a>', page, flags=re.IGNORECASE | re.DOTALL)
+    page = re.sub(r'(<header\b[^>]*class=[\"\'][^\"\']*\blegal-header\b[^\"\']*[\"\'][^>]*>\s*)<a\s+href=[\"\']/[\"\']>\s*ConversaPay\s*</a>', lambda match: f'{match.group(1)}<a href="/"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="ConversaPay"></a>', page, flags=re.IGNORECASE | re.DOTALL)
+    if 'rel="icon"' not in page.lower(): page = page.replace("</head>", f'<link rel="icon" type="image/png" href="{FAVICON_SRC}">\n</head>', 1)
+    if 'id="conversapay-branding"' not in page: page = page.replace("</head>", f"{_BRANDING_STYLE}</head>", 1)
     return page
 
 def _branded_file(path: str, status_code: int = 200):
-    with open(path, "r", encoding="utf-8") as page_file:
-        return HTMLResponse(_brand_markup(page_file.read()), status_code=status_code)
+    with open(path, "r", encoding="utf-8") as page_file: return HTMLResponse(_brand_markup(page_file.read()), status_code=status_code)
 
 @app.get("/admin-{secret_path}", response_class=HTMLResponse)
 @app.get("/admin-{secret_path}/dashboard", response_class=HTMLResponse)
@@ -231,8 +211,7 @@ async def sitemap(): return FileResponse(os.path.join(static_dir, "sitemap.xml")
 
 @app.exception_handler(404)
 async def not_found(request: Request, exc):
-    if "text/html" in request.headers.get("accept", ""):
-        return _branded_file(_html("404.html"), status_code=404)
+    if "text/html" in request.headers.get("accept", ""): return _branded_file(_html("404.html"), status_code=404)
     return JSONResponse(status_code=404, content={"error":"Not found","detail":str(exc.detail) if hasattr(exc,"detail") else "Not found"})
 @app.exception_handler(500)
 async def internal_error(request, exc): return JSONResponse(status_code=500, content={"error":"Internal server error","detail":"An unexpected error occurred"})
