@@ -18,19 +18,20 @@ $$;
 revoke all on function public.user_owns_business(uuid) from public;
 grant execute on function public.user_owns_business(uuid) to authenticated;
 
--- Enable RLS only for tables that exist in the deployed schema.
 do $$
 declare
-  table_name text;
+  target_table text;
 begin
-  foreach table_name in array array['businesses','products','orders','payments','api_keys','webhooks'] loop
-    if exists (select 1 from information_schema.tables where table_schema='public' and table_name=table_name) then
-      execute format('alter table public.%I enable row level security', table_name);
+  foreach target_table in array array['businesses','products','orders','payments','api_keys','webhooks'] loop
+    if exists (
+      select 1 from information_schema.tables t
+      where t.table_schema='public' and t.table_name=target_table
+    ) then
+      execute format('alter table public.%I enable row level security', target_table);
     end if;
   end loop;
 end $$;
 
--- Policies are created only when the expected tenant column exists.
 do $$
 begin
   if exists (select 1 from information_schema.columns where table_schema='public' and table_name='businesses' and column_name='owner_id') then
@@ -55,4 +56,13 @@ begin
   end if;
 end $$;
 
-revoke all on public.businesses, public.products, public.orders, public.payments, public.api_keys, public.webhooks from anon;
+do $$
+declare
+  target_table text;
+begin
+  foreach target_table in array array['businesses','products','orders','payments','api_keys','webhooks'] loop
+    if exists (select 1 from information_schema.tables t where t.table_schema='public' and t.table_name=target_table) then
+      execute format('revoke all on public.%I from anon', target_table);
+    end if;
+  end loop;
+end $$;
