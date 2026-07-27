@@ -3,243 +3,110 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>ConversaPay | לדבר עם הלקוח ולסגור מכירה, במקום אחד</title>
-  <meta name="description" content="ConversaPay עוזרת לעסק שלך לענות ללקוחות, להציע את המוצר הנכון ולקבל תשלום, הכל בשיחה אחת פשוטה וברורה.">
+  <title>ConversaPay | לדבר, להציע, לסגור</title>
+  <meta name="description" content="ConversaPay הופכת שיחות עם לקוחות למסלול מכירה ברור, עם התאמת מוצר, תשלום ודאשבורד במקום אחד.">
   <meta name="theme-color" content="#f8fafc">
   <link rel="canonical" href="https://conversapay.org/">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
   <script type="application/ld+json">
   {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "CONVERSAPAY",
-    "url": "https://conversapay.org",
-    "logo": "https://conversapay.org/images/logo.png"
+    "@context":"https://schema.org",
+    "@type":"Organization",
+    "name":"CONVERSAPAY",
+    "url":"https://conversapay.org",
+    "logo":"https://conversapay.org/images/logo.png"
   }
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
   <style>
-    .home-shell { display:grid; gap:2.5rem; }
-    .hero-grid { display:grid; grid-template-columns:1.25fr .95fr; gap:1.4rem; align-items:stretch; }
-    .hero-panel { background:linear-gradient(135deg,#1e1b4b,#0f172a); border-color:rgba(124,58,237,.15); }
-    .hero-stats { display:grid; gap:0.9rem; }
-    .stat-card { display:grid; gap:0.5rem; padding:1.4rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
-    .feature-card,.cta-card { display:grid; gap:0.5rem; padding:1.4rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
-    .stat-value { font-size:1.7rem; font-weight:800; color:var(--cp-accent); }
-    .feature-grid,.timeline-grid,.proof-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:1rem; }
-    .plans-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr)); gap:1.1rem; }
-    .plan-card { display:grid; gap:0.75rem; padding:1.5rem; border-radius:1.5rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
-    .plan-card.featured { border-color:var(--cp-accent); box-shadow:0 0 0 3px rgba(124,58,237,.1),var(--cp-shadow); }
-    .plan-list { margin:0; padding:0; list-style:none; display:grid; gap:0.5rem; }
-    .plan-list li { display:flex; gap:0.6rem; align-items:flex-start; color:var(--cp-muted-strong); font-weight:500; line-height:1.5; }
-    .plan-list li::before { content:'✓'; color:var(--cp-green); font-weight:700; }
-    .timeline-step { display:grid; gap:0.5rem; padding:1.1rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
-    .timeline-step strong { color:var(--cp-text); font-weight:700; }
-    .proof-card { padding:1.1rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
-    .proof-card strong { color:var(--cp-text); font-weight:700; }
-    .section-head { text-align:center; display:grid; gap:0.5rem; }
-    .section-head h2 { color:var(--cp-text); font-weight:700; }
-    .hero-actions,.inline-actions { display:flex; gap:0.6rem; flex-wrap:wrap; }
-    @media (max-width: 980px) { .hero-grid { grid-template-columns:1fr; } }
-    @media (max-width: 480px) {
-      .hero-actions { flex-direction:column; }
-      .hero-actions a { width:100%; }
-    }
+    :root{--home-ink:#0f172a;--home-muted:#334155;--home-accent:#6d28d9;--home-purple:#ede9fe;--home-cyan:#ecfeff;--home-line:#dbe4ef;--home-surface:#fff}
+    .home-page{background:#f8fafc;color:var(--home-ink)}
+    .home-page::before{background:radial-gradient(circle at 12% 12%,rgba(124,58,237,.1),transparent 26%),radial-gradient(circle at 90% 18%,rgba(8,145,178,.08),transparent 24%)}
+    .home-nav{position:sticky;top:16px;z-index:20;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:24px;width:min(1180px,calc(100% - 32px));margin:16px auto 0;padding:12px 14px 12px 18px;border:1px solid var(--home-line);border-radius:18px;background:rgba(255,255,255,.96);box-shadow:0 12px 32px rgba(15,23,42,.06)}
+    .home-nav-links{display:flex;justify-content:center;gap:24px;align-items:center}.home-nav-links a{color:#334155;text-decoration:none;font-weight:600}.home-nav-links a:hover{color:#6d28d9}.home-nav-actions{display:flex;gap:10px;align-items:center}.home-nav .cp-brand-mark{background:#6d28d9}
+    .home-shell{display:grid;gap:96px;padding-top:72px}.home-hero{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(420px,.98fr);gap:64px;align-items:center}.home-eyebrow{display:inline-flex;align-items:center;gap:10px;color:#6d28d9;font-size:.82rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.home-eyebrow::before{content:"";width:10px;height:10px;border-radius:50%;background:#0891b2;box-shadow:0 0 0 6px #cffafe}.home-hero h1{max-width:11ch;margin:18px 0 20px;font-size:clamp(3.2rem,7vw,6.4rem);line-height:.98;letter-spacing:-.06em;color:#020617!important}.home-lede{max-width:58ch;margin:0;color:#334155!important;font-size:1.16rem;line-height:1.8}.home-hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}.home-hero-actions .cp-button{min-width:148px}.home-note{margin-top:16px;color:#475569!important;font-size:.9rem}
+    .preview-frame{position:relative;min-height:520px;padding:14px;border:1px solid #cbd5e1;border-radius:30px;background:#0f172a;box-shadow:0 28px 70px rgba(15,23,42,.18);overflow:hidden;transform:rotate(-1.5deg)}.preview-frame::before{content:"";position:absolute;inset:-40% 20% auto -20%;height:260px;background:#7c3aed;opacity:.26;filter:blur(48px);border-radius:50%}.preview-window{position:relative;display:grid;grid-template-rows:auto 1fr auto;min-height:490px;border-radius:22px;background:#f8fafc;overflow:hidden}.preview-bar{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;background:#fff;border-bottom:1px solid #e2e8f0}.preview-brand{display:flex;align-items:center;gap:9px;color:#0f172a;font-weight:800}.preview-brand-mark{width:28px;height:28px;display:grid;place-items:center;border-radius:8px;background:#6d28d9;color:#fff;font-size:.75rem}.preview-status{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;background:#ecfdf5;color:#065f46;font-size:.75rem;font-weight:800}.preview-status::before{content:"";width:7px;height:7px;border-radius:50%;background:#10b981}.preview-chat{display:grid;gap:14px;align-content:start;padding:24px 20px}.chat-bubble{max-width:82%;padding:13px 15px;border-radius:16px;line-height:1.55;box-shadow:0 6px 16px rgba(15,23,42,.06)}.chat-bubble.client{justify-self:start;background:#fff;border:1px solid #e2e8f0;color:#334155;border-bottom-left-radius:5px}.chat-bubble.bot{justify-self:end;background:#ede9fe;color:#312e81;border-bottom-right-radius:5px}.preview-product{justify-self:end;display:grid;gap:12px;width:min(100%,300px);padding:14px;border:1px solid #c4b5fd;border-radius:18px;background:#fff;box-shadow:0 12px 24px rgba(76,29,149,.1);animation:preview-float 5s ease-in-out infinite}.preview-product-top{display:flex;justify-content:space-between;gap:12px;align-items:start}.preview-product h3{margin:0;color:#0f172a!important;font-size:1rem}.preview-product p{margin:0;color:#475569!important;font-size:.85rem}.preview-product-price{color:#6d28d9;font-weight:800}.preview-product button{width:100%;border:0;border-radius:11px;padding:10px;background:#6d28d9;color:#fff;font:inherit;font-weight:800;cursor:pointer}.preview-product button:hover{background:#4c1d95}.preview-footer{display:flex;justify-content:space-between;gap:12px;padding:15px 18px;background:#fff;border-top:1px solid #e2e8f0;color:#475569;font-size:.78rem}.preview-footer strong{color:#0f172a}@keyframes preview-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    .section-kicker{display:inline-block;color:#6d28d9;font-size:.78rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.section-heading{max-width:680px;margin:12px 0 0;font-size:clamp(2rem,4vw,3.6rem);line-height:1.05;letter-spacing:-.05em;color:#020617!important}.section-copy{max-width:60ch;margin:16px 0 0;color:#334155!important;font-size:1.05rem}.section-intro{display:grid;gap:4px;margin-bottom:34px}.feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.feature-card{position:relative;display:grid;gap:14px;min-height:240px;padding:24px;border:1px solid var(--home-line);border-radius:22px;background:#fff;box-shadow:0 10px 24px rgba(15,23,42,.04);transition:transform .24s cubic-bezier(.16,1,.3,1),box-shadow .24s ease,border-color .24s ease}.feature-card:hover{transform:translateY(-6px);border-color:#c4b5fd;box-shadow:0 20px 36px rgba(76,29,149,.12)}.feature-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:#ede9fe;color:#5b21b6;font-size:1.2rem;font-weight:800}.feature-card h3{margin:0;color:#020617!important;font-size:1.25rem}.feature-card p{margin:0;color:#475569!important;line-height:1.7}.feature-card:nth-child(2) .feature-icon{background:#cffafe;color:#155e75}.feature-card:nth-child(3) .feature-icon{background:#dcfce7;color:#166534}
+    .how-section{display:grid;grid-template-columns:.7fr 1.3fr;gap:64px;align-items:start}.timeline{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;position:relative}.timeline::before{content:"";position:absolute;top:20px;right:12%;left:12%;height:1px;background:#cbd5e1}.timeline-step{position:relative;z-index:1;display:grid;gap:12px;padding:0 8px}.step-number{width:42px;height:42px;display:grid;place-items:center;border-radius:50%;background:#6d28d9;color:#fff;font-weight:800;box-shadow:0 0 0 7px #f8fafc}.timeline-step h3{margin:4px 0 0;color:#020617!important;font-size:1.05rem}.timeline-step p{margin:0;color:#475569!important}
+    .proof-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;overflow:hidden;border:1px solid var(--home-line);border-radius:22px;background:var(--home-line)}.proof-item{display:grid;gap:8px;padding:24px;background:#fff}.proof-item strong{color:#020617;font-size:1.2rem}.proof-item span{color:#475569;line-height:1.6}
+    .plans-section{display:grid;gap:28px}.plans-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.plan-card{display:grid;gap:14px;padding:24px;border:1px solid var(--home-line);border-radius:22px;background:#fff}.plan-card.featured{border-color:#8b5cf6;box-shadow:0 16px 34px rgba(76,29,149,.12);transform:translateY(-8px)}.plan-card h3{margin:0;color:#020617!important}.plan-price{font-size:2.25rem;font-weight:800;letter-spacing:-.04em;color:#6d28d9}.plan-price small{font-size:.9rem;font-weight:500;color:#475569}.plan-card p{margin:0;color:#475569!important}.plan-list{display:grid;gap:9px;margin:0;padding:0;list-style:none}.plan-list li{color:#334155}.plan-list li::before{content:'✓';margin-left:8px;color:#059669;font-weight:800}
+    .cta-banner{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;padding:34px 38px;border-radius:24px;background:#1e1b4b;color:#fff;box-shadow:0 20px 45px rgba(30,27,75,.2)}.cta-banner h2{margin:0;color:#fff!important;font-size:clamp(1.8rem,3vw,2.7rem);letter-spacing:-.04em}.cta-banner p{margin:10px 0 0;color:#e2e8f0!important}.cta-banner .cp-button-secondary{background:#fff!important;color:#312e81!important;border-color:#fff!important}
+    .home-footer{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:end;width:min(1180px,calc(100% - 32px));margin:0 auto;padding:34px 0 42px;border-top:1px solid var(--home-line)}.home-footer p{margin:0;color:#475569!important}.home-footer-links{display:flex;gap:18px}.home-footer-links a{color:#334155;font-weight:700;text-decoration:none}.home-footer-links a:hover{color:#6d28d9}
+    @media(max-width:980px){.home-hero{grid-template-columns:1fr;gap:48px}.preview-frame{max-width:720px;margin:0 auto;width:100%;transform:none}.how-section{grid-template-columns:1fr;gap:28px}.feature-grid,.plans-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.plan-card.featured{transform:none}}
+    @media(max-width:640px){.home-nav{grid-template-columns:auto auto;justify-content:space-between}.home-nav-links{display:none}.home-nav-actions{gap:6px}.home-nav-actions .cp-button-secondary{display:none}.home-shell{gap:70px;padding-top:48px}.home-hero h1{max-width:14ch;font-size:clamp(2.9rem,15vw,4.4rem)}.home-lede{font-size:1rem}.preview-frame{min-height:450px;padding:8px;border-radius:22px}.preview-window{min-height:430px}.preview-chat{padding:18px 14px}.feature-grid,.plans-grid,.timeline,.proof-strip{grid-template-columns:1fr}.timeline{gap:28px}.timeline::before{top:0;bottom:0;right:20px;left:auto;width:1px;height:auto}.step-number{margin-right:0}.timeline-step{grid-template-columns:42px 1fr;column-gap:14px;padding:0}.timeline-step h3,.timeline-step p{grid-column:2}.timeline-step h3{margin-top:-38px}.timeline-step p{margin-top:0}.cta-banner,.home-footer{grid-template-columns:1fr}.home-footer-links{flex-wrap:wrap}.home-footer{padding-bottom:28px}}
   </style>
 </head>
-<body class="cp-page">
-  <header class="cp-topbar">
+<body class="cp-page home-page">
+  <header class="home-nav">
     <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
-    <nav class="cp-nav-toolbar" aria-label="ניווט ראשי">
-      <a class="cp-button-secondary" href="#plans">מסלולים</a>
-      <a class="cp-button-secondary" href="#how">איך זה עובד</a>
-      <a class="cp-button" href="/login">כניסה</a>
-    </nav>
+    <nav class="home-nav-links" aria-label="ניווט ראשי"><a href="#features">יכולות</a><a href="#how">איך זה עובד</a><a href="#plans">מסלולים</a></nav>
+    <div class="home-nav-actions"><a class="cp-button-secondary" href="/login">כניסה</a><a class="cp-button" href="/register">התחל עכשיו</a></div>
   </header>
 
   <main class="cp-shell home-shell">
-    <section class="hero-grid">
-      <article class="cp-panel cp-stack hero-panel hero-dark-panel">
-        <span class="cp-kicker">מכירה מתוך שיחה</span>
-        <h1 class="cp-title">מהשאלה הראשונה של הלקוח ועד לתשלום — הכל במקום אחד.</h1>
-        <p class="cp-subtitle">ConversaPay עונה ללקוחות, מתאימה להם את המוצר הנכון, סוגרת תשלום ושומרת את כל הסדר העסקי שלך בדאשבורד אחד ברור.</p>
-        <div class="hero-actions">
-          <a class="cp-button" href="/register">בואו נתחיל, בחינם</a>
-          <a class="cp-button-secondary" href="#how">איך זה עובד</a>
-        </div>
-        <p class="cp-muted" style="margin:0;">פתיחת חשבון תוך דקה, בלי כרטיס אשראי, עם מסלולי PRO ו‑PREMIUM כשתרצה לגדול.</p>
-      </article>
-
-      <aside class="hero-stats">
-        <div class="stat-card">
-          <small class="cp-muted">מכירה ושיחה</small>
-          <div class="stat-value">AI + Pay</div>
-          <span class="cp-muted">מענה ללקוח, התאמת מוצר ותשלום באותה זרימה.</span>
-        </div>
-        <div class="stat-card">
-          <small class="cp-muted">ערוצי חיבור</small>
-          <div class="stat-value">Web / WhatsApp</div>
-          <span class="cp-muted">מתאים לאתר שלך, להטמעות ול-WhatsApp Business במסלול Premium.</span>
-        </div>
-        <div class="stat-card">
-          <small class="cp-muted">צמיחה מסודרת</small>
-          <div class="stat-value">Dashboard</div>
-          <span class="cp-muted">מוצרים, דומיינים, API Keys, הזמנות ובונה אתרים — בעיצוב אחיד.</span>
-        </div>
-      </aside>
-    </section>
-
-    <section class="cp-stack" id="how">
-      <div class="section-head">
-        <h2 style="margin:0;">איך זה עובד</h2>
-        <p class="cp-muted">שלושה צעדים ברורים כדי לעבור משיחה למכירה.</p>
+    <section class="home-hero" aria-labelledby="hero-title">
+      <div>
+        <span class="home-eyebrow">Conversation to conversion</span>
+        <h1 id="hero-title">מדברים עם הלקוח. סוגרים את העסקה.</h1>
+        <p class="home-lede">ConversaPay מחברת שיחה, התאמת מוצר ותשלום למסלול אחד ברור. פחות קפיצות בין מערכות, יותר לקוחות שמגיעים עד הסוף.</p>
+        <div class="home-hero-actions"><a class="cp-button" href="/register">התחל עכשיו</a><a class="cp-button-secondary" href="#how">ראו איך זה עובד</a></div>
+        <p class="home-note">פתיחת חשבון בחינם, בלי כרטיס אשראי. משדרגים רק כשצריך.</p>
       </div>
-      <div class="timeline-grid">
-        <article class="timeline-step"><strong>1. מוסיפים את העסק והמוצרים</strong><span class="cp-muted">מגדירים מוצרים, מחירים, קישורי תשלום ופרטי העסק בדאשבורד.</span></article>
-        <article class="timeline-step"><strong>2. מחברים את ConversaPay</strong><span class="cp-muted">לאתר, ל-WhatsApp או לשניהם — בהתאם למסלול שלך.</span></article>
-        <article class="timeline-step"><strong>3. סוגרים מכירה מתוך השיחה</strong><span class="cp-muted">הלקוח מקבל תשובה, הצעה ותשלום מיידי בלי לעבור תהליך מסובך.</span></article>
+
+      <div class="preview-frame" aria-label="תצוגה מקדימה של שיחת מכירה">
+        <div class="preview-window">
+          <div class="preview-bar"><div class="preview-brand"><span class="preview-brand-mark">CP</span><span>ConversaPay chat</span></div><span class="preview-status">פעיל עכשיו</span></div>
+          <div class="preview-chat">
+            <div class="chat-bubble client">היי, אני מחפש פתרון שיעזור לי לסגור יותר פניות מהאתר.</div>
+            <div class="chat-bubble bot">ברור. בוא נמצא את המסלול שמתאים לקצב של העסק שלך.</div>
+            <article class="preview-product"><div class="preview-product-top"><div><h3>PRO לעסקים בצמיחה</h3><p>מכירה, דומיינים ו-API במקום אחד.</p></div><span class="preview-product-price">₪200</span></div><button type="button" data-preview-action="choose">בחירת מסלול</button></article>
+            <div class="chat-bubble bot" id="previewReply">הצעה ברורה, תשלום מיידי, וכל הנתונים נשמרים בדאשבורד.</div>
+          </div>
+          <div class="preview-footer"><span>Powered by <strong>ConversaPay</strong></span><span id="previewState">מוכן לתשלום</span></div>
+        </div>
       </div>
     </section>
 
-    <section class="cp-stack">
-      <div class="section-head">
-        <h2 style="margin:0;">למה עסקים בוחרים ב-ConversaPay</h2>
-        <p class="cp-muted">כלים שמחברים בין שיחה, מכירה ותפעול עסקי במקום אחד.</p>
-      </div>
+    <section id="features" aria-labelledby="features-title">
+      <div class="section-intro"><span class="section-kicker">Built for momentum</span><h2 class="section-heading" id="features-title">כל מה שצריך כדי להפוך עניין להכנסה.</h2><p class="section-copy">לא עוד אוסף כלים שמבקש ממך לחבר את הנקודות. כאן השיחה, המכירה והתפעול מדברים באותה שפה.</p></div>
       <div class="feature-grid">
-        <article class="feature-card"><h3 style="margin:0;">דאשבורד אחיד</h3><p class="cp-muted">מוצרים, דומיינים, API Keys, הזמנות ופרופיל — בלי בלגן ובלי קפיצות מיותרות.</p></article>
-        <article class="feature-card"><h3 style="margin:0;">הטמעה מהירה</h3><p class="cp-muted">מדריך הטמעה ברור, חיבור וידג׳ט, חיבור WhatsApp ומפתחות API מתוך המערכת.</p></article>
-        <article class="feature-card"><h3 style="margin:0;">בונה אתרים ל-Premium</h3><p class="cp-muted">יוצרים דף נחיתה מהיר מתוך רעיון ברור, עם גישה ייעודית מתוך הדאשבורד.</p></article>
-        <article class="feature-card"><h3 style="margin:0;">גדל עם העסק</h3><p class="cp-muted">מתחילים חינם, משדרגים ל-PRO כשצריך מסחר והטמעות, ול-PREMIUM עבור Builder ו-WhatsApp.</p></article>
+        <article class="feature-card"><span class="feature-icon">01</span><h3>מענה שמוביל לפעולה</h3><p>הלקוח מקבל תשובה ברורה, הצעה רלוונטית וקישור תשלום בלי לעבור מסלול מתיש.</p></article>
+        <article class="feature-card"><span class="feature-icon">02</span><h3>כל העסק בדאשבורד</h3><p>מוצרים, הזמנות, דומיינים, API Keys ואנליטיקות, במקום אחד שאפשר לנהל.</p></article>
+        <article class="feature-card"><span class="feature-icon">03</span><h3>צומחים בלי לפרק את המערכת</h3><p>מתחילים חינם, מוסיפים הטמעות, WhatsApp ובונה אתרים בדיוק כשמגיע הזמן.</p></article>
       </div>
     </section>
 
-    <section class="cp-stack" id="plans">
-      <div class="section-head">
-        <h2 style="margin:0;">מסלול שמתאים לקצב שלכם</h2>
-        <p class="cp-muted">מתחילים בחינם ומשדרגים כשמגיע הזמן להוסיף מסחר, API או WhatsApp.</p>
-      </div>
-      <div class="plans-grid">
-        <article class="plan-card">
-          <div class="cp-badge">FREE</div>
-          <div class="cp-price">₪0<small>/חודש</small></div>
-          <p class="cp-muted">לניהול בסיסי של מוצרים ושיחות מתוך חשבון ConversaPay.</p>
-          <ul class="plan-list">
-            <li>ניהול מוצרים</li>
-            <li>אנליטיקות בסיסיות</li>
-            <li>פרופיל ועסק</li>
-          </ul>
-          <a class="cp-button-secondary" href="/register">פתיחת חשבון</a>
-        </article>
-        <article class="plan-card featured">
-          <div class="cp-badge good">PRO</div>
-          <div class="cp-price">₪200<small>/חודש</small></div>
-          <p class="cp-muted">מתאים לעסקים שרוצים להתחבר לאתר, למכור ולעבוד עם API Keys.</p>
-          <ul class="plan-list">
-            <li>הזמנות ותשלומים</li>
-            <li>חיבור דומיינים</li>
-            <li>API Keys והטמעה לאתר</li>
-          </ul>
-          <a class="cp-button" href="/register">בחירת מסלול</a>
-        </article>
-        <article class="plan-card">
-          <div class="cp-badge">PREMIUM</div>
-          <div class="cp-price">₪350<small>/חודש</small></div>
-          <p class="cp-muted">כולל את כל יכולות PRO, בונה אתרים ו-WhatsApp Business.</p>
-          <ul class="plan-list">
-            <li>Site Builder</li>
-            <li>WhatsApp Business</li>
-            <li>עד 10 API Keys</li>
-          </ul>
-          <a class="cp-button-secondary" href="/register">בחירת מסלול</a>
-        </article>
+    <section class="how-section" id="how" aria-labelledby="how-title">
+      <div class="section-intro"><span class="section-kicker">Simple by design</span><h2 class="section-heading" id="how-title">שלושה צעדים. פחות חיכוך.</h2><p class="section-copy">המסלול נבנה כדי שהלקוח לא ירגיש את המורכבות שמאחורי הקלעים.</p></div>
+      <div class="timeline">
+        <article class="timeline-step"><span class="step-number">1</span><h3>מגדירים את העסק</h3><p>מוסיפים מוצרים, מחירים ופרטי תשלום בדקות.</p></article>
+        <article class="timeline-step"><span class="step-number">2</span><h3>מחברים את הערוץ</h3><p>מטמיעים באתר, מחברים WhatsApp, או משתמשים בשניהם.</p></article>
+        <article class="timeline-step"><span class="step-number">3</span><h3>סוגרים מתוך השיחה</h3><p>הלקוח מקבל הצעה, משלם, ואתה רואה הכול בזמן אמת.</p></article>
       </div>
     </section>
 
-    <section class="cp-stack">
-      <div class="section-head">
-        <h2 style="margin:0;">מה כבר מוכן לך בפנים</h2>
-        <p class="cp-muted">המערכת נבנית כך שתוכל להרגיש מקצועי מהרגע הראשון.</p>
-      </div>
-      <div class="proof-grid">
-        <article class="proof-card"><strong>מדריך הטמעה מובנה</strong><p class="cp-muted">קוד וידג׳ט, Webhook ל-WhatsApp והסברים טכניים במקום אחד.</p></article>
-        <article class="proof-card"><strong>מסך הגדרות ברור</strong><p class="cp-muted">ניהול WhatsApp, מגבלות מסלול וסטטוס חיבורים עם עיצוב עקבי.</p></article>
-        <article class="proof-card"><strong>פרופיל עם Business UUID</strong><p class="cp-muted">המזהה של העסק זמין ומוכן להעתקה עבור חיבורים והטמעות.</p></article>
-      </div>
-    </section>
+    <section aria-label="הוכחה חברתית"><div class="proof-strip"><div class="proof-item"><strong>שיחה אחת</strong><span>מענה, מוצר ותשלום באותה זרימה.</span></div><div class="proof-item"><strong>מסך אחד</strong><span>הפעילות העסקית שלך נשארת מסודרת.</span></div><div class="proof-item"><strong>צעד אחד קדימה</strong><span>כל מסלול נפתח כשאתה מוכן לגדול.</span></div></div></section>
 
-    <section class="cp-panel cta-card" style="text-align:center;">
-      <h2 style="margin:0;">מוכנים להתחיל?</h2>
-      <p class="cp-muted">פתחו חשבון בחינם ותנו ל-ConversaPay לעזור לכם לענות, להציע ולסגור.</p>
-      <div class="inline-actions" style="justify-content:center;">
-        <a class="cp-button" href="/register">פתיחת חשבון</a>
-        <a class="cp-button-secondary" href="/login">יש לי כבר חשבון</a>
-      </div>
-    </section>
+    <section class="plans-section" id="plans" aria-labelledby="plans-title"><div class="section-intro"><span class="section-kicker">Choose your pace</span><h2 class="section-heading" id="plans-title">מתחילים קטן, מתקדמים נכון.</h2><p class="section-copy">המחיר נשאר פשוט. היכולת גדלה איתך.</p></div><div class="plans-grid"><article class="plan-card"><span class="cp-badge">FREE</span><h3>להתחיל לזוז</h3><div class="plan-price">₪0 <small>/ חודש</small></div><p>לניהול בסיסי של מוצרים, פרופיל ואנליטיקות.</p><ul class="plan-list"><li>ניהול מוצרים</li><li>אנליטיקות בסיסיות</li><li>פרופיל ועסק</li></ul><a class="cp-button-secondary" href="/register">פתיחת חשבון</a></article><article class="plan-card featured"><span class="cp-badge good">PRO</span><h3>למכור בצורה מסודרת</h3><div class="plan-price">₪200 <small>/ חודש</small></div><p>לדומיינים, הזמנות, API Keys והטמעה באתר.</p><ul class="plan-list"><li>הזמנות ותשלומים</li><li>חיבור דומיינים</li><li>API Keys והטמעה</li></ul><a class="cp-button" href="/register">בחירת PRO</a></article><article class="plan-card"><span class="cp-badge">PREMIUM</span><h3>להפעיל את כל המנוע</h3><div class="plan-price">₪350 <small>/ חודש</small></div><p>כולל Site Builder, WhatsApp Business ועד 10 API Keys.</p><ul class="plan-list"><li>Site Builder</li><li>WhatsApp Business</li><li>עד 10 API Keys</li></ul><a class="cp-button-secondary" href="/register">בחירת PREMIUM</a></article></div></section>
+
+    <section class="cta-banner" aria-labelledby="cta-title"><div><h2 id="cta-title">הלקוח כבר מתעניין. תנו לו דרך קלה לסגור.</h2><p>פתחו חשבון בחינם והתחילו לחבר בין שיחה לתשלום.</p></div><a class="cp-button-secondary" href="/register">התחל עכשיו</a></section>
   </main>
 
-  <footer class="cp-footer">
-    <p>&copy; 2026 ConversaPay</p>
-    <p>הדרך הפשוטה לדבר עם לקוחות ולסגור מכירות, במקום אחד.</p>
-  </footer>
+  <footer class="home-footer"><div><p><strong>ConversaPay</strong>, לדבר, להציע, לסגור.</p><p>© 2026 ConversaPay</p></div><nav class="home-footer-links" aria-label="קישורי תחתית"><a href="/terms">תנאי שימוש</a><a href="/privacy">פרטיות</a><a href="/login">כניסה</a></nav></footer>
 
   <script>
     const DASHBOARD_ROUTE = '/dashboard';
     const OAUTH_CALLBACK_ROUTE = '/auth/callback';
-
-    function isOAuthReturn() {
-      const query = new URLSearchParams(location.search);
-      const hash = new URLSearchParams(location.hash.slice(1));
-      return Boolean(
-        query.get('code')
-        || query.get('error')
-        || hash.get('access_token')
-        || hash.get('error')
-      );
-    }
-
-    function redirectOAuthReturnToCallback() {
-      if (!isOAuthReturn()) return false;
-      location.replace(`${OAUTH_CALLBACK_ROUTE}${location.search}${location.hash}`);
-      return true;
-    }
-
-    async function redirectAuthenticatedUser() {
-      const token = localStorage.getItem('access_token')
-        || localStorage.getItem('conversapay_auth_token')
-        || sessionStorage.getItem('access_token')
-        || sessionStorage.getItem('conversapay_auth_token');
-
-      if (!token) return;
-
-      try {
-        const response = await fetch('/api/v1/auth/me', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        if (response.ok) {
-          location.replace(DASHBOARD_ROUTE);
-          return;
-        }
-
-        if (response.status === 401 || response.status === 403) {
-          ['access_token', 'conversapay_auth_token', 'conversapay_user', 'user_id', 'email'].forEach((key) => {
-            localStorage.removeItem(key);
-            sessionStorage.removeItem(key);
-          });
-        }
-      } catch (_) {
-        // Stay on the landing page if the auth check fails due to network issues.
-      }
-    }
-
-    if (!redirectOAuthReturnToCallback()) {
-      redirectAuthenticatedUser();
-    }
+    function isOAuthReturn(){const query=new URLSearchParams(location.search);const hash=new URLSearchParams(location.hash.slice(1));return Boolean(query.get('code')||query.get('error')||hash.get('access_token')||hash.get('error'))}
+    function redirectOAuthReturnToCallback(){if(!isOAuthReturn())return false;location.replace(`${OAUTH_CALLBACK_ROUTE}${location.search}${location.hash}`);return true}
+    async function redirectAuthenticatedUser(){const token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token');if(!token)return;try{const response=await fetch('/api/v1/auth/me',{headers:{Authorization:`Bearer ${token}`}});if(response.ok){location.replace(DASHBOARD_ROUTE);return}if(response.status===401||response.status===403){['access_token','conversapay_auth_token','conversapay_user','user_id','email'].forEach((key)=>{localStorage.removeItem(key);sessionStorage.removeItem(key)})}}catch(_){}}
+    const previewButton=document.querySelector('[data-preview-action="choose"]');
+    previewButton?.addEventListener('click',()=>{const reply=document.getElementById('previewReply');const state=document.getElementById('previewState');previewButton.textContent='נבחר ✓';previewButton.disabled=true;state.textContent='הצעה נבחרה';reply.textContent='מעולה. עכשיו אפשר להשלים תשלום ולהתחיל לעבוד.';reply.style.background='#dcfce7';reply.style.color='#166534'});
+    if(!redirectOAuthReturnToCallback()){redirectAuthenticatedUser()}
   </script>
 </body>
 </html>
