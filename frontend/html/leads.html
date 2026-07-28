@@ -4,14 +4,14 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <title>ConversaPay | פניות נכנסות</title>
+  <title>Talk2Pay | פניות נכנסות</title>
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
   <style>
     .leads-shell{display:grid;gap:18px}.leads-head{display:flex;align-items:end;justify-content:space-between;gap:18px;flex-wrap:wrap}.leads-head h1{margin:0}.leads-actions{display:flex;gap:10px;flex-wrap:wrap}.leads-toolbar{display:grid;grid-template-columns:minmax(0,1fr) 180px;gap:12px}.lead-list{display:grid;gap:10px}.lead-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:start;padding:18px;border:1px solid var(--cp-line);border-radius:16px;background:var(--cp-panel-strong)}.lead-main{display:grid;gap:6px;min-width:0}.lead-meta{display:flex;gap:10px;align-items:center;flex-wrap:wrap}.lead-message{white-space:pre-wrap;overflow-wrap:anywhere;color:var(--cp-muted-strong)}.lead-side{display:grid;gap:10px;justify-items:end}.lead-side select{min-height:40px}.empty-state{padding:34px;text-align:center;color:var(--cp-muted);border:1px dashed var(--cp-line);border-radius:16px}.count{font-variant-numeric:tabular-nums;color:var(--cp-accent-ink);font-weight:800}@media(max-width:640px){.leads-toolbar{grid-template-columns:1fr}.lead-row{grid-template-columns:1fr}.lead-side{justify-items:stretch}.lead-side>*{width:100%}}
   </style>
 </head>
 <body class="cp-page">
-  <header class="cp-topbar"><a class="cp-brand" href="/dashboard"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a><a class="cp-backlink" href="/dashboard">חזרה ללוח הבקרה</a></header>
+  <header class="cp-topbar"><a class="cp-brand" href="/dashboard"><span class="cp-brand-mark">T2P</span><span>Talk2Pay</span></a><a class="cp-backlink" href="/dashboard">חזרה ללוח הבקרה</a></header>
   <main class="cp-shell leads-shell">
     <section class="cp-panel leads-head"><div><span class="cp-kicker">פניות נכנסות</span><h1>פניות מהאתרים שלך</h1><p class="cp-muted">כל פנייה שנשלחה מטופס Site Builder, עם סטטוס וטיפול מסודר.</p></div><div class="leads-actions"><button class="cp-button-secondary" id="refresh" type="button">רענון</button><a class="cp-button" href="/setup-guide">מדריך הטמעה</a></div></section>
     <section class="cp-panel cp-stack"><div class="leads-toolbar"><input class="cp-input" id="search" type="search" placeholder="חיפוש לפי שם, אימייל או הודעה" aria-label="חיפוש פניות"><select class="cp-input" id="status" aria-label="סינון לפי סטטוס"><option value="">כל הסטטוסים</option><option value="new">חדשה</option><option value="contacted">נוצר קשר</option><option value="qualified">מתאימה</option><option value="converted">הומרה</option><option value="archived">בארכיון</option></select></div><p id="summary" class="cp-muted">טוען פניות...</p><div id="notice" class="cp-notice error" role="alert" hidden></div><div id="list" class="lead-list" aria-live="polite"></div></section>
