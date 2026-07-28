@@ -22,6 +22,12 @@ jobs:
       E2E_OWNER_TOKEN: ${{ secrets.E2E_OWNER_TOKEN }}
     steps:
       - uses: actions/checkout@v4
+      - name: Require live test credentials
+        run: |
+          test -n "$E2E_DEMO_BUSINESS_ID"
+          test -n "$E2E_DEMO_WIDGET_API_KEY"
+          test -n "$E2E_LEAD_PAGE_URL"
+          test -n "$E2E_OWNER_TOKEN"
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
