@@ -1,0 +1,8 @@
+.ui-container { width: min(1280px, calc(100% - 40px)); margin-inline: auto; }
+.ui-surface { background: var(--ui-surface); border: 1px solid var(--ui-line); border-radius: var(--ui-radius-lg); box-shadow: var(--ui-shadow-sm); }
+.ui-muted { color: var(--ui-text-muted) !important; }
+.ui-subtle { color: var(--ui-text-subtle) !important; }
+.ui-stack { display: grid; gap: var(--ui-space-4); }
+.ui-row { display: flex; align-items: center; gap: var(--ui-space-3); flex-wrap: wrap; }
+.ui-grid { display: grid; gap: var(--ui-space-4); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.ui-no-motion, .ui-no-motion * { animation: none !important; transition: none !important; }
