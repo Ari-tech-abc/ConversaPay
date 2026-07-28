@@ -1,6 +1,6 @@
-# ConversaPay AI Chat Assistant - WordPress Plugin
+# Talk2Pay AI Chat Assistant - WordPress Plugin
 
-Transform your WordPress website into an AI-powered sales machine with ConversaPay's intelligent chat widget.
+Transform your WordPress website into an AI-powered sales machine with Talk2Pay's intelligent chat widget.
 
 ## 🚀 Features
 
@@ -15,8 +15,8 @@ Transform your WordPress website into an AI-powered sales machine with ConversaP
 
 - WordPress 5.0 or higher
 - PHP 7.4 or higher
-- A ConversaPay account (sign up at [conversapay.org](https://conversapay.org))
-- A Business ID from your ConversaPay dashboard
+- A Talk2Pay account (sign up at [conversapay.org](https://conversapay.org))
+- A Business ID from your Talk2Pay dashboard
 
 ## 🔧 Installation
 
@@ -32,12 +32,12 @@ Transform your WordPress website into an AI-powered sales machine with ConversaP
 
 1. Upload the `conversapay-chat.php` file to `/wp-content/plugins/` directory
 2. Go to **WordPress Admin → Plugins**
-3. Find "ConversaPay AI Chat Assistant" and click **Activate**
+3. Find "Talk2Pay AI Chat Assistant" and click **Activate**
 
 ## ⚙️ Configuration
 
-1. After activation, go to **Settings → ConversaPay Chat**
-2. Enter your **Business ID** (found in your ConversaPay Dashboard)
+1. After activation, go to **Settings → Talk2Pay Chat**
+2. Enter your **Business ID** (found in your Talk2Pay Dashboard)
 3. Customize widget settings:
    - **Position**: Bottom-right or bottom-left
    - **Color**: Primary widget color
@@ -83,7 +83,7 @@ Customize the primary color to match your brand identity.
 
 ## 📊 Analytics & Monitoring
 
-Monitor your AI assistant's performance in the ConversaPay Dashboard:
+Monitor your AI assistant's performance in the Talk2Pay Dashboard:
 - Total conversations
 - Conversion rates
 - Revenue generated
@@ -97,7 +97,7 @@ Monitor your AI assistant's performance in the ConversaPay Dashboard:
 1. **Check Business ID**: Ensure you've entered the correct Business ID in settings
 2. **Clear Cache**: Clear WordPress cache and browser cache
 3. **Check Console**: Open browser console (F12) for any JavaScript errors
-4. **Verify Domain**: Ensure your domain is added to allowed domains in ConversaPay dashboard
+4. **Verify Domain**: Ensure your domain is added to allowed domains in Talk2Pay dashboard
 
 ### Chat Not Responding
 
@@ -127,11 +127,11 @@ Monitor your AI assistant's performance in the ConversaPay Dashboard:
 
 - **Documentation**: [conversapay.org/docs](https://conversapay.org/docs)
 - **Email Support**: support@conversapay.org
-- **Dashboard Help**: Available in your ConversaPay dashboard
+- **Dashboard Help**: Available in your Talk2Pay dashboard
 
-## 🔗 Integration with ConversaPay Ecosystem
+## 🔗 Integration with Talk2Pay Ecosystem
 
-This plugin is part of the complete ConversaPay platform:
+This plugin is part of the complete Talk2Pay platform:
 - **Dashboard**: Manage products, view analytics, customize AI
 - **Mobile App**: Monitor sales on the go
 - **API Access**: Build custom integrations
@@ -148,11 +148,11 @@ This plugin is part of the complete ConversaPay platform:
 
 ## 📄 License
 
-Proprietary - ConversaPay Team
+Proprietary - Talk2Pay Team
 
 ## 🙏 Credits
 
-Built with ❤️ by the ConversaPay Team
+Built with ❤️ by the Talk2Pay Team
 
 ---
 

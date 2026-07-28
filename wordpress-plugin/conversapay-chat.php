@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: ConversaPay AI Chat Assistant
- * Description: Responsive ConversaPay sales chat with a guided WordPress setup screen and shortcode embed.
+ * Plugin Name: Talk2Pay AI Chat Assistant
+ * Description: Responsive Talk2Pay sales chat with a guided WordPress setup screen and shortcode embed.
  * Version: 1.1.0
- * Author: ConversaPay Team
+ * Author: Talk2Pay Team
  * License: Proprietary
  * Text Domain: conversapay-chat
  */
@@ -16,7 +16,7 @@ define('CONVERSAPAY_CHAT_OPTION_KEY', 'conversapay_chat_settings');
 
 function conversapay_chat_defaults() { return array('business_id'=>'','frontend_url'=>'https://www.conversapay.org','api_key'=>'','widget_position'=>'bottom-right','widget_color'=>'#635bff','enable_on_pages'=>'all','enabled_pages'=>array()); }
 function conversapay_chat_settings() { return wp_parse_args((array)get_option(CONVERSAPAY_CHAT_OPTION_KEY, array()), conversapay_chat_defaults()); }
-function conversapay_chat_admin_menu() { add_options_page('ConversaPay Chat','ConversaPay Chat','manage_options','conversapay-chat','conversapay_chat_settings_page'); }
+function conversapay_chat_admin_menu() { add_options_page('Talk2Pay Chat','Talk2Pay Chat','manage_options','conversapay-chat','conversapay_chat_settings_page'); }
 add_action('admin_menu','conversapay_chat_admin_menu');
 function conversapay_chat_register_settings() { register_setting('conversapay_chat_settings_group', CONVERSAPAY_CHAT_OPTION_KEY, array('type'=>'array','sanitize_callback'=>'conversapay_chat_sanitize_settings','default'=>conversapay_chat_defaults())); }
 add_action('admin_init','conversapay_chat_register_settings');
@@ -28,10 +28,10 @@ function conversapay_chat_sanitize_settings($input) {
 }
 function conversapay_chat_settings_page() {
   if (!current_user_can('manage_options')) return; $s=conversapay_chat_settings(); $pages=get_pages(array('sort_column'=>'post_title','post_status'=>'publish')); ?>
-  <div class="wrap cp-admin"><div class="cp-admin-hero"><div><span class="cp-admin-kicker">CONVERSAPAY</span><h1>Chat operations</h1><p>הטמעה, תצוגה ובדיקת חיבור ממסך אחד. אין צורך לערוך קוד באתר.</p></div><a class="button button-primary" href="https://www.conversapay.org/dashboard" target="_blank" rel="noopener">פתח Dashboard</a></div>
+  <div class="wrap cp-admin"><div class="cp-admin-hero"><div><span class="cp-admin-kicker">TALK2PAY</span><h1>Chat operations</h1><p>הטמעה, תצוגה ובדיקת חיבור ממסך אחד. אין צורך לערוך קוד באתר.</p></div><a class="button button-primary" href="https://www.conversapay.org/dashboard" target="_blank" rel="noopener">פתח Dashboard</a></div>
   <div class="cp-admin-grid"><section class="cp-admin-card"><h2>חיבור הווידג'ט</h2><p class="description">הדבק את הנתונים מהדאשבורד. הווידג'ט ייטען בצורה מותאמת למובייל ולמחשב.</p><form method="post" action="options.php"><?php settings_fields('conversapay_chat_settings_group'); ?>
-  <table class="form-table" role="presentation"><tr><th><label for="cp_business_id">Business ID</label></th><td><input class="regular-text" id="cp_business_id" name="<?php echo esc_attr(CONVERSAPAY_CHAT_OPTION_KEY); ?>[business_id]" value="<?php echo esc_attr($s['business_id']); ?>" required><p class="description">UUID של העסק מתוך ConversaPay.</p></td></tr>
-  <tr><th><label for="cp_frontend_url">ConversaPay URL</label></th><td><input class="regular-text" type="url" id="cp_frontend_url" name="<?php echo esc_attr(CONVERSAPAY_CHAT_OPTION_KEY); ?>[frontend_url]" value="<?php echo esc_attr($s['frontend_url']); ?>" required></td></tr>
+  <table class="form-table" role="presentation"><tr><th><label for="cp_business_id">Business ID</label></th><td><input class="regular-text" id="cp_business_id" name="<?php echo esc_attr(CONVERSAPAY_CHAT_OPTION_KEY); ?>[business_id]" value="<?php echo esc_attr($s['business_id']); ?>" required><p class="description">UUID של העסק מתוך Talk2Pay.</p></td></tr>
+  <tr><th><label for="cp_frontend_url">Talk2Pay URL</label></th><td><input class="regular-text" type="url" id="cp_frontend_url" name="<?php echo esc_attr(CONVERSAPAY_CHAT_OPTION_KEY); ?>[frontend_url]" value="<?php echo esc_attr($s['frontend_url']); ?>" required></td></tr>
   <tr><th><label for="cp_api_key">Widget API Key</label></th><td><input class="regular-text" id="cp_api_key" name="<?php echo esc_attr(CONVERSAPAY_CHAT_OPTION_KEY); ?>[api_key]" value="<?php echo esc_attr($s['api_key']); ?>"><p class="description">אופציונלי, מומלץ במסלולי PRO ו-PREMIUM.</p></td></tr>
   <tr><th>מיקום</th><td><select name="<?php echo esc_attr(CONVERSAPAY_CHAT_OPTION_KEY); ?>[widget_position]"><option value="bottom-right" <?php selected($s['widget_position'],'bottom-right'); ?>>ימין למטה</option><option value="bottom-left" <?php selected($s['widget_position'],'bottom-left'); ?>>שמאל למטה</option></select></td></tr>
   <tr><th>צבע</th><td><input type="color" name="<?php echo esc_attr(CONVERSAPAY_CHAT_OPTION_KEY); ?>[widget_color]" value="<?php echo esc_attr($s['widget_color']); ?>"></td></tr>
