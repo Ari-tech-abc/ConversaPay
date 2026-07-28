@@ -30,7 +30,7 @@ def test_generated_site_submits_to_backend_and_has_accessible_fields():
 def test_public_leads_have_origin_and_atomic_rate_limit_protection():
     source = (ROOT / "backend/routers/site_builder.py").read_text(encoding="utf-8")
     migration = (ROOT / "database/migrations/20260728_site_builder_leads.sql").read_text(encoding="utf-8")
-    assert "origin = request.headers.get('origin')" in source
+    assert 'origin = request.headers.get("origin")' in source
     assert "_origin_allowed(origin, business.data)" in source
     assert "_consume_rate_limit" in source
     assert 'supabase.rpc("consume_site_lead_rate_limit"' in source
