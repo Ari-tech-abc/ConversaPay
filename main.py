@@ -49,7 +49,7 @@ async def lifespan(_: FastAPI):
     yield
 
 
-app = FastAPI(title="ConversaPay API", version="2.3.0", lifespan=lifespan, docs_url=None if settings.is_production else "/docs", redoc_url=None if settings.is_production else "/redoc")
+app = FastAPI(title="Talk2Pay API", version="2.3.0", lifespan=lifespan, docs_url=None if settings.is_production else "/docs", redoc_url=None if settings.is_production else "/redoc")
 
 
 class DualCORSMiddleware(BaseHTTPMiddleware):
@@ -138,11 +138,10 @@ FAVICON_SRC = "/frontend/images/favicon-32x32.png"
 DESIGN_SYSTEM_LINK = '<link rel="stylesheet" href="/frontend/html/design-system.css">'
 LANDING_FIXES_LINK = '<link rel="stylesheet" href="/frontend/html/landing-fixes.css">'
 APPLE_POLISH_LINK = '<link rel="stylesheet" href="/frontend/html/apple-ready-polish.css">'
-BRANDING_STYLE = '<style id="conversapay-branding">.cp-brand,.brand,.legal-header>a{display:inline-flex;align-items:center;min-height:38px}.cp-brand-logo,.brand-logo,.legal-header .cp-brand-logo{display:block;width:auto;height:38px;max-width:min(220px,55vw);object-fit:contain}@media(max-width:760px){.cp-brand-logo,.brand-logo,.legal-header .cp-brand-logo{height:32px;max-width:180px}}</style>'
+BRANDING_STYLE = '<style id="talk2pay-branding">.cp-brand,.brand,.legal-header>a{display:inline-flex;align-items:center;min-height:38px}.cp-brand-logo,.brand-logo,.legal-header .cp-brand-logo{display:block;width:auto;height:38px;max-width:min(220px,55vw);object-fit:contain}@media(max-width:760px){.cp-brand-logo,.brand-logo,.legal-header .cp-brand-logo{height:32px;max-width:180px}}</style>'
 
 COPY_REPLACEMENTS = (
-    ("Talk2Pay", "ConversaPay"),
-    ("talk2pay", "conversapay"),
+    ("ConversaPay", "Talk2Pay"),
     ("LIVE CANVAS", "קנבס חי"),
     ("Production checklist", "רשימת בדיקות לפרודקשן"),
     ("Developer tools", "כלי פיתוח"),
@@ -178,7 +177,7 @@ COPY_REPLACEMENTS = (
 
 
 def normalize_copy(page: str) -> str:
-    """Apply the canonical brand and Hebrew-first product vocabulary at the delivery boundary."""
+    """Apply the canonical Talk2Pay product vocabulary at the delivery boundary."""
     for source, target in COPY_REPLACEMENTS:
         page = page.replace(source, target)
     return page
@@ -198,11 +197,11 @@ def brand_markup(page: str) -> str:
         tag = match.group(0)
         href_match = re.search(r'href=["\']([^"\']+)', tag, re.IGNORECASE)
         href = href_match.group(1) if href_match else "/"
-        return f'<a class="cp-brand" href="{href}"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="ConversaPay" width="220" height="38"></a>'
+        return f'<a class="cp-brand" href="{href}"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="Talk2Pay" width="220" height="38"></a>'
 
     page = re.sub(r'<a\b[^>]*class=["\'][^>]*\bcp-brand\b[^>]*["\'][^>]*>.*?</a>', replace_cp_brand, page, flags=re.IGNORECASE | re.DOTALL)
-    page = re.sub(r'<a\b(?P<attrs>[^>]*class=["\'][^>]*\bbrand\b[^>]*["\'][^>]*)>\s*ConversaPay\s*</a>', lambda match: f'<a{match.group("attrs")}><img class="brand-logo" src="{BRAND_LOGO_SRC}" alt="ConversaPay" width="220" height="38"></a>', page, flags=re.IGNORECASE | re.DOTALL)
-    page = re.sub(r'(<header\b[^>]*class=["\'][^>]*\blegal-header\b[^>]*["\'][^>]*>\s*)<a\s+href=["\']/["\']>\s*ConversaPay\s*</a>', lambda match: f'{match.group(1)}<a href="/"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="ConversaPay" width="220" height="38"></a>', page, flags=re.IGNORECASE | re.DOTALL)
+    page = re.sub(r'<a\b(?P<attrs>[^>]*class=["\'][^>]*\bbrand\b[^>]*["\'][^>]*)>\s*Talk2Pay\s*</a>', lambda match: f'<a{match.group("attrs")}><img class="brand-logo" src="{BRAND_LOGO_SRC}" alt="Talk2Pay" width="220" height="38"></a>', page, flags=re.IGNORECASE | re.DOTALL)
+    page = re.sub(r'(<header\b[^>]*class=["\'][^>]*\blegal-header\b[^>]*["\'][^>]*>\s*)<a\s+href=["\']/["\']>\s*Talk2Pay\s*</a>', lambda match: f'{match.group(1)}<a href="/"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="Talk2Pay" width="220" height="38"></a>', page, flags=re.IGNORECASE | re.DOTALL)
     if 'rel="icon"' not in page.lower():
         page = page.replace("</head>", f'<link rel="icon" type="image/png" href="{FAVICON_SRC}">\n</head>', 1)
     for link in (DESIGN_SYSTEM_LINK, APPLE_POLISH_LINK):
@@ -210,7 +209,7 @@ def brand_markup(page: str) -> str:
             page = page.replace("</head>", f"{link}</head>", 1)
     if 'class="home-page"' in page and LANDING_FIXES_LINK not in page:
         page = page.replace("</head>", f"{LANDING_FIXES_LINK}</head>", 1)
-    if 'id="conversapay-branding"' not in page:
+    if 'id="talk2pay-branding"' not in page:
         page = page.replace("</head>", f"{BRANDING_STYLE}</head>", 1)
     return page
 
