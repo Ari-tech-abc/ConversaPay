@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&family=Rubik:wght@400;500;600;700;800&display=swap');
-
 :root{
   color-scheme:light;
   --cp-bg:oklch(97.8% .014 290);
@@ -117,4 +115,4 @@ pre,code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}pre{color:oklch
   .cp-topbar{padding:10px 12px}.cp-shell{width:min(100% - 20px,1180px);padding:1.25rem 0 2rem}.cp-card,.cp-panel{padding:1.1rem;border-radius:1.25rem}.cp-button,.cp-button-secondary,.cp-button-danger{min-height:48px}.cp-brand-logo{height:32px}.cp-center-shell{min-height:auto;padding:1.25rem 0}.cp-result-actions{grid-template-columns:1fr}.cp-result-actions>*{width:100%}
 }
 @media(max-width:560px){.cp-result-shell{min-height:auto;padding:1.1rem 0 1.75rem}.cp-result-card{gap:1rem}.cp-result-icon{width:68px;height:68px;border-radius:1.25rem;font-size:2rem}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition:none!important}}
