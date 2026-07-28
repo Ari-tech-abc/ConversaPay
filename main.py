@@ -157,10 +157,7 @@ async def readiness():
 
 @app.get(f"{settings.API_PREFIX}/config/public", include_in_schema=False)
 async def public_config():
-    return {
-        "supabase_url": settings.SUPABASE_URL,
-        "supabase_anon_key": settings.SUPABASE_ANON_KEY,
-    }
+    return {"supabase_url": settings.SUPABASE_URL, "supabase_anon_key": settings.SUPABASE_ANON_KEY}
 
 
 prefix = settings.API_PREFIX
@@ -190,7 +187,6 @@ for router, route_prefix, tag in (
 
 if not settings.is_production:
     from backend.routers.dev_simulator import router as dev_simulator_router
-
     app.include_router(dev_simulator_router, prefix=prefix, tags=["dev-simulator"])
 
 ROOT_DIR = Path(__file__).resolve().parent
@@ -202,6 +198,7 @@ SITE_BUILDER_DIR = ROOT_DIR / "conversapay-site-builder" / "frontend"
 ADMIN_SECRET = settings.ADMIN_SECRET_PATH.strip()
 BRAND_LOGO_SRC = "/frontend/images/conversapay_logo_whitebg.png"
 FAVICON_SRC = "/frontend/images/favicon-32x32.png"
+DESIGN_SYSTEM_LINK = '<link rel="stylesheet" href="/frontend/html/design-system.css">'
 BRANDING_STYLE = """
 <style id="conversapay-branding">
 .cp-brand,.brand,.legal-header>a{display:inline-flex;align-items:center;min-height:38px}
@@ -225,34 +222,20 @@ def brand_markup(page: str) -> str:
         href = href_match.group(1) if href_match else "/"
         return f'<a class="cp-brand" href="{href}"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="Talk2Pay" width="220" height="38"></a>'
 
-    page = re.sub(
-        r'<a\b[^>]*class=["\'][^"\']*\bcp-brand\b[^"\']*["\'][^>]*>.*?</a>',
-        replace_cp_brand,
-        page,
-        flags=re.IGNORECASE | re.DOTALL,
-    )
-    page = re.sub(
-        r'<a\b(?P<attrs>[^>]*class=["\'][^"\']*\bbrand\b[^"\']*["\'][^>]*)>\s*ConversaPay\s*</a>',
-        lambda match: f'<a{match.group("attrs")}><img class="brand-logo" src="{BRAND_LOGO_SRC}" alt="Talk2Pay" width="220" height="38"></a>',
-        page,
-        flags=re.IGNORECASE | re.DOTALL,
-    )
-    page = re.sub(
-        r'(<header\b[^>]*class=["\'][^"\']*\blegal-header\b[^"\']*["\'][^>]*>\s*)<a\s+href=["\']/["\']>\s*ConversaPay\s*</a>',
-        lambda match: f'{match.group(1)}<a href="/"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="Talk2Pay" width="220" height="38"></a>',
-        page,
-        flags=re.IGNORECASE | re.DOTALL,
-    )
+    page = re.sub(r'<a\b[^>]*class=["\'][^"\']*\bcp-brand\b[^"\']*["\'][^>]*>.*?</a>', replace_cp_brand, page, flags=re.IGNORECASE | re.DOTALL)
+    page = re.sub(r'<a\b(?P<attrs>[^>]*class=["\'][^"\']*\bbrand\b[^"\']*["\'][^>]*)>\s*ConversaPay\s*</a>', lambda match: f'<a{match.group("attrs")}><img class="brand-logo" src="{BRAND_LOGO_SRC}" alt="Talk2Pay" width="220" height="38"></a>', page, flags=re.IGNORECASE | re.DOTALL)
+    page = re.sub(r'(<header\b[^>]*class=["\'][^"\']*\blegal-header\b[^"\']*["\'][^>]*>\s*)<a\s+href=["\']/["\']>\s*ConversaPay\s*</a>', lambda match: f'{match.group(1)}<a href="/"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="Talk2Pay" width="220" height="38"></a>', page, flags=re.IGNORECASE | re.DOTALL)
     if 'rel="icon"' not in page.lower():
         page = page.replace("</head>", f'<link rel="icon" type="image/png" href="{FAVICON_SRC}">\n</head>', 1)
+    if DESIGN_SYSTEM_LINK not in page:
+        page = page.replace("</head>", f"{DESIGN_SYSTEM_LINK}</head>", 1)
     if 'id="conversapay-branding"' not in page:
         page = page.replace("</head>", f"{BRANDING_STYLE}</head>", 1)
     return page
 
 
 def branded_file(path: Path, status_code: int = 200) -> HTMLResponse:
-    page = path.read_text(encoding="utf-8")
-    return HTMLResponse(brand_markup(page), status_code=status_code)
+    return HTMLResponse(brand_markup(path.read_text(encoding="utf-8")), status_code=status_code)
 
 
 @app.get("/admin-{secret_path}", response_class=HTMLResponse)
@@ -267,7 +250,6 @@ async def serve_admin_dashboard(secret_path: str):
 
 def secrets_match(candidate: str, expected: str) -> bool:
     import hmac
-
     return hmac.compare_digest(candidate.encode(), expected.encode())
 
 
@@ -308,6 +290,7 @@ async def dashboard_page():
     if wordpress_link not in page and "</nav>" in page:
         page = page.replace("</nav>", f"{wordpress_link}</nav>", 1)
     additions = (
+        DESIGN_SYSTEM_LINK,
         '<link rel="stylesheet" href="/frontend/html/saas-overrides.css">',
         '<script src="/frontend/js/business-onboarding.js" defer></script>',
         '<script src="/frontend/js/premium-builder-link.js" defer></script>',
@@ -319,38 +302,20 @@ async def dashboard_page():
 
 
 PAGE_ROUTES = {
-    "/wordpress": "wordpress.html",
-    "/wordpress.html": "wordpress.html",
-    "/login": "login.html",
-    "/login.html": "login.html",
-    "/register": "register.html",
-    "/register.html": "register.html",
-    "/forgot-password": "forgot-password.html",
-    "/forgot-password.html": "forgot-password.html",
-    "/terms": "terms.html",
-    "/terms.html": "terms.html",
-    "/privacy": "privacy.html",
-    "/privacy.html": "privacy.html",
-    "/pay": "pay.html",
-    "/pay.html": "pay.html",
-    "/payment/success": "success.html",
-    "/payment-success.html": "success.html",
-    "/success": "success.html",
-    "/success.html": "success.html",
-    "/payment/canceled": "canceled.html",
-    "/payment-canceled.html": "canceled.html",
-    "/canceled": "canceled.html",
-    "/canceled.html": "canceled.html",
-    "/upgrade": "upgrade.html",
-    "/upgrade.html": "upgrade.html",
-    "/profile": "profile.html",
-    "/profile.html": "profile.html",
-    "/settings": "settings.html",
-    "/settings.html": "settings.html",
-    "/setup-guide": "setup-guide.html",
-    "/setup-guide.html": "setup-guide.html",
-    "/widget-demo": "widget-demo.html",
-    "/widget-demo.html": "widget-demo.html",
+    "/wordpress": "wordpress.html", "/wordpress.html": "wordpress.html",
+    "/login": "login.html", "/login.html": "login.html",
+    "/register": "register.html", "/register.html": "register.html",
+    "/forgot-password": "forgot-password.html", "/forgot-password.html": "forgot-password.html",
+    "/terms": "terms.html", "/terms.html": "terms.html",
+    "/privacy": "privacy.html", "/privacy.html": "privacy.html",
+    "/pay": "pay.html", "/pay.html": "pay.html",
+    "/payment/success": "success.html", "/payment-success.html": "success.html", "/success": "success.html", "/success.html": "success.html",
+    "/payment/canceled": "canceled.html", "/payment-canceled.html": "canceled.html", "/canceled": "canceled.html", "/canceled.html": "canceled.html",
+    "/upgrade": "upgrade.html", "/upgrade.html": "upgrade.html",
+    "/profile": "profile.html", "/profile.html": "profile.html",
+    "/settings": "settings.html", "/settings.html": "settings.html",
+    "/setup-guide": "setup-guide.html", "/setup-guide.html": "setup-guide.html",
+    "/widget-demo": "widget-demo.html", "/widget-demo.html": "widget-demo.html",
     "/auth/callback": "auth-callback.html",
 }
 
@@ -358,7 +323,6 @@ PAGE_ROUTES = {
 def make_page_handler(filename: str):
     async def page_handler():
         return branded_file(html_path(filename))
-
     return page_handler
 
 
@@ -433,10 +397,4 @@ async def internal_error(_: Request, exc: Exception):
 
 if __name__ == "__main__":
     import uvicorn
-
-    uvicorn.run(
-        "main:app",
-        host="0.0.0.0",
-        port=int(os.getenv("PORT", "8000")),
-        reload=settings.DEBUG,
-    )
+    uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("PORT", "8000")), reload=settings.DEBUG)
