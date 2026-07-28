@@ -1,7 +1,6 @@
-"""Delivery-boundary quality gate for ConversaPay's HTML product surface.
+"""Delivery-boundary quality gate for Talk2Pay's HTML product surface.
 Run with: python scripts/ui_quality_gate.py
-The server owns the canonical brand/copy transform, so this gate verifies both source metadata
-and the delivery contract instead of falsely flagging intentional legacy strings in templates.
+Technical `conversapay` identifiers remain allowed for domain and compatibility paths.
 """
 from pathlib import Path
 import re
@@ -22,7 +21,7 @@ for path in html_files:
 
 main_text = MAIN.read_text(encoding="utf-8")
 required_contracts = {
-    "COPY_REPLACEMENTS": "canonical copy map missing",
+    '("ConversaPay", "Talk2Pay")': "Talk2Pay canonical copy map missing",
     "APPLE_POLISH_LINK": "shared product polish stylesheet is not injected",
     "X-ConversaPay-Release": "release marker missing",
     "normalize_copy": "delivery-boundary copy normalization missing",
@@ -35,4 +34,4 @@ if failures:
     print("QUALITY GATE: FAIL")
     print("\n".join(f"- {item}" for item in failures))
     sys.exit(1)
-print(f"QUALITY GATE: PASS ({len(html_files)} HTML templates, delivery contract verified)")
+print(f"QUALITY GATE: PASS ({len(html_files)} HTML templates, Talk2Pay delivery contract verified)")
