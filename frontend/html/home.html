@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Talk2Pay | לדבר, להציע, לסגור</title>
-  <meta name="description" content="Talk2Pay הופכת שיחות עם לקוחות למסלול מכירה ברור, עם AI, ניהול מוצרים וכפתורי תשלום מהירים בתוך השיחה.">
-  <meta name="theme-color" content="#f7f4fb">
+  <title>Talk2Pay | משיחה למכירה, בלי חיכוך</title>
+  <meta name="description" content="Talk2Pay עוזרת לעסקים להפוך שיחות למכירות: בוט חכם, הצעה מותאמת וקישור תשלום בתוך השיחה.">
+  <meta name="theme-color" content="#fbf8f3">
   <link rel="canonical" href="https://conversapay.org/">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
@@ -20,25 +20,25 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
   <style>
     :root{
-      --home-bg:oklch(98.2% .012 282);
-      --home-surface:oklch(100% .006 282);
-      --home-surface-soft:oklch(96.8% .018 282);
-      --home-ink:oklch(24% .045 282);
-      --home-muted:oklch(46% .035 282);
-      --home-line:oklch(88% .026 282);
-      --home-primary:oklch(39% .17 278);
-      --home-primary-dark:oklch(31% .14 278);
-      --home-primary-soft:oklch(92.5% .045 278);
-      --home-accent:oklch(68% .16 48);
-      --home-accent-dark:oklch(54% .14 43);
-      --home-mint:oklch(80% .12 163);
-      --home-mint-soft:oklch(94% .04 163);
-      --home-shadow-sm:0 10px 26px oklch(25% .04 282 / .06);
-      --home-shadow-lg:0 28px 70px oklch(25% .04 282 / .15);
+      --home-bg:oklch(97.8% .018 82);
+      --home-surface:oklch(99.6% .008 82);
+      --home-surface-soft:oklch(95.8% .028 82);
+      --home-ink:oklch(24% .045 292);
+      --home-muted:oklch(46% .04 292);
+      --home-line:oklch(88% .028 292);
+      --home-primary:oklch(45% .16 292);
+      --home-primary-dark:oklch(31% .13 292);
+      --home-primary-soft:oklch(93% .05 292);
+      --home-accent:oklch(72% .17 43);
+      --home-accent-dark:oklch(57% .16 37);
+      --home-mint:oklch(80% .12 165);
+      --home-mint-soft:oklch(94% .045 165);
+      --home-shadow-sm:0 12px 28px oklch(30% .04 292 / .07);
+      --home-shadow-lg:0 30px 80px oklch(31% .13 292 / .18);
       --space-1:4px;
       --space-2:8px;
       --space-3:12px;
@@ -51,120 +51,133 @@
     }
     *{box-sizing:border-box}
     html{scroll-behavior:smooth;overflow-x:hidden}
-    body{overflow-x:hidden}
+    body{overflow-x:hidden;font-family:"Assistant",system-ui,sans-serif;font-size:16px;font-optical-sizing:auto}
+    h1,h2,h3{ text-wrap:balance }
+    p{ text-wrap:pretty }
     .home-page{background:var(--home-bg);color:var(--home-ink)}
-    .home-page::before{background:radial-gradient(circle at 14% 8%,oklch(78% .12 278 / .16),transparent 28%),radial-gradient(circle at 86% 16%,oklch(82% .12 48 / .12),transparent 24%)}
-    .home-nav{position:sticky;top:16px;z-index:20;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:var(--space-6);width:min(1180px,calc(100% - 32px));margin:16px auto 0;padding:12px 14px 12px 18px;border:1px solid var(--home-line);border-radius:18px;background:var(--home-surface);box-shadow:var(--home-shadow-sm)}
+    .home-page::before{background:radial-gradient(circle at 12% 9%,oklch(78% .14 292 / .18),transparent 27%),radial-gradient(circle at 89% 18%,oklch(82% .14 43 / .16),transparent 25%),radial-gradient(circle at 72% 76%,oklch(84% .10 165 / .10),transparent 22%)}
+    .home-nav{position:sticky;top:12px;z-index:20;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:var(--space-6);width:min(1180px,calc(100% - 32px));margin:12px auto 0;padding:12px 14px 12px 18px;border:1px solid oklch(84% .035 292);border-radius:22px;background:var(--home-surface);box-shadow:var(--home-shadow-sm)}
     .cp-brand{display:inline-flex;align-items:center;gap:10px;color:var(--home-ink);font-weight:800;text-decoration:none;white-space:nowrap}
-    .cp-brand-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--home-primary);color:oklch(99% .005 282);font-size:.68rem;letter-spacing:-.04em}
+    .cp-brand-mark{display:grid;place-items:center;width:40px;height:40px;border-radius:14px;background:var(--home-primary-dark);color:oklch(98% .01 82);font-size:.68rem;letter-spacing:-.04em;box-shadow:0 6px 14px oklch(31% .13 292 / .18)}
     .home-nav-links{display:flex;justify-content:center;align-items:center;gap:var(--space-8)}
-    .home-nav-links a{color:var(--home-muted);font-weight:600;text-decoration:none;transition:color .18s ease}
+    .home-nav-links a{color:var(--home-muted);font-weight:700;text-decoration:none;transition:color .18s cubic-bezier(.25,1,.5,1)}
     .home-nav-links a:hover{color:var(--home-primary)}
     .home-nav-actions{display:flex;align-items:center;gap:10px}
-    .home-nav .cp-button,.home-nav .cp-button-secondary{min-height:42px;padding:8px 16px;border-radius:12px}
-    .home-nav .cp-button{background:var(--home-accent);border-color:var(--home-accent-dark);color:oklch(22% .04 48)}
-    .home-nav .cp-button:hover{background:var(--home-accent-dark);border-color:var(--home-accent-dark);color:oklch(99% .005 48)}
-    .home-nav .cp-button-secondary{background:var(--home-surface);border-color:var(--home-line);color:var(--home-ink)}
-    .home-nav .cp-button-secondary:hover{border-color:var(--home-primary);color:var(--home-primary)}
+    .home-nav .cp-button,.home-nav .cp-button-secondary{min-height:44px;padding:8px 18px;border-radius:14px}
+    .home-nav .cp-button{background:var(--home-accent);border-color:var(--home-accent-dark);color:oklch(25% .045 43);box-shadow:0 7px 16px oklch(57% .16 37 / .18)}
+    .home-nav .cp-button:hover{background:var(--home-accent-dark);border-color:var(--home-accent-dark);color:oklch(99% .008 82);transform:translateY(-2px);box-shadow:0 10px 20px oklch(57% .16 37 / .22)}
+    .home-nav .cp-button-secondary{background:transparent;border-color:var(--home-line);color:var(--home-ink)}
+    .home-nav .cp-button-secondary:hover{border-color:var(--home-primary);color:var(--home-primary);background:var(--home-primary-soft)}
     .home-shell{display:grid;gap:var(--space-24);padding-top:var(--space-16)}
     .home-hero{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(420px,.98fr);gap:var(--space-16);align-items:center}
-    .home-eyebrow,.section-kicker{display:inline-flex;align-items:center;gap:10px;color:var(--home-primary);font-size:.78rem;font-weight:800;letter-spacing:.11em;text-transform:uppercase}
+    .home-eyebrow,.section-kicker{display:inline-flex;align-items:center;gap:10px;color:var(--home-primary);font-size:.82rem;font-weight:800;letter-spacing:.06em}
     .home-eyebrow::before,.section-kicker::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--home-accent);box-shadow:0 0 0 6px var(--home-primary-soft)}
-    .home-hero h1{max-width:10ch;margin:18px 0 20px;color:var(--home-ink)!important;font-size:clamp(3.2rem,7vw,6.3rem);line-height:.98;letter-spacing:-.06em}
-    .home-lede{max-width:58ch;margin:0;color:var(--home-muted)!important;font-size:1.14rem;line-height:1.8}
-    .home-hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:30px}
-    .home-hero-actions .cp-button,.home-hero-actions .cp-button-secondary{min-width:148px;min-height:50px;border-radius:14px}
-    .home-hero-actions .cp-button{background:var(--home-accent);border-color:var(--home-accent-dark);color:oklch(22% .04 48)}
-    .home-hero-actions .cp-button:hover{background:var(--home-accent-dark);border-color:var(--home-accent-dark);color:oklch(99% .005 48)}
-    .home-hero-actions .cp-button-secondary{background:transparent;border-color:var(--home-line);color:var(--home-ink)}
-    .home-hero-actions .cp-button-secondary:hover{border-color:var(--home-primary);color:var(--home-primary)}
-    .home-note{margin:16px 0 0;color:var(--home-muted)!important;font-size:.9rem}
-    .preview-frame{position:relative;min-height:520px;padding:14px;border:1px solid oklch(27% .06 278);border-radius:30px;background:var(--home-primary-dark);box-shadow:var(--home-shadow-lg);overflow:hidden;transform:rotate(-1.2deg)}
-    .preview-frame::before{content:"";position:absolute;inset:-30% 24% auto -16%;height:260px;background:oklch(63% .18 278 / .28);filter:blur(44px);border-radius:50%}
-    .preview-window{position:relative;display:grid;grid-template-rows:auto 1fr auto;min-height:490px;border-radius:22px;background:var(--home-bg);overflow:hidden}
+    .home-hero h1{max-width:11ch;margin:18px 0 20px;color:var(--home-primary-dark)!important;font-size:clamp(3.2rem,7vw,6.3rem);font-weight:800;line-height:.98;letter-spacing:-.06em}
+    .home-lede{max-width:58ch;margin:0;color:var(--home-muted)!important;font-size:1.18rem;font-weight:500;line-height:1.75}
+    .home-hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:32px}
+    .home-hero-actions .cp-button,.home-hero-actions .cp-button-secondary{min-width:154px;min-height:52px;border-radius:15px;font-weight:800}
+    .home-hero-actions .cp-button{background:var(--home-accent);border-color:var(--home-accent-dark);color:oklch(25% .045 43);box-shadow:0 10px 20px oklch(57% .16 37 / .18)}
+    .home-hero-actions .cp-button:hover{background:var(--home-accent-dark);border-color:var(--home-accent-dark);color:oklch(99% .008 82);transform:translateY(-2px);box-shadow:0 14px 26px oklch(57% .16 37 / .24)}
+    .home-hero-actions .cp-button-secondary{background:var(--home-surface);border-color:var(--home-line);color:var(--home-ink)}
+    .home-hero-actions .cp-button-secondary:hover{border-color:var(--home-primary);color:var(--home-primary);transform:translateY(-2px)}
+    .home-note{margin:16px 0 0;color:var(--home-muted)!important;font-size:.92rem;font-weight:600}
+    .preview-frame{position:relative;min-height:520px;padding:12px;border:0;border-radius:34px;background:var(--home-primary-dark);box-shadow:var(--home-shadow-lg);overflow:hidden;transform:rotate(-1.2deg)}
+    .preview-frame::before{content:"";position:absolute;inset:-30% 24% auto -16%;height:260px;background:oklch(68% .16 292 / .32);filter:blur(44px);border-radius:50%}
+    .preview-window{position:relative;display:grid;grid-template-rows:auto 1fr auto;min-height:496px;border-radius:26px;background:var(--home-surface-soft);overflow:hidden;border:1px solid oklch(99% .008 82 / .16)}
     .preview-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;background:var(--home-surface);border-bottom:1px solid var(--home-line)}
     .preview-brand{display:flex;align-items:center;gap:9px;color:var(--home-ink);font-weight:800}
-    .preview-brand-mark{display:grid;place-items:center;width:28px;height:28px;border-radius:9px;background:var(--home-primary);color:oklch(99% .005 282);font-size:.64rem}
-    .preview-status{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;background:var(--home-mint-soft);color:oklch(36% .08 163);font-size:.75rem;font-weight:800}
-    .preview-status::before{content:"";width:7px;height:7px;border-radius:50%;background:oklch(58% .16 163)}
-    .preview-chat{display:grid;gap:14px;align-content:start;padding:24px 20px}
-    .chat-bubble{max-width:82%;padding:13px 15px;border-radius:16px;line-height:1.55;box-shadow:0 6px 16px oklch(25% .04 282 / .06)}
-    .chat-bubble.client{justify-self:start;background:var(--home-surface);border:1px solid var(--home-line);color:var(--home-muted);border-bottom-left-radius:5px}
-    .chat-bubble.bot{justify-self:end;background:var(--home-primary-soft);color:var(--home-primary-dark);border-bottom-right-radius:5px}
-    .preview-product{justify-self:end;display:grid;gap:12px;width:min(100%,310px);padding:14px;border:1px solid oklch(74% .09 278);border-radius:18px;background:var(--home-surface);box-shadow:0 12px 24px oklch(34% .11 278 / .10);animation:preview-float 5s ease-in-out infinite}
+    .preview-brand-mark{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:var(--home-primary);color:oklch(99% .008 82);font-size:.64rem}
+    .preview-status{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;background:var(--home-mint-soft);color:oklch(36% .09 165);font-size:.78rem;font-weight:800}
+    .preview-status::before{content:"";width:7px;height:7px;border-radius:50%;background:oklch(58% .16 165)}
+    .preview-chat{display:grid;gap:16px;align-content:start;padding:26px 22px}
+    .chat-bubble{max-width:82%;padding:14px 16px;border-radius:18px;line-height:1.55;font-weight:500;box-shadow:0 7px 18px oklch(25% .04 292 / .06)}
+    .chat-bubble.client{justify-self:start;background:var(--home-surface);border:1px solid var(--home-line);color:var(--home-muted);border-bottom-left-radius:6px}
+    .chat-bubble.bot{justify-self:end;background:var(--home-primary-soft);color:var(--home-primary-dark);border-bottom-right-radius:6px}
+    .preview-product{justify-self:end;display:grid;gap:12px;width:min(100%,310px);padding:16px;border:1px solid oklch(75% .10 292);border-radius:20px;background:var(--home-surface);box-shadow:0 14px 28px oklch(34% .11 292 / .12);animation:preview-float 5s cubic-bezier(.25,1,.5,1) infinite}
     .preview-product-top{display:flex;justify-content:space-between;gap:12px;align-items:start}
-    .preview-product h3{margin:0;color:var(--home-ink)!important;font-size:1rem}
-    .preview-product p{margin:0;color:var(--home-muted)!important;font-size:.85rem}
+    .preview-product h3{margin:0;color:var(--home-ink)!important;font-size:1rem;font-weight:800}
+    .preview-product p{margin:0;color:var(--home-muted)!important;font-size:.88rem}
     .preview-product-price{color:var(--home-primary);font-weight:800;white-space:nowrap}
-    .preview-product button{width:100%;min-height:42px;border:0;border-radius:11px;padding:10px;background:var(--home-accent);color:oklch(22% .04 48);font:inherit;font-weight:800;cursor:pointer;transition:transform .18s cubic-bezier(.16,1,.3,1),background .18s ease}
-    .preview-product button:hover{background:var(--home-accent-dark);color:oklch(99% .005 48);transform:translateY(-2px)}
+    .preview-product button{width:100%;min-height:44px;border:0;border-radius:13px;padding:10px;background:var(--home-accent);color:oklch(25% .045 43);font:inherit;font-weight:800;cursor:pointer;transition:transform .18s cubic-bezier(.25,1,.5,1),background .18s cubic-bezier(.25,1,.5,1),box-shadow .18s cubic-bezier(.25,1,.5,1);box-shadow:0 7px 15px oklch(57% .16 37 / .14)}
+    .preview-product button:hover{background:var(--home-accent-dark);color:oklch(99% .008 82);transform:translateY(-2px);box-shadow:0 10px 20px oklch(57% .16 37 / .2)}
     .preview-product button:disabled{cursor:default;opacity:.76;transform:none}
-    .preview-footer{display:flex;justify-content:space-between;gap:12px;padding:15px 18px;background:var(--home-surface);border-top:1px solid var(--home-line);color:var(--home-muted);font-size:.78rem}
+    .preview-footer{display:flex;justify-content:space-between;gap:12px;padding:15px 18px;background:var(--home-surface);border-top:1px solid var(--home-line);color:var(--home-muted);font-size:.8rem}
     .preview-footer strong{color:var(--home-ink)}
     @keyframes preview-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
     .section-intro{display:grid;gap:4px;margin-bottom:34px}
-    .section-heading{max-width:680px;margin:12px 0 0;color:var(--home-ink)!important;font-size:clamp(2rem,4vw,3.6rem);line-height:1.05;letter-spacing:-.05em}
-    .section-copy{max-width:60ch;margin:16px 0 0;color:var(--home-muted)!important;font-size:1.05rem}
-    .feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-8)}
-    .feature-card{display:grid;align-content:start;gap:14px;min-height:230px;padding:22px 0 0;border-top:1px solid var(--home-line);transition:transform .24s cubic-bezier(.16,1,.3,1),border-color .24s ease}
-    .feature-card:hover{transform:translateY(-5px);border-color:var(--home-primary)}
-    .feature-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:15px;background:var(--home-primary-soft);color:var(--home-primary);font-weight:800}
-    .feature-icon svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-    .feature-card:nth-child(2) .feature-icon{background:oklch(94% .04 48);color:var(--home-accent-dark)}
-    .feature-card:nth-child(3) .feature-icon{background:var(--home-mint-soft);color:oklch(37% .09 163)}
-    .feature-card h3{margin:0;color:var(--home-ink)!important;font-size:1.25rem}
-    .feature-card p{max-width:33ch;margin:0;color:var(--home-muted)!important;line-height:1.7}
-    .trust-section{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:var(--space-12);align-items:center;padding:var(--space-12) 0;border-top:1px solid var(--home-line);border-bottom:1px solid var(--home-line)}
-    .trust-heading h2{max-width:12ch;margin:12px 0 0;color:var(--home-ink)!important;font-size:clamp(1.8rem,3.5vw,3rem);line-height:1.05;letter-spacing:-.045em}
-    .trust-heading p{max-width:42ch;margin:16px 0 0;color:var(--home-muted)!important}
+    .section-heading{max-width:680px;margin:12px 0 0;color:var(--home-ink)!important;font-size:clamp(2.2rem,4vw,3.7rem);font-weight:800;line-height:1.04;letter-spacing:-.05em}
+    .section-copy{max-width:60ch;margin:16px 0 0;color:var(--home-muted)!important;font-size:1.08rem;font-weight:500;line-height:1.65}
+    .feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+    .feature-card{display:grid;align-content:start;gap:14px;min-height:252px;padding:26px 22px 24px;border:1px solid var(--home-line);border-radius:24px;background:var(--home-surface);box-shadow:var(--home-shadow-sm);transition:transform .24s cubic-bezier(.16,1,.3,1),border-color .24s cubic-bezier(.25,1,.5,1),box-shadow .24s cubic-bezier(.25,1,.5,1)}
+    .feature-card:hover{transform:translateY(-6px);border-color:oklch(74% .08 292);box-shadow:0 18px 36px oklch(30% .04 292 / .10)}
+    .feature-icon{display:grid;place-items:center;width:52px;height:52px;border-radius:17px;background:var(--home-primary-soft);color:var(--home-primary);font-weight:800}
+    .feature-icon svg{width:25px;height:25px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .feature-card:nth-child(2){background:oklch(98.8% .018 45)}
+    .feature-card:nth-child(2) .feature-icon{background:oklch(93% .065 43);color:var(--home-accent-dark)}
+    .feature-card:nth-child(3){background:oklch(98.7% .016 165)}
+    .feature-card:nth-child(3) .feature-icon{background:var(--home-mint-soft);color:oklch(37% .09 165)}
+    .feature-card h3{margin:0;color:var(--home-ink)!important;font-size:1.35rem;font-weight:800}
+    .feature-card p{max-width:33ch;margin:0;color:var(--home-muted)!important;line-height:1.7;font-weight:500}
+    .trust-section{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:var(--space-12);align-items:center;padding:var(--space-12) 40px;border:1px solid var(--home-line);border-radius:30px;background:var(--home-surface);box-shadow:var(--home-shadow-sm)}
+    .trust-heading h2{max-width:12ch;margin:12px 0 0;color:var(--home-ink)!important;font-size:clamp(2rem,3.5vw,3.1rem);font-weight:800;line-height:1.05;letter-spacing:-.045em}
+    .trust-heading p{max-width:42ch;margin:16px 0 0;color:var(--home-muted)!important;font-weight:500;line-height:1.7}
     .trust-content{display:grid;gap:var(--space-6)}
     .payment-logos{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
-    .payment-logo{display:grid;place-items:center;min-height:62px;padding:12px;border:1px solid var(--home-line);border-radius:14px;background:var(--home-surface);color:var(--home-muted);font-size:1rem;font-weight:800;letter-spacing:-.02em}
+    .payment-logo{display:grid;place-items:center;min-height:66px;padding:12px;border:1px solid var(--home-line);border-radius:16px;background:var(--home-bg);color:var(--home-muted);font-size:1rem;font-weight:800;letter-spacing:-.02em}
     .payment-logo:nth-child(1){color:oklch(40% .14 194)}
     .payment-logo:nth-child(2){color:var(--home-primary)}
     .payment-logo:nth-child(3){color:oklch(40% .13 280)}
     .payment-logo:nth-child(4){color:var(--home-muted);font-size:.84rem}
-    .security-note{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:16px;background:var(--home-surface-soft);color:var(--home-muted)}
-    .security-note svg{flex:none;width:22px;height:22px;stroke:oklch(42% .12 163);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-    .security-note strong{display:block;color:var(--home-ink);font-size:.92rem}
-    .security-note span{display:block;font-size:.86rem}
+    .security-note{display:flex;align-items:center;gap:12px;padding:16px 18px;border-radius:18px;background:var(--home-mint-soft);color:var(--home-muted);font-weight:500}
+    .security-note svg{flex:none;width:22px;height:22px;stroke:oklch(42% .12 165);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+    .security-note strong{display:block;color:var(--home-ink);font-size:.95rem;font-weight:800}
+    .security-note span{display:block;font-size:.88rem;line-height:1.55}
     .how-section{display:grid;grid-template-columns:.7fr 1.3fr;gap:var(--space-16);align-items:start}
-    .timeline{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;position:relative}
-    .timeline::before{content:"";position:absolute;top:20px;right:12%;left:12%;height:1px;background:var(--home-line)}
+    .timeline{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;position:relative;padding-top:4px}
+    .timeline::before{content:"";position:absolute;top:24px;right:12%;left:12%;height:2px;background:var(--home-line)}
     .timeline-step{position:relative;z-index:1;display:grid;gap:12px;padding:0 8px}
-    .step-number{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--home-primary);color:oklch(99% .005 282);font-weight:800;box-shadow:0 0 0 7px var(--home-bg)}
-    .timeline-step h3{margin:4px 0 0;color:var(--home-ink)!important;font-size:1.05rem}
-    .timeline-step p{margin:0;color:var(--home-muted)!important}
-    .proof-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;overflow:hidden;border:1px solid var(--home-line);border-radius:22px;background:var(--home-line)}
-    .proof-item{display:grid;gap:8px;padding:24px;background:var(--home-surface)}
-    .proof-item strong{color:var(--home-ink);font-size:1.12rem}
-    .proof-item span{color:var(--home-muted);line-height:1.6}
+    .step-number{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:var(--home-primary);color:oklch(99% .008 82);font-weight:800;box-shadow:0 0 0 7px var(--home-bg),0 8px 16px oklch(31% .13 292 / .18)}
+    .timeline-step h3{margin:4px 0 0;color:var(--home-ink)!important;font-size:1.12rem;font-weight:800}
+    .timeline-step p{margin:0;color:var(--home-muted)!important;line-height:1.65;font-weight:500}
+    .proof-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;overflow:hidden;border:1px solid var(--home-line);border-radius:24px;background:var(--home-line);box-shadow:var(--home-shadow-sm)}
+    .proof-item{display:grid;gap:8px;padding:26px;background:var(--home-surface)}
+    .proof-item strong{color:var(--home-ink);font-size:1.18rem;font-weight:800}
+    .proof-item span{color:var(--home-muted);line-height:1.6;font-weight:500}
     .plans-section{display:grid;gap:28px}
-    .plans-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
-    .plan-card{display:grid;gap:14px;padding:24px;border:1px solid var(--home-line);border-radius:22px;background:var(--home-surface);box-shadow:var(--home-shadow-sm)}
-    .plan-card.featured{border-color:var(--home-primary);box-shadow:0 16px 34px oklch(34% .11 278 / .12);transform:translateY(-8px)}
-    .plan-card h3{margin:0;color:var(--home-ink)!important}
-    .plan-price{font-size:2.25rem;font-weight:800;letter-spacing:-.04em;color:var(--home-primary)}
-    .plan-price small{font-size:.9rem;font-weight:500;color:var(--home-muted)}
-    .plan-card p{margin:0;color:var(--home-muted)!important}
+    .plans-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:stretch}
+    .plan-card{display:grid;gap:14px;padding:26px;border:1px solid var(--home-line);border-radius:26px;background:var(--home-surface);box-shadow:var(--home-shadow-sm);transition:transform .24s cubic-bezier(.16,1,.3,1),box-shadow .24s cubic-bezier(.25,1,.5,1),border-color .24s cubic-bezier(.25,1,.5,1)}
+    .plan-card:hover{transform:translateY(-5px);border-color:oklch(74% .08 292);box-shadow:0 18px 36px oklch(30% .04 292 / .10)}
+    .plan-card.featured{border-color:var(--home-primary);background:var(--home-primary-dark);box-shadow:0 20px 42px oklch(31% .13 292 / .22);transform:translateY(-10px)}
+    .plan-card.featured:hover{transform:translateY(-14px)}
+    .plan-card h3{margin:0;color:var(--home-ink)!important;font-size:1.3rem;font-weight:800}
+    .plan-card.featured h3,.plan-card.featured p,.plan-card.featured .plan-price small,.plan-card.featured .plan-list li{color:oklch(91% .025 292)!important}
+    .plan-price{font-size:2.45rem;font-weight:800;letter-spacing:-.04em;color:var(--home-primary)}
+    .plan-card.featured .plan-price{color:oklch(82% .12 43)}
+    .plan-price small{font-size:.9rem;font-weight:600;color:var(--home-muted)}
+    .plan-card p{margin:0;color:var(--home-muted)!important;line-height:1.6;font-weight:500}
     .plan-list{display:grid;gap:9px;margin:0;padding:0;list-style:none}
-    .plan-list li{color:var(--home-muted)}
-    .plan-list li::before{content:'✓';margin-left:8px;color:oklch(43% .12 163);font-weight:800}
-    .plan-card .cp-button{background:var(--home-accent);border-color:var(--home-accent-dark);color:oklch(22% .04 48)}
-    .plan-card .cp-button:hover{background:var(--home-accent-dark);border-color:var(--home-accent-dark);color:oklch(99% .005 48)}
-    .cta-banner{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;padding:34px 38px;border-radius:24px;background:var(--home-primary-dark);color:oklch(99% .005 282);box-shadow:var(--home-shadow-lg)}
-    .cta-banner h2{margin:0;color:oklch(99% .005 282)!important;font-size:clamp(1.8rem,3vw,2.7rem);letter-spacing:-.04em}
-    .cta-banner p{margin:10px 0 0;color:oklch(90% .025 282)!important}
-    .cta-banner .cp-button-secondary{background:var(--home-accent)!important;color:oklch(22% .04 48)!important;border-color:var(--home-accent)!important}
-    .cta-banner .cp-button-secondary:hover{background:var(--home-accent-dark)!important;color:oklch(99% .005 48)!important}
-    .home-footer{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:end;width:min(1180px,calc(100% - 32px));margin:0 auto;padding:34px 0 42px;border-top:1px solid var(--home-line)}
-    .home-footer p{margin:0;color:var(--home-muted)!important}
-    .home-footer strong{color:var(--home-ink)}
-    .home-footer-links{display:flex;gap:18px}
+    .plan-list li{color:var(--home-muted);font-weight:500}
+    .plan-list li::before{content:'✓';margin-left:8px;color:oklch(43% .12 165);font-weight:800}
+    .plan-card.featured .plan-list li::before{color:oklch(80% .12 165)}
+    .plan-card .cp-button,.plan-card .cp-button-secondary{min-height:46px;border-radius:14px;font-weight:800}
+    .plan-card .cp-button{background:var(--home-accent);border-color:var(--home-accent-dark);color:oklch(25% .045 43)}
+    .plan-card .cp-button:hover{background:var(--home-accent-dark);border-color:var(--home-accent-dark);color:oklch(99% .008 82);transform:translateY(-2px)}
+    .plan-card .cp-button-secondary{background:transparent;border-color:var(--home-line);color:var(--home-ink)}
+    .plan-card .cp-button-secondary:hover{border-color:var(--home-primary);color:var(--home-primary);transform:translateY(-2px)}
+    .cta-banner{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center;padding:40px 44px;border-radius:30px;background:var(--home-primary-dark);color:oklch(99% .008 82);box-shadow:var(--home-shadow-lg)}
+    .cta-banner h2{margin:0;color:oklch(99% .008 82)!important;font-size:clamp(2rem,3vw,2.8rem);font-weight:800;letter-spacing:-.04em}
+    .cta-banner p{margin:10px 0 0;color:oklch(89% .03 292)!important;font-size:1.05rem;font-weight:500}
+    .cta-banner .cp-button-secondary{min-height:50px;border-radius:15px;background:var(--home-accent)!important;color:oklch(25% .045 43)!important;border-color:var(--home-accent)!important;font-weight:800;box-shadow:0 10px 20px oklch(20% .10 292 / .18)}
+    .cta-banner .cp-button-secondary:hover{background:var(--home-accent-dark)!important;color:oklch(99% .008 82)!important;transform:translateY(-2px)}
+    .home-footer{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:end;width:min(1180px,calc(100% - 32px));margin:0 auto;padding:38px 0 46px;border-top:1px solid var(--home-line)}
+    .home-footer p{margin:0;color:var(--home-muted)!important;font-weight:500}
+    .home-footer strong{color:var(--home-ink);font-weight:800}
+    .home-footer-links{display:flex;gap:20px}
     .home-footer-links a{color:var(--home-muted);font-weight:700;text-decoration:none}
     .home-footer-links a:hover{color:var(--home-primary)}
-    @media(max-width:980px){.home-hero{grid-template-columns:1fr;gap:var(--space-12)}.preview-frame{max-width:720px;margin:0 auto;width:100%;transform:none}.trust-section,.how-section{grid-template-columns:1fr;gap:var(--space-8)}.feature-grid,.plans-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.plan-card.featured{transform:none}}
-    @media(max-width:640px){.home-nav{grid-template-columns:auto auto;justify-content:space-between}.home-nav-links{display:none}.home-nav-actions{gap:6px}.home-nav-actions .cp-button-secondary{display:none}.home-shell{gap:70px;padding-top:48px}.home-hero h1{max-width:14ch;font-size:clamp(2.9rem,15vw,4.4rem)}.home-lede{font-size:1rem}.preview-frame{min-height:450px;padding:8px;border-radius:22px}.preview-window{min-height:430px}.preview-chat{padding:18px 14px}.feature-grid,.plans-grid,.timeline,.proof-strip{grid-template-columns:1fr}.payment-logos{grid-template-columns:repeat(2,minmax(0,1fr))}.trust-section{padding:var(--space-8) 0}.timeline{gap:28px}.timeline::before{top:0;bottom:0;right:20px;left:auto;width:1px;height:auto}.step-number{margin-right:0}.timeline-step{grid-template-columns:42px 1fr;column-gap:14px;padding:0}.timeline-step h3,.timeline-step p{grid-column:2}.timeline-step h3{margin-top:-38px}.cta-banner,.home-footer{grid-template-columns:1fr}.home-footer-links{flex-wrap:wrap}.home-footer{padding-bottom:28px}}
+    :focus-visible{outline:3px solid var(--home-accent-dark);outline-offset:3px}
+    @media(max-width:980px){.home-hero{grid-template-columns:1fr;gap:var(--space-12)}.preview-frame{max-width:720px;margin:0 auto;width:100%;transform:none}.trust-section,.how-section{grid-template-columns:1fr;gap:var(--space-8)}.trust-section{padding:var(--space-12) 28px}.feature-grid,.plans-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.plan-card.featured{transform:none}.plan-card.featured:hover{transform:translateY(-5px)}}
+    @media(max-width:640px){.home-nav{grid-template-columns:auto auto;justify-content:space-between;top:8px;margin-top:8px;width:calc(100% - 20px)}.home-nav-links{display:none}.home-nav-actions{gap:6px}.home-nav-actions .cp-button-secondary{display:none}.home-nav .cp-button{padding-inline:13px}.home-shell{gap:70px;padding-top:48px}.home-hero h1{max-width:14ch;font-size:clamp(2.9rem,15vw,4.4rem)}.home-lede{font-size:1.05rem}.preview-frame{min-height:450px;padding:8px;border-radius:24px}.preview-window{min-height:430px;border-radius:19px}.preview-chat{padding:18px 14px}.feature-grid,.plans-grid,.timeline,.proof-strip{grid-template-columns:1fr}.feature-card{min-height:auto}.trust-section{padding:32px 20px;border-radius:24px}.payment-logos{grid-template-columns:repeat(2,minmax(0,1fr))}.timeline{gap:28px}.timeline::before{top:0;bottom:0;right:20px;left:auto;width:2px;height:auto}.step-number{margin-right:0}.timeline-step{grid-template-columns:42px 1fr;column-gap:14px;padding:0}.timeline-step h3,.timeline-step p{grid-column:2}.timeline-step h3{margin-top:-38px}.cta-banner,.home-footer{grid-template-columns:1fr}.cta-banner{padding:32px 24px}.home-footer-links{flex-wrap:wrap}.home-footer{padding-bottom:28px}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
   </style>
 </head>
@@ -172,16 +185,16 @@
   <header class="home-nav">
     <a class="cp-brand" href="/"><span class="cp-brand-mark" aria-hidden="true">T2P</span><span>Talk2Pay</span></a>
     <nav class="home-nav-links" aria-label="ניווט ראשי"><a href="#features">יכולות</a><a href="#trust">אבטחה וסליקה</a><a href="#how">איך זה עובד</a><a href="#plans">מסלולים</a></nav>
-    <div class="home-nav-actions"><a class="cp-button-secondary" href="/login">כניסה</a><a class="cp-button" href="/register">צור בוט חינם</a></div>
+    <div class="home-nav-actions"><a class="cp-button-secondary" href="/login">כניסה</a><a class="cp-button" href="/register">פותחים חשבון בחינם</a></div>
   </header>
 
   <main class="cp-shell home-shell">
     <section class="home-hero" aria-labelledby="hero-title">
       <div>
-        <span class="home-eyebrow">Conversation to payment</span>
+        <span class="home-eyebrow">שיחה שמובילה למכירה</span>
         <h1 id="hero-title">מהשאלה הראשונה, עד התשלום.</h1>
-        <p class="home-lede">Talk2Pay היא שכבת מכירה חכמה לעסק שלך: צ׳אטבוט AI שמכיר את המוצרים, מתאים את ההצעה ויוצר כפתור תשלום בתוך השיחה.</p>
-        <div class="home-hero-actions"><a class="cp-button" href="/register">צור בוט חינם</a><a class="cp-button-secondary" href="#how">לראות איך זה עובד</a></div>
+        <p class="home-lede">Talk2Pay עוזרת לעסק שלך להפוך שיחות למכירות: בוט חכם שמכיר את המוצרים, מתאים הצעה ויוצר קישור תשלום בתוך השיחה.</p>
+        <div class="home-hero-actions"><a class="cp-button" href="/register">פותחים חשבון בחינם</a><a class="cp-button-secondary" href="#how">איך זה עובד</a></div>
         <p class="home-note">מתחילים בחינם, בלי כרטיס אשראי. משדרגים רק כשצריך.</p>
       </div>
 
@@ -189,32 +202,32 @@
         <div class="preview-window">
           <div class="preview-bar"><div class="preview-brand"><span class="preview-brand-mark" aria-hidden="true">T2P</span><span>Talk2Pay AI</span></div><span class="preview-status">פעיל עכשיו</span></div>
           <div class="preview-chat">
-            <div class="chat-bubble client">היי, אני מחפש דרך למכור את ערכת ההתחלה שלי בלי לשלוח את הלקוח לעוד חמישה מסכים.</div>
-            <div class="chat-bubble bot">ברור. מצאתי את המוצר שמתאים לך. אפשר להשלים את הרכישה כאן, בתוך השיחה.</div>
-            <article class="preview-product"><div class="preview-product-top"><div><h3>ערכת התחלה לעסק</h3><p>מוצר, הצעה וכפתור תשלום במקום אחד.</p></div><span class="preview-product-price">₪249</span></div><button type="button" data-preview-action="choose">שלחו לי קישור תשלום</button></article>
-            <div class="chat-bubble bot" id="previewReply">הקישור מוכן. התשלום עובר לספק הסליקה שלך, וההזמנה נכנסת לדאשבורד.</div>
+            <div class="chat-bubble client">יש לי סדנת אונליין. איך הלקוח יכול להבין אם היא מתאימה לו ולרכוש בלי לעבור לאתר אחר?</div>
+            <div class="chat-bubble bot">בשמחה. לפי מה שסיפרת, סדנת ההתחלה מתאימה למי שרוצה לבנות תהליך מכירה מסודר. היא עולה 249 ₪, ואפשר להשלים את הרכישה כאן, בלי לצאת מהשיחה.</div>
+            <article class="preview-product"><div class="preview-product-top"><div><h3>סדנת התחלה לעסק</h3><p>תהליך ברור, ליווי קצר וקישור תשלום במקום אחד.</p></div><span class="preview-product-price">₪249</span></div><button type="button" data-preview-action="choose">רוצים את הקישור לתשלום</button></article>
+            <div class="chat-bubble bot" id="previewReply">מעולה, שלחתי את הקישור המאובטח. אחרי התשלום ההזמנה תופיע בלוח הבקרה שלך.</div>
           </div>
-          <div class="preview-footer"><span>Powered by <strong>Talk2Pay</strong></span><span id="previewState">מוכן לתשלום</span></div>
+          <div class="preview-footer"><span>מופעל על ידי <strong>Talk2Pay</strong></span><span id="previewState">מוכן לתשלום</span></div>
         </div>
       </div>
     </section>
 
     <section id="features" aria-labelledby="features-title">
-      <div class="section-intro"><span class="section-kicker">Built for momentum</span><h2 class="section-heading" id="features-title">כל מה שצריך כדי להפוך עניין להכנסה.</h2><p class="section-copy">במקום לחבר ידנית בין צ׳אט, קטלוג ותשלום, Talk2Pay מחברת את כל המסלול לחוויה אחת ברורה.</p></div>
+      <div class="section-intro"><span class="section-kicker">יותר שיחות שהופכות למכירות</span><h2 class="section-heading" id="features-title">הופכים עניין להמרות, בלי להעמיס על הלקוח.</h2><p class="section-copy">מחברים שיחה, קטלוג ותשלום למסלול אחד, כך שפחות לקוחות נושרים בדרך.</p></div>
       <div class="feature-grid">
-        <article class="feature-card"><span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5z"/><path d="M8 8h8M8 12h5M8 16h3"/></svg></span><h3>ניהול מוצרים בלי כאב ראש</h3><p>מעדכנים שמות, מחירים, מלאי ותיאורים במקום אחד, כדי שהבוט תמיד ימכור את הדבר הנכון.</p></article>
-        <article class="feature-card"><span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M7 9h10M7 13h4M15 13h2"/></svg></span><h3>כפתור תשלום ברגע הנכון</h3><p>הלקוח מקבל הצעה ברורה וקישור תשלום מהיר, בלי לאבד הקשר ובלי לנדוד לעמודים מיותרים.</p></article>
+        <article class="feature-card"><span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18.5z"/><path d="M8 8h8M8 12h5M8 16h3"/></svg></span><h3>ניהול מוצרים בלי כאב ראש</h3><p>מעדכנים שמות, מחירים, מלאי ותיאורים במקום אחד, כדי שהבוט תמיד יציג את ההצעה הנכונה.</p></article>
+        <article class="feature-card"><span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M7 9h10M7 13h4M15 13h2"/></svg></span><h3>תשלום ברגע הנכון</h3><p>הלקוח מקבל הצעה ברורה וקישור תשלום מהיר, בלי לאבד הקשר ובלי לנדוד לעמודים מיותרים.</p></article>
         <article class="feature-card"><span class="feature-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7z"/><path d="M18 16l.7 2.3L21 19l-2.3.7L18 22l-.7-2.3L15 19l2.3-.7z"/></svg></span><h3>AI שמכיר את העסק</h3><p>הבוט מבין את ההיצע שלך, עונה בשפה טבעית ומוביל כל שיחה לצעד הבא, בלי תסריטים קשיחים.</p></article>
       </div>
     </section>
 
     <section class="trust-section" id="trust" aria-labelledby="trust-title">
-      <div class="trust-heading"><span class="section-kicker">Trust by design</span><h2 id="trust-title">מכירה חכמה, עם תשתית שאפשר לסמוך עליה.</h2><p>Talk2Pay מתחברת לזרימת התשלום של העסק שלך. פרטי כרטיס מלאים לא נשמרים אצלנו.</p></div>
+      <div class="trust-heading"><span class="section-kicker">תשלום בראש שקט</span><h2 id="trust-title">מכירה חלקה מתחילה בתשלום שאפשר לסמוך עליו.</h2><p>Talk2Pay מתחברת לזרימת התשלום של העסק שלך. פרטי כרטיס מלאים לא נשמרים אצלנו.</p></div>
       <div class="trust-content"><div class="payment-logos" aria-label="ספקי תשלום שניתן לחבר למערכת"><span class="payment-logo">PayMe</span><span class="payment-logo">Cardcom</span><span class="payment-logo">Stripe</span><span class="payment-logo">ספק הסליקה שלך</span></div><div class="security-note"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.6-2.8 7.9-7 10-4.2-2.1-7-5.4-7-10V6z"/><path d="m9 12 2 2 4-4"/></svg><div><strong>תשלום מאובטח בתקן PCI DSS</strong><span>הלקוח משלים תשלום אצל ספק הסליקה, ו-Talk2Pay מנהלת את השיחה, ההזמנה והסטטוס.</span></div></div></div>
     </section>
 
     <section class="how-section" id="how" aria-labelledby="how-title">
-      <div class="section-intro"><span class="section-kicker">Simple by design</span><h2 class="section-heading" id="how-title">שלושה צעדים. פחות חיכוך.</h2><p class="section-copy">המסלול נבנה כדי שהלקוח לא ירגיש את המורכבות שמאחורי הקלעים.</p></div>
+      <div class="section-intro"><span class="section-kicker">פשוט להגדיר, קל להפעיל</span><h2 class="section-heading" id="how-title">מעלים את העסק לאוויר בשלושה צעדים.</h2><p class="section-copy">את המורכבות נשאיר מאחורי הקלעים. הלקוח פוגש מסלול קצר וברור.</p></div>
       <div class="timeline">
         <article class="timeline-step"><span class="step-number">1</span><h3>מגדירים את העסק</h3><p>מוסיפים מוצרים, מחירים ופרטי תשלום בדקות.</p></article>
         <article class="timeline-step"><span class="step-number">2</span><h3>מחברים את הערוץ</h3><p>מטמיעים באתר, מחברים WhatsApp, או משתמשים בשניהם.</p></article>
@@ -222,14 +235,14 @@
       </div>
     </section>
 
-    <section aria-label="למה Talk2Pay עובד"><div class="proof-strip"><div class="proof-item"><strong>פחות מעבר בין מסכים</strong><span>הלקוח נשאר בשיחה עד הרגע שבו הוא מוכן לקנות.</span></div><div class="proof-item"><strong>תשובות שמבוססות על הקטלוג</strong><span>הבוט משתמש במוצרים ובמחירים שהגדרת, לא בהבטחות כלליות.</span></div><div class="proof-item"><strong>שליטה מלאה לעסק</strong><span>מוצרים, הזמנות וסטטוסים נשארים מסודרים בדאשבורד.</span></div></div></section>
+    <section aria-label="למה Talk2Pay עובד"><div class="proof-strip"><div class="proof-item"><strong>פחות נטישה בדרך</strong><span>הלקוח מקבל תשובה והצעה במקום אחד, בלי לקפוץ בין מסכים.</span></div><div class="proof-item"><strong>מידע מדויק בזמן אמת</strong><span>הבוט משתמש במוצרים ובמחירים שהגדרת, לא בהבטחות כלליות.</span></div><div class="proof-item"><strong>שליטה שמייצרת צמיחה</strong><span>מוצרים, הזמנות וסטטוסים נשארים מסודרים בלוח הבקרה.</span></div></div></section>
 
-    <section class="plans-section" id="plans" aria-labelledby="plans-title"><div class="section-intro"><span class="section-kicker">Choose your pace</span><h2 class="section-heading" id="plans-title">מתחילים קטן, מתקדמים נכון.</h2><p class="section-copy">המחיר נשאר פשוט. היכולת גדלה איתך.</p></div><div class="plans-grid"><article class="plan-card"><span class="cp-badge">FREE</span><h3>להתחיל לזוז</h3><div class="plan-price">₪0 <small>/ חודש</small></div><p>לניהול בסיסי של מוצרים, פרופיל ואנליטיקות.</p><ul class="plan-list"><li>ניהול מוצרים</li><li>אנליטיקות בסיסיות</li><li>פרופיל ועסק</li></ul><a class="cp-button-secondary" href="/register">פתיחת חשבון</a></article><article class="plan-card featured"><span class="cp-badge good">PRO</span><h3>למכור בצורה מסודרת</h3><div class="plan-price">₪200 <small>/ חודש</small></div><p>לדומיינים, הזמנות, API Keys והטמעה באתר.</p><ul class="plan-list"><li>הזמנות ותשלומים</li><li>חיבור דומיינים</li><li>API Keys והטמעה</li></ul><a class="cp-button" href="/register">בחירת PRO</a></article><article class="plan-card"><span class="cp-badge">PREMIUM</span><h3>להפעיל את כל המנוע</h3><div class="plan-price">₪350 <small>/ חודש</small></div><p>כולל Site Builder, WhatsApp Business ועד 10 API Keys.</p><ul class="plan-list"><li>Site Builder</li><li>WhatsApp Business</li><li>עד 10 API Keys</li></ul><a class="cp-button-secondary" href="/register">בחירת PREMIUM</a></article></div></section>
+    <section class="plans-section" id="plans" aria-labelledby="plans-title"><div class="section-intro"><span class="section-kicker">המסלול שמתאים לכם</span><h2 class="section-heading" id="plans-title">מתחילים במה שצריך, צומחים בלי להחליף מערכת.</h2><p class="section-copy">בוחרים את היכולת שמתאימה לשלב שלכם ומרחיבים כשמגיע הזמן.</p></div><div class="plans-grid"><article class="plan-card"><span class="cp-badge">FREE</span><h3>להתחיל לקבל פניות</h3><div class="plan-price">₪0 <small>/ חודש</small></div><p>לניהול בסיסי של מוצרים, פרופיל ואנליטיקות.</p><ul class="plan-list"><li>ניהול מוצרים</li><li>אנליטיקות בסיסיות</li><li>פרופיל ועסק</li></ul><a class="cp-button-secondary" href="/register">פותחים חשבון בחינם</a></article><article class="plan-card featured"><span class="cp-badge good">PRO</span><h3>להגדיל המרות</h3><div class="plan-price">₪200 <small>/ חודש</small></div><p>לדומיינים, הזמנות, API Keys והטמעה באתר.</p><ul class="plan-list"><li>הזמנות ותשלומים</li><li>חיבור דומיינים</li><li>API Keys והטמעה</li></ul><a class="cp-button" href="/register">בחירת המסלול</a></article><article class="plan-card"><span class="cp-badge">PREMIUM</span><h3>להפוך את המכירה לאוטומטית</h3><div class="plan-price">₪350 <small>/ חודש</small></div><p>כולל Site Builder, WhatsApp Business ועד 10 API Keys.</p><ul class="plan-list"><li>Site Builder</li><li>WhatsApp Business</li><li>עד 10 API Keys</li></ul><a class="cp-button-secondary" href="/register">בחירת המסלול</a></article></div></section>
 
-    <section class="cta-banner" aria-labelledby="cta-title"><div><h2 id="cta-title">הלקוח כבר מתעניין. תנו לו דרך קלה לסגור.</h2><p>פתחו חשבון בחינם והתחילו לחבר בין שיחה, מוצר ותשלום.</p></div><a class="cp-button-secondary" href="/register">צור בוט חינם</a></section>
+    <section class="cta-banner" aria-labelledby="cta-title"><div><h2 id="cta-title">הלקוח כבר מתעניין. תנו לו דרך קלה לקנות.</h2><p>פותחים חשבון בחינם ומתחילים לחבר בין שיחה, מוצר ותשלום.</p></div><a class="cp-button-secondary" href="/register">פותחים חשבון בחינם</a></section>
   </main>
 
-  <footer class="home-footer"><div><p><strong>Talk2Pay</strong>, לדבר, להציע, לסגור.</p><p>© 2026 Talk2Pay</p></div><nav class="home-footer-links" aria-label="קישורי תחתית"><a href="/terms">תנאי שימוש</a><a href="/privacy">פרטיות</a><a href="/login">כניסה</a></nav></footer>
+  <footer class="home-footer"><div><p><strong>Talk2Pay</strong>, מדברים, מציעים, סוגרים.</p><p>© 2026 Talk2Pay</p></div><nav class="home-footer-links" aria-label="קישורי תחתית"><a href="/terms">תנאי שימוש</a><a href="/privacy">פרטיות</a><a href="/login">כניסה</a></nav></footer>
 
   <script>
     const DASHBOARD_ROUTE = '/dashboard';
@@ -239,7 +252,7 @@
     async function redirectAuthenticatedUser(){const token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token');if(!token)return;try{const response=await fetch('/api/v1/auth/me',{headers:{Authorization:`Bearer ${token}`}});if(response.ok){location.replace(DASHBOARD_ROUTE);return}if(response.status===401||response.status===403){['access_token','conversapay_auth_token','conversapay_user','user_id','email'].forEach((key)=>{localStorage.removeItem(key);sessionStorage.removeItem(key)})}}catch(_){}
     }
     const previewButton=document.querySelector('[data-preview-action="choose"]');
-    previewButton?.addEventListener('click',()=>{const reply=document.getElementById('previewReply');const state=document.getElementById('previewState');previewButton.textContent='הקישור מוכן ✓';previewButton.disabled=true;state.textContent='נשלח לתשלום';reply.textContent='מעולה. הלקוח יכול להשלים תשלום עכשיו, ואתה תראה את ההזמנה בדאשבורד.';reply.style.background='oklch(94% .04 163)';reply.style.color='oklch(36% .08 163)'});
+    previewButton?.addEventListener('click',()=>{const reply=document.getElementById('previewReply');const state=document.getElementById('previewState');previewButton.textContent='הקישור מוכן ✓';previewButton.disabled=true;state.textContent='נשלח לתשלום';reply.textContent='מעולה. הלקוח יכול להשלים את התשלום עכשיו, ואתה תראה את ההזמנה בלוח הבקרה.';reply.style.background='oklch(94% .04 165)';reply.style.color='oklch(36% .08 165)'});
     if(!redirectOAuthReturnToCallback()){redirectAuthenticatedUser()}
   </script>
 </body>
