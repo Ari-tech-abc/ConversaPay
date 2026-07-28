@@ -266,9 +266,13 @@ async def root():
 @app.get("/dashboard.html")
 async def dashboard_page():
     page = html_path("dashboard.html").read_text(encoding="utf-8")
-    wordpress_link = '<a class="nav-pill" href="/wordpress" aria-label="פתיחת מסך תפעול WordPress">WordPress</a>'
-    if wordpress_link not in page and "</nav>" in page:
-        page = page.replace("</nav>", f"{wordpress_link}</nav>", 1)
+    navigation_links = (
+        '<a class="nav-pill" href="/wordpress" aria-label="פתיחת מסך תפעול WordPress">WordPress</a>',
+        '<a class="nav-pill" href="/leads" aria-label="פתיחת תיבת הפניות">פניות</a>',
+    )
+    for link in navigation_links:
+        if link not in page and "</nav>" in page:
+            page = page.replace("</nav>", f"{link}</nav>", 1)
     additions = (DESIGN_SYSTEM_LINK, APPLE_POLISH_LINK, '<script src="/frontend/js/business-onboarding.js" defer></script>', '<script src="/frontend/js/premium-builder-link.js" defer></script>')
     for addition in additions:
         if addition not in page:
@@ -276,7 +280,7 @@ async def dashboard_page():
     return HTMLResponse(brand_markup(page), headers={"X-ConversaPay-Release": "apple-ready-polish"})
 
 
-PAGE_ROUTES = {"/wordpress": "wordpress.html", "/wordpress.html": "wordpress.html", "/login": "login.html", "/login.html": "login.html", "/register": "register.html", "/register.html": "register.html", "/forgot-password": "forgot-password.html", "/forgot-password.html": "forgot-password.html", "/terms": "terms.html", "/terms.html": "terms.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/pay": "pay.html", "/pay.html": "pay.html", "/payment/success": "success.html", "/payment-success.html": "success.html", "/success": "success.html", "/success.html": "success.html", "/payment/canceled": "canceled.html", "/payment-canceled.html": "canceled.html", "/canceled": "canceled.html", "/canceled.html": "canceled.html", "/upgrade": "upgrade.html", "/upgrade.html": "upgrade.html", "/profile": "profile.html", "/profile.html": "profile.html", "/settings": "settings.html", "/settings.html": "settings.html", "/setup-guide": "setup-guide.html", "/setup-guide.html": "setup-guide.html", "/widget-demo": "widget-demo.html", "/widget-demo.html": "widget-demo.html", "/auth/callback": "auth-callback.html"}
+PAGE_ROUTES = {"/wordpress": "wordpress.html", "/wordpress.html": "wordpress.html", "/login": "login.html", "/login.html": "login.html", "/register": "register.html", "/register.html": "register.html", "/forgot-password": "forgot-password.html", "/forgot-password.html": "forgot-password.html", "/terms": "terms.html", "/terms.html": "terms.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/pay": "pay.html", "/pay.html": "pay.html", "/payment/success": "success.html", "/payment-success.html": "success.html", "/success": "success.html", "/success.html": "success.html", "/payment/canceled": "canceled.html", "/payment-canceled.html": "canceled.html", "/canceled": "canceled.html", "/canceled.html": "canceled.html", "/upgrade": "upgrade.html", "/upgrade.html": "upgrade.html", "/profile": "profile.html", "/profile.html": "profile.html", "/settings": "settings.html", "/settings.html": "settings.html", "/setup-guide": "setup-guide.html", "/setup-guide.html": "setup-guide.html", "/widget-demo": "widget-demo.html", "/widget-demo.html": "widget-demo.html", "/leads": "leads.html", "/leads.html": "leads.html", "/auth/callback": "auth-callback.html"}
 
 
 def make_page_handler(filename: str):
