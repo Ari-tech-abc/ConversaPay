@@ -1,0 +1,36 @@
+name: Production smoke
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Verify public release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for deployment
+        run: |
+          for attempt in {1..18}; do
+            status=$(curl -L -s -o /tmp/ready.json -w "%{http_code}" https://conversapay.org/ready || true)
+            if [ "$status" = "200" ]; then
+              cat /tmp/ready.json
+              break
+            fi
+            echo "Deployment not ready yet, attempt $attempt, HTTP $status"
+            sleep 10
+          done
+          test -s /tmp/ready.json
+          grep -q '"status":"ready"' /tmp/ready.json
+      - name: Verify release contract
+        run: |
+          curl -L -fsS -D /tmp/headers.txt https://conversapay.org/ -o /tmp/home.html
+          grep -qi 'X-ConversaPay-Release: apple-ready-polish' /tmp/headers.txt
+          grep -q 'ConversaPay' /tmp/home.html
+          ! grep -q 'Talk2Pay' /tmp/home.html
+          ! grep -q '₪500' /tmp/home.html
+          ! grep -q '₪750' /tmp/home.html
