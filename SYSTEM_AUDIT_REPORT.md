@@ -1,27 +1,25 @@
-# ConversaPay system audit
+# Talk2Pay system audit
 
-Date: 2026-07-25
-Branch: `main`
+## Brand and compatibility
 
-## Fixed in this pass
+Talk2Pay הוא המותג הרשמי. הדומיין `conversapay.org`, route names, environment variables, API identifiers, database names, RLS functions, DOM roots ושמות קבצים נשמרים ללא שינוי כדי למנוע שבירת לקוחות קיימים.
 
-- Added `/wordpress` and `/wordpress.html` routes for the WordPress operations page.
-- Added a visible WordPress entry to the Dashboard navigation at response time, so existing cached HTML is no longer required to expose the screen.
-- Added `X-Widget-Key` to the CORS preflight allow-list.
-- Removed `localhost` from the default CORS allow-list. Local origins now require explicit environment configuration.
-- Disabled interactive FastAPI `/docs` and `/redoc` in production.
-- Verified Python syntax for the changed application routing code.
+## Runtime controls
 
-## Findings checked
+- FastAPI ו-Uvicorn בפרודקשן.
+- `/ready` מחזיר `status=ready` ו-`environment=production` כאשר השירות זמין.
+- CI מריץ compile, quality gate, local link validation ו-pytest.
+- Render מוגדר ל-auto deploy מ-main ול-health check.
+- Production smoke בודק Talk2Pay, release marker והיעדר מחירים ישנים.
 
-- Dashboard-to-WordPress navigation: fixed.
-- WordPress page route availability: fixed.
-- Widget input rendering: widget messages use `textContent`, and the dashboard uses an escaping helper for server values inserted into HTML.
-- WordPress admin output: escaped settings and page values were retained; settings use WordPress capability checks and the Settings API.
-- CORS: production defaults are now restrictive; public widget endpoints still support cross-origin requests by design.
-- Placeholder and localhost search: no matches were found in the repository search pass for the checked patterns.
-- Open issues: none were returned by the repository issue search.
+## Security controls
 
-## Remaining verification note
+- Supabase Auth ו-JWT.
+- RLS ובידוד tenant.
+- Webhook signatures ו-replay protection.
+- Origin validation ו-rate limiting אטומי לטפסי Site Builder.
+- שדה חברה גלוי ושדה honeypot נפרד.
 
-GitHub Advanced Security is not enabled for this private repository, so native repository-wide secret scanning could not run. A targeted scan was attempted for the changed widget, WordPress, UI, and operations files. PHP linting was not available in the execution environment; the plugin should be linted in CI or a WordPress build environment before release.
+## Honest status
+
+הקוד והמיתוג ב-main עברו את סבב ההקשחות. ציון production סופי מחייב גם ראיות environment-level: migration applied, browser matrix, E2E payments, widget smoke, lead persistence ו-deploy verification.
