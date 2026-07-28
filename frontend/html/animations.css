@@ -1,4 +1,4 @@
-@keyframes ui-fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-@keyframes ui-spin { to { transform: rotate(360deg); } }
-.cp-page:not(.home-page) .cp-card, .cp-page:not(.home-page) .cp-panel, .cp-page:not(.home-page) .card { animation: ui-fade-up .42s var(--ui-ease) both; }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+@keyframes ui-fade-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes ui-spin{to{transform:rotate(360deg)}}
+.cp-page:not(.home-page) .cp-card,.cp-page:not(.home-page) .cp-panel,.cp-page:not(.home-page) .card{animation:ui-fade-up var(--ui-duration-enter) var(--ui-ease) both}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}

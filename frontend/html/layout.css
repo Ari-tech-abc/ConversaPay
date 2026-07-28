@@ -1,11 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-html { background: var(--ui-bg); }
-body.cp-page { min-width: 320px; background: var(--ui-bg); color: var(--ui-text); font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-.cp-page .cp-shell { width: min(1280px, calc(100% - 40px)); margin-inline: auto; }
-.cp-page .cp-topbar { background: oklch(13% .022 270 / .88); border-color: var(--ui-line); box-shadow: var(--ui-shadow-sm); backdrop-filter: blur(18px); }
-.cp-page .cp-auth-shell { min-height: calc(100dvh - 88px); }
-.cp-page main { position: relative; }
-.cp-page h1, .cp-page h2, .cp-page h3, .cp-page h4, .cp-page h5, .cp-page h6 { color: var(--ui-text); font-family: Inter, system-ui, sans-serif; font-weight: 800; letter-spacing: -.035em; }
-.cp-page p, .cp-page .cp-muted, .cp-page .muted { color: var(--ui-text-muted); }
-@media (max-width: 720px) { .cp-page .cp-shell { width: min(100% - 24px, 1280px); } }
+html{background:var(--ui-bg)}
+body.cp-page{min-width:320px;background:var(--ui-bg);color:var(--ui-text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-optical-sizing:auto}
+.cp-page .cp-shell{width:min(1280px,calc(100% - 40px));margin-inline:auto}
+.cp-page .cp-topbar{background:oklch(13% .022 270 / .88);border-color:var(--ui-line);box-shadow:var(--ui-shadow-sm);backdrop-filter:blur(18px)}
+.cp-page .cp-auth-shell{min-height:calc(100dvh - 88px)}
+.cp-page h1,.cp-page h2,.cp-page h3,.cp-page h4,.cp-page h5,.cp-page h6{color:var(--ui-text);font-family:Inter,system-ui,sans-serif;font-weight:800;letter-spacing:-.035em;text-wrap:balance}
+.cp-page p,.cp-page .cp-muted,.cp-page .muted{color:var(--ui-text-muted);text-wrap:pretty}
+.home-page{overflow-x:hidden}
+.home-page .section{scroll-margin-top:100px}
+@media(max-width:720px){.cp-page .cp-shell{width:min(100% - 24px,1280px)}}
