@@ -36,7 +36,7 @@ services:
       - key: EMAIL_FROM_ADDRESS
         sync: false
       - key: EMAIL_FROM_NAME
-        value: ConversaPay
+        value: Talk2Pay
       - key: FRONTEND_URL
         sync: false
       - key: BACKEND_URL
