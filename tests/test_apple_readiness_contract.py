@@ -21,6 +21,21 @@ def test_generated_site_submits_to_backend_and_has_accessible_fields():
     assert "/api/v1/site-builder/leads" in source
     assert "aria-live='polite'" in source
     assert "leadName" in source and "leadEmail" in source and "leadMessage" in source
+    assert "name='company'" in source
+    assert "name='website'" in source
+    assert "website:form.website.value.trim()" in source
+    assert "website:form.company.value.trim()" not in source
+
+
+def test_public_leads_have_origin_and_atomic_rate_limit_protection():
+    source = (ROOT / "backend/routers/site_builder.py").read_text(encoding="utf-8")
+    migration = (ROOT / "database/migrations/20260728_site_builder_leads.sql").read_text(encoding="utf-8")
+    assert "_origin_allowed" in source
+    assert "_consume_rate_limit" in source
+    assert 'supabase.rpc("consume_site_lead_rate_limit"' in source
+    assert "consume_site_lead_rate_limit" in migration
+    assert "pg_advisory_xact_lock" in migration
+    assert "drop policy if exists" in migration.lower()
 
 
 def test_brand_and_delivery_contract_are_present():
@@ -29,6 +44,8 @@ def test_brand_and_delivery_contract_are_present():
     assert "APPLE_POLISH_LINK" in source
     assert "COPY_REPLACEMENTS" in source
     assert "X-ConversaPay-Release" in source
+    assert '"/leads": "leads.html"' in source
+    assert 'href=\"/leads\"' in source
 
 
 def test_widget_demo_is_hebrew_first_and_rtl():
