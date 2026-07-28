@@ -26,6 +26,7 @@ class Settings(BaseSettings):
     EMAIL_FROM_NAME: str = "ConversaPay"
     ADMIN_SECRET_PATH: str = ""
     WEBHOOK_VERIFY_TOKEN: Optional[str] = None
+    WEBHOOK_SIGNING_SECRET: Optional[str] = None
     CORS_ORIGINS: str = "https://conversapay.org"
     FRONTEND_URL: str = "https://conversapay.org"
     BACKEND_URL: str = "https://conversapay.org"
