@@ -1,0 +1,10 @@
+{
+  "name": "talk2pay-production-e2e",
+  "private": true,
+  "scripts": {
+    "test:e2e:production": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.52.0"
+  }
+}

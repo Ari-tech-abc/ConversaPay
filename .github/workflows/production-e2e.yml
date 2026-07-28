@@ -1,0 +1,30 @@
+name: Production E2E browser matrix
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  production-e2e:
+    name: Production E2E, ${{ matrix.project }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [desktop-chrome, safari-webkit, chrome-mobile]
+    env:
+      E2E_BASE_URL: https://conversapay-proj.onrender.com
+      E2E_DEMO_BUSINESS_ID: ${{ secrets.E2E_DEMO_BUSINESS_ID }}
+      E2E_DEMO_WIDGET_API_KEY: ${{ secrets.E2E_DEMO_WIDGET_API_KEY }}
+      E2E_LEAD_PAGE_URL: ${{ secrets.E2E_LEAD_PAGE_URL }}
+      E2E_OWNER_TOKEN: ${{ secrets.E2E_OWNER_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npx playwright test --project=${{ matrix.project }}
