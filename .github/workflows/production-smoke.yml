@@ -16,7 +16,7 @@ jobs:
       - name: Wait for deployment
         run: |
           for attempt in {1..18}; do
-            status=$(curl -L -s -o /tmp/ready.json -w "%{http_code}" https://conversapay.org/ready || true)
+            status=$(curl -L -s -o /tmp/ready.json -w "%{http_code}" "https://conversapay.org/ready?smoke=${GITHUB_SHA}" || true)
             if [ "$status" = "200" ]; then
               cat /tmp/ready.json
               break
@@ -26,11 +26,12 @@ jobs:
           done
           test -s /tmp/ready.json
           grep -q '"status":"ready"' /tmp/ready.json
+          grep -q '"environment":"production"' /tmp/ready.json
       - name: Verify release contract
         run: |
-          curl -L -fsS -D /tmp/headers.txt https://conversapay.org/ -o /tmp/home.html
+          curl -L -fsS -D /tmp/headers.txt "https://conversapay.org/?smoke=${GITHUB_SHA}" -o /tmp/home.html
           grep -qi 'X-ConversaPay-Release: apple-ready-polish' /tmp/headers.txt
-          grep -q 'ConversaPay' /tmp/home.html
-          ! grep -q 'Talk2Pay' /tmp/home.html
+          grep -q 'Talk2Pay' /tmp/home.html
           ! grep -q '₪500' /tmp/home.html
           ! grep -q '₪750' /tmp/home.html
+          ! grep -q 'ConversaPay' /tmp/home.html
