@@ -62,6 +62,10 @@ create table if not exists public.site_lead_rate_limits (
   updated_at timestamptz not null default now()
 );
 
+alter table public.site_lead_rate_limits enable row level security;
+revoke all on table public.site_lead_rate_limits from anon, authenticated;
+grant all on table public.site_lead_rate_limits to service_role;
+
 create or replace function public.consume_site_lead_rate_limit(
   p_key text,
   p_limit integer default 5,
