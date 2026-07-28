@@ -50,9 +50,9 @@
     document.head.appendChild(style);
     const root = document.createElement('div');
     root.id = ROOT;
-    root.innerHTML = `<button class="cp-toggle" type="button" aria-label="פתח צ׳אט" aria-expanded="false">💬</button><section class="cp-window" role="dialog" aria-label="צ׳אט עם ConversaPay"><header class="cp-head"><strong></strong><button type="button" aria-label="סגור צ׳אט">×</button></header><div id="cpMessages" class="cp-messages" role="list" aria-live="polite"></div><form class="cp-input"><input id="cpInput" maxlength="2000" autocomplete="off" placeholder="הקלד הודעה..." aria-label="הודעה"><button id="cpSend" type="submit">שלח</button></form></section>`;
+    root.innerHTML = `<button class="cp-toggle" type="button" aria-label="פתח צ׳אט" aria-expanded="false">💬</button><section class="cp-window" role="dialog" aria-label="צ׳אט עם Talk2Pay"><header class="cp-head"><strong></strong><button type="button" aria-label="סגור צ׳אט">×</button></header><div id="cpMessages" class="cp-messages" role="list" aria-live="polite"></div><form class="cp-input"><input id="cpInput" maxlength="2000" autocomplete="off" placeholder="הקלד הודעה..." aria-label="הודעה"><button id="cpSend" type="submit">שלח</button></form></section>`;
     document.body.appendChild(root);
-    root.querySelector('.cp-head strong').textContent = widget.bot_name || 'נציג ConversaPay';
+    root.querySelector('.cp-head strong').textContent = widget.bot_name || 'נציג Talk2Pay';
     const win = root.querySelector('.cp-window');
     const toggle = root.querySelector('.cp-toggle');
     const setOpen = (open) => { win.classList.toggle('open', open); toggle.setAttribute('aria-expanded', String(open)); if (open) root.querySelector('#cpInput').focus(); };
@@ -85,9 +85,9 @@
       const response = await fetch(`${origin}/api/v1/widget/config/${encodeURIComponent(businessId)}`, { headers });
       if (!response.ok) throw new Error('Widget access denied');
       inject(await response.json());
-    } catch (error) { console.warn('[ConversaPay] widget unavailable', error); }
+    } catch (error) { console.warn('[Talk2Pay] widget unavailable', error); }
   }
 
-  window.ConversaPayWidget = { open: () => document.querySelector('.cp-window')?.classList.add('open'), close: () => document.querySelector('.cp-window')?.classList.remove('open') };
+  window.Talk2PayWidget = window.ConversaPayWidget = { open: () => document.querySelector('.cp-window')?.classList.add('open'), close: () => document.querySelector('.cp-window')?.classList.remove('open') };
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', init) : init();
 }());

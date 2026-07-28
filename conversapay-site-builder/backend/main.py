@@ -1,4 +1,4 @@
-"""ConversaPay Site Builder API."""
+"""Talk2Pay Site Builder API."""
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -8,12 +8,12 @@ from backend.routers import generator
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
-app = FastAPI(title="ConversaPay Site Builder", description="Premium AI website builder", version="1.0.0", docs_url="/docs" if settings.DEBUG else None, redoc_url="/redoc" if settings.DEBUG else None)
+app = FastAPI(title="Talk2Pay Site Builder", description="Premium AI website builder", version="1.0.0", docs_url="/docs" if settings.DEBUG else None, redoc_url="/redoc" if settings.DEBUG else None)
 app.add_middleware(CORSMiddleware, allow_origins=settings.CORS_ORIGINS, allow_credentials=False, allow_methods=["POST","GET","OPTIONS"], allow_headers=["Content-Type","X-Builder-Token"], expose_headers=[])
 @app.get("/health", tags=["health"])
-async def health_check(): return {"status":"healthy","service":"conversapay-site-builder","version":"1.0.0"}
+async def health_check(): return {"status":"healthy","service":"talk2pay-site-builder","version":"1.0.0"}
 @app.get("/", tags=["root"])
-async def root(): return {"message":"ConversaPay Site Builder API","health":"/health"}
+async def root(): return {"message":"Talk2Pay Site Builder API","health":"/health"}
 @app.exception_handler(404)
 async def not_found_handler(request, exc): return JSONResponse(status_code=404, content={"error":"Not Found","detail":"The requested resource was not found"})
 @app.exception_handler(500)

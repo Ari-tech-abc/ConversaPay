@@ -1,4 +1,4 @@
-"""Configuration management for ConversaPay backend."""
+"""Configuration management for Talk2Pay backend."""
 from typing import List, Optional
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     STRIPE_CANCEL_URL: Optional[str] = None
     RESEND_API_KEY: str
     EMAIL_FROM_ADDRESS: str
-    EMAIL_FROM_NAME: str = "ConversaPay"
+    EMAIL_FROM_NAME: str = "Talk2Pay"
     ADMIN_SECRET_PATH: str = ""
     WEBHOOK_VERIFY_TOKEN: Optional[str] = None
     WEBHOOK_SIGNING_SECRET: Optional[str] = None
