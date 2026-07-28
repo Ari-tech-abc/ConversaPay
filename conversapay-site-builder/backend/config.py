@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
 class Settings(BaseSettings):
-    APP_NAME: str = "ConversaPay Site Builder"
+    APP_NAME: str = "Talk2Pay Site Builder"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
     GEMINI_API_KEY: Optional[str] = None

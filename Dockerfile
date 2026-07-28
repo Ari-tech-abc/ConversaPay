@@ -1,5 +1,5 @@
 # ============================================
-# ConversaPay — Multi-Stage Docker Build
+# Talk2Pay, Multi-Stage Docker Build
 # ============================================
 
 # Stage 1: Builder

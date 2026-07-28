@@ -1,5 +1,5 @@
 """
-ConversaPay Backend Package
+Talk2Pay Backend Package
 Multi-tenant SaaS platform for AI-powered sales and customer service
 """
 
