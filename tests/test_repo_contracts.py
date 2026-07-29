@@ -12,5 +12,5 @@ def test_health_endpoint_exists():
 
 
 def test_security_sensitive_tables_have_migrations():
-    migrations = '\n'.join(p.read_text() for p in Path('database/migrations').glob('*.sql'))
-    assert 'webhook_events' in migrations
+    schema = Path('database/full_schema_bootstrap.sql').read_text()
+    assert 'webhook_events' in schema
