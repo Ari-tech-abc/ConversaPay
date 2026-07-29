@@ -1,12 +1,16 @@
-"""Configuration management for Talk2Pay backend."""
+"""Centralized environment and filesystem configuration."""
+from pathlib import Path
 from typing import List, Optional
+
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 load_dotenv()
 
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", case_sensitive=True, extra="allow")
+
     SECRET_KEY: str
     ENVIRONMENT: str = "development"
     DEBUG: bool = False
@@ -52,6 +56,35 @@ class Settings(BaseSettings):
     @property
     def is_development(self) -> bool:
         return self.ENVIRONMENT.lower() == "development"
+
+    @property
+    def base_dir(self) -> Path:
+        return Path(__file__).resolve().parent.parent
+
+    @property
+    def frontend_dir(self) -> Path:
+        return self.base_dir / "frontend"
+
+    @property
+    def html_dir(self) -> Path:
+        return self.frontend_dir / "html"
+
+    @property
+    def images_dir(self) -> Path:
+        return self.frontend_dir / "images"
+
+    @property
+    def static_dir(self) -> Path:
+        return self.base_dir / "backend" / "static"
+
+    @property
+    def site_builder_dir(self) -> Path:
+        return self.base_dir / "conversapay-site-builder" / "frontend"
+
+    def ensure_delivery_directories(self) -> None:
+        """Create empty delivery directories so StaticFiles never crashes startup."""
+        for directory in (self.frontend_dir, self.html_dir, self.images_dir, self.static_dir):
+            directory.mkdir(parents=True, exist_ok=True)
 
 
 settings = Settings()
