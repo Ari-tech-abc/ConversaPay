@@ -1,4 +1,4 @@
-"""Ordered, atomic SQL migration runner for the repository's Supabase schema."""
+"""Apply the repository's single consolidated SQL bootstrap."""
 from __future__ import annotations
 
 import hashlib
@@ -22,27 +22,23 @@ class Migration:
 
 
 def discover_migrations(directory: Path | None = None) -> list[Migration]:
-    root = directory or settings.migrations_dir
-    files = sorted(root.glob("*.sql"), key=lambda path: path.name)
-    migrations: list[Migration] = []
-    for path in files:
-        sql = path.read_text(encoding="utf-8")
-        migrations.append(Migration(path.name, sql, hashlib.sha256(sql.encode()).hexdigest()))
-    return migrations
+    """Return only the canonical full-schema bootstrap."""
+    path = (directory or settings.base_dir / "database") / "full_schema_bootstrap.sql"
+    if not path.exists():
+        return []
+    sql = path.read_text(encoding="utf-8")
+    return [Migration(path.name, sql, hashlib.sha256(sql.encode()).hexdigest())]
 
 
 async def apply_migrations() -> int:
-    """Apply all pending migrations in one transaction under a DB advisory lock.
-
-    If DATABASE_URL is absent, no connection is attempted. Production should set
-    it when MIGRATIONS_AUTO_APPLY is enabled; this keeps local UI-only runs safe.
-    """
+    """Apply the canonical bootstrap atomically under a DB advisory lock."""
     if not settings.MIGRATIONS_AUTO_APPLY or not settings.DATABASE_URL:
-        logger.warning("Database migrations skipped: DATABASE_URL or MIGRATIONS_AUTO_APPLY is not configured")
+        logger.warning("Database bootstrap skipped: DATABASE_URL or MIGRATIONS_AUTO_APPLY is not configured")
         return 0
 
     migrations = discover_migrations()
     if not migrations:
+        logger.warning("Database bootstrap file not found")
         return 0
 
     connection = await asyncpg.connect(settings.DATABASE_URL)
