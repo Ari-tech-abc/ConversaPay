@@ -1,14 +1,13 @@
 """Talk2Pay API composition root. Delivery lives in backend.routers.frontend."""
 from contextlib import asynccontextmanager
-
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-
 from backend.config import settings
 from backend.middleware.correlation import CorrelationIdMiddleware
+from backend.middleware.auth_rate_limit import AuthRateLimitMiddleware
 from backend.routers import admin, analytics, api_keys, auth, businesses, chat, dashboard, logs, onboarding, orders, payments, products, profile, site_builder, subscription, webhooks, widget
+from backend.routers.safe_auth import router as safe_auth_router
 from backend.routers.admin_password import router as admin_password_router
 from backend.routers.frontend import router as frontend_router
 from backend.routers.stripe_webhook import router as stripe_webhook_router
@@ -71,6 +70,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
 
 app.add_middleware(CorrelationIdMiddleware)
+app.add_middleware(AuthRateLimitMiddleware)
 app.add_middleware(DualCORSMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
@@ -91,7 +91,7 @@ async def public_config():
 
 
 prefix = settings.API_PREFIX
-for selected_router, route_prefix, tag in ((onboarding.router, prefix, "authentication-onboarding"), (auth.router, f"{prefix}/auth", "authentication"), (profile.router, f"{prefix}/profile", "profile"), (subscription.router, prefix, "subscription"), (businesses.router, prefix, "businesses"), (products.router, prefix, "products"), (chat.router, prefix, "chat"), (orders.router, prefix, "orders"), (payments.router, prefix, "payments"), (logs.router, prefix, "logs"), (webhooks.router, prefix, "webhooks"), (analytics.router, prefix, "analytics"), (widget.router, prefix, "widget"), (dashboard.router, prefix, "dashboard"), (admin.router, prefix, "admin"), (admin_password_router, prefix, "admin-security"), (api_keys.router, prefix, "api-keys"), (site_builder.router, prefix, "site-builder"), (stripe_webhook_router, prefix, "stripe-webhook"), (whatsapp_webhook_router, prefix, "whatsapp-webhook")):
+for selected_router, route_prefix, tag in ((onboarding.router, prefix, "authentication-onboarding"), (safe_auth_router, f"{prefix}", "authentication"), (auth.router, f"{prefix}/auth", "authentication"), (profile.router, f"{prefix}/profile", "profile"), (subscription.router, prefix, "subscription"), (businesses.router, prefix, "businesses"), (products.router, prefix, "products"), (chat.router, prefix, "chat"), (orders.router, prefix, "orders"), (payments.router, prefix, "payments"), (logs.router, prefix, "logs"), (webhooks.router, prefix, "webhooks"), (analytics.router, prefix, "analytics"), (widget.router, prefix, "widget"), (dashboard.router, prefix, "dashboard"), (admin.router, prefix, "admin"), (admin_password_router, prefix, "admin-security"), (api_keys.router, prefix, "api-keys"), (site_builder.router, prefix, "site-builder"), (stripe_webhook_router, prefix, "stripe-webhook"), (whatsapp_webhook_router, prefix, "whatsapp-webhook")):
     app.include_router(selected_router, prefix=route_prefix, tags=[tag])
 if not settings.is_production:
     from backend.routers.dev_simulator import router as dev_simulator_router
