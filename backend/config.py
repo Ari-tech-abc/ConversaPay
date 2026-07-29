@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     SUPABASE_SERVICE_ROLE_KEY: str
     GEMINI_API_KEY: str
     DATABASE_URL: Optional[str] = None
+    REDIS_URL: Optional[str] = None
     MIGRATIONS_AUTO_APPLY: bool = True
     STRIPE_SECRET_KEY: Optional[str] = None
     STRIPE_WEBHOOK_SECRET: Optional[str] = None
