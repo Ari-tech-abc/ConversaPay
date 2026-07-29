@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     SUPABASE_ANON_KEY: str
     SUPABASE_SERVICE_ROLE_KEY: str
     GEMINI_API_KEY: str
+    DATABASE_URL: Optional[str] = None
+    MIGRATIONS_AUTO_APPLY: bool = True
     STRIPE_SECRET_KEY: Optional[str] = None
     STRIPE_WEBHOOK_SECRET: Optional[str] = None
     STRIPE_PRO_PRICE_ID: Optional[str] = None
@@ -81,8 +83,11 @@ class Settings(BaseSettings):
     def site_builder_dir(self) -> Path:
         return self.base_dir / "conversapay-site-builder" / "frontend"
 
+    @property
+    def migrations_dir(self) -> Path:
+        return self.base_dir / "database" / "migrations"
+
     def ensure_delivery_directories(self) -> None:
-        """Create empty delivery directories so StaticFiles never crashes startup."""
         for directory in (self.frontend_dir, self.html_dir, self.images_dir, self.static_dir):
             directory.mkdir(parents=True, exist_ok=True)
 

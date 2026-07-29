@@ -13,6 +13,7 @@ from backend.routers.admin_password import router as admin_password_router
 from backend.routers.frontend import router as frontend_router
 from backend.routers.stripe_webhook import router as stripe_webhook_router
 from backend.routers.whatsapp import router as whatsapp_webhook_router
+from backend.services.migration_runner import apply_migrations
 from backend.services.monitoring_service import monitoring_service
 from backend.services.observability import initialize_error_tracking
 
@@ -21,10 +22,11 @@ from backend.services.observability import initialize_error_tracking
 async def lifespan(_: FastAPI):
     monitoring_service.initialize()
     initialize_error_tracking()
+    await apply_migrations()
     yield
 
 
-app = FastAPI(title="Talk2Pay API", version="2.4.0", lifespan=lifespan, docs_url=None if settings.is_production else "/docs", redoc_url=None if settings.is_production else "/redoc")
+app = FastAPI(title="Talk2Pay API", version="2.5.0", lifespan=lifespan, docs_url=None if settings.is_production else "/docs", redoc_url=None if settings.is_production else "/redoc")
 
 
 class DualCORSMiddleware(BaseHTTPMiddleware):
@@ -75,7 +77,7 @@ app.add_middleware(SecurityHeadersMiddleware)
 
 @app.get("/health", include_in_schema=False)
 async def health():
-    return {"status": "healthy", "version": "2.4.0", "environment": settings.ENVIRONMENT}
+    return {"status": "healthy", "version": "2.5.0", "environment": settings.ENVIRONMENT}
 
 
 @app.get("/ready", include_in_schema=False)
@@ -95,7 +97,6 @@ if not settings.is_production:
     from backend.routers.dev_simulator import router as dev_simulator_router
     app.include_router(dev_simulator_router, prefix=prefix, tags=["dev-simulator"])
 
-# Delivery is intentionally the only place that knows about HTML, assets, and static files.
 app.include_router(frontend_router)
 
 
