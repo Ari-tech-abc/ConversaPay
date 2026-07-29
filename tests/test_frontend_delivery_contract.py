@@ -11,9 +11,8 @@ def test_delivery_paths_are_absolute_and_inside_repo():
     assert settings.images_dir.parent == settings.frontend_dir
 
 
-def test_missing_html_returns_protected_404(monkeypatch, tmp_path):
-    monkeypatch.setattr(settings, "html_dir", tmp_path)
-    response = _html_response("missing.html")
+def test_missing_html_returns_protected_404():
+    response = _html_response("definitely-missing.html")
     assert response.status_code == 404
     assert "Talk2Pay" in response.body.decode()
 
