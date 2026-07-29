@@ -1,8 +1,13 @@
 """Talk2Pay API composition root. Delivery lives in backend.routers.frontend."""
 from contextlib import asynccontextmanager
+import asyncio
+import logging
+
+import asyncpg
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
 from starlette.middleware.base import BaseHTTPMiddleware
+
 from backend.config import settings
 from backend.middleware.correlation import CorrelationIdMiddleware
 from backend.middleware.auth_rate_limit import AuthRateLimitMiddleware
@@ -15,6 +20,8 @@ from backend.routers.whatsapp import router as whatsapp_webhook_router
 from backend.services.migration_runner import apply_migrations
 from backend.services.monitoring_service import monitoring_service
 from backend.services.observability import initialize_error_tracking
+
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -80,9 +87,47 @@ async def health():
     return {"status": "healthy", "version": "2.5.0", "environment": settings.ENVIRONMENT}
 
 
+async def _check_database() -> None:
+    if not settings.DATABASE_URL:
+        raise RuntimeError("DATABASE_URL is not configured")
+    connection = await asyncpg.connect(settings.DATABASE_URL, timeout=3)
+    try:
+        await connection.execute("SELECT 1")
+    finally:
+        await connection.close()
+
+
+async def _check_redis() -> None:
+    if not settings.REDIS_URL:
+        return
+    import redis.asyncio as redis_async
+    client = redis_async.from_url(settings.REDIS_URL, socket_connect_timeout=2, socket_timeout=2)
+    try:
+        await asyncio.wait_for(client.ping(), timeout=3)
+    finally:
+        await client.aclose()
+
+
 @app.get("/ready", include_in_schema=False)
 async def readiness():
-    return {"status": "ready", "environment": settings.ENVIRONMENT}
+    checks = {"database": "ok", "redis": "skipped" if not settings.REDIS_URL else "ok"}
+    failures = {}
+    try:
+        await _check_database()
+    except Exception as exc:
+        logger.error("Readiness database check failed: %s", exc)
+        checks["database"] = "failed"
+        failures["database"] = str(exc)
+    if settings.REDIS_URL:
+        try:
+            await _check_redis()
+        except Exception as exc:
+            logger.error("Readiness Redis check failed: %s", exc)
+            checks["redis"] = "failed"
+            failures["redis"] = str(exc)
+    if failures:
+        return JSONResponse(status_code=503, content={"status": "not_ready", "environment": settings.ENVIRONMENT, "checks": checks, "failures": failures})
+    return {"status": "ready", "environment": settings.ENVIRONMENT, "checks": checks}
 
 
 @app.get(f"{settings.API_PREFIX}/config/public", include_in_schema=False)

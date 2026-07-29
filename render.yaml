@@ -13,6 +13,10 @@ services:
         value: "false"
       - key: SECRET_KEY
         sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY
@@ -21,16 +25,20 @@ services:
         sync: false
       - key: GEMINI_API_KEY
         sync: false
-      - key: PAYME_PAY_KEY
+      - key: STRIPE_SECRET_KEY
         sync: false
-      - key: PAYME_SELLER_KEY
+      - key: STRIPE_WEBHOOK_SECRET
         sync: false
-      - key: PAYME_SELLER_ID
+      - key: STRIPE_PRO_PRICE_ID
         sync: false
-      - key: PAYME_BUSINESS_ID
+      - key: STRIPE_PREMIUM_PRICE_ID
         sync: false
-      - key: PAYME_API_URL
-        value: https://live.payme.io/api
+      - key: STRIPE_SUCCESS_URL
+        sync: false
+      - key: STRIPE_CANCEL_URL
+        sync: false
+      - key: MIGRATIONS_AUTO_APPLY
+        value: "true"
       - key: RESEND_API_KEY
         sync: false
       - key: EMAIL_FROM_ADDRESS
