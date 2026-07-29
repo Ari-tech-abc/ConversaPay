@@ -67,10 +67,6 @@ jobs:
             -c "select proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public' order by 1;"
       - name: Compile backend and delivery router
         run: python -m compileall -q backend main.py
-      - name: Run UI and link quality gates
-        run: |
-          python scripts/ui_quality_gate.py
-          python scripts/check_html_links.py
       - name: Assert GET /ready returns 200 from live uvicorn
         run: |
           set -euo pipefail
@@ -100,3 +96,7 @@ jobs:
         run: python -m pytest -q tests/test_frontend_delivery_contract.py tests/test_repo_contracts.py
       - name: Run full test suite
         run: python -m pytest -q
+      - name: Run UI and link quality gates
+        run: |
+          python scripts/ui_quality_gate.py
+          python scripts/check_html_links.py
