@@ -16,7 +16,7 @@ def test_public_lead_creation_has_no_auth_dependency_but_owner_reads_do():
     create = source.split('@router.post("/leads"', 1)[1].split('@router.get("/leads"', 1)[0]
     listing = source.split('@router.get("/leads"', 1)[1].split('@router.patch("/leads/{lead_id}"', 1)[0]
     assert "Depends(require_auth)" not in create
-    assert "Depends(require_auth)" in listing
+    assert "current_user: AuthUser = Depends(require_auth)" in listing
 
 
 def test_cross_tenant_guard_rejects_missing_resource():
