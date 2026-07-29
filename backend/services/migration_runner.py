@@ -15,21 +15,19 @@ class Migration:
     checksum:str
 def discover_migrations(directory:Path|None=None)->list[Migration]:
     root=directory or settings.migrations_dir
-    paths=[]
     bootstrap=settings.base_dir/"database"/"full_schema_bootstrap.sql"
-    if bootstrap.exists(): paths.append(bootstrap)
+    paths=[bootstrap] if bootstrap.exists() else []
     if root.exists(): paths.extend(sorted(root.glob("*.sql")))
-    migrations=[]
+    result=[]
     for path in paths:
         sql=path.read_text(encoding="utf-8")
-        migrations.append(Migration(path.name,sql,hashlib.sha256(sql.encode()).hexdigest()))
-    return migrations
+        result.append(Migration(path.name,sql,hashlib.sha256(sql.encode()).hexdigest()))
+    return result
 async def apply_migrations()->int:
     if not settings.MIGRATIONS_AUTO_APPLY or not settings.DATABASE_URL:
-        logger.warning("Database bootstrap skipped: DATABASE_URL or MIGRATIONS_AUTO_APPLY is not configured"); return 0
+        logger.warning("Database migrations skipped: configuration is incomplete"); return 0
     migrations=discover_migrations()
-    if not migrations:
-        logger.warning("Database migration files not found"); return 0
+    if not migrations: logger.warning("No database migrations found"); return 0
     connection=await asyncpg.connect(settings.DATABASE_URL)
     try:
         async with connection.transaction():
