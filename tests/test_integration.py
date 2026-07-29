@@ -77,8 +77,8 @@ class TestAuthEnforcement:
         response = client.get("/api/v1/payments/profile")
         assert response.status_code in (401, 403)
 
-    def test_dashboard_stats_requires_token(self):
-        response = client.get("/api/v1/dashboard/stats")
+    def test_dashboard_profile_requires_token(self):
+        response = client.get("/api/v1/dashboard/profile")
         assert response.status_code in (401, 403)
 
     def test_admin_panel_requires_token(self):
@@ -340,8 +340,7 @@ class TestVerifyEmailFlow:
     def test_login_invalid_credentials_returns_401(self):
         """POST /auth/login with bad credentials returns 401."""
         with patch("backend.routers.auth.supabase") as mock_sb:
-            from supabase_auth.errors import AuthApiError
-            mock_sb.auth.sign_in_with_password.side_effect = AuthApiError("Invalid login credentials", 400)
+            mock_sb.auth.sign_in_with_password.side_effect = Exception("Invalid login credentials")
             response = client.post(
                 "/api/v1/auth/login",
                 json={"email": "bad@example.com", "password": "wrongpass"}
