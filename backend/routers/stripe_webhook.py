@@ -16,9 +16,11 @@ def _claim(event_id,event_type):
     if isinstance(value,dict): value=next(iter(value.values()),False)
     return value is True or str(value).lower()=="true"
 
-def _lookup_user(customer_id):
-    if not customer_id:return None
-    result=supabase.table("profiles").select("user_id").eq("stripe_customer_id",customer_id).limit(1).execute()
+def _lookup_user(customer_id=None,subscription_id=None):
+    query=supabase.table("profiles").select("user_id")
+    if subscription_id: result=query.eq("stripe_subscription_id",subscription_id).limit(1).execute()
+    elif customer_id: result=query.eq("stripe_customer_id",customer_id).limit(1).execute()
+    else: return None
     return result.data[0]["user_id"] if result.data else None
 
 def _update_order(order_id:str,*,order_status:str,payment_status:str,metadata_updates:dict[str,Any],paid:bool=False)->None:
@@ -26,10 +28,16 @@ def _update_order(order_id:str,*,order_status:str,payment_status:str,metadata_up
     if result.data is not True and str(result.data).lower() not in {"true","[true]"}: raise RuntimeError("Atomic order/payment update was not confirmed")
 
 def _apply_from_event(*,user_id,plan_type,subscription_id,customer_id,context):
-    apply_subscription_state(user_id=user_id or _lookup_user(customer_id),plan_type=plan_type,subscription_status=context.get("status"),subscription_expires_at=context.get("current_period_end"),customer_id=customer_id,cancel_at_period_end=context.get("cancel_at_period_end",False),stripe_subscription_id=subscription_id)
+    apply_subscription_state(user_id=user_id or _lookup_user(customer_id,subscription_id),plan_type=plan_type,subscription_status=context.get("status"),subscription_expires_at=context.get("current_period_end"),customer_id=customer_id,cancel_at_period_end=context.get("cancel_at_period_end",False),stripe_subscription_id=subscription_id)
 
 def _subscription_context(obj:dict,subscription_id:str|None=None)->dict:
     return {"id":obj.get("id") or subscription_id,"metadata":dict(obj.get("metadata") or {}),"status":obj.get("status"),"current_period_end":period_end_iso(obj.get("current_period_end")),"customer":obj.get("customer"),"cancel_at_period_end":bool(obj.get("cancel_at_period_end",False))}
+
+def _as_dict(obj:Any)->dict:
+    if isinstance(obj,dict): return obj
+    if hasattr(obj,"to_dict_recursive"): return obj.to_dict_recursive()
+    if hasattr(obj,"to_dict"): return obj.to_dict()
+    return dict(obj)
 
 @router.post("")
 async def stripe_webhook(request:Request)->dict[str,Any]:
@@ -41,8 +49,7 @@ async def stripe_webhook(request:Request)->dict[str,Any]:
     event_id,event_type=str(event["id"]),str(event["type"])
     try:
         if not _claim(event_id,event_type): return {"status":"ok","processed":False,"duplicate":True}
-        obj=stripe.util.convert_to_stripe_object(event["data"]["object"]) if isinstance(event["data"]["object"],dict) else event["data"]["object"]
-        obj=stripe_service_obj(obj); metadata=dict(obj.get("metadata") or {})
+        obj=_as_dict(event["data"]["object"]); metadata=dict(obj.get("metadata") or {})
         if event_type in {"checkout.session.completed","checkout.session.async_payment_succeeded"}:
             order_id=metadata.get("order_id")
             if order_id: _update_order(order_id,order_status="paid",payment_status="succeeded",paid=True,metadata_updates={"provider":"stripe","session_id":obj.get("id"),"payment_intent":obj.get("payment_intent"),"customer":obj.get("customer")})
@@ -60,16 +67,10 @@ async def stripe_webhook(request:Request)->dict[str,Any]:
             if event_type!="invoice.payment_failed" or context.get("status") in {"canceled","unpaid","incomplete_expired"}:
                 _apply_from_event(user_id=cm.get("user_id"),plan_type=cm.get("plan_type"),subscription_id=context.get("id"),customer_id=context.get("customer") or obj.get("customer"),context=context)
         elif event_type in {"charge.refunded","charge.refund.updated"}:
-            user_id=_lookup_user(obj.get("customer"))
+            user_id=_lookup_user(customer_id=obj.get("customer"))
             if user_id: apply_subscription_state(user_id=user_id,plan_type="free",subscription_status="canceled",subscription_expires_at=None,customer_id=obj.get("customer"),cancel_at_period_end=False)
         mark_webhook_processed(event_id); return {"status":"ok","processed":True,"event_type":event_type}
     except Exception as exc:
         try: mark_webhook_failed(event_id,str(exc))
         except Exception: logger.exception("Failed to mark webhook event failed")
         logger.exception("Stripe webhook processing failed for %s",event_id); raise HTTPException(500,"Webhook processing failed") from exc
-
-def stripe_service_obj(obj):
-    if isinstance(obj,dict): return obj
-    if hasattr(obj,"to_dict_recursive"): return obj.to_dict_recursive()
-    if hasattr(obj,"to_dict"): return obj.to_dict()
-    return obj
