@@ -12,7 +12,7 @@ begin
   on conflict (provider, event_id) do nothing;
   if found then return true; end if;
   update public.webhook_events
-     set status = 'processing', received_at = now(), status = 'processing'
+     set status = 'processing', received_at = now()
    where provider = p_provider and event_id = p_event_id and status in ('failed', 'received');
   get diagnostics claimed = row_count;
   return claimed;
