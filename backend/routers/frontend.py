@@ -4,7 +4,7 @@ from __future__ import annotations
 import hmac
 import re
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -16,7 +16,7 @@ router.mount("/static", StaticFiles(directory=settings.static_dir), name="static
 router.mount("/frontend", StaticFiles(directory=settings.frontend_dir), name="frontend")
 router.mount("/images", StaticFiles(directory=settings.images_dir), name="images")
 
-FALLBACK_HTML = """<!doctype html><html lang=\"he\" dir=\"rtl\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Talk2Pay</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f1f8;color:#211b2b;font:16px system-ui,sans-serif}.box{width:min(620px,calc(100% - 40px));padding:40px;border:1px solid #ddd4e8;border-radius:24px;background:#fff;text-align:center}a{color:#6d42c5;font-weight:700}</style></head><body><main class=\"box\"><h1>Talk2Pay</h1><p>העמוד המבוקש אינו זמין כרגע.</p><a href=\"/\">חזרה לדף הבית</a></main></body></html>"""
+FALLBACK_HTML = """<!doctype html><html lang=\"he\" dir=\"rtl\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Talk2Pay</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f1f8;color:#211b2b;font:16px system-ui,sans-serif}.box{width:min(620px,calc(100% - 40px));padding:40px;border:1px solid #ddd4e8;border-radius:24px;background:#fff;text-align:center}.code{font-size:3rem;font-weight:800;color:#6d42c5}a{color:#6d42c5;font-weight:700}</style></head><body><main class=\"box\"><div class=\"code\">404</div><h1>Talk2Pay</h1><p>העמוד המבוקש אינו זמין כרגע.</p><a href=\"/\">חזרה לדף הבית</a></main></body></html>"""
 COPY_REPLACEMENTS = (("ConversaPay", "Talk2Pay"), ("Production checklist", "רשימת בדיקות לפרודקשן"), ("Developer tools", "כלי פיתוח"), ("Dashboard", "לוח בקרה"), ("DASHBOARD", "לוח בקרה"), ("Billing", "חיוב"), ("Security", "אבטחה"))
 BRAND_LOGO_SRC = "/frontend/images/conversapay_logo_whitebg.png"
 FAVICON_SRC = "/frontend/images/favicon-32x32.png"
@@ -46,7 +46,7 @@ def _brand_markup(page: str) -> str:
 def _html_response(filename: str, status_code: int = 200) -> HTMLResponse:
     path = _safe_html_path(filename)
     if not path.is_file():
-        return HTMLResponse(FALLBACK_HTML if status_code == 200 else "<h1>404</h1>", status_code=404 if status_code == 200 else status_code)
+        return HTMLResponse(FALLBACK_HTML, status_code=404)
     return HTMLResponse(_brand_markup(path.read_text(encoding="utf-8")), status_code=status_code, headers={"X-Delivery-Release": "safe-frontend-router"})
 
 
@@ -54,7 +54,7 @@ def _secret_matches(candidate: str, expected: str) -> bool:
     return bool(expected) and hmac.compare_digest(candidate.encode(), expected.encode())
 
 
-PAGE_ROUTES = {"/": "home.html", "/home": "home.html", "/dashboard": "dashboard.html", "/dashboard.html": "dashboard.html", "/wordpress": "wordpress.html", "/wordpress.html": "wordpress.html", "/login": "login.html", "/login.html": "login.html", "/register": "register.html", "/register.html": "register.html", "/forgot-password": "forgot-password.html", "/forgot-password.html": "forgot-password.html", "/terms": "terms.html", "/terms.html": "terms.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/pay": "pay.html", "/pay.html": "pay.html", "/payment/success": "success.html", "/payment-success.html": "payment-success.html", "/success": "success.html", "/success.html": "success.html", "/payment/canceled": "canceled.html", "/payment-canceled.html": "payment-canceled.html", "/canceled": "canceled.html", "/canceled.html": "canceled.html", "/upgrade": "upgrade.html", "/upgrade.html": "upgrade.html", "/profile": "profile.html", "/profile.html": "profile.html", "/settings": "settings.html", "/settings.html": "settings.html", "/setup-guide": "setup-guide.html", "/setup-guide.html": "setup-guide.html", "/widget-demo": "widget-demo.html", "/widget-demo.html": "widget-demo.html", "/leads": "leads.html", "/leads.html": "leads.html", "/auth/callback": "auth-callback.html"}
+PAGE_ROUTES = {"/": "home.html", "/home": "home.html", "/dashboard": "dashboard.html", "/dashboard.html": "dashboard.html", "/wordpress": "wordpress.html", "/wordpress.html": "wordpress.html", "/login": "login.html", "/login.html": "login.html", "/register": "register.html", "/register.html": "register.html", "/forgot-password": "forgot-password.html", "/forgot-password.html": "forgot-password.html", "/terms": "terms.html", "/terms.html": "terms.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/pay": "pay.html", "/pay.html": "pay.html", "/payment/success": "success.html", "/payment-success.html": "success.html", "/success": "success.html", "/success.html": "success.html", "/payment/canceled": "canceled.html", "/payment-canceled.html": "canceled.html", "/canceled": "canceled.html", "/canceled.html": "canceled.html", "/upgrade": "upgrade.html", "/upgrade.html": "upgrade.html", "/profile": "profile.html", "/profile.html": "profile.html", "/settings": "settings.html", "/settings.html": "settings.html", "/setup-guide": "setup-guide.html", "/setup-guide.html": "setup-guide.html", "/widget-demo": "widget-demo.html", "/widget-demo.html": "widget-demo.html", "/leads": "leads.html", "/leads.html": "leads.html", "/auth/callback": "auth-callback.html"}
 
 for route, filename in PAGE_ROUTES.items():
     router.add_api_route(route, lambda filename=filename: _html_response(filename), methods=["GET"], include_in_schema=False)
@@ -119,3 +119,10 @@ async def sitemap():
     if not path.is_file():
         raise HTTPException(status_code=404, detail="Sitemap not found")
     return FileResponse(path, media_type="application/xml")
+
+
+@router.get("/{path:path}", include_in_schema=False)
+async def frontend_fallback(path: str, request: Request):
+    if request.url.path.startswith(settings.API_PREFIX):
+        raise HTTPException(status_code=404, detail="Not found")
+    return HTMLResponse(FALLBACK_HTML, status_code=404)
