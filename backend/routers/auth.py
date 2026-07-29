@@ -5,14 +5,15 @@ Uses Supabase Auth for authentication.
 from fastapi import APIRouter, HTTPException, status, Depends, Request, Query
 from fastapi.security import HTTPBearer
 from fastapi.responses import HTMLResponse, RedirectResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 from typing import Optional
 from datetime import datetime, timedelta
 import logging
 import secrets
 
 from supabase import create_client, Client
-from supabase_auth.errors import AuthApiError
+from supabase_auth.errors import AuthApiError as SupabaseAuthApiError
+from postgrest.exceptions import APIError as PostgrestAPIError
 from backend.config import settings
 from backend.middleware.auth import AuthUser, get_current_user
 from backend.models.schemas import (
@@ -136,7 +137,7 @@ def create_business_for_user(user_id: str, business_name: str) -> Optional[str]:
         business_data = {
             "business_id": business_id,
             "business_name": business_name,
-            "description": f"\u05e2\u05e1\u05e7 \u05e9\u05dc {business_name}",
+            "description": f"עסק של {business_name}",
             "owner_id": user_id,
             "subscription_tier": "free",
             "subscription_status": "active",
@@ -228,6 +229,30 @@ def save_verification_token(user_id: str, token: str) -> bool:
         return False
 
 
+def _auth_error_status_code(error: Exception) -> int:
+    """Map a Supabase Auth failure to a client-safe HTTP status."""
+    raw_status = getattr(error, "status_code", None) or getattr(error, "status", None)
+    try:
+        upstream_status = int(raw_status)
+    except (TypeError, ValueError):
+        upstream_status = 0
+
+    return status.HTTP_400_BAD_REQUEST if 400 <= upstream_status < 500 else status.HTTP_502_BAD_GATEWAY
+
+
+def _is_database_permission_error(error: Exception) -> bool:
+    """Detect Postgres privilege/RLS failures returned by PostgREST."""
+    error_text = str(error).lower()
+    error_code = str(getattr(error, "code", "")).lower()
+    return (
+        error_code == "42501"
+        or "42501" in error_text
+        or "permission denied" in error_text
+        or "row-level security" in error_text
+        or "rls policy" in error_text
+    )
+
+
 # ============================================
 # Routes
 # ============================================
@@ -284,7 +309,7 @@ async def signup(request: UserRegister):
     
     except HTTPException:
         raise
-    except AuthApiError as e:
+    except SupabaseAuthApiError as e:
         error_message = str(e)
         logger.error(f"Registration error (AuthApiError): {error_message}")
         if "already registered" in error_message.lower() or "already exists" in error_message.lower() or "duplicate" in error_message.lower():
@@ -365,7 +390,7 @@ async def login(request: UserLogin):
     
     except HTTPException:
         raise
-    except AuthApiError as e:
+    except SupabaseAuthApiError as e:
         logger.error(f"Login error (AuthApiError): {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -409,7 +434,7 @@ async def verify_email(token: str = Query(..., description="Email verification t
             </head>
             <body>
                 <div class="container">
-                    <div class="error-icon">\u274c</div>
+                    <div class="error-icon">❌</div>
                     <h1>Verification Failed</h1>
                     <p>The verification link is invalid or has expired.</p>
                     <p>Please try registering again or contact support if you continue to have issues.</p>
@@ -441,7 +466,7 @@ async def verify_email(token: str = Query(..., description="Email verification t
                 </head>
                 <body>
                     <div class="container">
-                        <div class="warning-icon">\u23f0</div>
+                        <div class="warning-icon">⏰</div>
                         <h1>Link Expired</h1>
                         <p>This verification link has expired. Verification links are valid for 24 hours.</p>
                         <p>Please request a new verification email or try registering again.</p>
@@ -470,7 +495,7 @@ async def verify_email(token: str = Query(..., description="Email verification t
             </head>
             <body>
                 <div class="container">
-                    <div class="info-icon">\u2139\ufe0f</div>
+                    <div class="info-icon">ℹ️</div>
                     <h1>Already Verified</h1>
                     <p>Your email has already been verified. You can log in to your account.</p>
                     <a href="/login.html" class="button">Login</a>
@@ -508,7 +533,7 @@ async def verify_email(token: str = Query(..., description="Email verification t
         </head>
         <body>
             <div class="container">
-                <div class="success-icon">\u2705</div>
+                <div class="success-icon">✅</div>
                 <h1>Email Verified Successfully!</h1>
                 <p>Thank you for verifying your email address. Your account is now active.</p>
                 <p>You can now log in and start using ConversaPay!</p>
@@ -580,7 +605,6 @@ async def request_password_reset(request: Request, request_data: PasswordResetRe
     try:
         client_ip = request.client.host if request.client else "unknown"
         user_agent = request.headers.get("user-agent", "unknown")
-        current_time = datetime.utcnow()
         
         logger.info(
             f"Password reset requested - Email: {request_data.email}, "
@@ -601,31 +625,83 @@ async def request_password_reset(request: Request, request_data: PasswordResetRe
     
     except HTTPException:
         raise
+    except SupabaseAuthApiError as e:
+        error_message = str(e)
+        response_status = _auth_error_status_code(e)
+        logger.error(
+            f"Password reset request AuthApiError: {error_message}; "
+            f"returning HTTP {response_status}",
+            exc_info=True
+        )
+        if response_status == status.HTTP_400_BAD_REQUEST:
+            detail = "Password reset request was rejected. Check the email address and try again."
+        else:
+            detail = "Password reset service is temporarily unavailable. Please try again later."
+        raise HTTPException(status_code=response_status, detail=detail)
     except Exception as e:
         logger.error(f"Password reset request error: {str(e)}", exc_info=True)
-        return MessageResponse(
-            message="If an account exists with this email, you will receive a password reset link."
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Password reset service is temporarily unavailable. Please try again later."
         )
 
 
 @router.post("/password-reset/confirm", response_model=MessageResponse)
-async def confirm_password_reset(request: Request, request_data: PasswordReset):
+async def confirm_password_reset(request: Request):
     """
     Confirm password reset with token and new password.
+
+    The body is validated here instead of by FastAPI's parameter validation so
+    missing, malformed, or invalid values return an actionable 400 response
+    rather than an opaque 422 validation payload.
     """
     try:
-        client_ip = request.client.host if request.client else "unknown"
-        user_agent = request.headers.get("user-agent", "unknown")
-        
+        try:
+            payload = await request.json()
+        except (TypeError, ValueError):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Request body must be valid JSON with a reset token and new password."
+            )
+
+        if not isinstance(payload, dict):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Request body must be an object with a reset token and new password."
+            )
+
+        if not isinstance(payload.get("token"), str) or not payload.get("token", "").strip():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="A valid reset token is required."
+            )
+
+        if not isinstance(payload.get("new_password"), str):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="A new password is required and must be at least 8 characters long."
+            )
+
+        try:
+            request_data = PasswordReset(**payload)
+        except ValidationError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="A new password is required and must be at least 8 characters long."
+            )
+
         if len(request_data.new_password) < 8:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Password must be at least 8 characters long"
+                detail="Password must be at least 8 characters long."
             )
+        
+        client_ip = request.client.host if request.client else "unknown"
+        user_agent = request.headers.get("user-agent", "unknown")
         
         supabase.auth.update_user({
             "password": request_data.new_password
-        }, request_data.token)
+        }, request_data.token.strip())
         
         logger.info(
             f"Password reset successful - IP: {client_ip}, "
@@ -633,7 +709,7 @@ async def confirm_password_reset(request: Request, request_data: PasswordReset):
         )
         
         try:
-            user_response = supabase.auth.get_user(request_data.token)
+            user_response = supabase.auth.get_user(request_data.token.strip())
             if user_response and user_response.user:
                 user_id = user_response.user.id
                 
@@ -657,23 +733,23 @@ async def confirm_password_reset(request: Request, request_data: PasswordReset):
     
     except HTTPException:
         raise
-    except AuthApiError as e:
-        logger.error(f"Password reset confirm error (AuthApiError): {str(e)}")
+    except SupabaseAuthApiError as e:
+        logger.error(f"Password reset confirm error (AuthApiError): {str(e)}", exc_info=True)
         error_message = str(e)
         if "expired" in error_message.lower() or "invalid" in error_message.lower():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid or expired reset token"
+                detail="Invalid or expired reset token. Request a new password reset link."
             )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Password reset failed. Please try again."
+            detail="Password reset failed. Check the reset token and try again."
         )
     except Exception as e:
         logger.error(f"Password reset confirm error: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid or expired reset token"
+            detail="Invalid or expired reset token. Request a new password reset link."
         )
 
 
@@ -707,7 +783,7 @@ async def verify_identity_for_reset(
                 email_sent = email_service.send_verification_email(
                     to_email=email,
                     token=verification_token,
-                    user_name=user_lookup.user.user_metadata.get("full_name", "\u05de\u05e9\u05ea\u05de\u05e9")
+                    user_name=user_lookup.user.user_metadata.get("full_name", "משתמש")
                 )
                 
                 logger.info(
@@ -720,7 +796,7 @@ async def verify_identity_for_reset(
                     "email": email,
                     "expires_in_minutes": 10
                 }
-        except AuthApiError:
+        except SupabaseAuthApiError:
             pass
         
         logger.info(f"Identity verification requested for: {email}, IP: {client_ip}")
@@ -839,18 +915,73 @@ async def complete_oauth_session(current_user: AuthUser = Depends(get_current_us
     """
     try:
         full_name = ""
-        business_name = "\u05d4\u05e2\u05e1\u05e7 \u05e9\u05dc\u05d9"
+        business_name = "העסק שלי"
         try:
             user_lookup = supabase.auth.admin.get_user_by_id(current_user.user_id)
             metadata = (user_lookup.user.user_metadata or {}) if user_lookup and user_lookup.user else {}
             full_name = metadata.get("full_name") or metadata.get("name") or ""
             business_name = metadata.get("business_name") or (
-                f"\u05d4\u05e2\u05e1\u05e7 \u05e9\u05dc {full_name}" if full_name else "\u05d4\u05e2\u05e1\u05e7 \u05e9\u05dc\u05d9"
+                f"העסק של {full_name}" if full_name else "העסק שלי"
             )
         except Exception as e:
             logger.warning(f"Could not fetch OAuth user metadata: {str(e)}")
 
-        profile = get_user_profile(current_user.user_id)
+        # Do not use get_user_profile here: it intentionally swallows database
+        # errors, which would make a missing profiles SELECT privilege look like
+        # a missing row and lead to a misleading insert attempt.
+        try:
+            profile_result = supabase.table("profiles") \
+                .select("*") \
+                .eq("user_id", current_user.user_id) \
+                .execute()
+            profile = profile_result.data[0] if profile_result.data else None
+        except PostgrestAPIError as e:
+            if _is_database_permission_error(e):
+                logger.error(
+                    "SQL PERMISSION WARNING: OAuth session cannot SELECT from "
+                    "public.profiles for user %s. Missing SQL privileges or an "
+                    "RLS policy is blocking the query. Grant SELECT on profiles "
+                    "and verify the Supabase service-role/RLS configuration. "
+                    "Database error: %s",
+                    current_user.user_id,
+                    str(e),
+                    exc_info=True,
+                )
+            else:
+                logger.error(
+                    "OAuth session profiles query failed for user %s: %s",
+                    current_user.user_id,
+                    str(e),
+                    exc_info=True,
+                )
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Unable to load your profile. Please try again later."
+            )
+        except Exception as e:
+            if _is_database_permission_error(e):
+                logger.error(
+                    "SQL PERMISSION WARNING: OAuth session cannot SELECT from "
+                    "public.profiles for user %s. Missing SQL privileges or an "
+                    "RLS policy is blocking the query. Grant SELECT on profiles "
+                    "and verify the Supabase service-role/RLS configuration. "
+                    "Database error: %s",
+                    current_user.user_id,
+                    str(e),
+                    exc_info=True,
+                )
+            else:
+                logger.error(
+                    "Unexpected OAuth session profiles lookup error for user %s: %s",
+                    current_user.user_id,
+                    str(e),
+                    exc_info=True,
+                )
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail="Unable to load your profile. Please try again later."
+            )
+
         if not profile:
             token = generate_verification_token()
             expires_at = (datetime.utcnow() + timedelta(hours=24)).isoformat()
