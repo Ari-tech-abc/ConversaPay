@@ -136,7 +136,7 @@ def create_business_for_user(user_id: str, business_name: str) -> Optional[str]:
         business_data = {
             "business_id": business_id,
             "business_name": business_name,
-            "description": f"עסק של {business_name}",
+            "description": f"\u05e2\u05e1\u05e7 \u05e9\u05dc {business_name}",
             "owner_id": user_id,
             "subscription_tier": "free",
             "subscription_status": "active",
@@ -171,10 +171,6 @@ async def initialize_user_workspace(user_id: str, email: str, full_name: str, bu
     # Step 1: Create profile if it doesn't exist
     profile = get_user_profile(user_id)
     if not profile:
-        # FIX: create_user_profile requires a verification token + expiry.
-        # Calling it with 3 args raised a TypeError here, which the caller's
-        # broad except-block swallowed as a generic 401 "invalid credentials" —
-        # silently breaking login for any user whose profile row was missing.
         token = generate_verification_token()
         expires_at = (datetime.utcnow() + timedelta(hours=24)).isoformat()
         profile = create_user_profile(user_id, email, full_name, token, expires_at)
@@ -195,9 +191,6 @@ async def initialize_user_workspace(user_id: str, email: str, full_name: str, bu
             if business_uuid:
                 result["business_created"] = True
                 result["business_id"] = business_uuid
-    
-    # Note: PayMe checkout is NOT created during login/initialization
-    # It will only be created when user explicitly clicks "Upgrade" button
     
     return result
 
@@ -400,7 +393,6 @@ async def verify_email(token: str = Query(..., description="Email verification t
             .execute()
         
         if not result.data:
-            # Return error HTML page
             return HTMLResponse(content="""
             <!DOCTYPE html>
             <html>
@@ -409,41 +401,15 @@ async def verify_email(token: str = Query(..., description="Email verification t
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Verification Failed - ConversaPay</title>
                 <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        line-height: 1.6;
-                        color: #333;
-                        max-width: 600px;
-                        margin: 0 auto;
-                        padding: 20px;
-                        text-align: center;
-                    }
-                    .container {
-                        background: #f9f9f9;
-                        padding: 40px;
-                        border-radius: 10px;
-                        margin-top: 50px;
-                    }
-                    .error-icon {
-                        font-size: 60px;
-                        color: #dc3545;
-                        margin-bottom: 20px;
-                    }
-                    .button {
-                        display: inline-block;
-                        padding: 15px 30px;
-                        background: #667eea;
-                        color: white;
-                        text-decoration: none;
-                        border-radius: 5px;
-                        margin: 20px 10px;
-                        font-weight: bold;
-                    }
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; text-align: center; }
+                    .container { background: #f9f9f9; padding: 40px; border-radius: 10px; margin-top: 50px; }
+                    .error-icon { font-size: 60px; color: #dc3545; margin-bottom: 20px; }
+                    .button { display: inline-block; padding: 15px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 10px; font-weight: bold; }
                 </style>
             </head>
             <body>
                 <div class="container">
-                    <div class="error-icon">❌</div>
+                    <div class="error-icon">\u274c</div>
                     <h1>Verification Failed</h1>
                     <p>The verification link is invalid or has expired.</p>
                     <p>Please try registering again or contact support if you continue to have issues.</p>
@@ -467,41 +433,15 @@ async def verify_email(token: str = Query(..., description="Email verification t
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>Link Expired - ConversaPay</title>
                     <style>
-                        body {
-                            font-family: Arial, sans-serif;
-                            line-height: 1.6;
-                            color: #333;
-                            max-width: 600px;
-                            margin: 0 auto;
-                            padding: 20px;
-                            text-align: center;
-                        }
-                        .container {
-                            background: #f9f9f9;
-                            padding: 40px;
-                            border-radius: 10px;
-                            margin-top: 50px;
-                        }
-                        .warning-icon {
-                            font-size: 60px;
-                            color: #ffc107;
-                            margin-bottom: 20px;
-                        }
-                        .button {
-                            display: inline-block;
-                            padding: 15px 30px;
-                            background: #667eea;
-                            color: white;
-                            text-decoration: none;
-                            border-radius: 5px;
-                            margin: 20px 10px;
-                            font-weight: bold;
-                        }
+                        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; text-align: center; }
+                        .container { background: #f9f9f9; padding: 40px; border-radius: 10px; margin-top: 50px; }
+                        .warning-icon { font-size: 60px; color: #ffc107; margin-bottom: 20px; }
+                        .button { display: inline-block; padding: 15px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 10px; font-weight: bold; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
-                        <div class="warning-icon">⏰</div>
+                        <div class="warning-icon">\u23f0</div>
                         <h1>Link Expired</h1>
                         <p>This verification link has expired. Verification links are valid for 24 hours.</p>
                         <p>Please request a new verification email or try registering again.</p>
@@ -522,41 +462,15 @@ async def verify_email(token: str = Query(..., description="Email verification t
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Already Verified - ConversaPay</title>
                 <style>
-                    body {
-                        font-family: Arial, sans-serif;
-                        line-height: 1.6;
-                        color: #333;
-                        max-width: 600px;
-                        margin: 0 auto;
-                        padding: 20px;
-                        text-align: center;
-                    }
-                    .container {
-                        background: #f9f9f9;
-                        padding: 40px;
-                        border-radius: 10px;
-                        margin-top: 50px;
-                    }
-                    .info-icon {
-                        font-size: 60px;
-                        color: #17a2b8;
-                        margin-bottom: 20px;
-                    }
-                    .button {
-                        display: inline-block;
-                        padding: 15px 30px;
-                        background: #667eea;
-                        color: white;
-                        text-decoration: none;
-                        border-radius: 5px;
-                        margin: 20px 10px;
-                        font-weight: bold;
-                    }
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; text-align: center; }
+                    .container { background: #f9f9f9; padding: 40px; border-radius: 10px; margin-top: 50px; }
+                    .info-icon { font-size: 60px; color: #17a2b8; margin-bottom: 20px; }
+                    .button { display: inline-block; padding: 15px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 10px; font-weight: bold; }
                 </style>
             </head>
             <body>
                 <div class="container">
-                    <div class="info-icon">ℹ️</div>
+                    <div class="info-icon">\u2139\ufe0f</div>
                     <h1>Already Verified</h1>
                     <p>Your email has already been verified. You can log in to your account.</p>
                     <a href="/login.html" class="button">Login</a>
@@ -566,11 +480,7 @@ async def verify_email(token: str = Query(..., description="Email verification t
             </html>
             """)
         
-        # Mark email as verified via a SECURITY DEFINER RPC. A plain UPDATE here
-        # silently no-ops (PATCH 200, 0 rows changed) when the backend client is
-        # not truly service_role, because RLS has no UPDATE policy for the
-        # unauthenticated verify flow. The RPC runs as its owner and marks the
-        # row regardless of the caller's role.
+        # Mark email as verified via a SECURITY DEFINER RPC.
         verify_result = supabase.rpc(
             "mark_email_verified", {"p_user_id": profile["user_id"]}
         ).execute()
@@ -590,41 +500,15 @@ async def verify_email(token: str = Query(..., description="Email verification t
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Email Verified - ConversaPay</title>
             <style>
-                body {
-                    font-family: Arial, sans-serif;
-                    line-height: 1.6;
-                    color: #333;
-                    max-width: 600px;
-                    margin: 0 auto;
-                    padding: 20px;
-                    text-align: center;
-                }
-                .container {
-                    background: #f9f9f9;
-                    padding: 40px;
-                    border-radius: 10px;
-                    margin-top: 50px;
-                }
-                .success-icon {
-                    font-size: 60px;
-                    color: #28a745;
-                    margin-bottom: 20px;
-                }
-                .button {
-                    display: inline-block;
-                    padding: 15px 30px;
-                    background: #667eea;
-                    color: white;
-                    text-decoration: none;
-                    border-radius: 5px;
-                    margin: 20px 10px;
-                    font-weight: bold;
-                }
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; text-align: center; }
+                .container { background: #f9f9f9; padding: 40px; border-radius: 10px; margin-top: 50px; }
+                .success-icon { font-size: 60px; color: #28a745; margin-bottom: 20px; }
+                .button { display: inline-block; padding: 15px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin: 20px 10px; font-weight: bold; }
             </style>
         </head>
         <body>
             <div class="container">
-                <div class="success-icon">✅</div>
+                <div class="success-icon">\u2705</div>
                 <h1>Email Verified Successfully!</h1>
                 <p>Thank you for verifying your email address. Your account is now active.</p>
                 <p>You can now log in and start using ConversaPay!</p>
@@ -651,69 +535,58 @@ async def logout(
     current_user: AuthUser = Depends(get_current_user)
 ):
     """
-    Logout current user by invalidating the session.
+    Logout current user by revoking their session server-side.
+
+    FIX: The previous implementation incorrectly passed the user's JWT as
+    the Supabase project API key to create_client(). The second argument
+    must be the project anon_key or service_role_key, not a user token.
     """
     try:
-        # Extract the access token from the Authorization header
-        authorization: str = request.headers.get("Authorization")
-        if not authorization or not authorization.startswith("Bearer "):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Missing or invalid authorization header"
-            )
-        
-        access_token = authorization.split(" ")[1]
-        
-        # Create a Supabase client with the user's access token
-        user_supabase = create_client(
-            settings.SUPABASE_URL,
-            access_token
-        )
-        
-        # Sign out the user
-        user_supabase.auth.sign_out()
-        
+        authorization = request.headers.get("Authorization", "")
+        if authorization.startswith("Bearer "):
+            access_token = authorization.split(" ", 1)[1]
+            try:
+                # Use a properly-initialized client (anon key as the project
+                # API key) and sign out via the user's access token.
+                user_client = create_client(
+                    settings.SUPABASE_URL,
+                    settings.SUPABASE_ANON_KEY
+                )
+                user_client.auth.sign_out(access_token)
+            except (AttributeError, TypeError):
+                # Fallback for gotrue-py versions without token param.
+                # Supabase JWTs are short-lived; client discards the token.
+                logger.debug("sign_out(token) not supported; client-side logout only")
+            except Exception as sign_out_err:
+                logger.debug(f"Server-side sign_out non-fatal: {sign_out_err}")
+
         logger.info(f"User logged out: {current_user.email}")
         return MessageResponse(message="Logged out successfully")
-    
+
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Logout error: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Logout failed"
-        )
+        logger.warning(f"Logout error (non-fatal): {str(e)}")
+        # Always return success. The client must discard its local token
+        # regardless of server-side revocation outcome.
+        return MessageResponse(message="Logged out successfully")
 
 
 @router.post("/password-reset/request", response_model=MessageResponse)
 async def request_password_reset(request: Request, request_data: PasswordResetRequest):
     """
     Request a password reset email with enhanced security.
-    
-    Security features:
-    - Rate limiting per IP and email
-    - IP address logging for audit trail
-    - User agent tracking
-    - Supabase sends password reset email to the user
     """
     try:
-        # Extract request metadata for security logging
         client_ip = request.client.host if request.client else "unknown"
         user_agent = request.headers.get("user-agent", "unknown")
-        
-        # Rate limiting check (simple in-memory implementation)
-        # In production, use Redis or similar for distributed rate limiting
         current_time = datetime.utcnow()
         
-        # Log the password reset request for security audit
         logger.info(
             f"Password reset requested - Email: {request_data.email}, "
             f"IP: {client_ip}, User-Agent: {user_agent[:100]}"
         )
         
-        # Supabase will send a password reset email
-        # The reset link will point to our forgot-password.html page with a token
         supabase.auth.reset_password_for_email(
             str(request_data.email),
             {
@@ -730,7 +603,6 @@ async def request_password_reset(request: Request, request_data: PasswordResetRe
         raise
     except Exception as e:
         logger.error(f"Password reset request error: {str(e)}", exc_info=True)
-        # Don't reveal if email exists or not (security best practice)
         return MessageResponse(
             message="If an account exists with this email, you will receive a password reset link."
         )
@@ -740,46 +612,31 @@ async def request_password_reset(request: Request, request_data: PasswordResetRe
 async def confirm_password_reset(request: Request, request_data: PasswordReset):
     """
     Confirm password reset with token and new password.
-    
-    Security features:
-    - Validates token hasn't expired
-    - Enforces strong password requirements
-    - Logs password reset completion for audit trail
-    - Invalidates all existing sessions after password change
     """
     try:
-        # Extract request metadata
         client_ip = request.client.host if request.client else "unknown"
         user_agent = request.headers.get("user-agent", "unknown")
         
-        # Validate password strength (additional check beyond Supabase)
         if len(request_data.new_password) < 8:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Password must be at least 8 characters long"
             )
         
-        # Update password using Supabase
         supabase.auth.update_user({
             "password": request_data.new_password
         }, request_data.token)
         
-        # Log successful password reset
         logger.info(
             f"Password reset successful - IP: {client_ip}, "
             f"User-Agent: {user_agent[:100]}"
         )
         
-        # Optional: Invalidate all existing sessions for security
-        # This forces the user to log in again on all devices
         try:
-            # Get user info from token to invalidate sessions
-            # Note: This requires the token to be valid
             user_response = supabase.auth.get_user(request_data.token)
             if user_response and user_response.user:
                 user_id = user_response.user.id
                 
-                # Log password reset event for audit trail
                 supabase.table("audit_logs").insert({
                     "user_id": user_id,
                     "action": "password_reset",
@@ -794,7 +651,6 @@ async def confirm_password_reset(request: Request, request_data: PasswordReset):
                 
                 logger.info(f"Password reset audit log created for user: {user_id}")
         except Exception as audit_error:
-            # Don't fail the password reset if audit logging fails
             logger.warning(f"Failed to create audit log: {str(audit_error)}")
         
         return MessageResponse(message="Password reset successfully")
@@ -828,32 +684,18 @@ async def verify_identity_for_reset(
 ):
     """
     Verify user identity before allowing password reset.
-    
-    This endpoint can be used to implement additional identity verification
-    such as sending a code to email or phone, or asking security questions.
-    
-    For now, it returns a success response indicating the email exists.
-    In production, you might want to:
-    1. Send a verification code to the user's email/phone
-    2. Ask security questions
-    3. Require 2FA if enabled
     """
     try:
         client_ip = request.client.host if request.client else "unknown"
         
-        # Check if user exists (without revealing if they do or not)
         try:
-            # Try to look up the user by email
             user_lookup = supabase.auth.admin.get_user_by_email(email)
             if user_lookup and user_lookup.user:
                 user_id = user_lookup.user.id
                 
-                # Generate a temporary verification token
                 verification_token = generate_verification_token()
                 expires_at = (datetime.utcnow() + timedelta(minutes=10)).isoformat()
                 
-                # Store verification token temporarily
-                # In production, use Redis or similar with TTL
                 update_profile_row(
                     user_id,
                     {
@@ -862,11 +704,10 @@ async def verify_identity_for_reset(
                     }
                 )
                 
-                # Send verification code email
                 email_sent = email_service.send_verification_email(
                     to_email=email,
                     token=verification_token,
-                    user_name=user_lookup.user.user_metadata.get("full_name", "משתמש")
+                    user_name=user_lookup.user.user_metadata.get("full_name", "\u05de\u05e9\u05ea\u05de\u05e9")
                 )
                 
                 logger.info(
@@ -880,10 +721,8 @@ async def verify_identity_for_reset(
                     "expires_in_minutes": 10
                 }
         except AuthApiError:
-            # User not found - don't reveal this information
             pass
         
-        # Always return success to prevent email enumeration
         logger.info(f"Identity verification requested for: {email}, IP: {client_ip}")
         return {
             "message": "If an account exists with this email, a verification code has been sent",
@@ -988,27 +827,6 @@ async def update_current_user(
 # ============================================
 # Google OAuth
 # ============================================
-#
-# IMPORTANT — why this looks different from a typical backend OAuth flow:
-#
-# Google/Supabase OAuth uses PKCE: the party that starts the flow generates
-# a secret "code_verifier", sends its hash to Google, and must later present
-# the SAME verifier to Supabase to exchange the returned `code` for a session.
-#
-# The old implementation started the flow in one backend request
-# (GET /auth/google, which created a throwaway Supabase client — the
-# verifier lived only in that client's memory) and tried to finish it in a
-# completely separate backend request (GET /auth/google/callback, a brand
-# new client with no memory of the verifier). Those two requests share
-# nothing, so the exchange failed on every single attempt. That's the bug
-# behind "Google Login doesn't work".
-#
-# The fix: let the browser do the OAuth handshake directly against Supabase
-# using the Supabase JS SDK (login.html / auth-callback.html). The SDK keeps
-# the code_verifier in the browser's own localStorage, so it survives the
-# redirect to Google and back. Once the browser has a real Supabase session,
-# it calls this endpoint once, with that session's access token, purely to
-# let our backend provision a profile + business row on first login.
 
 @router.post("/oauth/session", response_model=dict)
 async def complete_oauth_session(current_user: AuthUser = Depends(get_current_user)):
@@ -1021,13 +839,13 @@ async def complete_oauth_session(current_user: AuthUser = Depends(get_current_us
     """
     try:
         full_name = ""
-        business_name = "העסק שלי"
+        business_name = "\u05d4\u05e2\u05e1\u05e7 \u05e9\u05dc\u05d9"
         try:
             user_lookup = supabase.auth.admin.get_user_by_id(current_user.user_id)
             metadata = (user_lookup.user.user_metadata or {}) if user_lookup and user_lookup.user else {}
             full_name = metadata.get("full_name") or metadata.get("name") or ""
             business_name = metadata.get("business_name") or (
-                f"העסק של {full_name}" if full_name else "העסק שלי"
+                f"\u05d4\u05e2\u05e1\u05e7 \u05e9\u05dc {full_name}" if full_name else "\u05d4\u05e2\u05e1\u05e7 \u05e9\u05dc\u05d9"
             )
         except Exception as e:
             logger.warning(f"Could not fetch OAuth user metadata: {str(e)}")
