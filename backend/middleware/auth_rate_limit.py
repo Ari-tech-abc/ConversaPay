@@ -20,7 +20,7 @@ class AuthRateLimitMiddleware(BaseHTTPMiddleware):
         self.hits = defaultdict(list)
 
     async def dispatch(self, request: Request, call_next):
-        if request.method == "POST" and request.url.path in self.WINDOWS:
+        if request.method in {"POST", "GET"} and request.url.path in self.WINDOWS:
             limit, window = self.WINDOWS[request.url.path]
             key = f"{request.url.path}:{get_client_ip(request)}"
             now = time.monotonic()
