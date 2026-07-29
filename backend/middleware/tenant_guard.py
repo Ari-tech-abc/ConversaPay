@@ -11,8 +11,18 @@ def verify_tenant_ownership(*, supabase: Any, user_id: str, business_id: str) ->
     return result.data[0]
 
 
-def verify_resource_owner(*, supabase: Any, table: str, resource_id: str, user_id: str, owner_column: str = "user_id") -> dict:
-    result = supabase.table(table).select("*").eq("id", resource_id).eq(owner_column, user_id).limit(1).execute()
+def verify_resource_owner(*, supabase: Any, table: str, resource_id: str, user_id: str, owner_column: str = "user_id", business_id: str | None = None) -> dict:
+    query = supabase.table(table).select("*").eq("id", resource_id)
+    if owner_column == "user_id":
+        query = query.eq("user_id", user_id)
+    elif owner_column == "business_id":
+        if not business_id:
+            raise HTTPException(404, "Resource not found")
+        verify_tenant_ownership(supabase=supabase, user_id=user_id, business_id=business_id)
+        query = query.eq("business_id", business_id)
+    else:
+        raise ValueError("Unsupported ownership column")
+    result = query.limit(1).execute()
     if not result.data:
         raise HTTPException(404, "Resource not found")
     return result.data[0]
