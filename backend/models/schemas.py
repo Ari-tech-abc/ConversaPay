@@ -42,7 +42,7 @@ class OrderBase(BaseModel): status:OrderStatus=OrderStatus.PENDING; subtotal:Dec
 class OrderCreate(OrderBase): business_id:str; customer_id:Optional[str]=None; conversation_id:Optional[str]=None
 class OrderUpdate(BaseModel): status:Optional[OrderStatus]=None; notes:Optional[str]=None
 class PaymentInfo(BaseModel): customer_email:Optional[str]=None; customer_name:Optional[str]=None
-class OrderResponse(OrderBase): model_config=ConfigDict(from_attributes=True); id:str; business_id:str; customer_id:Optional[str]=None; conversation_id:Optional[str]=None; order_number:str; created_at:datetime; updated_at:datetime
+class OrderResponse(OrderBase): model_config=ConfigDict(from_attributes=True); id:str; business_id:str; customer_id:Optional[str]=None; conversation_id:Optional[str]=None; order_number:str; public_access_token:Optional[str]=None; created_at:datetime; updated_at:datetime
 class SubscriptionCreate(BaseModel): user_id:str; email:EmailStr; full_name:Optional[str]=None; plan_type:str="pro"
 class SubscriptionResponse(BaseModel): model_config=ConfigDict(from_attributes=True); session_id:str; url:str; payme_sale_id:Optional[str]=None
 class PaymentBase(BaseModel): amount:Decimal=Field(...,ge=0); currency:str=Field(default="ILS",min_length=3,max_length=3); status:PaymentStatus=PaymentStatus.PENDING; payment_method:Optional[str]=None; customer_email:Optional[str]=None; customer_name:Optional[str]=None; metadata:Dict[str,Any]={}

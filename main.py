@@ -15,7 +15,7 @@ from backend.routers.admin_password import router as admin_password_router
 from backend.routers.frontend import router as frontend_router
 from backend.routers.stripe_webhook import router as stripe_webhook_router
 from backend.routers.whatsapp import router as whatsapp_webhook_router
-from backend.services.migration_runner import apply_migrations
+from backend.services.migration_runner import apply_migrations, get_migration_status
 from backend.services.monitoring_service import monitoring_service
 from backend.services.observability import initialize_error_tracking
 from backend.services.whatsapp_security import secure_get_user_profile, secure_update_profile_row
@@ -56,7 +56,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 app.add_middleware(CorrelationIdMiddleware);app.add_middleware(AuthRateLimitMiddleware);app.add_middleware(DualCORSMiddleware);app.add_middleware(SecurityHeadersMiddleware)
 @app.get("/health",include_in_schema=False)
-async def health():return {"status":"healthy","version":"2.5.0","environment":settings.ENVIRONMENT}
+async def health():
+    migration_status=get_migration_status()
+    if migration_status in {"pending","in_progress","failed"}: return JSONResponse(status_code=503,content={"status":"not_ready","version":"2.5.0","environment":settings.ENVIRONMENT,"checks":{"migrations":migration_status}})
+    return {"status":"healthy","version":"2.5.0","environment":settings.ENVIRONMENT,"checks":{"migrations":migration_status}}
 async def _check_database():
     if not settings.DATABASE_URL:raise RuntimeError("DATABASE_URL is not configured")
     connection=await asyncpg.connect(settings.DATABASE_URL,timeout=3)
@@ -70,7 +73,8 @@ async def _check_redis():
     finally:await client.aclose()
 @app.get("/ready",include_in_schema=False)
 async def readiness():
-    checks={"database":"ok","redis":"skipped" if not settings.REDIS_URL else "ok"};failures={}
+    migration_status=get_migration_status(); checks={"database":"ok","redis":"skipped" if not settings.REDIS_URL else "ok","migrations":migration_status}; failures={}
+    if migration_status in {"pending","in_progress","failed"}: failures["migrations"]=f"Migration status is {migration_status}"
     try:await _check_database()
     except Exception as exc:logger.error("Readiness database check failed: %s",exc);checks["database"]="failed";failures["database"]=str(exc)
     if settings.REDIS_URL:
