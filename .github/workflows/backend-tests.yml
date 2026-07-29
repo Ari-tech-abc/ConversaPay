@@ -26,7 +26,13 @@ jobs:
           python-version: '3.12'
       - run: python -m pip install --upgrade pip
       - run: pip install -r requirements.txt pytest
-      - run: python -m compileall -q backend main.py
-      - run: python scripts/ui_quality_gate.py
-      - run: python scripts/check_html_links.py
-      - run: python -m pytest -q
+      - name: Compile backend and delivery router
+        run: python -m compileall -q backend main.py
+      - name: Run UI and link quality gates
+        run: |
+          python scripts/ui_quality_gate.py
+          python scripts/check_html_links.py
+      - name: Run backend and frontend delivery contracts
+        run: python -m pytest -q tests/test_frontend_delivery_contract.py tests/test_repo_contracts.py
+      - name: Run full test suite
+        run: python -m pytest -q

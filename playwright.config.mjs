@@ -9,7 +9,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
   use: {
-    baseURL: process.env.E2E_BASE_URL || 'https://conversapay-proj.onrender.com',
+    baseURL: process.env.E2E_BASE_URL || process.env.PRODUCTION_ORIGIN || 'https://conversapay-proj.onrender.com',
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',

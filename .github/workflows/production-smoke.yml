@@ -5,6 +5,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+env:
+  PRODUCTION_ORIGIN: https://conversapay-proj.onrender.com
+  PRODUCTION_DOMAIN: https://conversapay.org
+
 permissions:
   contents: read
 
@@ -13,11 +17,12 @@ jobs:
     name: Verify public release
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for deployment
+      - name: Wait for Render deployment readiness
         run: |
-          for attempt in {1..18}; do
-            status=$(curl -L -s -o /tmp/ready.json -w "%{http_code}" "https://conversapay.org/ready?smoke=${GITHUB_SHA}" || true)
-            if [ "$status" = "200" ]; then
+          set -euo pipefail
+          for attempt in {1..30}; do
+            status=$(curl -L -sS -o /tmp/ready.json -w "%{http_code}" "$PRODUCTION_ORIGIN/ready?smoke=${GITHUB_SHA}" || true)
+            if [ "$status" = "200" ] && grep -q '"status":"ready"' /tmp/ready.json && grep -q '"environment":"production"' /tmp/ready.json; then
               cat /tmp/ready.json
               break
             fi
@@ -27,11 +32,34 @@ jobs:
           test -s /tmp/ready.json
           grep -q '"status":"ready"' /tmp/ready.json
           grep -q '"environment":"production"' /tmp/ready.json
-      - name: Verify release contract
+      - name: Verify origin root is HTML and never 500
         run: |
-          curl -L -fsS -D /tmp/headers.txt "https://conversapay.org/?smoke=${GITHUB_SHA}" -o /tmp/home.html
-          grep -qi 'X-ConversaPay-Release: apple-ready-polish' /tmp/headers.txt
+          set -euo pipefail
+          status=$(curl -L -sS -o /tmp/home.html -D /tmp/headers.txt -w "%{http_code}" "$PRODUCTION_ORIGIN/?smoke=${GITHUB_SHA}")
+          test "$status" = "200"
+          grep -qi 'text/html' /tmp/headers.txt
           grep -q 'Talk2Pay' /tmp/home.html
+          grep -q '₪200' /tmp/home.html
+          grep -q '₪350' /tmp/home.html
           ! grep -q '₪500' /tmp/home.html
           ! grep -q '₪750' /tmp/home.html
-          ! grep -q 'ConversaPay' /tmp/home.html
+          ! grep -q 'Internal Server Error' /tmp/home.html
+      - name: Verify origin page route contract
+        run: |
+          set -euo pipefail
+          for route in /login /register /dashboard /upgrade /leads /terms /privacy /widget-demo; do
+            status=$(curl -L -sS -o /tmp/route.html -w "%{http_code}" "$PRODUCTION_ORIGIN$route?smoke=${GITHUB_SHA}")
+            test "$status" -lt 500
+            grep -qi 'text/html' <(curl -sSI "$PRODUCTION_ORIGIN$route?smoke=${GITHUB_SHA}")
+            ! grep -q 'Internal Server Error' /tmp/route.html
+          done
+      - name: Detect custom-domain drift
+        run: |
+          set -euo pipefail
+          status=$(curl -L -sS -o /tmp/domain-home.html -D /tmp/domain-headers.txt -w "%{http_code}" "$PRODUCTION_DOMAIN/?smoke=${GITHUB_SHA}")
+          test "$status" = "200"
+          grep -qi 'text/html' /tmp/domain-headers.txt
+          grep -q 'Talk2Pay' /tmp/domain-home.html
+          ! grep -q 'ConversaPay - פתרון תשלומים שיחתי' /tmp/domain-home.html
+          ! grep -q '₪500' /tmp/domain-home.html
+          ! grep -q '₪750' /tmp/domain-home.html
