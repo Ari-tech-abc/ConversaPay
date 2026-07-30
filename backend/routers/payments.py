@@ -1,4 +1,4 @@
-"""Stripe-backed payment routes. Subscription state is webhook-owned."""
+"""Stripe-backed payment routes. Subscription state is confirmed here on demand and by webhook."""
 from __future__ import annotations
 import logging
 from pathlib import Path
@@ -11,6 +11,7 @@ from backend.config import settings
 from backend.middleware.auth import AuthUser, require_auth
 from backend.models.schemas import PaymentResponse, ProfileResponse, SubscriptionCreate, SubscriptionResponse
 from backend.services.stripe_service import PLACEHOLDER_SECRET_KEY_PREFIX, STRIPE_KEY_MISSING_MESSAGE, StripeServiceError, describe_stripe_error, stripe_service
+from backend.services.subscription_service import apply_subscription_state, period_end_iso
 
 logger = logging.getLogger(__name__)
 supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
@@ -74,9 +75,35 @@ async def create_subscription_checkout_session(request: SubscriptionCreate, curr
     return SubscriptionResponse(session_id=session["session_id"], url=session["url"], payme_sale_id=None)
 
 
+def _extract_subscription_fields(session: dict[str, Any]) -> tuple[str | None, str | None, str | None, bool]:
+    """Pull subscription id/status/expiry/cancel-flag out of an (expanded) Checkout Session dict.
+
+    The `subscription` field is either an expanded object (dict) or a bare id (str), depending on
+    whether Stripe had it ready to expand at retrieval time; handle both.
+    """
+    subscription = session.get("subscription")
+    if isinstance(subscription, dict):
+        return (
+            subscription.get("id"),
+            subscription.get("status"),
+            period_end_iso(subscription.get("current_period_end")),
+            bool(subscription.get("cancel_at_period_end", False)),
+        )
+    if isinstance(subscription, str):
+        return subscription, None, None, False
+    return None, None, None, False
+
+
 @router.get("/confirm-session", response_model=dict)
 async def confirm_checkout_session(session_id: str = Query(..., min_length=1), current_user: AuthUser = Depends(require_auth)) -> dict[str, Any]:
-    """Read-only UI helper. It must never mutate subscription or payment state."""
+    """Verify a Checkout Session against Stripe and, for subscriptions, reconcile the profile now.
+
+    success.html calls this immediately on load instead of waiting for the webhook. Once Stripe
+    confirms payment_status == 'paid' for a subscription-mode session, we update
+    profiles.plan_type right here so the UI never has to sit on "sync pending". This is safe to
+    call more than once (e.g. the webhook firing afterwards): both paths converge on the same
+    Stripe-confirmed state.
+    """
     try:
         session = stripe_service.retrieve_checkout_session(session_id)
     except ValueError as exc:
@@ -86,7 +113,39 @@ async def confirm_checkout_session(session_id: str = Query(..., min_length=1), c
     metadata = dict(session.get("metadata") or {})
     if metadata.get("user_id") and metadata["user_id"] != current_user.user_id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Session does not belong to the current user")
-    return {"session_id": session.get("id"), "mode": session.get("mode"), "status": session.get("status"), "payment_status": session.get("payment_status"), "confirmed": False, "subscription_state_source": "stripe_webhook"}
+
+    payment_status = session.get("payment_status")
+    mode = session.get("mode")
+    response: dict[str, Any] = {"session_id": session.get("id"), "mode": mode, "status": "pending", "payment_status": payment_status, "confirmed": False, "subscription_state_source": "stripe_webhook"}
+
+    if payment_status != "paid":
+        return response
+
+    if mode != "subscription":
+        # One-off order payments are reconciled by the webhook via update_order_payment_atomic;
+        # there is no profile plan to sync here, just acknowledge Stripe already confirmed it.
+        response.update({"confirmed": True, "status": "confirmed"})
+        return response
+
+    plan_type = (metadata.get("plan_type") or "pro").lower()
+    subscription_id, subscription_status, subscription_expires_at, cancel_at_period_end = _extract_subscription_fields(session)
+    try:
+        apply_subscription_state(
+            user_id=current_user.user_id,
+            plan_type=plan_type,
+            subscription_status=subscription_status,
+            subscription_expires_at=subscription_expires_at,
+            customer_id=session.get("customer"),
+            cancel_at_period_end=cancel_at_period_end,
+            stripe_subscription_id=subscription_id,
+        )
+    except Exception as exc:
+        logger.error("Immediate plan reconciliation failed (user_id=%s session_id=%s plan_type=%s): %s", current_user.user_id, session_id, plan_type, exc, exc_info=True)
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Stripe confirmed the payment but syncing the profile failed. Please retry in a moment.") from exc
+
+    logger.info("Subscription reconciled immediately via confirm-session: user_id=%s plan_type=%s session_id=%s (triggered by success.html, ahead of webhook)", current_user.user_id, plan_type, session_id)
+    response.update({"confirmed": True, "status": "confirmed", "plan_type": plan_type, "subscription_status": subscription_status or "active", "subscription_expires_at": subscription_expires_at})
+    return response
 
 
 @router.get("/profile", response_model=ProfileResponse)
