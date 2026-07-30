@@ -8,6 +8,7 @@ from backend.config import settings
 from backend.middleware.correlation import CorrelationIdMiddleware
 from backend.middleware.auth_rate_limit import AuthRateLimitMiddleware
 from backend.routers import admin, analytics, api_keys, auth, businesses, chat, dashboard, logs, onboarding, orders, payments, products, profile, site_builder, subscription, webhooks, widget, reconciliation
+from backend.routers.email_verification import router as email_verification_router
 from backend.routers.safe_auth import router as safe_auth_router
 from backend.routers.admin_password import router as admin_password_router
 from backend.routers.frontend import router as frontend_router
@@ -80,7 +81,7 @@ async def readiness():
 @app.get(f"{settings.API_PREFIX}/config/public",include_in_schema=False)
 async def public_config(): return {"supabase_url":settings.SUPABASE_URL,"supabase_anon_key":settings.SUPABASE_ANON_KEY}
 prefix=settings.API_PREFIX
-for selected_router,route_prefix,tag in ((onboarding.router,prefix,"authentication-onboarding"),(safe_auth_router,prefix,"authentication"),(auth.router,f"{prefix}/auth","authentication"),(profile.router,f"{prefix}/profile","profile"),(subscription.router,prefix,"subscription"),(businesses.router,prefix,"businesses"),(products.router,prefix,"products"),(chat.router,prefix,"chat"),(orders.router,prefix,"orders"),(payments.router,prefix,"payments"),(reconciliation.router,prefix,"reconciliation"),(logs.router,prefix,"logs"),(webhooks.router,prefix,"webhooks"),(analytics.router,prefix,"analytics"),(widget.router,prefix,"widget"),(dashboard.router,prefix,"dashboard"),(admin.router,prefix,"admin"),(admin_password_router,prefix,"admin-security"),(api_keys.router,prefix,"api-keys"),(site_builder.router,prefix,"site-builder"),(stripe_webhook_router,prefix,"stripe-webhook"),(whatsapp_webhook_router,prefix,"whatsapp-webhook")): app.include_router(selected_router,prefix=route_prefix,tags=[tag])
+for selected_router,route_prefix,tag in ((onboarding.router,prefix,"authentication-onboarding"),(safe_auth_router,prefix,"authentication"),(email_verification_router,f"{prefix}/auth","authentication"),(auth.router,f"{prefix}/auth","authentication"),(profile.router,f"{prefix}/profile","profile"),(subscription.router,prefix,"subscription"),(businesses.router,prefix,"businesses"),(products.router,prefix,"products"),(chat.router,prefix,"chat"),(orders.router,prefix,"orders"),(payments.router,prefix,"payments"),(reconciliation.router,prefix,"reconciliation"),(logs.router,prefix,"logs"),(webhooks.router,prefix,"webhooks"),(analytics.router,prefix,"analytics"),(widget.router,prefix,"widget"),(dashboard.router,prefix,"dashboard"),(admin.router,prefix,"admin"),(admin_password_router,prefix,"admin-security"),(api_keys.router,prefix,"api-keys"),(site_builder.router,prefix,"site-builder"),(stripe_webhook_router,prefix,"stripe-webhook"),(whatsapp_webhook_router,prefix,"whatsapp-webhook")): app.include_router(selected_router,prefix=route_prefix,tags=[tag])
 if not settings.is_production:
     from backend.routers.dev_simulator import router as dev_simulator_router
     app.include_router(dev_simulator_router,prefix=prefix,tags=["dev-simulator"])
