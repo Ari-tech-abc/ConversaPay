@@ -48,4 +48,20 @@
     }
     return response;
   };
+
+  async function verifyDashboardAccess() {
+    if (!token) return;
+    try {
+      const response = await originalFetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
+      if (response.status === 403) {
+        const data = await response.json().catch(() => ({}));
+        if (data.detail === 'EMAIL_NOT_VERIFIED') showVerificationModal();
+      }
+    } catch (_) {
+      // The dashboard's own request handling remains the source of truth for transient failures.
+    }
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', verifyDashboardAccess, { once: true });
+  else verifyDashboardAccess();
 })();
