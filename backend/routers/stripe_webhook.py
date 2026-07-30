@@ -4,10 +4,15 @@ import logging
 from typing import Any
 import stripe
 from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import JSONResponse
 from supabase import Client, create_client
 from backend.config import settings
 from backend.services.subscription_service import apply_subscription_state, mark_webhook_failed, mark_webhook_processed, period_end_iso
-logger=logging.getLogger(__name__); router=APIRouter(prefix="/webhooks/stripe",tags=["stripe-webhook"]); supabase:Client=create_client(settings.SUPABASE_URL,settings.SUPABASE_SERVICE_ROLE_KEY)
+logger=logging.getLogger(__name__)
+# redirect_slashes=False + dual registration below: Stripe's webhook sender does not follow
+# 307 redirects on retries, so both "/webhooks/stripe" and "/webhooks/stripe/" must be handled
+# directly without ever bouncing through a redirect.
+router=APIRouter(prefix="/webhooks/stripe",tags=["stripe-webhook"],redirect_slashes=False); supabase:Client=create_client(settings.SUPABASE_URL,settings.SUPABASE_SERVICE_ROLE_KEY)
 if settings.STRIPE_SECRET_KEY: stripe.api_key=settings.STRIPE_SECRET_KEY
 
 def _claim(event_id,event_type):
@@ -40,7 +45,8 @@ def _as_dict(obj:Any)->dict:
     return dict(obj)
 
 @router.post("")
-async def stripe_webhook(request:Request)->dict[str,Any]:
+@router.post("/")
+async def stripe_webhook(request:Request)->JSONResponse:
     raw=await request.body(); signature=request.headers.get("stripe-signature")
     if not signature or not settings.STRIPE_WEBHOOK_SECRET: raise HTTPException(400,"Missing Stripe signature configuration")
     try: event=stripe.Webhook.construct_event(raw,signature,settings.STRIPE_WEBHOOK_SECRET)
@@ -48,11 +54,14 @@ async def stripe_webhook(request:Request)->dict[str,Any]:
     except stripe.error.SignatureVerificationError as exc: raise HTTPException(400,"Invalid Stripe signature") from exc
     event_id,event_type=str(event["id"]),str(event["type"])
     try:
-        if not _claim(event_id,event_type): return {"status":"ok","processed":False,"duplicate":True}
+        if not _claim(event_id,event_type): return JSONResponse(status_code=200,content={"status":"ok","processed":False,"duplicate":True})
         obj=_as_dict(event["data"]["object"]); metadata=dict(obj.get("metadata") or {})
+        checkout_completed=False
         if event_type in {"checkout.session.completed","checkout.session.async_payment_succeeded"}:
             order_id=metadata.get("order_id")
-            if order_id: _update_order(order_id,order_status="paid",payment_status="succeeded",paid=True,metadata_updates={"provider":"stripe","session_id":obj.get("id"),"payment_intent":obj.get("payment_intent"),"customer":obj.get("customer")})
+            if order_id:
+                _update_order(order_id,order_status="paid",payment_status="succeeded",paid=True,metadata_updates={"provider":"stripe","session_id":obj.get("id"),"payment_intent":obj.get("payment_intent"),"customer":obj.get("customer")})
+                checkout_completed=True
             if obj.get("mode")=="subscription":
                 subscription_id=obj.get("subscription") if isinstance(obj.get("subscription"),str) else None; context=_subscription_context(obj,subscription_id); cm=context.get("metadata") or {}
                 _apply_from_event(user_id=cm.get("user_id") or metadata.get("user_id"),plan_type=cm.get("plan_type") or metadata.get("plan_type"),subscription_id=subscription_id,customer_id=obj.get("customer"),context=context)
@@ -69,7 +78,11 @@ async def stripe_webhook(request:Request)->dict[str,Any]:
         elif event_type in {"charge.refunded","charge.refund.updated"}:
             user_id=_lookup_user(customer_id=obj.get("customer"))
             if user_id: apply_subscription_state(user_id=user_id,plan_type="free",subscription_status="canceled",subscription_expires_at=None,customer_id=obj.get("customer"),cancel_at_period_end=False)
-        mark_webhook_processed(event_id); return {"status":"ok","processed":True,"event_type":event_type}
+        mark_webhook_processed(event_id)
+        # update_order_payment_atomic has just committed the paid/succeeded state for this
+        # checkout.session.completed event: ack Stripe immediately with an explicit 200 + status.
+        if checkout_completed: return JSONResponse(status_code=200,content={"status":"success"})
+        return JSONResponse(status_code=200,content={"status":"ok","processed":True,"event_type":event_type})
     except Exception as exc:
         try: mark_webhook_failed(event_id,str(exc))
         except Exception: logger.exception("Failed to mark webhook event failed")
