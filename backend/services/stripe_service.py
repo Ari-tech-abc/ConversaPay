@@ -1,20 +1,52 @@
 """Stripe Checkout service for one-time payments and subscriptions."""
 from __future__ import annotations
+import logging
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Any
 import stripe
 from backend.config import settings
+
+logger = logging.getLogger(__name__)
+
+# Single source of truth for the "unconfigured Stripe" message surfaced to callers.
+STRIPE_KEY_MISSING_MESSAGE = "Stripe secret key is missing"
+PLACEHOLDER_SECRET_KEY_PREFIX = "sk_test_EXAMPLE"
 
 
 class StripeServiceError(RuntimeError):
     """Raised when Stripe cannot create or retrieve a payment."""
 
 
+def describe_stripe_error(exc: BaseException) -> str:
+    """Build a log-safe description of a failure.
+
+    Only Stripe-provided error metadata is included; the API key is never part of
+    Stripe exceptions, so this string is safe to write to server logs.
+    """
+    if not isinstance(exc, stripe.error.StripeError):
+        return f"{type(exc).__name__}: {exc}"
+    body = getattr(exc, "json_body", None)
+    error = body.get("error") if isinstance(body, dict) else None
+    error = error if isinstance(error, dict) else {}
+    message = error.get("message") or getattr(exc, "user_message", None) or str(exc)
+    fields = {
+        "error_type": error.get("type") or type(exc).__name__,
+        "code": error.get("code") or getattr(exc, "code", None),
+        "param": error.get("param"),
+        "http_status": getattr(exc, "http_status", None),
+        "request_id": getattr(exc, "request_id", None),
+    }
+    described = ", ".join(f"{key}={value}" for key, value in fields.items() if value is not None)
+    return f"{message} ({described})" if described else str(message)
+
+
 class StripeService:
     def _ensure_configured(self) -> None:
-        secret_key = settings.STRIPE_SECRET_KEY
-        if not secret_key or secret_key.startswith("sk_test_EXAMPLE"):
-            raise StripeServiceError("STRIPE_SECRET_KEY is not configured")
+        secret_key = (settings.STRIPE_SECRET_KEY or "").strip()
+        if not secret_key or secret_key.startswith(PLACEHOLDER_SECRET_KEY_PREFIX):
+            # Never log the key itself, only the fact that it is unusable.
+            logger.error("%s: STRIPE_SECRET_KEY is unset or still a placeholder (value not logged).", STRIPE_KEY_MISSING_MESSAGE)
+            raise StripeServiceError(STRIPE_KEY_MISSING_MESSAGE)
         if stripe.api_key != secret_key:
             stripe.api_key = secret_key
 
@@ -64,6 +96,23 @@ class StripeService:
     def _serialize_session(session: Any) -> dict[str, Any]:
         return {"session_id": session.id, "url": session.url, "mode": session.mode, "payment_status": session.payment_status}
 
+    def _create_session(self, params: dict[str, Any], *, context: str) -> Any:
+        """Call the synchronous Stripe client and convert any failure into StripeServiceError.
+
+        Catches explicit Stripe errors (bad price id, invalid key, connection issues) and any
+        unexpected exception, logging the precise reason at ERROR level before re-raising.
+        """
+        try:
+            return stripe.checkout.Session.create(**params)
+        except stripe.error.StripeError as exc:
+            reason = describe_stripe_error(exc)
+            logger.error("Stripe rejected checkout session creation (%s): %s", context, reason, exc_info=True)
+            raise StripeServiceError(f"Stripe Checkout session creation failed: {reason}") from exc
+        except Exception as exc:
+            reason = f"{type(exc).__name__}: {exc}"
+            logger.error("Unexpected error during checkout session creation (%s): %s", context, reason, exc_info=True)
+            raise StripeServiceError(f"Stripe Checkout session creation failed: {reason}") from exc
+
     def create_checkout_session(self, *, amount: Decimal | int | float | str, product_name: str, currency: str = "ILS", mode: str = "payment", customer_email: str | None = None, metadata: dict[str, str] | None = None) -> dict[str, Any]:
         self._ensure_configured()
         if mode not in {"payment", "subscription"}:
@@ -81,10 +130,7 @@ class StripeService:
             params["payment_intent_data"] = {"metadata": metadata or {}}
         else:
             params["subscription_data"] = {"metadata": metadata or {}}
-        try:
-            session = stripe.checkout.Session.create(**params)
-        except stripe.error.StripeError as exc:
-            raise StripeServiceError("Stripe Checkout session creation failed") from exc
+        session = self._create_session(params, context=f"mode={mode} price=inline_price_data currency={currency}")
         return self._serialize_session(session)
 
     def create_checkout_session_with_price(self, *, price_id: str, mode: str, metadata: dict[str, str] | None = None, customer_email: str | None = None) -> dict[str, Any]:
@@ -98,10 +144,7 @@ class StripeService:
             params["payment_intent_data"] = {"metadata": metadata or {}}
         else:
             params["subscription_data"] = {"metadata": metadata or {}}
-        try:
-            session = stripe.checkout.Session.create(**params)
-        except stripe.error.StripeError as exc:
-            raise StripeServiceError("Stripe Checkout session creation failed") from exc
+        session = self._create_session(params, context=f"mode={mode} price_id={price_id}")
         return self._serialize_session(session)
 
     def retrieve_checkout_session(self, session_id: str) -> dict[str, Any]:
@@ -111,6 +154,7 @@ class StripeService:
         try:
             session = stripe.checkout.Session.retrieve(session_id, expand=["subscription", "payment_intent"])
         except stripe.error.StripeError as exc:
+            logger.error("Stripe checkout session retrieval failed (session_id=%s): %s", session_id, describe_stripe_error(exc), exc_info=True)
             raise StripeServiceError("Stripe checkout session retrieval failed") from exc
         return self.serialize_stripe_object(session)
 
@@ -121,6 +165,7 @@ class StripeService:
         try:
             subscription = stripe.Subscription.retrieve(subscription_id)
         except stripe.error.StripeError as exc:
+            logger.error("Stripe subscription retrieval failed (subscription_id=%s): %s", subscription_id, describe_stripe_error(exc), exc_info=True)
             raise StripeServiceError("Stripe subscription retrieval failed") from exc
         return self.serialize_stripe_object(subscription)
 
