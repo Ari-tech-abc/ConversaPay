@@ -1,4 +1,12 @@
-"""Authoritative subscription state transitions, callable only by webhooks."""
+"""Authoritative subscription state transitions.
+
+Called from two places, both of which only pass through Stripe-confirmed state:
+1. The Stripe webhook (backend/routers/stripe_webhook.py), the eventual-consistency path.
+2. payments.confirm_checkout_session (backend/routers/payments.py), which reconciles the
+   profile immediately after Stripe confirms payment_status == 'paid', instead of making the
+   user wait for the webhook to arrive. Both call sites converge to the same final state, so
+   calling this twice for the same session is safe.
+"""
 from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -20,7 +28,7 @@ def period_end_iso(value: Any) -> str | None:
 def apply_subscription_state(*, user_id: str | None, plan_type: str | None, subscription_status: str | None,
                               subscription_expires_at: str | None, customer_id: str | None = None,
                               cancel_at_period_end: bool = False, stripe_subscription_id: str | None = None) -> None:
-    """Apply a provider-confirmed state. This is intentionally not imported by payments.py."""
+    """Apply a provider-confirmed state."""
     if not user_id:
         return
     plan = (plan_type or "pro").lower()
