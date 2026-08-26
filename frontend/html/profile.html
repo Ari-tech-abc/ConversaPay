@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ConversaPay | פרופיל והגדרות חשבון</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/frontend/html/conversapay-ui.css"><link rel="stylesheet" href="/frontend/html/saas-overrides.css">
+</head>
+<body class="cp-page">
+<header class="cp-topbar"><a class="cp-brand" href="/dashboard"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a><a class="cp-backlink" href="/dashboard">חזרה לדאשבורד</a></header>
+<main class="cp-shell">
+  <div id="notice" class="cp-notice hidden" role="status"></div>
+  <div class="profile-saas">
+    <aside class="profile-sidebar" aria-label="ניווט פרופיל">
+      <div class="profile-hero" style="border:0;padding:.5rem .4rem 1rem;">
+        <div class="profile-large-avatar" id="avatar">א</div><div><strong id="nameDisplay">פרופיל</strong><small class="cp-muted" id="emailDisplay" style="display:block">טוען...</small></div>
+      </div>
+      <nav class="profile-nav">
+        <button class="active" data-tab="personal">פרטים אישיים</button><button data-tab="security">אבטחה</button><button data-tab="developer">API ואינטגרציות</button><button data-tab="notifications">התראות</button><button data-tab="billing">חיוב ושימוש</button><button data-tab="danger">אזור מסוכן</button>
+      </nav>
+    </aside>
+
+    <section class="profile-main-section">
+      <section class="profile-section active" id="tab-personal">
+        <div><span class="cp-kicker">Account</span><h1>פרטים אישיים</h1><p class="cp-muted">נהל את הזהות, הארגון ואזור הזמן של החשבון.</p></div>
+        <form id="personalForm" class="profile-grid">
+          <div class="cp-field"><label class="cp-label" for="fullName">שם מלא</label><input class="cp-input" id="fullName" maxlength="255" required></div>
+          <div class="cp-field"><label class="cp-label" for="email">אימייל</label><input class="cp-input" id="email" type="email" disabled></div>
+          <div class="cp-field"><label class="cp-label" for="companyName">ארגון / חברה</label><input class="cp-input" id="companyName" maxlength="255" placeholder="שם החברה שלך"></div>
+          <div class="cp-field"><label class="cp-label" for="timezone">אזור זמן</label><select class="cp-input" id="timezone"><option value="UTC">UTC</option><option value="Asia/Jerusalem">Asia/Jerusalem</option><option value="Europe/London">Europe/London</option><option value="America/New_York">America/New_York</option><option value="America/Los_Angeles">America/Los_Angeles</option></select></div>
+          <div class="cp-field full"><label class="cp-label" for="avatarUrl">קישור לתמונת פרופיל</label><input class="cp-input" id="avatarUrl" type="url" placeholder="https://..."><small class="cp-muted">אם אין תמונה, נציג ראשי תיבות אוטומטיים.</small></div>
+          <div class="profile-actions full"><button class="cp-button" type="submit" id="savePersonal">שמור פרטים</button></div>
+        </form>
+      </section>
+
+      <section class="profile-section" id="tab-security">
+        <div><span class="cp-kicker">Security</span><h2>אבטחה ואימות</h2><p class="cp-muted">שמור על החשבון עם סיסמה חזקה, אימות דו-שלבי וניהול סשנים.</p></div>
+        <form id="passwordForm" class="profile-grid"><div class="cp-field"><label class="cp-label" for="currentPassword">סיסמה נוכחית</label><input class="cp-input" id="currentPassword" type="password" required></div><div class="cp-field"><label class="cp-label" for="newPassword">סיסמה חדשה</label><input class="cp-input" id="newPassword" type="password" minlength="8" required></div><div class="profile-actions full"><button class="cp-button-secondary" type="submit" id="changePassword">שנה סיסמה</button></div></form>
+        <div class="profile-list"><div class="profile-list-row"><div><strong>אימות דו-שלבי (TOTP)</strong><small>הפעל שכבת הגנה נוספת לחשבון.</small></div><button class="cp-button-secondary" id="toggle2fa" type="button">טוען...</button></div><div class="profile-list-row"><div><strong>סשנים פעילים</strong><small id="sessionSummary">טוען...</small></div><button class="cp-button-secondary" id="revokeSessions" type="button">נתק מכשירים אחרים</button></div></div>
+        <div id="sessions" class="profile-list"></div>
+      </section>
+
+      <section class="profile-section" id="tab-developer">
+        <div><span class="cp-kicker">Developer tools</span><h2>API ואינטגרציות</h2><p class="cp-muted">נהל מפתחות חיבור בלי לעזוב את הפרופיל.</p></div>
+        <div class="profile-grid"><div class="profile-stat"><small>מפתחות פעילים</small><strong id="keyCount">0</strong></div><div class="profile-stat"><small>מסלול נוכחי</small><strong id="devPlan">FREE</strong></div></div>
+        <form id="keyForm" class="profile-grid"><div class="cp-field full"><label class="cp-label" for="keyName">שם מפתח</label><input class="cp-input" id="keyName" maxlength="100" placeholder="Main website widget"></div><div class="profile-actions full"><button class="cp-button" type="submit" id="createKey">צור מפתח סודי</button><a class="cp-button-secondary" href="/setup-guide">מדריך אינטגרציה</a></div></form>
+        <div id="keyReveal" class="profile-key-reveal hidden"><strong>שמור את המפתח עכשיו, הוא יוצג פעם אחת בלבד.</strong><div id="keyValue" style="margin-top:.5rem"></div><button class="cp-button-secondary" id="copyKey" type="button" style="margin-top:.7rem">העתק מפתח</button></div>
+        <div id="keyList" class="profile-list"></div>
+      </section>
+
+      <section class="profile-section" id="tab-notifications">
+        <div><span class="cp-kicker">Preferences</span><h2>העדפות התראות</h2><p class="cp-muted">בחר אילו עדכונים חשובים לך.</p></div>
+        <form id="notificationsForm" class="profile-list"><label class="profile-list-row profile-toggle"><span><strong>התראות הצלחת תשלום</strong><small>קבל עדכון כשעסקה הושלמה.</small></span><input id="payment_success" type="checkbox"></label><label class="profile-list-row profile-toggle"><span><strong>סיכום שימוש שבועי</strong><small>דוח קצר על הפעילות והצריכה.</small></span><input id="weekly_digest" type="checkbox"></label><label class="profile-list-row profile-toggle"><span><strong>התראות אבטחה</strong><small>כניסות חריגות ושינויי אבטחה.</small></span><input id="security_alerts" type="checkbox"></label><label class="profile-list-row profile-toggle"><span><strong>עדכוני מוצר</strong><small>פיצ'רים, שיפורים והכרזות.</small></span><input id="product_updates" type="checkbox"></label><div class="profile-actions"><button class="cp-button" type="submit">שמור העדפות</button></div></form>
+      </section>
+
+      <section class="profile-section" id="tab-billing">
+        <div><span class="cp-kicker">Billing</span><h2>חיוב ושימוש</h2><p class="cp-muted">תמונה מהירה של המסלול, המכסה והקישורים החשובים.</p></div>
+        <div class="profile-grid"><div class="profile-stat"><small>מסלול</small><strong id="billingPlan">FREE</strong></div><div class="profile-stat"><small>סטטוס</small><strong id="billingStatus">ACTIVE</strong></div><div class="profile-stat"><small>שימוש החודש</small><strong id="usageText">0 / 1,000</strong></div></div><div class="profile-list-row"><div><strong>ניהול מנוי</strong><small id="billingExpiry">ללא תאריך תפוגה</small></div><div class="profile-actions"><a class="cp-button" href="/upgrade">שדרג או נהל מסלול</a><a class="cp-button-secondary" href="/upgrade#invoices">היסטוריית חשבוניות</a></div></div>
+      </section>
+
+      <section class="profile-section" id="tab-danger">
+        <div><span class="cp-kicker">Privacy</span><h2>אזור מסוכן</h2><p class="cp-muted">ייצוא המידע שלך זמין תמיד. מחיקת חשבון היא פעולה בלתי הפיכה.</p></div>
+        <div class="profile-list"><div class="profile-list-row"><div><strong>ייצוא נתוני החשבון</strong><small>קבל JSON עם פרטי הפרופיל והעדפותיך.</small></div><button class="cp-button-secondary" id="exportData" type="button">ייצא נתונים</button></div><div class="profile-list-row profile-danger"><div><strong>מחיקת חשבון</strong><small>כל הנתונים והגישה יוסרו לצמיתות.</small></div><button class="cp-button-danger" id="deleteAccount" type="button">מחיקת חשבון</button></div></div>
+      </section>
+    </section>
+  </div>
+</main>
+<script>
+const API='/api/v1',token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token');if(!token)location.href='/login';
+const $=id=>document.getElementById(id),auth={Authorization:`Bearer ${token}`};
+function show(message,error=false){const n=$('notice');n.textContent=message;n.className=`cp-notice ${error?'error':''}`;n.classList.remove('hidden')}
+async function api(path,options={}){const r=await fetch(API+path,{...options,headers:{...auth,...(options.headers||{})}});const d=await r.json().catch(()=>({}));if(r.status===401){localStorage.clear();sessionStorage.clear();location.href='/login';throw Error('נדרשת התחברות')}if(!r.ok)throw Error(d.detail||'הפעולה נכשלה');return d}
+function setTab(name){document.querySelectorAll('.profile-section').forEach(x=>x.classList.toggle('active',x.id===`tab-${name}`));document.querySelectorAll('.profile-nav button').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));history.replaceState(null,'',`#${name}`)}
+document.querySelectorAll('.profile-nav button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));setTab(location.hash.slice(1)||'personal');
+function initials(name){return(name||'א').trim().split(/\s+/).map(x=>x[0]).slice(0,2).join('').toUpperCase()}
+async function load(){const [profile,security,notifications,billing]=await Promise.all([api('/profile'),api('/profile/security'),api('/profile/notifications'),api('/profile/billing')]);const p=profile.profile||{};$('fullName').value=p.full_name||'';$('email').value=profile.email||'';$('companyName').value=p.company_name||'';$('timezone').value=p.timezone||'UTC';$('avatarUrl').value=p.avatar_url||'';$('nameDisplay').textContent=p.full_name||'פרופיל';$('emailDisplay').textContent=profile.email||'';$('avatar').textContent=initials(p.full_name||profile.email);$('toggle2fa').textContent=security.two_factor_enabled?'השבת 2FA':'הפעל 2FA';$('sessionSummary').textContent=`${security.sessions?.length||1} סשן פעיל`;$('sessions').innerHTML=(security.sessions||[]).map(s=>`<div class="profile-list-row"><div><strong>${s.device}</strong><small>${s.ip} · ${s.current?'הסשן הנוכחי':''}</small></div><span class="cp-badge ${s.current?'good':''}">${s.current?'פעיל':'סשן'}</span></div>`).join('');const pref=notifications.preferences||{};['payment_success','weekly_digest','security_alerts','product_updates'].forEach(k=>$(k).checked=pref[k]!==false);$('billingPlan').textContent=(billing.plan_type||'free').toUpperCase();$('devPlan').textContent=(billing.plan_type||'free').toUpperCase();$('billingStatus').textContent=(billing.subscription_status||'active').toUpperCase();$('usageText').textContent=`${Number(billing.usage?.used||0).toLocaleString()} / ${Number(billing.usage?.limit||1000).toLocaleString()}`;$('billingExpiry').textContent=billing.subscription_expires_at?`בתוקף עד ${billing.subscription_expires_at}`:'ללא תאריך תפוגה';await loadKeys()}
+async function loadKeys(){try{const businesses=await api('/businesses');const b=Array.isArray(businesses)&&businesses[0];if(!b){$('keyList').innerHTML='<div class="profile-list-row">אין עסק פעיל.</div>';return}const d=await api(`/api-keys?business_id=${encodeURIComponent(b.id)}`);$('keyCount').textContent=d.keys?.length||0;$('keyList').innerHTML=(d.keys||[]).map(k=>`<div class="profile-list-row"><div><strong>${k.name||'API Key'}</strong><small>${k.key_prefix||''}... · שימוש אחרון: ${k.last_used_at||'עדיין לא'}</small></div><button class="cp-button-danger" type="button" data-revoke="${k.id}">בטל</button></div>`).join('')||'<div class="profile-list-row">אין מפתחות פעילים.</div>';document.querySelectorAll('[data-revoke]').forEach(b=>b.onclick=async()=>{if(confirm('לבטל את המפתח?')){await api(`/api-keys/${b.dataset.revoke}`,{method:'DELETE'});await loadKeys()}})}catch(e){show(e.message,true)}}
+$('personalForm').onsubmit=async e=>{e.preventDefault();try{await api('/profile',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify({full_name:$('fullName').value.trim(),company_name:$('companyName').value.trim(),timezone:$('timezone').value,avatar_url:$('avatarUrl').value.trim()||null})});show('הפרטים נשמרו');await load()}catch(e){show(e.message,true)}};
+$('passwordForm').onsubmit=async e=>{e.preventDefault();try{await api('/profile/password',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({current_password:$('currentPassword').value,new_password:$('newPassword').value})});$('passwordForm').reset();show('הסיסמה עודכנה')}catch(e){show(e.message,true)}};
+$('toggle2fa').onclick=async()=>{try{const d=await api('/profile/2fa/toggle',{method:'POST'});$('toggle2fa').textContent=d.two_factor_enabled?'השבת 2FA':'הפעל 2FA';show(d.two_factor_enabled?'אימות דו-שלבי הופעל':'אימות דו-שלבי הושבת')}catch(e){show(e.message,true)}};
+$('revokeSessions').onclick=async()=>{try{await api('/profile/sessions/revoke-others',{method:'POST'});show('הסשנים האחרים נותקו')}catch(e){show(e.message,true)}};
+$('notificationsForm').onsubmit=async e=>{e.preventDefault();try{await api('/profile/notifications',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.fromEntries(['payment_success','weekly_digest','security_alerts','product_updates'].map(k=>[k,$(k).checked]))) });show('העדפות ההתראות נשמרו')}catch(e){show(e.message,true)}};
+$('keyForm').onsubmit=async e=>{e.preventDefault();try{const businesses=await api('/businesses'),b=businesses?.[0];if(!b)throw Error('אין עסק פעיל');const d=await api('/api-keys',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({business_id:b.id,name:$('keyName').value.trim()||'Profile key'})});$('keyValue').textContent=d.key;$('keyReveal').classList.remove('hidden');$('keyForm').reset();await loadKeys();show('המפתח נוצר')}catch(e){show(e.message,true)}};
+$('copyKey').onclick=async()=>{await navigator.clipboard.writeText($('keyValue').textContent);show('המפתח הועתק')};
+$('exportData').onclick=async()=>{try{const d=await api('/profile/export');const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='conversapay-account-export.json';a.click();show('הייצוא הורד')}catch(e){show(e.message,true)}};
+$('deleteAccount').onclick=async()=>{if(prompt('הקלד DELETE MY ACCOUNT לאישור מחיקת החשבון')!=='DELETE MY ACCOUNT')return;try{await api('/profile?confirm=DELETE%20MY%20ACCOUNT',{method:'DELETE'});localStorage.clear();sessionStorage.clear();location.href='/'}catch(e){show(e.message,true)}};
+load().catch(e=>show(e.message,true));
+</script>
+</body></html>

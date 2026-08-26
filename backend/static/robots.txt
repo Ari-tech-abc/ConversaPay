@@ -1,0 +1,46 @@
+User-agent: *
+Allow: /
+Disallow: /api/v1/
+Disallow: /docs
+Disallow: /redoc
+Disallow: /static/widget.js
+
+# Crawl delay for polite crawling
+Crawl-delay: 1
+
+# Sitemap location (update with your actual sitemap URL)
+Sitemap: https://conversapay.org/sitemap.xml
+
+# Allow all major search engines
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 1
+
+User-agent: DuckDuckBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Baiduspider
+Allow: /
+Crawl-delay: 1
+
+# Block AI training crawlers (optional)
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /

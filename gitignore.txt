@@ -1,0 +1,57 @@
+# ============================================
+# ConversaPay — .gitignore
+# ============================================
+
+# --- Secrets & environment ---
+.env
+.env.*
+!.env.example
+Settings files/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.whl
+
+# --- Virtual environments ---
+venv/
+.venv/
+env/
+.env/
+ENV/
+
+# --- Testing & coverage ---
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.cover
+
+# --- IDE & OS ---
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Logs ---
+*.log
+logs/
+
+# --- Local-only folders (not needed on GitHub/Render) ---
+Claude Fixes/
+MD files/
+.amazonq/
+
+# --- Render / Docker build artefacts ---
+*.pyc

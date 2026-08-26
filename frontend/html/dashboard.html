@@ -1,0 +1,1919 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#F5F6FA">
+  <title>ConversaPay | DASHBOARD</title>
+  <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --np-bg: #F5F6FA;
+      --np-surface: #FFFFFF;
+      --np-border: #E6E8F1;
+      --np-border-soft: #EFF1F7;
+      --np-text: #13141B;
+      --np-text-soft: #5B5F6B;
+      --np-text-mute: #9297A3;
+      --np-violet: #7C5CFC;
+      --np-turquoise: #22D3EE;
+      --np-emerald: #12B76A;
+      --np-lilac: #C4B5FD;
+      --np-amber: #F59E0B;
+      --np-red: #F04438;
+      --np-radius-lg: 22px;
+      --np-radius-md: 16px;
+      --np-radius-sm: 11px;
+      --np-shadow: 0 1px 2px rgba(16,24,40,.04), 0 10px 28px -14px rgba(16,24,40,.10);
+      --np-shadow-soft: 0 1px 1px rgba(16,24,40,.03);
+      --np-gradient-ai: linear-gradient(135deg, #7C5CFC 0%, #22D3EE 58%, #12B76A 100%);
+      --np-gradient-soft: linear-gradient(135deg, rgba(124,92,252,.10), rgba(34,211,238,.08));
+      --np-sidebar-w: 256px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body.cp-page {
+      background: var(--np-bg);
+      color: var(--np-text);
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    h1, h2, h3, h4, .np-display {
+      font-family: 'Sora', 'Inter', sans-serif;
+      letter-spacing: -0.01em;
+      margin: 0;
+      color: var(--np-text);
+    }
+
+    .np-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    a { color: inherit; }
+
+    /* ---------- Shell ---------- */
+    .np-shell {
+      display: grid;
+      grid-template-columns: var(--np-sidebar-w) 1fr;
+      min-height: 100vh;
+      align-items: start;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .np-sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      border-left: 1px solid var(--np-border);
+      background: var(--np-surface);
+      display: flex;
+      flex-direction: column;
+      padding: 22px 18px;
+      gap: 26px;
+    }
+
+    .np-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      padding: 4px 6px;
+    }
+
+    .np-logo-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: var(--np-gradient-ai);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-family: 'Sora', sans-serif;
+      font-size: .82rem;
+      flex-shrink: 0;
+    }
+
+    .np-logo-text {
+      display: grid;
+      line-height: 1.15;
+    }
+
+    .np-logo-text strong {
+      font-family: 'Sora', sans-serif;
+      font-size: 1rem;
+    }
+
+    .np-logo-text span {
+      font-size: .72rem;
+      color: var(--np-text-mute);
+      letter-spacing: .06em;
+    }
+
+    .np-nav {
+      display: grid;
+      gap: 4px;
+    }
+
+    .np-nav-label {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      color: var(--np-text-mute);
+      padding: 6px 12px 4px;
+    }
+
+    .np-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 10px 12px;
+      border-radius: var(--np-radius-sm);
+      text-decoration: none;
+      color: var(--np-text-soft);
+      font-size: .92rem;
+      font-weight: 500;
+      transition: .15s ease;
+    }
+
+    .np-nav-item svg { flex-shrink: 0; opacity: .85; }
+
+    .np-nav-item:hover {
+      background: var(--np-border-soft);
+      color: var(--np-text);
+    }
+
+    .np-nav-item.active {
+      background: var(--np-gradient-soft);
+      color: var(--np-violet);
+      font-weight: 700;
+      box-shadow: inset 0 0 0 1px rgba(124,92,252,.16);
+    }
+
+    .np-nav-item.active svg { opacity: 1; }
+
+    .np-sidebar-foot {
+      margin-top: auto;
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border-radius: var(--np-radius-md);
+      background: var(--np-gradient-soft);
+      border: 1px solid rgba(124,92,252,.14);
+    }
+
+    .np-sidebar-foot strong { font-size: .85rem; }
+    .np-sidebar-foot span { font-size: .78rem; color: var(--np-text-soft); line-height: 1.5; }
+
+    /* ---------- Main column ---------- */
+    .np-main {
+      min-width: 0;
+      display: grid;
+      align-content: start;
+      gap: 22px;
+      padding: 20px 26px 80px;
+    }
+
+    /* ---------- Topbar ---------- */
+    .np-topbar {
+      position: sticky;
+      top: 14px;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 10px 12px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.86);
+      border: 1px solid var(--np-border);
+      box-shadow: var(--np-shadow);
+      backdrop-filter: blur(14px);
+      flex-wrap: wrap;
+    }
+
+    .np-search {
+      flex: 1;
+      min-width: 180px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      background: var(--np-bg);
+      border: 1px solid var(--np-border);
+      border-radius: 12px;
+      padding: 9px 13px;
+      color: var(--np-text-mute);
+    }
+
+    .np-search input {
+      border: none;
+      background: transparent;
+      outline: none;
+      font: inherit;
+      font-size: .88rem;
+      color: var(--np-text);
+      width: 100%;
+    }
+
+    .np-topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .np-icon-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
+      border: 1px solid var(--np-border);
+      background: var(--np-surface);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--np-text-soft);
+      position: relative;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .np-icon-btn .np-dot {
+      position: absolute;
+      top: 7px;
+      left: 7px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--np-emerald);
+      border: 2px solid var(--np-surface);
+    }
+
+    .np-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      border: none;
+      background: var(--np-gradient-ai);
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      font-size: .88rem;
+      cursor: pointer;
+      box-shadow: 0 8px 20px -8px rgba(124,92,252,.55);
+      white-space: nowrap;
+    }
+
+    .np-profile-link {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-decoration: none;
+      padding: 5px 10px 5px 5px;
+      border-radius: 999px;
+      border: 1px solid var(--np-border);
+      background: var(--np-surface);
+    }
+
+    .np-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--np-gradient-ai);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: .82rem;
+      flex-shrink: 0;
+    }
+
+    .np-profile-meta { display: grid; line-height: 1.2; }
+    .np-profile-meta strong { font-size: .82rem; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .np-profile-meta span { font-size: .7rem; color: var(--np-text-mute); }
+
+    /* Mobile nav pills (shown < 960px instead of sidebar) */
+    .np-mobile-nav {
+      display: none;
+      gap: 8px;
+      overflow-x: auto;
+      padding: 4px 2px;
+    }
+
+    .np-mobile-nav a {
+      flex-shrink: 0;
+      padding: 8px 14px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-size: .84rem;
+      font-weight: 600;
+      color: var(--np-text-soft);
+      background: var(--np-surface);
+      border: 1px solid var(--np-border);
+    }
+
+    .np-mobile-nav a.active {
+      color: var(--np-violet);
+      border-color: rgba(124,92,252,.3);
+      background: var(--np-gradient-soft);
+    }
+
+    /* ---------- Notice ---------- */
+    .np-notice {
+      padding: 13px 16px;
+      border-radius: var(--np-radius-sm);
+      background: #FEF3F2;
+      border: 1px solid #FDA29B;
+      color: #B42318;
+      font-size: .88rem;
+      font-weight: 500;
+    }
+
+    .hidden { display: none !important; }
+
+    /* ---------- Welcome strip ---------- */
+    .np-welcome {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .np-welcome h1 {
+      font-size: 1.5rem;
+    }
+
+    .np-welcome p {
+      margin: 4px 0 0;
+      color: var(--np-text-soft);
+      font-size: .92rem;
+    }
+
+    .np-plan-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--np-gradient-soft);
+      border: 1px solid rgba(124,92,252,.18);
+      color: var(--np-violet);
+      font-weight: 800;
+      font-size: .78rem;
+      letter-spacing: .04em;
+    }
+
+    /* ---------- KPI grid ---------- */
+    .np-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    .np-kpi-card {
+      position: relative;
+      overflow: hidden;
+      background: var(--np-surface);
+      border: 1px solid var(--np-border);
+      border-radius: var(--np-radius-lg);
+      padding: 18px 18px 16px;
+      box-shadow: var(--np-shadow-soft);
+      display: grid;
+      gap: 10px;
+    }
+
+    .np-kpi-card::before {
+      content: '';
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 3px;
+      background: var(--bar, var(--np-gradient-ai));
+    }
+
+    .np-kpi-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .np-kpi-label {
+      font-size: .8rem;
+      color: var(--np-text-soft);
+      font-weight: 600;
+    }
+
+    .np-kpi-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--chip, var(--np-gradient-soft));
+      color: var(--iconColor, var(--np-violet));
+    }
+
+    .np-kpi-value {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.7rem;
+      font-weight: 700;
+    }
+
+    .np-kpi-foot {
+      font-size: .76rem;
+      color: var(--np-text-mute);
+    }
+
+    /* ---------- Panels / cards generic ---------- */
+    .np-panel {
+      background: var(--np-surface);
+      border: 1px solid var(--np-border);
+      border-radius: var(--np-radius-lg);
+      padding: 22px;
+      box-shadow: var(--np-shadow-soft);
+      display: grid;
+      gap: 16px;
+    }
+
+    .np-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .np-panel-header h2 { font-size: 1.05rem; }
+    .np-panel-header h3 { font-size: 1rem; }
+    .np-panel-sub { margin: 4px 0 0; font-size: .82rem; color: var(--np-text-soft); }
+
+    .np-chart-row {
+      display: grid;
+      grid-template-columns: 1.7fr 1fr;
+      gap: 16px;
+    }
+
+    .np-legend {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .np-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .78rem;
+      color: var(--np-text-soft);
+    }
+
+    .np-legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    #snapshotChartWrap, #usageDonutWrap {
+      width: 100%;
+    }
+
+    .np-donut-center {
+      font-family: 'Sora', sans-serif;
+    }
+
+    /* ---------- Tools row ---------- */
+    .np-tools-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .np-tool-card {
+      background: var(--np-surface);
+      border: 1px solid var(--np-border);
+      border-radius: var(--np-radius-lg);
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+      box-shadow: var(--np-shadow-soft);
+    }
+
+    .np-tool-card.highlight {
+      background: linear-gradient(150deg, rgba(124,92,252,.06), rgba(34,211,238,.05));
+      border-color: rgba(124,92,252,.18);
+    }
+
+    .np-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 11px;
+      border-radius: 999px;
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .03em;
+      background: var(--np-border-soft);
+      color: var(--np-text-soft);
+      width: fit-content;
+    }
+
+    .np-badge.good { background: rgba(18,183,106,.10); color: #0D8A50; }
+    .np-badge.warn { background: rgba(245,158,11,.12); color: #B45309; }
+    .np-badge.ai { background: var(--np-gradient-soft); color: var(--np-violet); }
+
+    .np-row-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* ---------- Buttons ---------- */
+    .np-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 10px 15px;
+      border-radius: 11px;
+      border: none;
+      background: var(--np-gradient-ai);
+      color: #fff;
+      font: inherit;
+      font-weight: 700;
+      font-size: .85rem;
+      cursor: pointer;
+    }
+
+    .np-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+    .np-btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 9px 14px;
+      border-radius: 11px;
+      border: 1px solid var(--np-border);
+      background: var(--np-surface);
+      color: var(--np-text);
+      font: inherit;
+      font-weight: 600;
+      font-size: .85rem;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .np-btn-ghost:disabled { opacity: .45; cursor: not-allowed; }
+
+    /* ---------- Tier cards ---------- */
+    .np-tier-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .np-tier-card {
+      border: 1px solid var(--np-border);
+      border-radius: var(--np-radius-md);
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+      background: var(--np-bg);
+    }
+
+    .np-tier-card.current {
+      background: var(--np-gradient-soft);
+      border-color: rgba(124,92,252,.28);
+      box-shadow: inset 0 0 0 1px rgba(124,92,252,.12);
+    }
+
+    .np-tier-card ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+    .np-tier-card li { display: flex; align-items: center; gap: 8px; font-size: .84rem; color: var(--np-text-soft); }
+    .np-tier-card li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--np-gradient-ai); flex-shrink: 0; }
+
+    /* ---------- Forms ---------- */
+    .np-form {
+      display: grid;
+      gap: 14px;
+      padding: 16px;
+      border-radius: var(--np-radius-md);
+      background: var(--np-bg);
+      border: 1px solid var(--np-border);
+    }
+
+    .np-form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .np-form-grid .full { grid-column: 1/-1; }
+
+    .np-field { display: grid; gap: 6px; }
+    .np-field label { font-size: .82rem; font-weight: 600; color: var(--np-text-soft); }
+    .np-field input, .np-field textarea {
+      border: 1px solid var(--np-border);
+      background: var(--np-surface);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: inherit;
+      font-size: .88rem;
+      color: var(--np-text);
+      outline: none;
+    }
+    .np-field input:focus, .np-field textarea:focus { border-color: var(--np-violet); box-shadow: 0 0 0 3px rgba(124,92,252,.12); }
+    .np-field textarea { min-height: 90px; resize: vertical; }
+
+    .np-checkbox-row { display: flex; align-items: center; gap: 9px; font-size: .86rem; color: var(--np-text-soft); }
+
+    /* ---------- Collections ---------- */
+    .np-list { display: grid; gap: 10px; }
+
+    .np-item-card {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border-radius: var(--np-radius-sm);
+      background: var(--np-bg);
+      border: 1px solid var(--np-border);
+    }
+
+    .np-item-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+    .np-item-top strong { font-size: .92rem; }
+    .np-item-top .np-price { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+    .np-item-sub { font-size: .78rem; color: var(--np-text-mute); }
+
+    .np-empty, .np-locked {
+      padding: 16px;
+      border-radius: var(--np-radius-sm);
+      border: 1px dashed var(--np-border);
+      color: var(--np-text-mute);
+      font-size: .86rem;
+      text-align: center;
+    }
+
+    .np-key-box {
+      padding: 14px;
+      border-radius: var(--np-radius-sm);
+      background: var(--np-gradient-soft);
+      border: 1px solid rgba(124,92,252,.22);
+      display: grid;
+      gap: 10px;
+    }
+
+    .np-key-box strong { font-size: .84rem; }
+    .np-key-value { font-family: 'JetBrains Mono', monospace; font-size: .82rem; word-break: break-all; color: var(--np-text); }
+
+    .np-domain-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: var(--np-bg);
+      border: 1px solid var(--np-border);
+      font-size: .84rem;
+    }
+
+    .np-domain-list { display: flex; gap: 9px; flex-wrap: wrap; }
+
+    /* ---------- Activity table ---------- */
+    .np-table-wrap { overflow-x: auto; }
+
+    table.np-table { width: 100%; border-collapse: collapse; min-width: 560px; }
+    table.np-table thead th {
+      text-align: right;
+      font-size: .74rem;
+      letter-spacing: .05em;
+      color: var(--np-text-mute);
+      font-weight: 700;
+      padding: 0 10px 10px;
+      border-bottom: 1px solid var(--np-border);
+    }
+    table.np-table tbody td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--np-border-soft);
+      font-size: .86rem;
+      vertical-align: middle;
+    }
+    table.np-table tbody tr:last-child td { border-bottom: none; }
+
+    .np-cust {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+    }
+
+    .np-cust-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--np-gradient-ai);
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .72rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .np-status-pill {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: .72rem;
+      font-weight: 700;
+      background: var(--np-border-soft);
+      color: var(--np-text-soft);
+    }
+    .np-status-pill.good { background: rgba(18,183,106,.10); color: #0D8A50; }
+    .np-status-pill.pending { background: rgba(245,158,11,.12); color: #B45309; }
+    .np-status-pill.bad { background: rgba(240,68,56,.10); color: #B42318; }
+
+    .np-panel-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+
+    /* ---------- Builder locked ---------- */
+    .np-builder-locked { opacity: .82; }
+    .np-builder-locked .np-btn { display: none; }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 1180px) {
+      .np-kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .np-tools-grid { grid-template-columns: 1fr 1fr; }
+      .np-tier-grid { grid-template-columns: 1fr; }
+      .np-chart-row { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 960px) {
+      .np-shell { grid-template-columns: 1fr; }
+      .np-sidebar { display: none; }
+      .np-mobile-nav { display: flex; }
+      .np-main { padding: 14px 14px 70px; }
+      .np-panel-grid { grid-template-columns: 1fr; }
+      .np-tools-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .np-kpi-grid { grid-template-columns: 1fr 1fr; }
+      .np-topbar { padding: 10px; }
+      .np-search { order: 3; flex-basis: 100%; }
+      .np-cta span.np-cta-label { display: none; }
+      .np-profile-meta { display: none; }
+    }
+
+    @media (max-width: 420px) {
+      .np-kpi-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="cp-page">
+  <div class="np-shell">
+    <!-- ============ Sidebar ============ -->
+    <aside class="np-sidebar">
+      <a class="np-logo" href="/">
+        <span class="np-logo-mark">CP</span>
+        <span class="np-logo-text">
+          <strong>ConversaPay</strong>
+          <span>AI COMMERCE OS</span>
+        </span>
+      </a>
+
+      <nav class="np-nav" aria-label="ניווט ראשי">
+        <span class="np-nav-label">ניהול</span>
+        <a class="np-nav-item active" href="/dashboard">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg>
+          <span>Dashboard</span>
+        </a>
+        <a class="np-nav-item" href="/upgrade">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          <span>מסלולים</span>
+        </a>
+        <a class="np-nav-item" href="/settings">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span>הגדרות</span>
+        </a>
+        <a class="np-nav-item" href="/setup-guide">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          <span>הטמעה</span>
+        </a>
+      </nav>
+
+      <div class="np-sidebar-foot">
+        <strong>שדרוג ל-PREMIUM</strong>
+        <span>פתחו בונה אתר, WhatsApp Business ועד 10 מפתחות חיבור.</span>
+        <a class="np-btn-ghost" href="/upgrade" style="justify-self:start;">לצפייה במסלולים</a>
+      </div>
+    </aside>
+
+    <!-- ============ Main ============ -->
+    <main class="np-main">
+      <header class="np-topbar">
+        <div class="np-search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="חיפוש מוצרים, הזמנות, דומיינים…" aria-label="חיפוש">
+        </div>
+        <div class="np-topbar-actions">
+          <button class="np-icon-btn" type="button" aria-label="התראות">
+            <span class="np-dot"></span>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </button>
+          <button class="np-cta" id="openProductFormHero" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span class="np-cta-label">הוסף מוצר</span>
+          </button>
+          <a class="np-profile-link" href="/profile">
+            <span class="np-avatar" id="profileDockAvatar">C</span>
+            <span class="np-profile-meta">
+              <strong id="profileDockName">Profile</strong>
+              <span id="profileDockPlan">FREE</span>
+            </span>
+          </a>
+          <button class="np-icon-btn" id="logout" type="button" aria-label="יציאה" title="יציאה">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <nav class="np-mobile-nav" aria-label="ניווט מהיר">
+        <a class="active" href="/dashboard">Dashboard</a>
+        <a href="/upgrade">מסלולים</a>
+        <a href="/settings">הגדרות</a>
+        <a href="/setup-guide">הטמעה</a>
+      </nav>
+
+      <div id="notice" class="np-notice hidden"></div>
+
+      <section class="np-welcome">
+        <div>
+          <h1>שלום, <span id="name">טוען...</span></h1>
+          <p id="business">טוען נתוני העסק...</p>
+        </div>
+        <span class="np-plan-chip">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.9-5 4.8 1.3 6.9L12 17.6 5.9 20.9l1.3-6.9-5-4.8 6.9-.9L12 2z"/></svg>
+          <span id="currentPlanBadge">FREE</span>
+        </span>
+      </section>
+
+      <!-- ===== KPI cards ===== -->
+      <section class="np-kpi-grid" id="metrics">
+        <article class="np-kpi-card" style="--bar:linear-gradient(90deg,#7C5CFC,#22D3EE);">
+          <div class="np-kpi-top">
+            <span class="np-kpi-label">הכנסות</span>
+            <span class="np-kpi-icon" style="--chip:rgba(124,92,252,.12); --iconColor:#7C5CFC;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            </span>
+          </div>
+          <div class="np-kpi-value" id="revenue">₪0</div>
+          <div class="np-kpi-foot">סך הכנסות שהתקבלו</div>
+        </article>
+
+        <article class="np-kpi-card" style="--bar:linear-gradient(90deg,#22D3EE,#12B76A);">
+          <div class="np-kpi-top">
+            <span class="np-kpi-label">עסקאות</span>
+            <span class="np-kpi-icon" style="--chip:rgba(34,211,238,.12); --iconColor:#0891A8;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+            </span>
+          </div>
+          <div class="np-kpi-value" id="deals">0</div>
+          <div class="np-kpi-foot">עסקאות שנסגרו</div>
+        </article>
+
+        <article class="np-kpi-card" style="--bar:linear-gradient(90deg,#12B76A,#C4B5FD);">
+          <div class="np-kpi-top">
+            <span class="np-kpi-label">שיחות</span>
+            <span class="np-kpi-icon" style="--chip:rgba(18,183,106,.12); --iconColor:#0D8A50;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </span>
+          </div>
+          <div class="np-kpi-value" id="conversations">0</div>
+          <div class="np-kpi-foot">שיחות שנרשמו</div>
+        </article>
+
+        <article class="np-kpi-card" style="--bar:linear-gradient(90deg,#C4B5FD,#7C5CFC);">
+          <div class="np-kpi-top">
+            <span class="np-kpi-label">המרה</span>
+            <span class="np-kpi-icon" style="--chip:rgba(196,181,253,.22); --iconColor:#7C5CFC;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+            </span>
+          </div>
+          <div class="np-kpi-value" id="conversion">0%</div>
+          <div class="np-kpi-foot">יחס המרה נוכחי</div>
+        </article>
+      </section>
+
+      <!-- ===== Charts ===== -->
+      <section class="np-panel">
+        <div class="np-panel-header">
+          <div>
+            <h2>תמונת מצב עסקית</h2>
+            <p class="np-panel-sub">השוואה חזותית בין המדדים המרכזיים של העסק, בזמן אמת מתוך האנליטיקות שלך.</p>
+          </div>
+          <span class="np-badge ai">Live data</span>
+        </div>
+
+        <div class="np-chart-row">
+          <div id="snapshotChartWrap"></div>
+          <div id="usageDonutWrap"></div>
+        </div>
+      </section>
+
+      <!-- ===== Tools row ===== -->
+      <section class="np-tools-grid">
+        <article class="np-tool-card highlight" id="builderCard">
+          <div class="np-row-between">
+            <h3>בונה האתר</h3>
+            <span class="np-badge" id="builderBadge">בודק...</span>
+          </div>
+          <p class="np-panel-sub" id="builderCopy" style="margin:0;">בודק זמינות...</p>
+          <button class="np-btn" id="builderButton" type="button">פתח את בונה האתר</button>
+        </article>
+
+        <article class="np-tool-card">
+          <div class="np-row-between">
+            <h3>סטטוס מסלול</h3>
+            <strong class="np-badge ai" id="plan">FREE</strong>
+          </div>
+          <div class="np-row-between" style="font-size:.86rem;color:var(--np-text-soft);">
+            <span>מפתחות חיבור</span><strong class="np-mono" id="keyLimit">0</strong>
+          </div>
+          <div class="np-row-between" style="font-size:.86rem;color:var(--np-text-soft);">
+            <span>חיבור דומיינים</span><strong class="np-mono" id="domainLimit">0</strong>
+          </div>
+        </article>
+
+        <article class="np-tool-card">
+          <div class="np-row-between">
+            <h3>גישה מהירה</h3>
+            <span class="np-badge good">מסודר</span>
+          </div>
+          <div class="np-row-between">
+            <a class="np-btn-ghost" href="/setup-guide">מדריך הטמעה</a>
+            <a class="np-btn-ghost" href="/upgrade">ניהול מסלול</a>
+          </div>
+        </article>
+      </section>
+
+      <!-- ===== Tiers ===== -->
+      <section class="np-panel">
+        <div class="np-panel-header">
+          <div>
+            <h2>מסלולים ופיצ'רים</h2>
+            <p class="np-panel-sub">כל Tier מסודר במקום אחד, בלי בלגן ובלי פיצול מיותר.</p>
+          </div>
+        </div>
+        <div class="np-tier-grid" id="tierCards"></div>
+      </section>
+
+      <!-- ===== Products / Domains ===== -->
+      <section class="np-panel-grid">
+        <article class="np-panel" id="productsPanel">
+          <div class="np-panel-header">
+            <div>
+              <h2>ניהול מוצרים</h2>
+              <p class="np-panel-sub">יצירה, עריכה ומחיקה של מוצרים מתוך אותו Dashboard.</p>
+            </div>
+            <div class="np-row-between">
+              <button class="np-btn" id="toggleProductForm" type="button">הוסף מוצר</button>
+              <button class="np-btn-ghost hidden" id="cancelProductEdit" type="button">בטל עריכה</button>
+            </div>
+          </div>
+
+          <form id="productForm" class="np-form hidden">
+            <input id="productId" type="hidden">
+            <div class="np-form-grid">
+              <div class="np-field">
+                <label for="productName">שם מוצר</label>
+                <input id="productName" required maxlength="255" placeholder="לדוגמה: פגישת ייעוץ">
+              </div>
+              <div class="np-field">
+                <label for="productItemKey">מזהה מוצר</label>
+                <input id="productItemKey" required maxlength="100" placeholder="consulting_session">
+              </div>
+              <div class="np-field">
+                <label for="productPrice">מחיר</label>
+                <input id="productPrice" type="number" min="0" step="0.01" required placeholder="0.00">
+              </div>
+              <div class="np-field">
+                <label for="productPaymentLink">קישור תשלום</label>
+                <input id="productPaymentLink" type="url" placeholder="https://...">
+              </div>
+              <div class="np-field full">
+                <label for="productDescription">תיאור</label>
+                <textarea id="productDescription" placeholder="תיאור קצר של המוצר"></textarea>
+              </div>
+              <div class="np-field full">
+                <label for="productImageUrl">תמונה</label>
+                <input id="productImageUrl" type="url" placeholder="https://...">
+              </div>
+            </div>
+            <label class="np-checkbox-row">
+              <input id="productIsActive" type="checkbox" checked>
+              <span>המוצר פעיל להצגה ולמכירה</span>
+            </label>
+            <div class="np-row-between">
+              <button class="np-btn" id="productSubmit" type="submit">שמור מוצר</button>
+              <button class="np-btn-ghost" id="productCancelInline" type="button">סגור</button>
+            </div>
+          </form>
+
+          <div id="productsSummary" class="np-panel-sub">טוען מוצרים...</div>
+          <div id="products" class="np-list"></div>
+        </article>
+
+        <article class="np-panel" id="domainsPanel">
+          <div class="np-panel-header">
+            <div>
+              <h2>ניהול דומיינים</h2>
+              <p class="np-panel-sub">ניהול ישיר מהדאשבורד, בלי לפצל את המסך לשניים.</p>
+            </div>
+            <span class="np-badge ai" id="domainPlanBadge">FREE</span>
+          </div>
+
+          <div class="np-row-between" style="font-size:.86rem;color:var(--np-text-soft);">
+            <span>דומיינים מחוברים</span>
+            <strong class="np-mono"><span id="connectedDomainsCount">0</span> / <span id="connectedDomainsLimit">0</span></strong>
+          </div>
+
+          <div id="domainLockedNotice" class="np-locked hidden">
+            ניהול דומיינים זמין במסלולי PRO ו‑PREMIUM. שדרוג יפתח הוספה והסרה של דומיינים מהמסך הזה.
+          </div>
+
+          <form id="domainForm" class="np-form">
+            <div class="np-form-grid">
+              <div class="np-field full">
+                <label for="domainInput">דומיין חדש</label>
+                <input id="domainInput" placeholder="example.com">
+              </div>
+            </div>
+            <div class="np-row-between">
+              <button class="np-btn" id="addDomainButton" type="submit">הוסף דומיין</button>
+              <a class="np-btn-ghost" href="/setup-guide">מדריך חיבור</a>
+            </div>
+          </form>
+
+          <div id="domainSummary" class="np-panel-sub">טוען דומיינים...</div>
+          <div id="domains" class="np-domain-list"></div>
+        </article>
+      </section>
+
+      <!-- ===== API keys / Orders ===== -->
+      <section class="np-panel-grid">
+        <article class="np-panel" id="apiKeysPanel">
+          <div class="np-panel-header">
+            <div>
+              <h2>API Keys</h2>
+              <p class="np-panel-sub">יצירת מפתחות חיבור לזכאים ישירות מהדאשבורד.</p>
+            </div>
+            <span class="np-badge ai" id="apiKeyPlanBadge">FREE</span>
+          </div>
+
+          <div class="np-row-between" style="font-size:.86rem;color:var(--np-text-soft);">
+            <span>מפתחות פעילים</span>
+            <strong class="np-mono"><span id="apiKeyCount">0</span> / <span id="apiKeyLimitValue">0</span></strong>
+          </div>
+
+          <div id="apiKeyLockedNotice" class="np-locked hidden">
+            API Keys זמינים רק במסלולי PRO ו‑PREMIUM.
+          </div>
+
+          <form id="apiKeyForm" class="np-form">
+            <div class="np-form-grid">
+              <div class="np-field full">
+                <label for="apiKeyName">שם מפתח</label>
+                <input id="apiKeyName" maxlength="100" placeholder="Widget key for main website">
+              </div>
+            </div>
+            <div class="np-row-between">
+              <button class="np-btn" id="createApiKeyButton" type="submit">צור API Key</button>
+            </div>
+          </form>
+
+          <div id="apiKeySummary" class="np-panel-sub">טוען מפתחות...</div>
+          <div id="latestApiKeyBox" class="np-key-box hidden">
+            <strong>המפתח החדש שלך</strong>
+            <div id="latestApiKeyValue" class="np-key-value"></div>
+            <div class="np-row-between">
+              <button class="np-btn-ghost" id="copyLatestApiKey" type="button">העתק מפתח</button>
+            </div>
+          </div>
+          <div id="apiKeys" class="np-list"></div>
+        </article>
+
+        <article class="np-panel" id="ordersPanel">
+          <div class="np-panel-header">
+            <div>
+              <h2>הזמנות אחרונות</h2>
+              <p class="np-panel-sub">תצוגה מרוכזת של ההזמנות האחרונות מהמערכת.</p>
+            </div>
+          </div>
+          <div id="orders" class="np-table-wrap"><p class="np-panel-sub">טוען...</p></div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const API = '/api/v1';
+    const LOGIN_ROUTE = '/login';
+    const state = {
+      token: localStorage.getItem('access_token') ||
+        localStorage.getItem('conversapay_auth_token') ||
+        sessionStorage.getItem('access_token') ||
+        sessionStorage.getItem('conversapay_auth_token'),
+      me: null,
+      features: null,
+      analytics: null,
+      currentBusiness: null,
+      products: [],
+      orders: [],
+      customDomains: [],
+      apiKeys: [],
+      apiKeysLocked: false,
+      latestCreatedKey: null,
+      editingProductId: null,
+      ordersLocked: false
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    const PLAN_FEATURES = {
+      free: ['ניהול מוצרים', 'אנליטיקות בסיסיות', 'פרופיל חשבון'],
+      pro: ['ניהול מוצרים', 'ניהול דומיינים', 'הזמנות ומכירות', 'Widget API Keys', 'וורדפרס והטמעה'],
+      premium: ['כל מה שיש ב‑PRO', 'בונה אתר', 'WhatsApp Business', 'עד 10 מפתחות חיבור', 'ניהול מתקדם יותר לדומיינים וחיבורים']
+    };
+
+    function authHeaders() {
+      return state.token ? { Authorization: `Bearer ${state.token}` } : {};
+    }
+
+    function logout() {
+      ['access_token', 'conversapay_auth_token', 'conversapay_user', 'user_id', 'email'].forEach((key) => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      });
+      location.href = LOGIN_ROUTE;
+    }
+
+    function showNotice(message) {
+      const notice = $('notice');
+      notice.textContent = message;
+      notice.classList.remove('hidden');
+    }
+
+    function hideNotice() {
+      $('notice').classList.add('hidden');
+      $('notice').textContent = '';
+    }
+
+    async function apiRequest(path, options = {}) {
+      const response = await fetch(`${API}${path}`, {
+        ...options,
+        headers: {
+          ...authHeaders(),
+          ...(options.headers || {})
+        }
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (response.status === 401) {
+        logout();
+        throw new Error('יש להתחבר מחדש');
+      }
+      if (!response.ok) {
+        throw new Error(data.detail || 'לא ניתן לטעון את הנתונים');
+      }
+      return data;
+    }
+
+    function money(value) {
+      return '₪' + Number(value || 0).toLocaleString('he-IL', { maximumFractionDigits: 2 });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
+
+    function normalizeDomain(value) {
+      return String(value || '')
+        .trim()
+        .replace(/^https?:\/\//i, '')
+        .replace(/\/$/, '')
+        .toLowerCase();
+    }
+
+    function currentPlan() {
+      return String(state.features?.plan_type || 'free').toLowerCase();
+    }
+
+    function canManageDomains() {
+      return state.features?.domains === true;
+    }
+
+    function hasApiKeyAccess() {
+      return Number(state.features?.api_key_limit || 0) > 0;
+    }
+
+    function updateProfileDock() {
+      const profile = state.me?.profile || {};
+      const name = profile.full_name || state.me?.email || 'Profile';
+      const initial = (name || 'P').trim().charAt(0).toUpperCase();
+      $('profileDockAvatar').textContent = initial;
+      $('profileDockName').textContent = name;
+      $('profileDockPlan').textContent = currentPlan().toUpperCase();
+    }
+
+    function setBusinessState() {
+      const hasBusiness = Boolean(state.currentBusiness?.id);
+      $('toggleProductForm').disabled = !hasBusiness;
+      $('openProductFormHero').disabled = !hasBusiness;
+      $('domainInput').disabled = !hasBusiness || !canManageDomains();
+      $('addDomainButton').disabled = !hasBusiness || !canManageDomains();
+      $('apiKeyName').disabled = !hasBusiness || !hasApiKeyAccess();
+      $('createApiKeyButton').disabled = !hasBusiness || !hasApiKeyAccess();
+
+      if (!hasBusiness) {
+        $('productsSummary').textContent = 'אין עסק פעיל כרגע. יש ליצור עסק כדי לנהל מוצרים.';
+        $('domainSummary').textContent = 'אין עסק פעיל כרגע. יש ליצור עסק כדי לנהל דומיינים.';
+        $('apiKeySummary').textContent = 'אין עסק פעיל כרגע. יש ליצור עסק כדי להנפיק API Keys.';
+      }
+    }
+
+    function renderTierCards() {
+      const plan = currentPlan();
+      $('currentPlanBadge').textContent = plan.toUpperCase();
+      $('tierCards').innerHTML = Object.entries(PLAN_FEATURES).map(([tier, features]) => `
+        <article class="np-tier-card ${tier === plan ? 'current' : ''}">
+          <div class="np-row-between">
+            <h3>${tier.toUpperCase()}</h3>
+            <span class="np-badge ${tier === plan ? 'good' : ''}">${tier === plan ? 'המסלול שלך' : 'זמין'}</span>
+          </div>
+          <ul>
+            ${features.map((feature) => `<li>${escapeHtml(feature)}</li>`).join('')}
+          </ul>
+        </article>
+      `).join('');
+    }
+
+    /* ---------- Charts (built from real analytics/feature data only) ---------- */
+
+    function renderSnapshotChart() {
+      const wrap = $('snapshotChartWrap');
+      const a = state.analytics || {};
+      const metrics = [
+        { label: 'הכנסות', value: Number(a.total_revenue || 0), color: '#7C5CFC' },
+        { label: 'עסקאות', value: Number(a.closed_deals || 0), color: '#22D3EE' },
+        { label: 'שיחות', value: Number(a.total_conversations || 0), color: '#12B76A' },
+        { label: 'המרה %', value: Number(a.conversion_rate || 0), color: '#C4B5FD' }
+      ];
+      const max = Math.max(1, ...metrics.map((m) => m.value));
+      const w = 560, h = 220, padL = 8, padR = 8, padTop = 18, padBottom = 34;
+      const chartW = w - padL - padR;
+      const chartH = h - padTop - padBottom;
+      const gap = 28;
+      const barW = (chartW - gap * (metrics.length - 1)) / metrics.length;
+
+      const bars = metrics.map((m, i) => {
+        const ratio = m.value / max;
+        const barH = Math.max(4, ratio * chartH);
+        const x = padL + i * (barW + gap);
+        const y = padTop + (chartH - barH);
+        const gradId = `snapBar${i}`;
+        const displayVal = m.label === 'הכנסות' ? money(m.value) : (m.label === 'המרה %' ? m.value.toFixed(1) + '%' : m.value);
+        return `
+          <defs>
+            <linearGradient id="${gradId}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="${m.color}" stop-opacity="0.95"/>
+              <stop offset="100%" stop-color="${m.color}" stop-opacity="0.35"/>
+            </linearGradient>
+          </defs>
+          <rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="10" fill="url(#${gradId})"></rect>
+          <text x="${x + barW / 2}" y="${y - 8}" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="12" font-weight="600" fill="#13141B">${escapeHtml(String(displayVal))}</text>
+          <text x="${x + barW / 2}" y="${h - 12}" text-anchor="middle" font-family="Inter, sans-serif" font-size="12" fill="#5B5F6B">${escapeHtml(m.label)}</text>
+        `;
+      }).join('');
+
+      const baseline = padTop + chartH;
+
+      wrap.innerHTML = `
+        <svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" role="img" aria-label="תמונת מצב עסקית">
+          <line x1="${padL}" y1="${baseline}" x2="${w - padR}" y2="${baseline}" stroke="#E6E8F1" stroke-width="1"/>
+          ${bars}
+        </svg>
+        <div class="np-legend">
+          ${metrics.map((m) => `<span class="np-legend-item"><span class="np-legend-dot" style="background:${m.color};"></span>${escapeHtml(m.label)}</span>`).join('')}
+        </div>
+      `;
+    }
+
+    function renderUsageDonut() {
+      const wrap = $('usageDonutWrap');
+      const domainLimit = Number(state.features?.domain_limit || 0);
+      const domainUsed = Math.min((state.customDomains || []).length, domainLimit || (state.customDomains || []).length);
+      const keyLimit = Number(state.features?.api_key_limit || 0);
+      const keyUsed = Math.min((state.apiKeys || []).length, keyLimit || (state.apiKeys || []).length);
+
+      const segments = [
+        { label: 'דומיינים', used: domainUsed, limit: domainLimit, color: '#7C5CFC' },
+        { label: 'API Keys', used: keyUsed, limit: keyLimit, color: '#22D3EE' }
+      ];
+
+      const size = 180, stroke = 16, r = (size - stroke) / 2, cx = size / 2, cy = size / 2;
+      const circumference = 2 * Math.PI * r;
+      let offsetAcc = 0;
+      const totalLimit = segments.reduce((s, seg) => s + seg.limit, 0) || 1;
+
+      const arcs = segments.map((seg) => {
+        const ratio = seg.limit > 0 ? seg.used / totalLimit : 0;
+        const len = circumference * ratio;
+        const dasharray = `${len} ${circumference - len}`;
+        const dashoffset = -offsetAcc;
+        offsetAcc += len;
+        return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${seg.color}" stroke-width="${stroke}" stroke-dasharray="${dasharray}" stroke-dashoffset="${dashoffset}" stroke-linecap="round" transform="rotate(-90 ${cx} ${cy})"></circle>`;
+      }).join('');
+
+      const totalUsed = segments.reduce((s, seg) => s + seg.used, 0);
+
+      wrap.innerHTML = `
+        <div style="display:grid;justify-items:center;gap:12px;">
+          <svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" role="img" aria-label="ניצול מכסות">
+            <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#EFF1F7" stroke-width="${stroke}"></circle>
+            ${arcs}
+            <text x="${cx}" y="${cy - 4}" text-anchor="middle" font-family="Sora, sans-serif" font-size="22" font-weight="700" fill="#13141B" class="np-donut-center">${totalUsed}</text>
+            <text x="${cx}" y="${cy + 16}" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#9297A3">בשימוש</text>
+          </svg>
+          <div class="np-legend">
+            ${segments.map((seg) => `<span class="np-legend-item"><span class="np-legend-dot" style="background:${seg.color};"></span>${escapeHtml(seg.label)} ${seg.used}/${seg.limit}</span>`).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTopSection() {
+      const plan = currentPlan();
+      const profile = state.me?.profile || {};
+      const analytics = state.analytics || {};
+      const features = state.features || {};
+
+      $('name').textContent = profile.full_name || state.me?.email || 'בעלים';
+      $('business').textContent = analytics.business_name || state.currentBusiness?.business_name || 'אין עסק פעיל';
+      $('plan').textContent = plan.toUpperCase();
+      $('currentPlanBadge').textContent = plan.toUpperCase();
+      $('domainPlanBadge').textContent = plan.toUpperCase();
+      $('apiKeyPlanBadge').textContent = plan.toUpperCase();
+      $('keyLimit').textContent = String(features.api_key_limit ?? 0);
+      $('domainLimit').textContent = String(features.domain_limit ?? 0);
+      $('connectedDomainsLimit').textContent = String(features.domain_limit ?? 0);
+      $('apiKeyLimitValue').textContent = String(features.api_key_limit ?? 0);
+      $('revenue').textContent = money(analytics.total_revenue);
+      $('deals').textContent = String(analytics.closed_deals ?? 0);
+      $('conversations').textContent = String(analytics.total_conversations ?? 0);
+      $('conversion').textContent = Number(analytics.conversion_rate || 0).toFixed(1) + '%';
+
+      const builderEnabled = features.site_builder === true;
+      $('builderCard').classList.toggle('np-builder-locked', !builderEnabled);
+      $('builderBadge').textContent = builderEnabled ? 'זמין ב‑PREMIUM' : 'נעול, PREMIUM בלבד';
+      $('builderBadge').className = builderEnabled ? 'np-badge good' : 'np-badge warn';
+      $('builderCopy').textContent = builderEnabled
+        ? 'בונה האתר זמין במסלול PREMIUM שלך.'
+        : 'בונה האתר אינו כלול במסלול הנוכחי.';
+      $('builderButton').disabled = !builderEnabled;
+      $('builderButton').onclick = async () => {
+        if (!builderEnabled) return;
+        const data = await apiRequest('/site-builder/access', { method: 'POST' });
+        if (data.url) {
+          location.href = data.url;
+        }
+      };
+
+      renderTierCards();
+      renderSnapshotChart();
+      updateProfileDock();
+    }
+
+    function openProductForm(product = null) {
+      $('productForm').classList.remove('hidden');
+      $('cancelProductEdit').classList.toggle('hidden', !product);
+      state.editingProductId = product?.id || null;
+      $('productId').value = product?.id || '';
+      $('productName').value = product?.name || '';
+      $('productItemKey').value = product?.item_key || '';
+      $('productItemKey').disabled = Boolean(product?.id);
+      $('productPrice').value = product?.price ?? '';
+      $('productDescription').value = product?.description || '';
+      $('productImageUrl').value = product?.image_url || '';
+      $('productPaymentLink').value = product?.payment_link || '';
+      $('productIsActive').checked = product ? product.is_active !== false : true;
+      $('productSubmit').textContent = product ? 'עדכן מוצר' : 'שמור מוצר';
+    }
+
+    function closeProductForm() {
+      state.editingProductId = null;
+      $('productForm').reset();
+      $('productId').value = '';
+      $('productItemKey').disabled = false;
+      $('productForm').classList.add('hidden');
+      $('cancelProductEdit').classList.add('hidden');
+      $('productSubmit').textContent = 'שמור מוצר';
+    }
+
+    function renderProducts() {
+      const root = $('products');
+      const items = state.products || [];
+      $('productsSummary').textContent = items.length
+        ? `יש כרגע ${items.length} מוצרים במערכת.`
+        : 'עדיין אין מוצרים. אפשר להתחיל עם המוצר הראשון ישירות מכאן.';
+
+      if (!items.length) {
+        root.innerHTML = '<div class="np-empty">אין מוצרים עדיין.</div>';
+        return;
+      }
+
+      root.innerHTML = items.map((product) => `
+        <article class="np-item-card">
+          <div class="np-item-top">
+            <div>
+              <strong>${escapeHtml(product.name || 'מוצר')}</strong>
+              <div class="np-item-sub">${escapeHtml(product.item_key || '')}</div>
+            </div>
+            <strong class="np-price">${money(product.price)}</strong>
+          </div>
+          ${product.description ? `<div class="np-item-sub">${escapeHtml(product.description)}</div>` : ''}
+          <div class="np-row-between">
+            <span class="np-badge ${product.is_active ? 'good' : 'warn'}">${product.is_active ? 'פעיל' : 'לא פעיל'}</span>
+            <div class="np-row-between">
+              <button class="np-btn-ghost" type="button" onclick="startEditProduct('${product.id}')">ערוך</button>
+              <button class="np-btn-ghost" type="button" onclick="removeProduct('${product.id}')">מחק</button>
+            </div>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    async function loadProducts() {
+      if (!state.currentBusiness?.id) {
+        state.products = [];
+        renderProducts();
+        return;
+      }
+
+      const response = await apiRequest(`/products?business_id=${encodeURIComponent(state.currentBusiness.id)}&active_only=false`);
+      state.products = Array.isArray(response) ? response : [];
+      renderProducts();
+    }
+
+    async function handleProductSubmit(event) {
+      event.preventDefault();
+      if (!state.currentBusiness?.id) {
+        showNotice('יש ליצור עסק לפני שמוסיפים מוצרים.');
+        return;
+      }
+
+      const submitButton = $('productSubmit');
+      submitButton.disabled = true;
+      const originalText = submitButton.textContent;
+      submitButton.textContent = 'שומר...';
+      hideNotice();
+
+      try {
+        const productId = $('productId').value;
+        const payload = {
+          business_id: state.currentBusiness.id,
+          item_key: $('productItemKey').value.trim(),
+          name: $('productName').value.trim(),
+          description: $('productDescription').value.trim() || null,
+          price: Number($('productPrice').value || 0),
+          image_url: $('productImageUrl').value.trim() || null,
+          payment_link: $('productPaymentLink').value.trim() || null,
+          is_active: $('productIsActive').checked,
+          currency: 'ILS'
+        };
+
+        await apiRequest(productId ? `/products/${productId}` : '/products', {
+          method: productId ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        closeProductForm();
+        await loadProducts();
+      } catch (error) {
+        showNotice(error.message || 'לא ניתן לשמור את המוצר');
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+      }
+    }
+
+    async function startEditProduct(productId) {
+      try {
+        hideNotice();
+        const product = await apiRequest(`/products/${productId}`);
+        openProductForm(product);
+        $('productForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } catch (error) {
+        showNotice(error.message || 'לא ניתן לטעון את פרטי המוצר');
+      }
+    }
+
+    async function removeProduct(productId) {
+      if (!confirm('למחוק את המוצר הזה?')) return;
+      try {
+        hideNotice();
+        await apiRequest(`/products/${productId}`, { method: 'DELETE' });
+        await loadProducts();
+      } catch (error) {
+        showNotice(error.message || 'לא ניתן למחוק את המוצר');
+      }
+    }
+
+    function renderDomains() {
+      const root = $('domains');
+      const domains = state.customDomains || [];
+      const limit = Number(state.features?.domain_limit || 0);
+      const hasBusiness = Boolean(state.currentBusiness?.id);
+      const locked = !canManageDomains();
+
+      $('connectedDomainsCount').textContent = String(domains.length);
+      $('domainLockedNotice').classList.toggle('hidden', !locked);
+      $('domainSummary').textContent = !hasBusiness
+        ? 'אין עסק פעיל לניהול דומיינים.'
+        : locked
+          ? 'במסלול הנוכחי אין ניהול דומיינים פעיל.'
+          : domains.length
+            ? `מחוברים כרגע ${domains.length} דומיינים.`
+            : 'עדיין לא חיברת דומיינים.';
+
+      if (!domains.length) {
+        root.innerHTML = '<div class="np-empty">אין דומיינים מחוברים עדיין.</div>';
+      } else {
+        root.innerHTML = domains.map((domain, index) => `
+          <div class="np-domain-pill">
+            <span>${escapeHtml(domain)}</span>
+            <button class="np-btn-ghost" type="button" onclick="removeDomain(${index})">הסר</button>
+          </div>
+        `).join('');
+      }
+
+      $('domainInput').disabled = locked || !hasBusiness || domains.length >= limit;
+      $('addDomainButton').disabled = locked || !hasBusiness || domains.length >= limit;
+
+      if (!locked && hasBusiness && limit > 0 && domains.length >= limit) {
+        $('domainSummary').textContent = `הגעת למגבלת הדומיינים של המסלול (${limit}).`;
+      }
+
+      renderUsageDonut();
+    }
+
+    async function saveDomains(nextDomains) {
+      if (!state.currentBusiness?.id) {
+        throw new Error('אין עסק פעיל לשמירת דומיינים.');
+      }
+
+      const payload = {
+        settings: {
+          ...(state.currentBusiness.settings || {}),
+          custom_domains: nextDomains
+        }
+      };
+
+      const updated = await apiRequest(`/businesses/${state.currentBusiness.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      state.currentBusiness = updated;
+      state.customDomains = Array.isArray(updated.settings?.custom_domains)
+        ? updated.settings.custom_domains
+        : [];
+      renderDomains();
+    }
+
+    async function handleDomainSubmit(event) {
+      event.preventDefault();
+      hideNotice();
+
+      if (!canManageDomains()) {
+        showNotice('ניהול דומיינים זמין במסלולי PRO ו‑PREMIUM.');
+        return;
+      }
+
+      const normalized = normalizeDomain($('domainInput').value);
+      if (!normalized) {
+        showNotice('יש להזין דומיין תקין.');
+        return;
+      }
+
+      const domains = state.customDomains || [];
+      const limit = Number(state.features?.domain_limit || 0);
+      if (domains.includes(normalized)) {
+        showNotice('הדומיין כבר קיים ברשימה.');
+        return;
+      }
+      if (domains.length >= limit) {
+        showNotice('הגעת למגבלת הדומיינים של המסלול שלך.');
+        return;
+      }
+
+      try {
+        await saveDomains([...domains, normalized]);
+        $('domainInput').value = '';
+      } catch (error) {
+        showNotice(error.message || 'לא ניתן לשמור את הדומיין');
+      }
+    }
+
+    async function removeDomain(index) {
+      try {
+        hideNotice();
+        const next = [...(state.customDomains || [])];
+        next.splice(index, 1);
+        await saveDomains(next);
+      } catch (error) {
+        showNotice(error.message || 'לא ניתן להסיר את הדומיין');
+      }
+    }
+
+    function renderApiKeys() {
+      const keys = state.apiKeys || [];
+      const limit = Number(state.features?.api_key_limit || 0);
+      const hasBusiness = Boolean(state.currentBusiness?.id);
+      const locked = !hasApiKeyAccess() || state.apiKeysLocked === true;
+
+      $('apiKeyCount').textContent = String(keys.length);
+      $('apiKeyLockedNotice').classList.toggle('hidden', !locked || !hasBusiness);
+      $('apiKeySummary').textContent = !hasBusiness
+        ? 'אין עסק פעיל כרגע. יש ליצור עסק כדי להנפיק API Keys.'
+        : locked
+          ? 'במסלול הנוכחי אין אפשרות ליצור API Keys.'
+          : keys.length
+            ? `יש כרגע ${keys.length} מפתחות פעילים מתוך ${limit}.`
+            : 'עדיין אין API Keys פעילים.';
+
+      if (state.latestCreatedKey) {
+        $('latestApiKeyBox').classList.remove('hidden');
+        $('latestApiKeyValue').textContent = state.latestCreatedKey;
+      } else {
+        $('latestApiKeyBox').classList.add('hidden');
+      }
+
+      if (!keys.length) {
+        $('apiKeys').innerHTML = '<div class="np-empty">אין API Keys פעילים.</div>';
+      } else {
+        $('apiKeys').innerHTML = keys.map((key) => `
+          <article class="np-item-card">
+            <div class="np-item-top">
+              <div>
+                <strong>${escapeHtml(key.name || 'API Key')}</strong>
+                <div class="np-item-sub np-mono">${escapeHtml(key.key_prefix || '')}...</div>
+              </div>
+              <span class="np-badge good">פעיל</span>
+            </div>
+            <div class="np-row-between">
+              <span class="np-item-sub">הרשאה: widget</span>
+              <button class="np-btn-ghost" type="button" onclick="revokeApiKey('${key.id}')">בטל מפתח</button>
+            </div>
+          </article>
+        `).join('');
+      }
+
+      $('apiKeyName').disabled = !hasBusiness || locked || keys.length >= limit;
+      $('createApiKeyButton').disabled = !hasBusiness || locked || keys.length >= limit;
+
+      if (!locked && hasBusiness && limit > 0 && keys.length >= limit) {
+        $('apiKeySummary').textContent = `הגעת למגבלת ה‑API Keys של המסלול (${limit}).`;
+      }
+
+      renderUsageDonut();
+    }
+
+    async function loadApiKeys() {
+      if (!state.currentBusiness?.id) {
+        state.apiKeys = [];
+        state.apiKeysLocked = false;
+        renderApiKeys();
+        return;
+      }
+
+      try {
+        const data = await apiRequest(`/api-keys?business_id=${encodeURIComponent(state.currentBusiness.id)}`);
+        state.apiKeys = Array.isArray(data.keys) ? data.keys : [];
+        state.apiKeysLocked = data.locked === true;
+      } catch (error) {
+        state.apiKeys = [];
+        state.apiKeysLocked = true;
+        showNotice(error.message || 'לא ניתן לטעון API Keys');
+      }
+      renderApiKeys();
+      injectWidget();
+    }
+
+    function injectWidget() {
+      if (document.getElementById('conversapay-chat-widget')) return;
+      if (!state.currentBusiness?.id || !state.token) return;
+      window.ConversaPayWidgetConfig = {
+        business_id: state.currentBusiness.id,
+        auth_token: state.token,
+        upgrade_url: `${window.location.origin}/upgrade`
+      };
+      const script = document.createElement('script');
+      script.src = `${window.location.origin}/frontend/js/widget.js`;
+      script.defer = true;
+      document.body.appendChild(script);
+    }
+
+    async function handleApiKeySubmit(event) {
+      event.preventDefault();
+      hideNotice();
+
+      if (!state.currentBusiness?.id) {
+        showNotice('יש ליצור עסק לפני שמנפיקים API Key.');
+        return;
+      }
+
+      const name = $('apiKeyName').value.trim();
+      if (!name) {
+        showNotice('יש להזין שם למפתח.');
+        return;
+      }
+
+      const button = $('createApiKeyButton');
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = 'יוצר...';
+
+      try {
+        const data = await apiRequest('/api-keys', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            business_id: state.currentBusiness.id
+          })
+        });
+        state.latestCreatedKey = data.key || null;
+        $('apiKeyName').value = '';
+        await loadApiKeys();
+      } catch (error) {
+        showNotice(error.message || 'לא ניתן ליצור API Key');
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    }
+
+    async function revokeApiKey(keyId) {
+      if (!confirm('לבטל את ה-API Key הזה?')) return;
+      hideNotice();
+      try {
+        await apiRequest(`/api-keys/${keyId}`, { method: 'DELETE' });
+        await loadApiKeys();
+      } catch (error) {
+        showNotice(error.message || 'לא ניתן לבטל את המפתח');
+      }
+    }
+
+    async function copyLatestApiKey() {
+      if (!state.latestCreatedKey) return;
+      try {
+        await navigator.clipboard.writeText(state.latestCreatedKey);
+        $('copyLatestApiKey').textContent = 'הועתק ✓';
+        setTimeout(() => {
+          $('copyLatestApiKey').textContent = 'העתק מפתח';
+        }, 1600);
+      } catch (_) {
+        showNotice('לא ניתן להעתיק אוטומטית.');
+      }
+    }
+
+    function statusPillClass(status) {
+      const s = String(status || '').toLowerCase();
+      if (['paid', 'completed', 'success', 'הושלם', 'שולם'].includes(s)) return 'good';
+      if (['failed', 'cancelled', 'canceled', 'בוטל', 'נכשל'].includes(s)) return 'bad';
+      return 'pending';
+    }
+
+    function renderOrders() {
+      const root = $('orders');
+      const items = state.orders || [];
+      const locked = state.ordersLocked === true;
+
+      if (!items.length) {
+        root.innerHTML = locked
+          ? '<div class="np-locked">ניהול הזמנות מלא זמין במסלולי PRO ו‑PREMIUM.</div>'
+          : '<div class="np-empty">אין הזמנות עדיין.</div>';
+        return;
+      }
+
+      root.innerHTML = `
+        <table class="np-table">
+          <thead>
+            <tr>
+              <th>הזמנה</th>
+              <th>לקוח</th>
+              <th>סטטוס</th>
+              <th>סכום</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${items.map((order) => {
+              const customerName = order.customer_info?.name || order.customer_info?.email || 'לקוח אנונימי';
+              const initial = (customerName || 'ל').trim().charAt(0).toUpperCase();
+              const statusLabel = order.status || 'ממתין';
+              return `
+                <tr>
+                  <td class="np-mono">${escapeHtml(order.order_number || order.id || '—')}</td>
+                  <td>
+                    <span class="np-cust">
+                      <span class="np-cust-avatar">${escapeHtml(initial)}</span>
+                      <span>${escapeHtml(customerName)}</span>
+                    </span>
+                  </td>
+                  <td><span class="np-status-pill ${statusPillClass(order.status)}">${escapeHtml(statusLabel)}</span></td>
+                  <td class="np-mono">${money(order.total)}</td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function scrollToSection(id) {
+      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    async function load() {
+      if (!state.token) {
+        logout();
+        return;
+      }
+
+      try {
+        hideNotice();
+        const [me, features, analytics, ordersData, businesses] = await Promise.all([
+          apiRequest('/auth/me'),
+          apiRequest('/dashboard/features'),
+          apiRequest('/dashboard/analytics'),
+          apiRequest('/dashboard/orders'),
+          apiRequest('/businesses')
+        ]);
+
+        state.me = me;
+        state.features = features;
+        state.analytics = analytics;
+        state.currentBusiness = Array.isArray(businesses) && businesses.length ? businesses[0] : null;
+        state.orders = Array.isArray(ordersData.orders) ? ordersData.orders : [];
+        state.ordersLocked = ordersData.locked === true;
+        state.customDomains = Array.isArray(state.currentBusiness?.settings?.custom_domains)
+          ? state.currentBusiness.settings.custom_domains
+          : [];
+
+        renderTopSection();
+        setBusinessState();
+        renderDomains();
+        renderOrders();
+        await Promise.all([loadProducts(), loadApiKeys()]);
+      } catch (error) {
+        showNotice(error.message || 'לא ניתן לטעון את הדאשבורד');
+      }
+    }
+
+    $('logout').onclick = logout;
+    $('toggleProductForm').onclick = () => {
+      openProductForm();
+      scrollToSection('productsPanel');
+    };
+    $('openProductFormHero').onclick = () => {
+      openProductForm();
+      scrollToSection('productsPanel');
+    };
+    $('cancelProductEdit').onclick = closeProductForm;
+    $('productCancelInline').onclick = closeProductForm;
+    $('productForm').addEventListener('submit', handleProductSubmit);
+    $('domainForm').addEventListener('submit', handleDomainSubmit);
+    $('apiKeyForm').addEventListener('submit', handleApiKeySubmit);
+    $('copyLatestApiKey').onclick = copyLatestApiKey;
+
+    window.startEditProduct = startEditProduct;
+    window.removeProduct = removeProduct;
+    window.removeDomain = removeDomain;
+    window.revokeApiKey = revokeApiKey;
+
+    load();
+  </script>
+</body>
+</html>
