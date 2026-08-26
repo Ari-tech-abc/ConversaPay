@@ -20,11 +20,13 @@ https://www.conversapay.org/auth/callback
 
 ### 2. Authentication → Settings
 
-**Auth flow type:**
-- Change from: `Implicit flow`
-- Change to: `PKCE flow`
+**Important:** In the current Supabase version, PKCE flow is enabled by default and cannot be changed in the dashboard UI. The system automatically uses PKCE when available.
 
-This ensures tokens are returned as query parameters (`?code=...`) instead of hash fragments (`#access_token=...`).
+If you're seeing hash fragments (`#access_token=...`), it means:
+- The OAuth provider (Google) is configured to use implicit flow, OR
+- The redirect is happening before PKCE can be used
+
+The redirect script added to `home.html` will handle both cases automatically.
 
 ### 3. Authentication → Providers → Google
 
