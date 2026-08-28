@@ -1724,14 +1724,23 @@
     function injectWidget() {
       if (document.getElementById('conversapay-chat-widget')) return;
       if (!state.currentBusiness?.id || !state.token) return;
+      const productCount = (state.products || []).filter(p => p.is_active).length;
+      const revenue = state.analytics?.total_revenue || 0;
+      const greeting = productCount > 0
+        ? `שלום! יש לך ${productCount} מוצרים פעילים ו-${money(revenue)} הכנסות. איך אפשר לעזור?`
+        : 'שלום! איך אפשר לעזור?';
       window.ConversaPayWidgetConfig = {
         business_id: state.currentBusiness.id,
         auth_token: state.token,
-        upgrade_url: `${window.location.origin}/upgrade`
+        upgrade_url: `${window.location.origin}/upgrade`,
+        greeting_message: greeting
       };
       const script = document.createElement('script');
       script.src = `${window.location.origin}/frontend/js/widget.js`;
       script.defer = true;
+      script.addEventListener('load', () => {
+        setTimeout(() => window.ConversaPayWidget?.open(), 300);
+      });
       document.body.appendChild(script);
     }
 

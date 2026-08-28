@@ -1,2 +1,6 @@
 @import url('../css/main.css');
 /* Compatibility entrypoint. All shared frontend styling now lives in ../css/main.css. */
+
+/* Fallback spinner for pages that only load this file (e.g. auth-callback). */
+.cp-spinner{width:48px;height:48px;border-radius:50%;border:4px solid rgba(99,102,241,.15);border-top-color:#6366f1;animation:cp-spin .8s linear infinite;margin:0 auto 18px;display:block}
+@keyframes cp-spin{to{transform:rotate(360deg)}}

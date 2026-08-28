@@ -23,6 +23,7 @@
   let sending = false;
   let msgCount = 0;
   let limitReached = false;
+  let isFreeplan = false;
 
   const escapeText = (value) => String(value ?? '');
 
@@ -217,6 +218,7 @@
     document.body.appendChild(root);
 
     applyTheme(widget.theme_colors);
+    isFreeplan = (widget.features?.plan_type || 'free') === 'free';
     const botName = widget.bot_name || '\u05e0\u05e6\u05d9\u05d2 ConversaPay';
     root.querySelector('#cpTitle').textContent = botName;
     root.querySelector('#cpAvatar').textContent = botName.trim().charAt(0).toUpperCase();
@@ -233,8 +235,11 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && win.classList.contains('open')) setOpen(false); });
     root.querySelector('.cp-input').addEventListener('submit', (event) => { event.preventDefault(); send(); });
 
-    addMessage(widget.greeting_message || '\u05e9\u05dc\u05d5\u05dd! \u05d0\u05d9\u05da \u05d0\u05e4\u05e9\u05e8 \u05dc\u05e2\u05d6\u05d5\u05e8?', 'bot');
-    if (!win.classList.contains('open')) setUnread(1);
+    addMessage(config.greeting_message || widget.greeting_message || '\u05e9\u05dc\u05d5\u05dd! \u05d0\u05d9\u05da \u05d0\u05e4\u05e9\u05e8 \u05dc\u05e2\u05d6\u05d5\u05e8?', 'bot');
+    if (isFreeplan) {
+      addMessage('\u05d4\u05e2\u05e8\u05d4: \u05d1\u05de\u05e1\u05dc\u05d5\u05dc \u05d4\u05d7\u05d9\u05e0\u05de\u05d9 \u05d9\u05e9 \u05de\u05d2\u05d1\u05dc\u05d4 \u05e9\u05dc 5 \u05d4\u05d5\u05d3\u05e2\u05d5\u05ea \u05dc\u05e9\u05e2\u05d4. \u05d4\u05e9\u05ea\u05de\u05e9 \u05d1\u05d7\u05d5\u05db\u05de\u05d4! \ud83d\ude4f', 'bot');
+    }
+    if (!win.classList.contains('open')) setUnread(isFreeplan ? 2 : 1);
   }
 
   function setSending(isSending) {
