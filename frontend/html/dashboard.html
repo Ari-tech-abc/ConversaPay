@@ -1722,8 +1722,16 @@
     }
 
     function injectWidget() {
-      if (document.getElementById('conversapay-chat-widget')) return;
-      if (!state.currentBusiness?.id || !state.token) return;
+      console.log('[Dashboard] injectWidget called', { hasBusiness: !!state.currentBusiness?.id, hasToken: !!state.token, businessId: state.currentBusiness?.id });
+      if (document.getElementById('conversapay-chat-widget')) {
+        console.log('[Dashboard] Widget root already present, opening...');
+        window.ConversaPayWidget?.open();
+        return;
+      }
+      if (!state.currentBusiness?.id || !state.token) {
+        console.warn('[Dashboard] Widget injection skipped: missing business or token');
+        return;
+      }
       const productCount = (state.products || []).filter(p => p.is_active).length;
       const revenue = state.analytics?.total_revenue || 0;
       const greeting = productCount > 0
@@ -1739,9 +1747,23 @@
       script.src = `${window.location.origin}/frontend/js/widget.js`;
       script.defer = true;
       script.addEventListener('load', () => {
-        setTimeout(() => window.ConversaPayWidget?.open(), 300);
+        console.log('[Dashboard] Widget script loaded');
+        setTimeout(() => {
+          const root = document.getElementById('conversapay-chat-widget');
+          console.log('[Dashboard] Widget root after timeout', { root: !!root, windowApi: !!window.ConversaPayWidget });
+          if (!root) {
+            console.error('[Dashboard] Widget script loaded but root element missing');
+            return;
+          }
+          window.ConversaPayWidget?.open();
+        }, 500);
+      });
+      script.addEventListener('error', () => {
+        console.error('[Dashboard] Failed to load widget script');
+        showNotice('טעינת הווידג׳ט נכשלה');
       });
       document.body.appendChild(script);
+      console.log('[Dashboard] Widget script appended', { src: script.src });
     }
 
     async function handleApiKeySubmit(event) {
