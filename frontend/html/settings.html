@@ -4,26 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>ConversaPay - הגדרות</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
-  <style>
-    .settings-shell { display:grid; gap:1.2rem; max-width:860px; margin:auto; }
-    .summary-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)); gap:1rem; }
-    .summary-card,.settings-card { display:grid; gap:12px; padding:1.4rem; border-radius:1.25rem; background:var(--cp-panel); border:1px solid var(--cp-line); box-shadow:var(--cp-shadow); }
-    .summary-value { font-size:1.5rem; font-weight:800; color:var(--cp-accent); }
-    .field-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:14px; }
-    .field-grid .full { grid-column:1/-1; }
-    .settings-field { display:grid; gap:8px; }
-    .settings-field label { color:var(--cp-muted-strong); font-weight:700; font-size:.92rem; }
-    .settings-field input,.webhook-box { width:100%; border-radius:13px; border:1px solid var(--cp-line-strong); background:var(--cp-bg); color:var(--cp-text); padding:12px 14px; font:inherit; box-sizing:border-box; font-weight:500; }
-    .webhook-box { direction:ltr; text-align:left; word-break:break-all; background:var(--cp-panel-strong); }
-    .settings-actions,.inline-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    .help-list { display:grid; gap:10px; }
-    .help-item { padding:14px 16px; border-radius:1rem; background:var(--cp-panel-strong); border:1px solid var(--cp-line); }
-    .help-item strong { color:var(--cp-text); font-weight:700; }
-  </style>
 </head>
 <body class="cp-page">
   <header class="cp-topbar">
@@ -31,62 +12,55 @@
     <a class="cp-backlink" href="/dashboard">חזרה לדאשבורד</a>
   </header>
 
-  <main class="cp-shell settings-shell">
-    <section class="settings-card">
-      <div class="cp-stack">
+  <main class="cp-shell cp-stack" style="max-width:860px;margin-inline:auto;">
+    <section class="cp-card cp-stack">
         <h1>הגדרות</h1>
         <p class="cp-muted">ניהול מהיר של החיבורים, המגבלות והגדרות WhatsApp שלך.</p>
-      </div>
     </section>
 
-    <section class="summary-grid" id="summaryGrid">
-      <article class="summary-card">
+    <section class="cp-grid-2" id="summaryGrid">
+      <article class="cp-panel">
         <small class="cp-muted">PayMe</small>
-        <div class="summary-value" id="paymeStatus">—</div>
+        <strong id="paymeStatus">—</strong>
       </article>
-      <article class="summary-card">
+      <article class="cp-panel">
         <small class="cp-muted">WhatsApp</small>
-        <div class="summary-value" id="whatsappStatus">—</div>
+        <strong id="whatsappStatus">—</strong>
       </article>
-      <article class="summary-card">
+      <article class="cp-panel">
         <small class="cp-muted">מגבלת דומיינים</small>
-        <div class="summary-value" id="domainLimit">0</div>
+        <strong id="domainLimit">0</strong>
       </article>
-      <article class="summary-card">
+      <article class="cp-panel">
         <small class="cp-muted">מגבלת API Keys</small>
-        <div class="summary-value" id="apiKeyLimit">0</div>
+        <strong id="apiKeyLimit">0</strong>
       </article>
     </section>
 
-    <section class="settings-card">
-      <div class="cp-stack">
-        <h2>חיבור WhatsApp Business</h2>
-        <p class="cp-muted">מלא את הפרטים מ-Meta כדי לחבר את הבוט ל-WhatsApp.</p>
-      </div>
-
+    <section class="cp-card cp-stack">
+      <h2>חיבור WhatsApp Business</h2>
+      <p class="cp-muted">מלא את הפרטים מ-Meta כדי לחבר את הבוט ל-WhatsApp.</p>
       <div id="notice" class="cp-notice" hidden></div>
-
       <form id="whatsappForm" class="cp-stack">
-        <div class="field-grid">
-          <div class="settings-field">
-            <label for="phoneNumberId">Phone Number ID</label>
-            <input id="phoneNumberId" placeholder="לדוגמה: 123456789012345">
+        <div class="cp-grid-2">
+          <div class="cp-field">
+            <label class="cp-label" for="phoneNumberId">Phone Number ID</label>
+            <input class="cp-input" id="phoneNumberId" placeholder="לדוגמה: 123456789012345">
           </div>
-          <div class="settings-field">
-            <label for="verifyToken">Verify Token</label>
-            <input id="verifyToken" placeholder="בחר טוקן משלך לאימות ה-Webhook">
+          <div class="cp-field">
+            <label class="cp-label" for="verifyToken">Verify Token</label>
+            <input class="cp-input" id="verifyToken" placeholder="בחר טוקן משלך לאימות ה-Webhook">
           </div>
-          <div class="settings-field full">
-            <label for="accessToken">Access Token</label>
-            <input id="accessToken" placeholder="Paste Meta access token here">
+          <div class="cp-field" style="grid-column:1/-1">
+            <label class="cp-label" for="accessToken">Access Token</label>
+            <input class="cp-input" id="accessToken" placeholder="Paste Meta access token here">
           </div>
-          <div class="settings-field full">
-            <label>Webhook URL</label>
-            <div class="webhook-box" id="webhookUrl">טוען...</div>
+          <div class="cp-field" style="grid-column:1/-1">
+            <label class="cp-label">Webhook URL</label>
+            <div class="cp-code" id="webhookUrl">טוען...</div>
           </div>
         </div>
-
-        <div class="settings-actions">
+        <div class="cp-actions">
           <button class="cp-button" type="submit" id="saveWhatsApp">שמור הגדרות WhatsApp</button>
           <button class="cp-button-secondary" type="button" id="copyWebhook">העתק Webhook</button>
           <a class="cp-button-secondary" href="/setup-guide">פתח מדריך</a>
@@ -94,15 +68,13 @@
       </form>
     </section>
 
-    <section class="settings-card">
-      <div class="cp-stack">
-        <h2>עזרה מהירה</h2>
-        <p class="cp-muted">רק כדי לוודא שהחיבור עובד חלק.</p>
-      </div>
-      <div class="help-list">
-        <div class="help-item"><strong>1. Meta App</strong><br><span class="cp-muted">הפעל WhatsApp Business Platform בתוך Meta Developers.</span></div>
-        <div class="help-item"><strong>2. שלושת השדות</strong><br><span class="cp-muted">צריך Phone Number ID, Access Token ו-Verify Token.</span></div>
-        <div class="help-item"><strong>3. בדיקת Webhook</strong><br><span class="cp-muted">אותו Verify Token צריך להופיע גם כאן וגם בהגדרות ה-Webhook ב-Meta.</span></div>
+    <section class="cp-card cp-stack">
+      <h2>עזרה מהירה</h2>
+      <p class="cp-muted">רק כדי לוודא שהחיבור עובד חלק.</p>
+      <div class="cp-list">
+        <div class="cp-list-item"><strong>1. Meta App</strong><span class="cp-muted">הפעל WhatsApp Business Platform בתוך Meta Developers.</span></div>
+        <div class="cp-list-item"><strong>2. שלושת השדות</strong><span class="cp-muted">צריך Phone Number ID, Access Token ו-Verify Token.</span></div>
+        <div class="cp-list-item"><strong>3. בדיקת Webhook</strong><span class="cp-muted">אותו Verify Token צריך להופיע גם כאן וגם בהגדרות ה-Webhook ב-Meta.</span></div>
       </div>
     </section>
   </main>

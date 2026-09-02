@@ -1,9 +1,26 @@
 <!doctype html>
 <html lang="he" dir="rtl">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>משלימים התחברות | Talk2Pay</title><meta name="robots" content="noindex,nofollow,noarchive"><meta name="referrer" content="no-referrer"><meta name="theme-color" content="#f7f5fb"><link rel="stylesheet" href="/frontend/html/conversapay-ui.css"></head>
-<body class="cp-page"><main class="cp-shell cp-center-shell"><section class="cp-card cp-card-sm cp-text-center" aria-labelledby="page-title" aria-busy="true" id="callback-card"><div class="cp-spinner" aria-hidden="true"></div><h1 id="page-title">מתחברים לחשבון</h1><p id="status" class="cp-muted" role="status" aria-live="polite">מאמתים את פרטי ההתחברות...</p><p id="error" class="cp-notice error" role="alert" hidden></p><a id="retry" class="cp-button-secondary cp-full cp-mt-md" href="/login" hidden>חזרה לכניסה</a></section></main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" crossorigin="anonymous"></script>
-<script>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>משלימים התחברות | Talk2Pay</title>
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#f7f5fb">
+  <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+</head>
+<body class="cp-page">
+  <main class="cp-shell cp-center-shell">
+    <section class="cp-card cp-card-sm cp-text-center" aria-labelledby="page-title" aria-busy="true" id="callback-card">
+      <div class="cp-spinner" aria-hidden="true"></div>
+      <h1 id="page-title">מתחברים לחשבון</h1>
+      <p id="status" class="cp-muted" role="status" aria-live="polite">מאמתים את פרטי ההתחברות...</p>
+      <p id="error" class="cp-notice error" role="alert" hidden></p>
+      <a id="retry" class="cp-button-secondary cp-full cp-mt-md" href="/login" hidden>חזרה לכניסה</a>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js" crossorigin="anonymous"></script>
+  <script>
 (()=>{'use strict';
 const API='/api/v1',DEFAULT_NEXT='/dashboard';
 const status=document.getElementById('status'),errorNode=document.getElementById('error'),retry=document.getElementById('retry'),card=document.getElementById('callback-card');

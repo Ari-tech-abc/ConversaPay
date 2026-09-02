@@ -6,21 +6,27 @@
   <meta name="robots" content="noindex,nofollow">
   <title>ConversaPay | התשלום בוטל</title>
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
-  <style>
-    .result-shell{min-height:calc(100dvh - 92px);display:grid;place-items:center;padding:1.5rem 0 2.5rem}
-    .result-card{width:min(620px,100%);text-align:center;display:grid;gap:1.25rem;justify-items:center;min-width:0}
-    .result-icon{width:82px;height:82px;border-radius:1.5rem;display:grid;place-items:center;background:#fffbeb;border:1px solid #fde68a;color:#d97706;font-size:2.4rem;box-shadow:0 8px 32px rgba(217,119,6,.1)}
-    .result-copy{max-width:46ch;width:100%;min-width:0}.result-copy h1{font-size:clamp(1.9rem,5vw,3.1rem);margin:10px 0;line-height:1.1;color:var(--cp-text)}.result-copy p{overflow-wrap:anywhere}
-    .result-actions{width:min(440px,100%);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.result-actions>*{min-width:0}
-    .sandbox-note,.next-step{width:100%;max-width:100%;padding:12px 14px;border-radius:1.1rem;font-size:.88rem;font-weight:700;overflow-wrap:anywhere}
-    .sandbox-note{color:#92400e;background:#fffbeb;border:1px solid #fde68a}
-    .next-step{text-align:right;color:var(--cp-text);background:var(--cp-panel-strong);border:1px solid var(--cp-line);font-weight:500}
-    .next-step strong{display:block;margin-bottom:4px;font-weight:700;color:var(--cp-text)}
-    @media(max-width:560px){.result-shell{min-height:auto;padding:1.1rem 0 1.75rem}.result-card{gap:1rem}.result-icon{width:68px;height:68px;border-radius:1.25rem;font-size:2rem}.result-actions{grid-template-columns:1fr}.result-actions>*{width:100%}.next-step{padding:14px}}
-  </style>
 </head>
 <body class="cp-page">
-  <header class="cp-topbar"><a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a><span class="cp-badge">Stripe</span></header>
-  <main class="cp-shell result-shell"><section class="cp-card result-card"><div class="result-icon" aria-hidden="true">!</div><div class="result-copy"><span class="cp-kicker" style="justify-content:center">לא בוצע חיוב</span><h1>התשלום בוטל</h1><p class="cp-muted">לא בוצע חיוב ולא נוצר שדרוג. אפשר לחזור לדאשבורד ולנסות שוב בכל רגע.</p></div><span class="sandbox-note">מצב בדיקות / Sandbox</span><div class="next-step"><strong>מה עכשיו?</strong><span class="cp-muted">בדוק את פרטי התשלום, את הגדרות Stripe Sandbox, ואם צריך נסה שוב ממסך השדרוג.</span></div><div class="cp-actions result-actions"><a class="cp-button" href="/dashboard">חזרה לדאשבורד</a><a class="cp-button-secondary" href="/upgrade">חזרה לבחירת מסלול</a></div></section></main>
+  <header class="cp-topbar">
+    <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
+    <span class="cp-badge">Stripe</span>
+  </header>
+  <main class="cp-shell cp-center-shell">
+    <section class="cp-card cp-text-center">
+      <span class="cp-kicker cp-text-center">לא בוצע חיוב</span>
+      <h1>התשלום בוטל</h1>
+      <p class="cp-muted">לא בוצע חיוב ולא נוצר שדרוג. אפשר לחזור לדאשבורד ולנסות שוב בכל רגע.</p>
+      <span class="cp-badge warn">מצב בדיקות / Sandbox</span>
+      <div class="cp-panel cp-mt-md">
+        <strong>מה עכשיו?</strong>
+        <p class="cp-muted">בדוק את פרטי התשלום, את הגדרות Stripe Sandbox, ואם צריך נסה שוב ממסך השדרוג.</p>
+      </div>
+      <div class="cp-actions">
+        <a class="cp-button" href="/dashboard">חזרה לדאשבורד</a>
+        <a class="cp-button-secondary" href="/upgrade">חזרה לבחירת מסלול</a>
+      </div>
+    </section>
+  </main>
 </body>
 </html>

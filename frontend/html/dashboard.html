@@ -6,1118 +6,348 @@
   <meta name="theme-color" content="#F5F6FA">
   <title>ConversaPay | DASHBOARD</title>
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --np-bg: #F5F6FA;
-      --np-surface: #FFFFFF;
-      --np-border: #E6E8F1;
-      --np-border-soft: #EFF1F7;
-      --np-text: #13141B;
-      --np-text-soft: #5B5F6B;
-      --np-text-mute: #9297A3;
-      --np-violet: #7C5CFC;
-      --np-turquoise: #22D3EE;
-      --np-emerald: #12B76A;
-      --np-lilac: #C4B5FD;
-      --np-amber: #F59E0B;
-      --np-red: #F04438;
-      --np-radius-lg: 22px;
-      --np-radius-md: 16px;
-      --np-radius-sm: 11px;
-      --np-shadow: 0 1px 2px rgba(16,24,40,.04), 0 10px 28px -14px rgba(16,24,40,.10);
-      --np-shadow-soft: 0 1px 1px rgba(16,24,40,.03);
-      --np-gradient-ai: linear-gradient(135deg, #7C5CFC 0%, #22D3EE 58%, #12B76A 100%);
-      --np-gradient-soft: linear-gradient(135deg, rgba(124,92,252,.10), rgba(34,211,238,.08));
-      --np-sidebar-w: 256px;
-    }
-
-    * { box-sizing: border-box; }
-
-    body.cp-page {
-      background: var(--np-bg);
-      color: var(--np-text);
-      font-family: 'Inter', 'Segoe UI', sans-serif;
-      margin: 0;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    h1, h2, h3, h4, .np-display {
-      font-family: 'Sora', 'Inter', sans-serif;
-      letter-spacing: -0.01em;
-      margin: 0;
-      color: var(--np-text);
-    }
-
-    .np-mono {
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    a { color: inherit; }
-
-    /* ---------- Shell ---------- */
-    .np-shell {
-      display: grid;
-      grid-template-columns: var(--np-sidebar-w) 1fr;
-      min-height: 100vh;
-      align-items: start;
-    }
-
-    /* ---------- Sidebar ---------- */
-    .np-sidebar {
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      border-left: 1px solid var(--np-border);
-      background: var(--np-surface);
-      display: flex;
-      flex-direction: column;
-      padding: 22px 18px;
-      gap: 26px;
-    }
-
-    .np-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      padding: 4px 6px;
-    }
-
-    .np-logo-mark {
-      width: 34px;
-      height: 34px;
-      border-radius: 10px;
-      background: var(--np-gradient-ai);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-weight: 800;
-      font-family: 'Sora', sans-serif;
-      font-size: .82rem;
-      flex-shrink: 0;
-    }
-
-    .np-logo-text {
-      display: grid;
-      line-height: 1.15;
-    }
-
-    .np-logo-text strong {
-      font-family: 'Sora', sans-serif;
-      font-size: 1rem;
-    }
-
-    .np-logo-text span {
-      font-size: .72rem;
-      color: var(--np-text-mute);
-      letter-spacing: .06em;
-    }
-
-    .np-nav {
-      display: grid;
-      gap: 4px;
-    }
-
-    .np-nav-label {
-      font-size: .7rem;
-      font-weight: 700;
-      letter-spacing: .1em;
-      color: var(--np-text-mute);
-      padding: 6px 12px 4px;
-    }
-
-    .np-nav-item {
-      display: flex;
-      align-items: center;
-      gap: 11px;
-      padding: 10px 12px;
-      border-radius: var(--np-radius-sm);
-      text-decoration: none;
-      color: var(--np-text-soft);
-      font-size: .92rem;
-      font-weight: 500;
-      transition: .15s ease;
-    }
-
-    .np-nav-item svg { flex-shrink: 0; opacity: .85; }
-
-    .np-nav-item:hover {
-      background: var(--np-border-soft);
-      color: var(--np-text);
-    }
-
-    .np-nav-item.active {
-      background: var(--np-gradient-soft);
-      color: var(--np-violet);
-      font-weight: 700;
-      box-shadow: inset 0 0 0 1px rgba(124,92,252,.16);
-    }
-
-    .np-nav-item.active svg { opacity: 1; }
-
-    .np-sidebar-foot {
-      margin-top: auto;
-      display: grid;
-      gap: 10px;
-      padding: 14px;
-      border-radius: var(--np-radius-md);
-      background: var(--np-gradient-soft);
-      border: 1px solid rgba(124,92,252,.14);
-    }
-
-    .np-sidebar-foot strong { font-size: .85rem; }
-    .np-sidebar-foot span { font-size: .78rem; color: var(--np-text-soft); line-height: 1.5; }
-
-    /* ---------- Main column ---------- */
-    .np-main {
-      min-width: 0;
-      display: grid;
-      align-content: start;
-      gap: 22px;
-      padding: 20px 26px 80px;
-    }
-
-    /* ---------- Topbar ---------- */
-    .np-topbar {
-      position: sticky;
-      top: 14px;
-      z-index: 20;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 10px 12px;
-      border-radius: 18px;
-      background: rgba(255,255,255,.86);
-      border: 1px solid var(--np-border);
-      box-shadow: var(--np-shadow);
-      backdrop-filter: blur(14px);
-      flex-wrap: wrap;
-    }
-
-    .np-search {
-      flex: 1;
-      min-width: 180px;
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      background: var(--np-bg);
-      border: 1px solid var(--np-border);
-      border-radius: 12px;
-      padding: 9px 13px;
-      color: var(--np-text-mute);
-    }
-
-    .np-search input {
-      border: none;
-      background: transparent;
-      outline: none;
-      font: inherit;
-      font-size: .88rem;
-      color: var(--np-text);
-      width: 100%;
-    }
-
-    .np-topbar-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .np-icon-btn {
-      width: 38px;
-      height: 38px;
-      border-radius: 11px;
-      border: 1px solid var(--np-border);
-      background: var(--np-surface);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--np-text-soft);
-      position: relative;
-      flex-shrink: 0;
-      cursor: pointer;
-    }
-
-    .np-icon-btn .np-dot {
-      position: absolute;
-      top: 7px;
-      left: 7px;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--np-emerald);
-      border: 2px solid var(--np-surface);
-    }
-
-    .np-cta {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 16px;
-      border-radius: 12px;
-      border: none;
-      background: var(--np-gradient-ai);
-      color: #fff;
-      font: inherit;
-      font-weight: 700;
-      font-size: .88rem;
-      cursor: pointer;
-      box-shadow: 0 8px 20px -8px rgba(124,92,252,.55);
-      white-space: nowrap;
-    }
-
-    .np-profile-link {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      text-decoration: none;
-      padding: 5px 10px 5px 5px;
-      border-radius: 999px;
-      border: 1px solid var(--np-border);
-      background: var(--np-surface);
-    }
-
-    .np-avatar {
-      width: 30px;
-      height: 30px;
-      border-radius: 50%;
-      background: var(--np-gradient-ai);
-      color: #fff;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 800;
-      font-size: .82rem;
-      flex-shrink: 0;
-    }
-
-    .np-profile-meta { display: grid; line-height: 1.2; }
-    .np-profile-meta strong { font-size: .82rem; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .np-profile-meta span { font-size: .7rem; color: var(--np-text-mute); }
-
-    /* Mobile nav pills (shown < 960px instead of sidebar) */
-    .np-mobile-nav {
-      display: none;
-      gap: 8px;
-      overflow-x: auto;
-      padding: 4px 2px;
-    }
-
-    .np-mobile-nav a {
-      flex-shrink: 0;
-      padding: 8px 14px;
-      border-radius: 999px;
-      text-decoration: none;
-      font-size: .84rem;
-      font-weight: 600;
-      color: var(--np-text-soft);
-      background: var(--np-surface);
-      border: 1px solid var(--np-border);
-    }
-
-    .np-mobile-nav a.active {
-      color: var(--np-violet);
-      border-color: rgba(124,92,252,.3);
-      background: var(--np-gradient-soft);
-    }
-
-    /* ---------- Notice ---------- */
-    .np-notice {
-      padding: 13px 16px;
-      border-radius: var(--np-radius-sm);
-      background: #FEF3F2;
-      border: 1px solid #FDA29B;
-      color: #B42318;
-      font-size: .88rem;
-      font-weight: 500;
-    }
-
-    .hidden { display: none !important; }
-
-    /* ---------- Welcome strip ---------- */
-    .np-welcome {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-
-    .np-welcome h1 {
-      font-size: 1.5rem;
-    }
-
-    .np-welcome p {
-      margin: 4px 0 0;
-      color: var(--np-text-soft);
-      font-size: .92rem;
-    }
-
-    .np-plan-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 8px 14px;
-      border-radius: 999px;
-      background: var(--np-gradient-soft);
-      border: 1px solid rgba(124,92,252,.18);
-      color: var(--np-violet);
-      font-weight: 800;
-      font-size: .78rem;
-      letter-spacing: .04em;
-    }
-
-    /* ---------- KPI grid ---------- */
-    .np-kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-    }
-
-    .np-kpi-card {
-      position: relative;
-      overflow: hidden;
-      background: var(--np-surface);
-      border: 1px solid var(--np-border);
-      border-radius: var(--np-radius-lg);
-      padding: 18px 18px 16px;
-      box-shadow: var(--np-shadow-soft);
-      display: grid;
-      gap: 10px;
-    }
-
-    .np-kpi-card::before {
-      content: '';
-      position: absolute;
-      inset: 0 0 auto 0;
-      height: 3px;
-      background: var(--bar, var(--np-gradient-ai));
-    }
-
-    .np-kpi-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .np-kpi-label {
-      font-size: .8rem;
-      color: var(--np-text-soft);
-      font-weight: 600;
-    }
-
-    .np-kpi-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 9px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--chip, var(--np-gradient-soft));
-      color: var(--iconColor, var(--np-violet));
-    }
-
-    .np-kpi-value {
-      font-family: 'Sora', sans-serif;
-      font-size: 1.7rem;
-      font-weight: 700;
-    }
-
-    .np-kpi-foot {
-      font-size: .76rem;
-      color: var(--np-text-mute);
-    }
-
-    /* ---------- Panels / cards generic ---------- */
-    .np-panel {
-      background: var(--np-surface);
-      border: 1px solid var(--np-border);
-      border-radius: var(--np-radius-lg);
-      padding: 22px;
-      box-shadow: var(--np-shadow-soft);
-      display: grid;
-      gap: 16px;
-    }
-
-    .np-panel-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .np-panel-header h2 { font-size: 1.05rem; }
-    .np-panel-header h3 { font-size: 1rem; }
-    .np-panel-sub { margin: 4px 0 0; font-size: .82rem; color: var(--np-text-soft); }
-
-    .np-chart-row {
-      display: grid;
-      grid-template-columns: 1.7fr 1fr;
-      gap: 16px;
-    }
-
-    .np-legend {
-      display: flex;
-      gap: 14px;
-      flex-wrap: wrap;
-    }
-
-    .np-legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: .78rem;
-      color: var(--np-text-soft);
-    }
-
-    .np-legend-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-
-    #snapshotChartWrap, #usageDonutWrap {
-      width: 100%;
-    }
-
-    .np-donut-center {
-      font-family: 'Sora', sans-serif;
-    }
-
-    /* ---------- Tools row ---------- */
-    .np-tools-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
-
-    .np-tool-card {
-      background: var(--np-surface);
-      border: 1px solid var(--np-border);
-      border-radius: var(--np-radius-lg);
-      padding: 18px;
-      display: grid;
-      gap: 12px;
-      box-shadow: var(--np-shadow-soft);
-    }
-
-    .np-tool-card.highlight {
-      background: linear-gradient(150deg, rgba(124,92,252,.06), rgba(34,211,238,.05));
-      border-color: rgba(124,92,252,.18);
-    }
-
-    .np-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 11px;
-      border-radius: 999px;
-      font-size: .72rem;
-      font-weight: 700;
-      letter-spacing: .03em;
-      background: var(--np-border-soft);
-      color: var(--np-text-soft);
-      width: fit-content;
-    }
-
-    .np-badge.good { background: rgba(18,183,106,.10); color: #0D8A50; }
-    .np-badge.warn { background: rgba(245,158,11,.12); color: #B45309; }
-    .np-badge.ai { background: var(--np-gradient-soft); color: var(--np-violet); }
-
-    .np-row-between {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    /* ---------- Buttons ---------- */
-    .np-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      padding: 10px 15px;
-      border-radius: 11px;
-      border: none;
-      background: var(--np-gradient-ai);
-      color: #fff;
-      font: inherit;
-      font-weight: 700;
-      font-size: .85rem;
-      cursor: pointer;
-    }
-
-    .np-btn:disabled { opacity: .45; cursor: not-allowed; }
-
-    .np-btn-ghost {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      padding: 9px 14px;
-      border-radius: 11px;
-      border: 1px solid var(--np-border);
-      background: var(--np-surface);
-      color: var(--np-text);
-      font: inherit;
-      font-weight: 600;
-      font-size: .85rem;
-      cursor: pointer;
-      text-decoration: none;
-    }
-
-    .np-btn-ghost:disabled { opacity: .45; cursor: not-allowed; }
-
-    /* ---------- Tier cards ---------- */
-    .np-tier-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 16px;
-    }
-
-    .np-tier-card {
-      border: 1px solid var(--np-border);
-      border-radius: var(--np-radius-md);
-      padding: 18px;
-      display: grid;
-      gap: 12px;
-      background: var(--np-bg);
-    }
-
-    .np-tier-card.current {
-      background: var(--np-gradient-soft);
-      border-color: rgba(124,92,252,.28);
-      box-shadow: inset 0 0 0 1px rgba(124,92,252,.12);
-    }
-
-    .np-tier-card ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-    .np-tier-card li { display: flex; align-items: center; gap: 8px; font-size: .84rem; color: var(--np-text-soft); }
-    .np-tier-card li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--np-gradient-ai); flex-shrink: 0; }
-
-    /* ---------- Forms ---------- */
-    .np-form {
-      display: grid;
-      gap: 14px;
-      padding: 16px;
-      border-radius: var(--np-radius-md);
-      background: var(--np-bg);
-      border: 1px solid var(--np-border);
-    }
-
-    .np-form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 12px;
-    }
-
-    .np-form-grid .full { grid-column: 1/-1; }
-
-    .np-field { display: grid; gap: 6px; }
-    .np-field label { font-size: .82rem; font-weight: 600; color: var(--np-text-soft); }
-    .np-field input, .np-field textarea {
-      border: 1px solid var(--np-border);
-      background: var(--np-surface);
-      border-radius: 10px;
-      padding: 10px 12px;
-      font: inherit;
-      font-size: .88rem;
-      color: var(--np-text);
-      outline: none;
-    }
-    .np-field input:focus, .np-field textarea:focus { border-color: var(--np-violet); box-shadow: 0 0 0 3px rgba(124,92,252,.12); }
-    .np-field textarea { min-height: 90px; resize: vertical; }
-
-    .np-checkbox-row { display: flex; align-items: center; gap: 9px; font-size: .86rem; color: var(--np-text-soft); }
-
-    /* ---------- Collections ---------- */
-    .np-list { display: grid; gap: 10px; }
-
-    .np-item-card {
-      display: grid;
-      gap: 10px;
-      padding: 14px;
-      border-radius: var(--np-radius-sm);
-      background: var(--np-bg);
-      border: 1px solid var(--np-border);
-    }
-
-    .np-item-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
-    .np-item-top strong { font-size: .92rem; }
-    .np-item-top .np-price { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
-    .np-item-sub { font-size: .78rem; color: var(--np-text-mute); }
-
-    .np-empty, .np-locked {
-      padding: 16px;
-      border-radius: var(--np-radius-sm);
-      border: 1px dashed var(--np-border);
-      color: var(--np-text-mute);
-      font-size: .86rem;
-      text-align: center;
-    }
-
-    .np-key-box {
-      padding: 14px;
-      border-radius: var(--np-radius-sm);
-      background: var(--np-gradient-soft);
-      border: 1px solid rgba(124,92,252,.22);
-      display: grid;
-      gap: 10px;
-    }
-
-    .np-key-box strong { font-size: .84rem; }
-    .np-key-value { font-family: 'JetBrains Mono', monospace; font-size: .82rem; word-break: break-all; color: var(--np-text); }
-
-    .np-domain-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 9px;
-      padding: 9px 12px;
-      border-radius: 999px;
-      background: var(--np-bg);
-      border: 1px solid var(--np-border);
-      font-size: .84rem;
-    }
-
-    .np-domain-list { display: flex; gap: 9px; flex-wrap: wrap; }
-
-    /* ---------- Activity table ---------- */
-    .np-table-wrap { overflow-x: auto; }
-
-    table.np-table { width: 100%; border-collapse: collapse; min-width: 560px; }
-    table.np-table thead th {
-      text-align: right;
-      font-size: .74rem;
-      letter-spacing: .05em;
-      color: var(--np-text-mute);
-      font-weight: 700;
-      padding: 0 10px 10px;
-      border-bottom: 1px solid var(--np-border);
-    }
-    table.np-table tbody td {
-      padding: 12px 10px;
-      border-bottom: 1px solid var(--np-border-soft);
-      font-size: .86rem;
-      vertical-align: middle;
-    }
-    table.np-table tbody tr:last-child td { border-bottom: none; }
-
-    .np-cust {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-    }
-
-    .np-cust-avatar {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: var(--np-gradient-ai);
-      color: #fff;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: .72rem;
-      font-weight: 800;
-      flex-shrink: 0;
-    }
-
-    .np-status-pill {
-      display: inline-flex;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: .72rem;
-      font-weight: 700;
-      background: var(--np-border-soft);
-      color: var(--np-text-soft);
-    }
-    .np-status-pill.good { background: rgba(18,183,106,.10); color: #0D8A50; }
-    .np-status-pill.pending { background: rgba(245,158,11,.12); color: #B45309; }
-    .np-status-pill.bad { background: rgba(240,68,56,.10); color: #B42318; }
-
-    .np-panel-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-
-    /* ---------- Builder locked ---------- */
-    .np-builder-locked { opacity: .82; }
-    .np-builder-locked .np-btn { display: none; }
-
-    /* ---------- Responsive ---------- */
-    @media (max-width: 1180px) {
-      .np-kpi-grid { grid-template-columns: repeat(2, 1fr); }
-      .np-tools-grid { grid-template-columns: 1fr 1fr; }
-      .np-tier-grid { grid-template-columns: 1fr; }
-      .np-chart-row { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 960px) {
-      .np-shell { grid-template-columns: 1fr; }
-      .np-sidebar { display: none; }
-      .np-mobile-nav { display: flex; }
-      .np-main { padding: 14px 14px 70px; }
-      .np-panel-grid { grid-template-columns: 1fr; }
-      .np-tools-grid { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 640px) {
-      .np-kpi-grid { grid-template-columns: 1fr 1fr; }
-      .np-topbar { padding: 10px; }
-      .np-search { order: 3; flex-basis: 100%; }
-      .np-cta span.np-cta-label { display: none; }
-      .np-profile-meta { display: none; }
-    }
-
-    @media (max-width: 420px) {
-      .np-kpi-grid { grid-template-columns: 1fr; }
-    }
-  </style>
-</head>
+  </head>
 <body class="cp-page">
-  <div class="np-shell">
+  <div class="dash-shell">
     <!-- ============ Sidebar ============ -->
-    <aside class="np-sidebar">
-      <a class="np-logo" href="/">
-        <span class="np-logo-mark">CP</span>
-        <span class="np-logo-text">
+    <aside class="dash-sidebar">
+      <a class="dash-logo" href="/">
+        <span class="dash-logo-mark">CP</span>
+        <span class="dash-logo-text">
           <strong>ConversaPay</strong>
           <span>AI COMMERCE OS</span>
         </span>
       </a>
 
-      <nav class="np-nav" aria-label="ניווט ראשי">
-        <span class="np-nav-label">ניהול</span>
-        <a class="np-nav-item active" href="/dashboard">
+      <nav class="dash-nav" aria-label="ניווט ראשי">
+        <span class="dash-nav-label">ניהול</span>
+        <a class="dash-nav-item active" href="/dashboard">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="16" width="7" height="5" rx="2"/></svg>
           <span>Dashboard</span>
         </a>
-        <a class="np-nav-item" href="/upgrade">
+        <a class="dash-nav-item" href="/upgrade">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
           <span>מסלולים</span>
         </a>
-        <a class="np-nav-item" href="/settings">
+        <a class="dash-nav-item" href="/settings">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           <span>הגדרות</span>
         </a>
-        <a class="np-nav-item" href="/setup-guide">
+        <a class="dash-nav-item" href="/setup-guide">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
           <span>הטמעה</span>
         </a>
       </nav>
 
-      <div class="np-sidebar-foot">
+      <div class="dash-sidebar-foot">
         <strong>שדרוג ל-PREMIUM</strong>
         <span>פתחו בונה אתר, WhatsApp Business ועד 10 מפתחות חיבור.</span>
-        <a class="np-btn-ghost" href="/upgrade" style="justify-self:start;">לצפייה במסלולים</a>
+        <a class="dash-btn-ghost" href="/upgrade" style="justify-self:start;">לצפייה במסלולים</a>
       </div>
     </aside>
 
     <!-- ============ Main ============ -->
-    <main class="np-main">
-      <header class="np-topbar">
-        <div class="np-search">
+    <main class="dash-main">
+      <header class="dash-topbar">
+        <div class="dash-search">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
           <input type="text" placeholder="חיפוש מוצרים, הזמנות, דומיינים…" aria-label="חיפוש">
         </div>
-        <div class="np-topbar-actions">
-          <button class="np-icon-btn" type="button" aria-label="התראות">
-            <span class="np-dot"></span>
+        <div class="dash-topbar-actions">
+          <button class="dash-icon-btn" type="button" aria-label="התראות">
+            <span class="dash-dot"></span>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
           </button>
-          <button class="np-cta" id="openProductFormHero" type="button">
+          <button class="dash-cta" id="openProductFormHero" type="button">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span class="np-cta-label">הוסף מוצר</span>
+            <span class="dash-cta-label">הוסף מוצר</span>
           </button>
-          <a class="np-profile-link" href="/profile">
-            <span class="np-avatar" id="profileDockAvatar">C</span>
-            <span class="np-profile-meta">
+          <a class="dash-profile-link" href="/profile">
+            <span class="dash-avatar" id="profileDockAvatar">C</span>
+            <span class="dash-profile-meta">
               <strong id="profileDockName">Profile</strong>
               <span id="profileDockPlan">FREE</span>
             </span>
           </a>
-          <button class="np-icon-btn" id="logout" type="button" aria-label="יציאה" title="יציאה">
+          <button class="dash-icon-btn" id="logout" type="button" aria-label="יציאה" title="יציאה">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           </button>
         </div>
       </header>
 
-      <nav class="np-mobile-nav" aria-label="ניווט מהיר">
+      <nav class="dash-mobile-nav" aria-label="ניווט מהיר">
         <a class="active" href="/dashboard">Dashboard</a>
         <a href="/upgrade">מסלולים</a>
         <a href="/settings">הגדרות</a>
         <a href="/setup-guide">הטמעה</a>
       </nav>
 
-      <div id="notice" class="np-notice hidden"></div>
+      <div id="notice" class="dash-notice hidden"></div>
 
-      <section class="np-welcome">
+      <section class="dash-welcome">
         <div>
           <h1>שלום, <span id="name">טוען...</span></h1>
           <p id="business">טוען נתוני העסק...</p>
         </div>
-        <span class="np-plan-chip">
+        <span class="dash-plan-chip">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.3 6.9.9-5 4.8 1.3 6.9L12 17.6 5.9 20.9l1.3-6.9-5-4.8 6.9-.9L12 2z"/></svg>
           <span id="currentPlanBadge">FREE</span>
         </span>
       </section>
 
       <!-- ===== KPI cards ===== -->
-      <section class="np-kpi-grid" id="metrics">
-        <article class="np-kpi-card" style="--bar:linear-gradient(90deg,#7C5CFC,#22D3EE);">
-          <div class="np-kpi-top">
-            <span class="np-kpi-label">הכנסות</span>
-            <span class="np-kpi-icon" style="--chip:rgba(124,92,252,.12); --iconColor:#7C5CFC;">
+      <section class="dash-kpi-grid" id="metrics">
+        <article class="dash-kpi-card" style="--bar:linear-gradient(90deg,#7C5CFC,#22D3EE);">
+          <div class="dash-kpi-top">
+            <span class="dash-kpi-label">הכנסות</span>
+            <span class="dash-kpi-icon" style="--chip:rgba(124,92,252,.12); --iconColor:#7C5CFC;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </span>
           </div>
-          <div class="np-kpi-value" id="revenue">₪0</div>
-          <div class="np-kpi-foot">סך הכנסות שהתקבלו</div>
+          <div class="dash-kpi-value" id="revenue">₪0</div>
+          <div class="dash-kpi-foot">סך הכנסות שהתקבלו</div>
         </article>
 
-        <article class="np-kpi-card" style="--bar:linear-gradient(90deg,#22D3EE,#12B76A);">
-          <div class="np-kpi-top">
-            <span class="np-kpi-label">עסקאות</span>
-            <span class="np-kpi-icon" style="--chip:rgba(34,211,238,.12); --iconColor:#0891A8;">
+        <article class="dash-kpi-card" style="--bar:linear-gradient(90deg,#22D3EE,#12B76A);">
+          <div class="dash-kpi-top">
+            <span class="dash-kpi-label">עסקאות</span>
+            <span class="dash-kpi-icon" style="--chip:rgba(34,211,238,.12); --iconColor:#0891A8;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
             </span>
           </div>
-          <div class="np-kpi-value" id="deals">0</div>
-          <div class="np-kpi-foot">עסקאות שנסגרו</div>
+          <div class="dash-kpi-value" id="deals">0</div>
+          <div class="dash-kpi-foot">עסקאות שנסגרו</div>
         </article>
 
-        <article class="np-kpi-card" style="--bar:linear-gradient(90deg,#12B76A,#C4B5FD);">
-          <div class="np-kpi-top">
-            <span class="np-kpi-label">שיחות</span>
-            <span class="np-kpi-icon" style="--chip:rgba(18,183,106,.12); --iconColor:#0D8A50;">
+        <article class="dash-kpi-card" style="--bar:linear-gradient(90deg,#12B76A,#C4B5FD);">
+          <div class="dash-kpi-top">
+            <span class="dash-kpi-label">שיחות</span>
+            <span class="dash-kpi-icon" style="--chip:rgba(18,183,106,.12); --iconColor:#0D8A50;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </span>
           </div>
-          <div class="np-kpi-value" id="conversations">0</div>
-          <div class="np-kpi-foot">שיחות שנרשמו</div>
+          <div class="dash-kpi-value" id="conversations">0</div>
+          <div class="dash-kpi-foot">שיחות שנרשמו</div>
         </article>
 
-        <article class="np-kpi-card" style="--bar:linear-gradient(90deg,#C4B5FD,#7C5CFC);">
-          <div class="np-kpi-top">
-            <span class="np-kpi-label">המרה</span>
-            <span class="np-kpi-icon" style="--chip:rgba(196,181,253,.22); --iconColor:#7C5CFC;">
+        <article class="dash-kpi-card" style="--bar:linear-gradient(90deg,#C4B5FD,#7C5CFC);">
+          <div class="dash-kpi-top">
+            <span class="dash-kpi-label">המרה</span>
+            <span class="dash-kpi-icon" style="--chip:rgba(196,181,253,.22); --iconColor:#7C5CFC;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
             </span>
           </div>
-          <div class="np-kpi-value" id="conversion">0%</div>
-          <div class="np-kpi-foot">יחס המרה נוכחי</div>
+          <div class="dash-kpi-value" id="conversion">0%</div>
+          <div class="dash-kpi-foot">יחס המרה נוכחי</div>
         </article>
       </section>
 
       <!-- ===== Charts ===== -->
-      <section class="np-panel">
-        <div class="np-panel-header">
+      <section class="dash-panel">
+        <div class="dash-panel-header">
           <div>
             <h2>תמונת מצב עסקית</h2>
-            <p class="np-panel-sub">השוואה חזותית בין המדדים המרכזיים של העסק, בזמן אמת מתוך האנליטיקות שלך.</p>
+            <p class="dash-panel-sub">השוואה חזותית בין המדדים המרכזיים של העסק, בזמן אמת מתוך האנליטיקות שלך.</p>
           </div>
-          <span class="np-badge ai">Live data</span>
+          <span class="dash-badge ai">Live data</span>
         </div>
 
-        <div class="np-chart-row">
+        <div class="dash-chart-row">
           <div id="snapshotChartWrap"></div>
           <div id="usageDonutWrap"></div>
         </div>
       </section>
 
       <!-- ===== Tools row ===== -->
-      <section class="np-tools-grid">
-        <article class="np-tool-card highlight" id="builderCard">
-          <div class="np-row-between">
+      <section class="dash-tools-grid">
+        <article class="dash-tool-card highlight" id="builderCard">
+          <div class="dash-row-between">
             <h3>בונה האתר</h3>
-            <span class="np-badge" id="builderBadge">בודק...</span>
+            <span class="dash-badge" id="builderBadge">בודק...</span>
           </div>
-          <p class="np-panel-sub" id="builderCopy" style="margin:0;">בודק זמינות...</p>
-          <button class="np-btn" id="builderButton" type="button">פתח את בונה האתר</button>
+          <p class="dash-panel-sub" id="builderCopy" style="margin:0;">בודק זמינות...</p>
+          <button class="dash-btn" id="builderButton" type="button">פתח את בונה האתר</button>
         </article>
 
-        <article class="np-tool-card">
-          <div class="np-row-between">
+        <article class="dash-tool-card">
+          <div class="dash-row-between">
             <h3>סטטוס מסלול</h3>
-            <strong class="np-badge ai" id="plan">FREE</strong>
+            <strong class="dash-badge ai" id="plan">FREE</strong>
           </div>
-          <div class="np-row-between" style="font-size:.86rem;color:var(--np-text-soft);">
-            <span>מפתחות חיבור</span><strong class="np-mono" id="keyLimit">0</strong>
+          <div class="dash-row-between" style="font-size:.86rem;color:var(--np-text-soft);">
+            <span>מפתחות חיבור</span><strong class="dash-mono" id="keyLimit">0</strong>
           </div>
-          <div class="np-row-between" style="font-size:.86rem;color:var(--np-text-soft);">
-            <span>חיבור דומיינים</span><strong class="np-mono" id="domainLimit">0</strong>
+          <div class="dash-row-between" style="font-size:.86rem;color:var(--np-text-soft);">
+            <span>חיבור דומיינים</span><strong class="dash-mono" id="domainLimit">0</strong>
           </div>
         </article>
 
-        <article class="np-tool-card">
-          <div class="np-row-between">
+        <article class="dash-tool-card">
+          <div class="dash-row-between">
             <h3>גישה מהירה</h3>
-            <span class="np-badge good">מסודר</span>
+            <span class="dash-badge good">מסודר</span>
           </div>
-          <div class="np-row-between">
-            <a class="np-btn-ghost" href="/setup-guide">מדריך הטמעה</a>
-            <a class="np-btn-ghost" href="/upgrade">ניהול מסלול</a>
+          <div class="dash-row-between">
+            <a class="dash-btn-ghost" href="/setup-guide">מדריך הטמעה</a>
+            <a class="dash-btn-ghost" href="/upgrade">ניהול מסלול</a>
           </div>
         </article>
       </section>
 
       <!-- ===== Tiers ===== -->
-      <section class="np-panel">
-        <div class="np-panel-header">
+      <section class="dash-panel">
+        <div class="dash-panel-header">
           <div>
             <h2>מסלולים ופיצ'רים</h2>
-            <p class="np-panel-sub">כל Tier מסודר במקום אחד, בלי בלגן ובלי פיצול מיותר.</p>
+            <p class="dash-panel-sub">כל Tier מסודר במקום אחד, בלי בלגן ובלי פיצול מיותר.</p>
           </div>
         </div>
-        <div class="np-tier-grid" id="tierCards"></div>
+        <div class="dash-tier-grid" id="tierCards"></div>
       </section>
 
       <!-- ===== Products / Domains ===== -->
-      <section class="np-panel-grid">
-        <article class="np-panel" id="productsPanel">
-          <div class="np-panel-header">
+      <section class="dash-panel-grid">
+        <article class="dash-panel" id="productsPanel">
+          <div class="dash-panel-header">
             <div>
               <h2>ניהול מוצרים</h2>
-              <p class="np-panel-sub">יצירה, עריכה ומחיקה של מוצרים מתוך אותו Dashboard.</p>
+              <p class="dash-panel-sub">יצירה, עריכה ומחיקה של מוצרים מתוך אותו Dashboard.</p>
             </div>
-            <div class="np-row-between">
-              <button class="np-btn" id="toggleProductForm" type="button">הוסף מוצר</button>
-              <button class="np-btn-ghost hidden" id="cancelProductEdit" type="button">בטל עריכה</button>
+            <div class="dash-row-between">
+              <button class="dash-btn" id="toggleProductForm" type="button">הוסף מוצר</button>
+              <button class="dash-btn-ghost hidden" id="cancelProductEdit" type="button">בטל עריכה</button>
             </div>
           </div>
 
-          <form id="productForm" class="np-form hidden">
+          <form id="productForm" class="dash-form hidden">
             <input id="productId" type="hidden">
-            <div class="np-form-grid">
-              <div class="np-field">
+            <div class="dash-form-grid">
+              <div class="dash-field">
                 <label for="productName">שם מוצר</label>
                 <input id="productName" required maxlength="255" placeholder="לדוגמה: פגישת ייעוץ">
               </div>
-              <div class="np-field">
+              <div class="dash-field">
                 <label for="productItemKey">מזהה מוצר</label>
                 <input id="productItemKey" required maxlength="100" placeholder="consulting_session">
               </div>
-              <div class="np-field">
+              <div class="dash-field">
                 <label for="productPrice">מחיר</label>
                 <input id="productPrice" type="number" min="0" step="0.01" required placeholder="0.00">
               </div>
-              <div class="np-field">
+              <div class="dash-field">
                 <label for="productPaymentLink">קישור תשלום</label>
                 <input id="productPaymentLink" type="url" placeholder="https://...">
               </div>
-              <div class="np-field full">
+              <div class="dash-field full">
                 <label for="productDescription">תיאור</label>
                 <textarea id="productDescription" placeholder="תיאור קצר של המוצר"></textarea>
               </div>
-              <div class="np-field full">
+              <div class="dash-field full">
                 <label for="productImageUrl">תמונה</label>
                 <input id="productImageUrl" type="url" placeholder="https://...">
               </div>
             </div>
-            <label class="np-checkbox-row">
+            <label class="dash-checkbox-row">
               <input id="productIsActive" type="checkbox" checked>
               <span>המוצר פעיל להצגה ולמכירה</span>
             </label>
-            <div class="np-row-between">
-              <button class="np-btn" id="productSubmit" type="submit">שמור מוצר</button>
-              <button class="np-btn-ghost" id="productCancelInline" type="button">סגור</button>
+            <div class="dash-row-between">
+              <button class="dash-btn" id="productSubmit" type="submit">שמור מוצר</button>
+              <button class="dash-btn-ghost" id="productCancelInline" type="button">סגור</button>
             </div>
           </form>
 
-          <div id="productsSummary" class="np-panel-sub">טוען מוצרים...</div>
-          <div id="products" class="np-list"></div>
+          <div id="productsSummary" class="dash-panel-sub">טוען מוצרים...</div>
+          <div id="products" class="dash-list"></div>
         </article>
 
-        <article class="np-panel" id="domainsPanel">
-          <div class="np-panel-header">
+        <article class="dash-panel" id="domainsPanel">
+          <div class="dash-panel-header">
             <div>
               <h2>ניהול דומיינים</h2>
-              <p class="np-panel-sub">ניהול ישיר מהדאשבורד, בלי לפצל את המסך לשניים.</p>
+              <p class="dash-panel-sub">ניהול ישיר מהדאשבורד, בלי לפצל את המסך לשניים.</p>
             </div>
-            <span class="np-badge ai" id="domainPlanBadge">FREE</span>
+            <span class="dash-badge ai" id="domainPlanBadge">FREE</span>
           </div>
 
-          <div class="np-row-between" style="font-size:.86rem;color:var(--np-text-soft);">
+          <div class="dash-row-between" style="font-size:.86rem;color:var(--np-text-soft);">
             <span>דומיינים מחוברים</span>
-            <strong class="np-mono"><span id="connectedDomainsCount">0</span> / <span id="connectedDomainsLimit">0</span></strong>
+            <strong class="dash-mono"><span id="connectedDomainsCount">0</span> / <span id="connectedDomainsLimit">0</span></strong>
           </div>
 
-          <div id="domainLockedNotice" class="np-locked hidden">
+          <div id="domainLockedNotice" class="dash-locked hidden">
             ניהול דומיינים זמין במסלולי PRO ו‑PREMIUM. שדרוג יפתח הוספה והסרה של דומיינים מהמסך הזה.
           </div>
 
-          <form id="domainForm" class="np-form">
-            <div class="np-form-grid">
-              <div class="np-field full">
+          <form id="domainForm" class="dash-form">
+            <div class="dash-form-grid">
+              <div class="dash-field full">
                 <label for="domainInput">דומיין חדש</label>
                 <input id="domainInput" placeholder="example.com">
               </div>
             </div>
-            <div class="np-row-between">
-              <button class="np-btn" id="addDomainButton" type="submit">הוסף דומיין</button>
-              <a class="np-btn-ghost" href="/setup-guide">מדריך חיבור</a>
+            <div class="dash-row-between">
+              <button class="dash-btn" id="addDomainButton" type="submit">הוסף דומיין</button>
+              <a class="dash-btn-ghost" href="/setup-guide">מדריך חיבור</a>
             </div>
           </form>
 
-          <div id="domainSummary" class="np-panel-sub">טוען דומיינים...</div>
-          <div id="domains" class="np-domain-list"></div>
+          <div id="domainSummary" class="dash-panel-sub">טוען דומיינים...</div>
+          <div id="domains" class="dash-domain-list"></div>
         </article>
       </section>
 
       <!-- ===== API keys / Orders ===== -->
-      <section class="np-panel-grid">
-        <article class="np-panel" id="apiKeysPanel">
-          <div class="np-panel-header">
+      <section class="dash-panel-grid">
+        <article class="dash-panel" id="apiKeysPanel">
+          <div class="dash-panel-header">
             <div>
               <h2>API Keys</h2>
-              <p class="np-panel-sub">יצירת מפתחות חיבור לזכאים ישירות מהדאשבורד.</p>
+              <p class="dash-panel-sub">יצירת מפתחות חיבור לזכאים ישירות מהדאשבורד.</p>
             </div>
-            <span class="np-badge ai" id="apiKeyPlanBadge">FREE</span>
+            <span class="dash-badge ai" id="apiKeyPlanBadge">FREE</span>
           </div>
 
-          <div class="np-row-between" style="font-size:.86rem;color:var(--np-text-soft);">
+          <div class="dash-row-between" style="font-size:.86rem;color:var(--np-text-soft);">
             <span>מפתחות פעילים</span>
-            <strong class="np-mono"><span id="apiKeyCount">0</span> / <span id="apiKeyLimitValue">0</span></strong>
+            <strong class="dash-mono"><span id="apiKeyCount">0</span> / <span id="apiKeyLimitValue">0</span></strong>
           </div>
 
-          <div id="apiKeyLockedNotice" class="np-locked hidden">
+          <div id="apiKeyLockedNotice" class="dash-locked hidden">
             API Keys זמינים רק במסלולי PRO ו‑PREMIUM.
           </div>
 
-          <form id="apiKeyForm" class="np-form">
-            <div class="np-form-grid">
-              <div class="np-field full">
+          <form id="apiKeyForm" class="dash-form">
+            <div class="dash-form-grid">
+              <div class="dash-field full">
                 <label for="apiKeyName">שם מפתח</label>
                 <input id="apiKeyName" maxlength="100" placeholder="Widget key for main website">
               </div>
             </div>
-            <div class="np-row-between">
-              <button class="np-btn" id="createApiKeyButton" type="submit">צור API Key</button>
+            <div class="dash-row-between">
+              <button class="dash-btn" id="createApiKeyButton" type="submit">צור API Key</button>
             </div>
           </form>
 
-          <div id="apiKeySummary" class="np-panel-sub">טוען מפתחות...</div>
-          <div id="latestApiKeyBox" class="np-key-box hidden">
+          <div id="apiKeySummary" class="dash-panel-sub">טוען מפתחות...</div>
+          <div id="latestApiKeyBox" class="dash-key-box hidden">
             <strong>המפתח החדש שלך</strong>
-            <div id="latestApiKeyValue" class="np-key-value"></div>
-            <div class="np-row-between">
-              <button class="np-btn-ghost" id="copyLatestApiKey" type="button">העתק מפתח</button>
+            <div id="latestApiKeyValue" class="dash-key-value"></div>
+            <div class="dash-row-between">
+              <button class="dash-btn-ghost" id="copyLatestApiKey" type="button">העתק מפתח</button>
             </div>
           </div>
-          <div id="apiKeys" class="np-list"></div>
+          <div id="apiKeys" class="dash-list"></div>
         </article>
 
-        <article class="np-panel" id="ordersPanel">
-          <div class="np-panel-header">
+        <article class="dash-panel" id="ordersPanel">
+          <div class="dash-panel-header">
             <div>
               <h2>הזמנות אחרונות</h2>
-              <p class="np-panel-sub">תצוגה מרוכזת של ההזמנות האחרונות מהמערכת.</p>
+              <p class="dash-panel-sub">תצוגה מרוכזת של ההזמנות האחרונות מהמערכת.</p>
             </div>
           </div>
-          <div id="orders" class="np-table-wrap"><p class="np-panel-sub">טוען...</p></div>
+          <div id="orders" class="dash-table-wrap"><p class="dash-panel-sub">טוען...</p></div>
         </article>
       </section>
     </main>
@@ -1255,10 +485,10 @@
       const plan = currentPlan();
       $('currentPlanBadge').textContent = plan.toUpperCase();
       $('tierCards').innerHTML = Object.entries(PLAN_FEATURES).map(([tier, features]) => `
-        <article class="np-tier-card ${tier === plan ? 'current' : ''}">
-          <div class="np-row-between">
+        <article class="dash-tier-card ${tier === plan ? 'current' : ''}">
+          <div class="dash-row-between">
             <h3>${tier.toUpperCase()}</h3>
-            <span class="np-badge ${tier === plan ? 'good' : ''}">${tier === plan ? 'המסלול שלך' : 'זמין'}</span>
+            <span class="dash-badge ${tier === plan ? 'good' : ''}">${tier === plan ? 'המסלול שלך' : 'זמין'}</span>
           </div>
           <ul>
             ${features.map((feature) => `<li>${escapeHtml(feature)}</li>`).join('')}
@@ -1312,8 +542,8 @@
           <line x1="${padL}" y1="${baseline}" x2="${w - padR}" y2="${baseline}" stroke="#E6E8F1" stroke-width="1"/>
           ${bars}
         </svg>
-        <div class="np-legend">
-          ${metrics.map((m) => `<span class="np-legend-item"><span class="np-legend-dot" style="background:${m.color};"></span>${escapeHtml(m.label)}</span>`).join('')}
+        <div class="dash-legend">
+          ${metrics.map((m) => `<span class="dash-legend-item"><span class="dash-legend-dot" style="background:${m.color};"></span>${escapeHtml(m.label)}</span>`).join('')}
         </div>
       `;
     }
@@ -1351,11 +581,11 @@
           <svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" role="img" aria-label="ניצול מכסות">
             <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#EFF1F7" stroke-width="${stroke}"></circle>
             ${arcs}
-            <text x="${cx}" y="${cy - 4}" text-anchor="middle" font-family="Sora, sans-serif" font-size="22" font-weight="700" fill="#13141B" class="np-donut-center">${totalUsed}</text>
+            <text x="${cx}" y="${cy - 4}" text-anchor="middle" font-family="Sora, sans-serif" font-size="22" font-weight="700" fill="#13141B" class="dash-donut-center">${totalUsed}</text>
             <text x="${cx}" y="${cy + 16}" text-anchor="middle" font-family="Inter, sans-serif" font-size="11" fill="#9297A3">בשימוש</text>
           </svg>
-          <div class="np-legend">
-            ${segments.map((seg) => `<span class="np-legend-item"><span class="np-legend-dot" style="background:${seg.color};"></span>${escapeHtml(seg.label)} ${seg.used}/${seg.limit}</span>`).join('')}
+          <div class="dash-legend">
+            ${segments.map((seg) => `<span class="dash-legend-item"><span class="dash-legend-dot" style="background:${seg.color};"></span>${escapeHtml(seg.label)} ${seg.used}/${seg.limit}</span>`).join('')}
           </div>
         </div>
       `;
@@ -1383,9 +613,9 @@
       $('conversion').textContent = Number(analytics.conversion_rate || 0).toFixed(1) + '%';
 
       const builderEnabled = features.site_builder === true;
-      $('builderCard').classList.toggle('np-builder-locked', !builderEnabled);
+      $('builderCard').classList.toggle('dash-builder-locked', !builderEnabled);
       $('builderBadge').textContent = builderEnabled ? 'זמין ב‑PREMIUM' : 'נעול, PREMIUM בלבד';
-      $('builderBadge').className = builderEnabled ? 'np-badge good' : 'np-badge warn';
+      $('builderBadge').className = builderEnabled ? 'dash-badge good' : 'dash-badge warn';
       $('builderCopy').textContent = builderEnabled
         ? 'בונה האתר זמין במסלול PREMIUM שלך.'
         : 'בונה האתר אינו כלול במסלול הנוכחי.';
@@ -1437,25 +667,25 @@
         : 'עדיין אין מוצרים. אפשר להתחיל עם המוצר הראשון ישירות מכאן.';
 
       if (!items.length) {
-        root.innerHTML = '<div class="np-empty">אין מוצרים עדיין.</div>';
+        root.innerHTML = '<div class="dash-empty">אין מוצרים עדיין.</div>';
         return;
       }
 
       root.innerHTML = items.map((product) => `
-        <article class="np-item-card">
-          <div class="np-item-top">
+        <article class="dash-item-card">
+          <div class="dash-item-top">
             <div>
               <strong>${escapeHtml(product.name || 'מוצר')}</strong>
-              <div class="np-item-sub">${escapeHtml(product.item_key || '')}</div>
+              <div class="dash-item-sub">${escapeHtml(product.item_key || '')}</div>
             </div>
-            <strong class="np-price">${money(product.price)}</strong>
+            <strong class="cp-price">${money(product.price)}</strong>
           </div>
-          ${product.description ? `<div class="np-item-sub">${escapeHtml(product.description)}</div>` : ''}
-          <div class="np-row-between">
-            <span class="np-badge ${product.is_active ? 'good' : 'warn'}">${product.is_active ? 'פעיל' : 'לא פעיל'}</span>
-            <div class="np-row-between">
-              <button class="np-btn-ghost" type="button" onclick="startEditProduct('${product.id}')">ערוך</button>
-              <button class="np-btn-ghost" type="button" onclick="removeProduct('${product.id}')">מחק</button>
+          ${product.description ? `<div class="dash-item-sub">${escapeHtml(product.description)}</div>` : ''}
+          <div class="dash-row-between">
+            <span class="dash-badge ${product.is_active ? 'good' : 'warn'}">${product.is_active ? 'פעיל' : 'לא פעיל'}</span>
+            <div class="dash-row-between">
+              <button class="dash-btn-ghost" type="button" onclick="startEditProduct('${product.id}')">ערוך</button>
+              <button class="dash-btn-ghost" type="button" onclick="removeProduct('${product.id}')">מחק</button>
             </div>
           </div>
         </article>
@@ -1557,12 +787,12 @@
             : 'עדיין לא חיברת דומיינים.';
 
       if (!domains.length) {
-        root.innerHTML = '<div class="np-empty">אין דומיינים מחוברים עדיין.</div>';
+        root.innerHTML = '<div class="dash-empty">אין דומיינים מחוברים עדיין.</div>';
       } else {
         root.innerHTML = domains.map((domain, index) => `
-          <div class="np-domain-pill">
+          <div class="dash-domain-pill">
             <span>${escapeHtml(domain)}</span>
-            <button class="np-btn-ghost" type="button" onclick="removeDomain(${index})">הסר</button>
+            <button class="dash-btn-ghost" type="button" onclick="removeDomain(${index})">הסר</button>
           </div>
         `).join('');
       }
@@ -1671,20 +901,20 @@
       }
 
       if (!keys.length) {
-        $('apiKeys').innerHTML = '<div class="np-empty">אין API Keys פעילים.</div>';
+        $('apiKeys').innerHTML = '<div class="dash-empty">אין API Keys פעילים.</div>';
       } else {
         $('apiKeys').innerHTML = keys.map((key) => `
-          <article class="np-item-card">
-            <div class="np-item-top">
+          <article class="dash-item-card">
+            <div class="dash-item-top">
               <div>
                 <strong>${escapeHtml(key.name || 'API Key')}</strong>
-                <div class="np-item-sub np-mono">${escapeHtml(key.key_prefix || '')}...</div>
+                <div class="dash-item-sub dash-mono">${escapeHtml(key.key_prefix || '')}...</div>
               </div>
-              <span class="np-badge good">פעיל</span>
+              <span class="dash-badge good">פעיל</span>
             </div>
-            <div class="np-row-between">
-              <span class="np-item-sub">הרשאה: widget</span>
-              <button class="np-btn-ghost" type="button" onclick="revokeApiKey('${key.id}')">בטל מפתח</button>
+            <div class="dash-row-between">
+              <span class="dash-item-sub">הרשאה: widget</span>
+              <button class="dash-btn-ghost" type="button" onclick="revokeApiKey('${key.id}')">בטל מפתח</button>
             </div>
           </article>
         `).join('');
@@ -1844,13 +1074,13 @@
 
       if (!items.length) {
         root.innerHTML = locked
-          ? '<div class="np-locked">ניהול הזמנות מלא זמין במסלולי PRO ו‑PREMIUM.</div>'
-          : '<div class="np-empty">אין הזמנות עדיין.</div>';
+          ? '<div class="dash-locked">ניהול הזמנות מלא זמין במסלולי PRO ו‑PREMIUM.</div>'
+          : '<div class="dash-empty">אין הזמנות עדיין.</div>';
         return;
       }
 
       root.innerHTML = `
-        <table class="np-table">
+        <table class="dash-table">
           <thead>
             <tr>
               <th>הזמנה</th>
@@ -1866,15 +1096,15 @@
               const statusLabel = order.status || 'ממתין';
               return `
                 <tr>
-                  <td class="np-mono">${escapeHtml(order.order_number || order.id || '—')}</td>
+                  <td class="dash-mono">${escapeHtml(order.order_number || order.id || '—')}</td>
                   <td>
-                    <span class="np-cust">
-                      <span class="np-cust-avatar">${escapeHtml(initial)}</span>
+                    <span class="dash-cust">
+                      <span class="dash-cust-avatar">${escapeHtml(initial)}</span>
                       <span>${escapeHtml(customerName)}</span>
                     </span>
                   </td>
-                  <td><span class="np-status-pill ${statusPillClass(order.status)}">${escapeHtml(statusLabel)}</span></td>
-                  <td class="np-mono">${money(order.total)}</td>
+                  <td><span class="dash-status-pill ${statusPillClass(order.status)}">${escapeHtml(statusLabel)}</span></td>
+                  <td class="dash-mono">${money(order.total)}</td>
                 </tr>
               `;
             }).join('')}

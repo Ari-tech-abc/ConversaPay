@@ -4,14 +4,11 @@
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>ConversaPay - שדרוג וניהול מנוי</title>
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
-  <style>
-    .billing-shell{display:grid;gap:20px}.billing-hero{display:grid;gap:10px;text-align:center}.billing-status{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.billing-stat{padding:16px;border:1px solid var(--cp-line);border-radius:16px;background:var(--cp-panel-strong);display:grid;gap:4px}.billing-stat strong{font-size:1.2rem;color:var(--cp-text)}.plans-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.cp-plan{display:grid;gap:14px}.cp-plan.current{border-color:#7c3aed;box-shadow:0 0 0 3px rgba(124,58,237,.12),var(--cp-shadow)}.current-label{display:none;color:#5b21b6;font-weight:800}.cp-plan.current .current-label{display:block}.subscription-note{padding:14px 16px;border-radius:14px;background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;font-weight:600}.subscription-note.pending{background:#fffbeb;border-color:#fde68a;color:#92400e}.manage-row{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}.cancel-dialog{width:min(560px,calc(100% - 28px));border:0;border-radius:20px;padding:0;box-shadow:0 24px 70px rgba(15,23,42,.25)}.cancel-dialog::backdrop{background:rgba(15,23,42,.45)}.dialog-body{display:grid;gap:14px;padding:24px}.dialog-body textarea{min-height:130px;width:100%;resize:vertical}.dialog-actions{display:flex;gap:10px;justify-content:flex-start;flex-wrap:wrap}@media(max-width:760px){.billing-status,.plans-grid{grid-template-columns:1fr}.manage-row{align-items:stretch}.manage-row>*{width:100%}.dialog-actions{display:grid}.dialog-actions>*{width:100%}}
-  </style>
 </head>
 <body class="cp-page">
-  <header class="cp-topbar"><a class="cp-brand" href="/dashboard"><img class="cp-brand-logo" src="/frontend/images/conversapay_logo_whitebg.png" alt="ConversaPay"></a><a class="cp-backlink" href="/dashboard">חזרה לדאשבורד</a></header>
+  <header class="cp-topbar"><a class="cp-brand" href="/dashboard"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a><a class="cp-backlink" href="/dashboard">חזרה לדאשבורד</a></header>
   <main class="cp-shell billing-shell">
-    <section class="cp-panel billing-hero"><span class="cp-kicker" style="justify-content:center">BILLING</span><h1>ניהול המנוי</h1><p class="cp-muted">המסלול, תאריך החידוש והבקשות שלך במקום אחד.</p></section>
+    <section class="cp-panel billing-hero"><span class="cp-kicker cp-text-center">BILLING</span><h1>ניהול המנוי</h1><p class="cp-muted">המסלול, תאריך החידוש והבקשות שלך במקום אחד.</p></section>
     <section class="cp-panel billing-status" aria-live="polite"><div class="billing-stat"><span class="cp-muted">המסלול הנוכחי</span><strong id="current">טוען...</strong></div><div class="billing-stat"><span class="cp-muted">תאריך סיום/חידוש המנוי</span><strong id="endDate">טוען...</strong></div><div class="billing-stat"><span class="cp-muted">ימים שנותרו</span><strong id="remainingDays">טוען...</strong></div></section>
     <div id="subscriptionNote" class="subscription-note" hidden></div>
     <section class="plans-grid" aria-label="מסלולים">
