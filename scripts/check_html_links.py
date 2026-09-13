@@ -18,12 +18,13 @@ ROUTES = {
     "/": "frontend/html/home.html", "/dashboard": "frontend/html/dashboard.html", "/dashboard.html": "frontend/html/dashboard.html",
     "/login": "frontend/html/login.html", "/login.html": "frontend/html/login.html", "/register": "frontend/html/register.html", "/register.html": "frontend/html/register.html",
     "/forgot-password": "frontend/html/forgot-password.html", "/forgot-password.html": "frontend/html/forgot-password.html", "/terms": "frontend/html/terms.html", "/terms.html": "frontend/html/terms.html",
-    "/privacy": "frontend/html/privacy.html", "/privacy.html": "frontend/html/privacy.html", "/pay": "frontend/html/pay.html", "/pay.html": "frontend/html/pay.html",
+    "/privacy": "frontend/html/privacy.html", "/privacy.html": "frontend/html/privacy.html", "/cookies": "frontend/html/cookies.html", "/cookies.html": "frontend/html/cookies.html",
+    "/refund-policy": "frontend/html/refund-policy.html", "/refund-policy.html": "frontend/html/refund-policy.html", "/pay": "frontend/html/pay.html", "/pay.html": "frontend/html/pay.html",
     "/payment/success": "frontend/html/success.html", "/payment/canceled": "frontend/html/canceled.html", "/success": "frontend/html/success.html", "/success.html": "frontend/html/success.html", "/canceled": "frontend/html/canceled.html", "/canceled.html": "frontend/html/canceled.html",
     "/upgrade": "frontend/html/upgrade.html", "/upgrade.html": "frontend/html/upgrade.html", "/profile": "frontend/html/profile.html", "/profile.html": "frontend/html/profile.html", "/settings": "frontend/html/settings.html", "/settings.html": "frontend/html/settings.html",
     "/admin": "frontend/html/admin-dashboard.html", "/admin.html": "frontend/html/admin-dashboard.html", "/admin/login": "frontend/html/admin-login.html", "/admin-login.html": "frontend/html/admin-login.html", "/admin/change-password": "frontend/html/admin-change-password.html", "/admin-change-password.html": "frontend/html/admin-change-password.html",
     "/setup-guide": "frontend/html/setup-guide.html", "/setup-guide.html": "frontend/html/setup-guide.html", "/widget-demo": "frontend/html/widget-demo.html", "/widget-demo.html": "frontend/html/widget-demo.html", "/leads": "frontend/html/leads.html", "/leads.html": "frontend/html/leads.html",
-    "/auth/callback": "frontend/html/auth-callback.html", "/site-builder": "conversapay-site-builder/frontend/index.html", "/frontend/html/conversapay-ui.css": "frontend/html/conversapay-ui.css",
+    "/auth/callback": "frontend/html/auth-callback.html", "/site-builder": "Site Builder/frontend/index.html", "/frontend/html/conversapay-ui.css": "frontend/html/conversapay-ui.css",
 }
 SKIP_SCHEMES = ("data:", "mailto:", "tel:", "javascript:")
 SKIP_PREFIXES = ("/api/", "/docs", "/redoc", "/health", "#")
