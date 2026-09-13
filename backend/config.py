@@ -92,7 +92,7 @@ class Settings(BaseSettings):
 
     @property
     def site_builder_dir(self) -> Path:
-        return self.base_dir / "conversapay-site-builder" / "frontend"
+        return self.base_dir / "Site Builder" / "frontend"
 
     @property
     def migrations_dir(self) -> Path:

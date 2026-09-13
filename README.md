@@ -1,6 +1,8 @@
 # Talk2Pay (ConversaPay)
 
-Talk2Pay is a multi-tenant payment and conversational-commerce platform. It combines a FastAPI backend, a static frontend, Supabase/PostgreSQL persistence, pluggable payment providers (Stripe, PayMe, Cardcom), WhatsApp Cloud API integration, an embeddable widget, and a WordPress plugin.
+Talk2Pay is a multi-tenant, AI-powered conversational-commerce SaaS platform. It combines a FastAPI backend, a static frontend, Supabase/PostgreSQL persistence, pluggable payment providers (Stripe, PayMe, Cardcom), WhatsApp Cloud API integration, an embeddable chat widget, a WordPress plugin, and a PREMIUM-gated AI site builder.
+
+> **Branding note:** The codebase uses both `Talk2Pay` (product brand) and `conversapay` (technical identifiers, domain paths, legacy compatibility). Both names refer to the same product.
 
 ## Contents
 
@@ -8,6 +10,7 @@ Talk2Pay is a multi-tenant payment and conversational-commerce platform. It comb
 - [Threat model and security](#threat-model-and-security)
 - [Orders and payment lifecycle](#orders-and-payment-lifecycle)
 - [Payment providers](#payment-providers)
+- [Subscription plans](#subscription-plans)
 - [Onboarding](#onboarding)
 - [Local development](#local-development)
 - [Environment variables](#environment-variables)
@@ -15,6 +18,7 @@ Talk2Pay is a multi-tenant payment and conversational-commerce platform. It comb
 - [CI/CD](#cicd)
 - [Database and migrations](#database-and-migrations)
 - [Repository layout](#repository-layout)
+- [Current implementation notes](#current-implementation-notes)
 
 ## Architecture
 
@@ -27,25 +31,34 @@ Browser / Widget / WordPress plugin / WhatsApp
        routers -> services -> Supabase/PostgreSQL
                     |                 |
          Payment adapters       SQL migrations/RPCs
-         (Stripe / PayMe)
+         (Stripe / PayMe / Cardcom)
                     |
               Stripe webhooks
 ```
 
 ### Application layers
 
-- `main.py` is the FastAPI composition root (v2.5.0). It registers middleware, routers, health/readiness endpoints, and background migration startup.
-- `backend/routers/` contains HTTP handlers for authentication, businesses, products, chat, orders, payments, analytics, dashboards, site builder, Stripe webhooks, WhatsApp, reconciliation, API keys, admin, onboarding, subscriptions, and widget.
-- `backend/services/` contains integrations and domain services: Stripe, PayMe, Cardcom, Gemini AI, email, sessions, monitoring, subscriptions, migrations, reconciliation, billing, money helpers, product search, widget auth, and WhatsApp secret handling.
-- `backend/middleware/` contains authentication, tenant ownership, rate limiting, correlation IDs, and request context behavior.
-- `backend/models/schemas.py` contains Pydantic request and response models. Monetary fields use `Decimal`.
-- `database/full_schema_bootstrap.sql` contains the idempotent baseline schema. Incremental SQL changes live under `database/migrations/`.
-- `frontend/` contains the static application and widget assets. `wordpress-plugin/` contains the WordPress integration.
-- `Site Builder/` contains the standalone site-builder sub-application.
+- `main.py` is the FastAPI composition root (v2.5.0). It registers middleware, routers, health/readiness endpoints, and background migration startup. It also monkey-patches `auth.get_user_profile` and `auth.update_profile_row` at startup to transparently encrypt/decrypt WhatsApp credentials via `whatsapp_security`.
+- `backend/routers/` contains HTTP handlers for: authentication, onboarding, safe-auth, email verification, profile, businesses, products, chat, orders, payments, analytics, dashboard, site builder, stripe webhook, whatsapp webhook, reconciliation, api keys, admin, admin password, subscription, webhooks, widget, logs, and frontend delivery.
+- `backend/services/` contains integrations and domain services: Stripe, PayMe, Cardcom, Gemini AI, email (Resend), sessions, monitoring (Sentry), observability, migrations, reconciliation, billing helpers, money helpers, product search, widget auth, webhook security, and WhatsApp credential encryption.
+- `backend/middleware/` contains: Supabase Auth bearer-token validation, tenant ownership checks, rate limiting (Redis + in-memory fallback), correlation IDs, and request context.
+- `backend/models/schemas.py` contains all Pydantic request and response models. Monetary fields use `Decimal`.
+- `database/full_schema_bootstrap.sql` contains the idempotent baseline schema.
+- `frontend/html/` contains all static HTML pages served by the backend. `frontend/js/` contains client-side scripts. `frontend/html/conversapay-ui.css` is the component-level stylesheet.
+- `Site Builder/frontend/index.html` is the standalone site-builder SPA, served at `/site-builder`.
+- `wordpress-plugin/` contains the WordPress chat widget plugin (PHP).
 
 The production API is mounted under `/api/v1`. FastAPI documentation is available locally when the environment is not production; production disables `/docs` and `/redoc`.
 
 A `dev_simulator` router (`POST /api/v1/orders/{order_id}/mark-paid`) is included only in non-production environments for testing payment flows. It requires authentication and business ownership.
+
+### Middleware stack (applied in order)
+
+1. `CorrelationIdMiddleware` — injects `X-Correlation-ID` into every request/response
+2. `AuthRateLimitMiddleware` — per-IP rate limits on auth/recovery endpoints
+3. `PublicEndpointSafetyNetMiddleware` — coarse 120 req/min IP backstop for all public prefixes
+4. `DualCORSMiddleware` — wildcard CORS for public endpoints, credentialed CORS for configured origins
+5. `SecurityHeadersMiddleware` — CSP, HSTS (production), X-Content-Type-Options, X-Frame-Options, COOP, Referrer-Policy, Permissions-Policy
 
 ## Threat model and security
 
@@ -54,7 +67,7 @@ A `dev_simulator` router (`POST /api/v1/orders/{order_id}/mark-paid`) is include
 - User identities, sessions, password-reset flows, and email-verification state.
 - Tenant data: businesses, products, customers, conversations, orders, payments, logs, and API keys.
 - Payment metadata and subscription state.
-- WhatsApp access and verification credentials.
+- WhatsApp access and verification credentials (encrypted at rest with Fernet/AES-128, versioned key rotation via `SECRET_KEY_CURRENT`/`SECRET_KEY_PREVIOUS`).
 - Site-builder tokens and lead submissions.
 
 ### Trust boundaries
@@ -66,18 +79,21 @@ A `dev_simulator` router (`POST /api/v1/orders/{order_id}/mark-paid`) is include
 
 ### Controls implemented
 
-- Supabase Auth bearer-token validation for protected routes.
-- Tenant ownership checks through business ownership guards.
+- Supabase Auth bearer-token validation for protected routes (`backend/middleware/auth.py`).
+- Tenant ownership checks via `verify_tenant_ownership` and `require_business_owner_for_business_id`.
 - PostgreSQL RLS policies for tenant-scoped tables.
-- Stripe signature verification and webhook replay protection through `webhook_events`.
-- HMAC verification for generic signed webhooks.
-- Rate limiting for authentication, public order/chat flows, and site-builder lead submissions. A coarse IP-level safety-net middleware (`PublicEndpointSafetyNetMiddleware`, 120 req/min) backstops all public prefixes.
+- Stripe signature verification and webhook replay protection through `webhook_events` + `claim_webhook_event` RPC.
+- HMAC verification for generic signed webhooks (`webhook_security.py`).
+- Meta/WhatsApp `X-Hub-Signature-256` verification for WhatsApp webhooks.
+- Rate limiting: per-endpoint (chat, widget config, public orders), per-auth-endpoint, and coarse IP safety net. Redis-backed with in-memory fallback.
 - Dual CORS middleware: wildcard for public endpoints, credentialed for configured origins.
 - Security headers including CSP, HSTS in production, `X-Content-Type-Options`, `X-Frame-Options`, `Cross-Origin-Opener-Policy`, Referrer Policy, and Permissions Policy.
-- API keys are stored as HMAC-SHA256 hashes; widget access is checked against the business scope. Origin/Referer headers are never used for security decisions.
-- WhatsApp access and verification tokens are encrypted at rest; verification lookup uses an HMAC digest. Decrypted access tokens are used only inside the WhatsApp send path and are not returned by API responses.
+- API keys stored as HMAC-SHA256 hashes; widget access checked against business scope. Origin/Referer headers are **never** used for security decisions.
+- WhatsApp access and verification tokens encrypted at rest (Fernet v2, SHA-256 key derivation). Decrypted tokens used only inside the WhatsApp send path and never returned by API responses.
 - Service errors returned to clients are intentionally generic in sensitive paths.
 - Dev-simulator endpoint is double-guarded: non-production flag plus authenticated business ownership.
+- Admin endpoints return 404 (not 401/403) to unauthorized callers to hide endpoint existence. Admin login uses PBKDF2-SHA256 with account lockout after 5 failed attempts.
+- Free-plan widget sessions capped at 5 messages/hour per session_id.
 
 ### Operational assumptions
 
@@ -92,9 +108,10 @@ A `dev_simulator` router (`POST /api/v1/orders/{order_id}/mark-paid`) is include
 1. A client submits an order to `POST /api/v1/orders/pay`.
 2. The backend resolves the business and loads active products by item key.
 3. Prices come from the server-side catalog, not from client-supplied totals.
-4. Product currencies must match and quantity is bounded.
+4. Product currencies must match and quantity is bounded (1–100).
 5. Monetary calculations use `Decimal` via `backend/services/money.py` and are persisted as two-decimal values compatible with PostgreSQL `NUMERIC(12,2)`.
 6. The order is stored as `pending` with `payment_status=pending`.
+7. A time-limited HMAC guest token (`public_access_token`) is returned for unauthenticated order status lookups.
 
 ### Checkout
 
@@ -108,10 +125,10 @@ A `dev_simulator` router (`POST /api/v1/orders/{order_id}/mark-paid`) is include
 
 ```text
 Stripe event
-    -> signature verification
-    -> claim_webhook_event(provider, event_id)
+    -> signature verification (stripe.Webhook.construct_event)
+    -> claim_webhook_event(provider, event_id)   [idempotency]
     -> event-specific handling
-    -> update_order_payment_atomic(...)
+    -> update_order_payment_atomic(...)           [atomic DB RPC]
     -> mark_webhook_processed(event_id)
 ```
 
@@ -119,7 +136,7 @@ For order payments, `backend/routers/stripe_webhook.py` calls the PostgreSQL RPC
 
 Duplicate Stripe events are rejected or safely reprocessed through the webhook claim table.
 
-Subscription state is webhook-owned. `confirm-session` is read-only and does not mutate subscription state.
+Subscription state is webhook-owned. `confirm-session` (`GET /api/v1/payments/confirm-session`) is read-only and performs immediate reconciliation but does not replace webhook-driven state.
 
 ### Reconciliation
 
@@ -133,24 +150,39 @@ The active provider is selected by the `PAYMENT_PROVIDER` environment variable (
 | --- | --- | --- |
 | `stripe` | `StripeCheckoutAdapter` | Default. Stripe Checkout hosted page. |
 | `payme` | `PayMeCheckoutAdapter` | PayMe IL hosted sale page. Requires `PAYME_CLIENT_KEY` and `PAYME_SELLER_PAYME_ID`. |
-| `cardcom` | `CardcomService` (direct) | Cardcom v11 Low Profile. Requires `CARDCOM_TERMINAL_NUMBER`, `CARDCOM_USER_NAME`, optionally `CARDCOM_API_TOKEN`. |
+| `cardcom` | `CardcomService` (direct) | Cardcom v11 Low Profile. Requires `CARDCOM_TERMINAL_NUMBER`, `CARDCOM_USER_NAME`, optionally `CARDCOM_API_TOKEN`. Not exposed via a webhook router (the Cardcom webhook router is a deprecated stub). |
+
+## Subscription plans
+
+Plans are defined in `backend/routers/dashboard.py`:
+
+| Feature | free | pro | premium |
+| --- | --- | --- | --- |
+| Products & analytics | ✓ | ✓ | ✓ |
+| Orders & sales | — | ✓ | ✓ |
+| WordPress / HTML embed | — | ✓ | ✓ |
+| Custom domains | — | up to 3 | up to 10 |
+| Widget API keys | 0 | up to 3 | up to 10 |
+| WhatsApp integration | — | — | ✓ |
+| Site builder | — | — | ✓ |
+| Chat sessions/hour | 5 | unlimited | unlimited |
 
 ## Onboarding
 
-1. A user signs up through the authentication routes.
+1. A user signs up through `POST /api/v1/auth/signup` (or the legacy `/api/v1/auth/register`).
 2. Supabase Auth creates the identity.
 3. Talk2Pay creates a profile with free-plan defaults and an email-verification token.
-4. The verification email is sent through the configured email provider (Resend).
-5. The verification endpoint validates the token and marks the profile verified through a database RPC.
-6. On the first successful login or OAuth finalization, the application ensures a profile and starter business exist.
+4. The verification email is sent through Resend.
+5. The verification endpoint (`GET /api/v1/auth/verify?token=...`) validates the token and marks the profile verified through the `mark_email_verified` database RPC.
+6. On the first successful login or OAuth finalization (`POST /api/v1/auth/oauth/session`), the application ensures a profile and starter business exist.
 7. The user creates products and configures the widget, WordPress plugin, or premium WhatsApp integration.
-8. Premium users save WhatsApp settings through the authenticated settings endpoint. Sensitive credentials are encrypted before persistence.
+8. Premium users save WhatsApp settings through `PUT /api/v1/auth/whatsapp-settings`. Sensitive credentials are encrypted before persistence via `whatsapp_security.py`.
 
 ## Local development
 
 ### Prerequisites
 
-- Python 3.12 recommended.
+- Python 3.12 recommended (Dockerfile uses 3.11-slim).
 - Node.js 20 for Playwright production E2E tests.
 - A Supabase project and PostgreSQL connection string for readiness/migrations.
 - Stripe test credentials for checkout and webhook development.
@@ -195,7 +227,7 @@ The following settings are defined by `backend/config.py` or required by the CI 
 | `SUPABASE_URL` | Supabase project URL. |
 | `SUPABASE_ANON_KEY` | Public Supabase key used by client-side/auth operations. |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-only Supabase service-role key. Never expose it publicly. |
-| `GEMINI_API_KEY` | Gemini API credential for conversational responses. |
+| `GEMINI_API_KEY` | Gemini API credential for conversational responses and site builder. |
 | `RESEND_API_KEY` | Email provider credential. |
 | `EMAIL_FROM_ADDRESS` | Sender address for transactional email. |
 
@@ -204,12 +236,12 @@ The following settings are defined by `backend/config.py` or required by the CI 
 | Variable | Purpose |
 | --- | --- |
 | `DATABASE_URL` | PostgreSQL connection used by readiness and migration runner. |
-| `REDIS_URL` | Optional Redis URL for rate limiting/readiness. |
-| `MIGRATIONS_AUTO_APPLY` | Enables automatic migration application during background startup. |
+| `REDIS_URL` | Optional Redis URL for distributed rate limiting and readiness check. |
+| `MIGRATIONS_AUTO_APPLY` | Enables automatic migration application during background startup (default: `true`). |
 | `ENVIRONMENT` | Runtime environment: `development`, `test`, or `production`. |
-| `DEBUG` | Debug flag; must be false in production. |
+| `DEBUG` | Debug flag; must be `false` in production. |
 | `API_PREFIX` | API route prefix, default `/api/v1`. |
-| `CORS_ORIGINS` | Comma-separated allowed origins. |
+| `CORS_ORIGINS` | Comma-separated allowed origins for credentialed CORS. |
 | `PAYMENT_PROVIDER` | Active payment provider: `stripe` (default), `payme`, or `cardcom`. |
 
 ### URLs and integrations
@@ -240,14 +272,16 @@ The following settings are defined by `backend/config.py` or required by the CI 
 | `CARDCOM_SUCCESS_URL` | Cardcom success redirect URL. |
 | `CARDCOM_FAILURE_URL` | Cardcom failure redirect URL. |
 | `CARDCOM_CANCEL_URL` | Cardcom cancel redirect URL. |
-| `META_APP_SECRET` | Meta/WhatsApp app secret. |
-| `WHATSAPP_APP_SECRET` | WhatsApp app secret (alternative). |
+| `META_APP_SECRET` | Meta/WhatsApp app secret for `X-Hub-Signature-256` verification. |
+| `WHATSAPP_APP_SECRET` | WhatsApp app secret (alternative to `META_APP_SECRET`). |
 | `WEBHOOK_VERIFY_TOKEN` | Optional generic webhook verification token. |
 | `WEBHOOK_SIGNING_SECRET` | HMAC signing secret for generic webhooks. |
 | `EMAIL_FROM_NAME` | Display name for transactional email (default: `Talk2Pay`). |
-| `SENTRY_DSN` | Optional Sentry DSN. |
+| `SENTRY_DSN` | Optional Sentry DSN for error tracking. |
 | `UPTIMEROBOT_API_KEY` | Optional uptime-monitoring credential. |
-| `ADMIN_SECRET_PATH` | Optional admin secret path setting. |
+| `ADMIN_SECRET_PATH` | Secret path segment for hidden admin routes (e.g. `/admin-{secret}/login`). |
+| `SECRET_KEY_CURRENT` | Override for current WhatsApp encryption key (defaults to `SECRET_KEY`). |
+| `SECRET_KEY_PREVIOUS` | Previous WhatsApp encryption key for key rotation. |
 
 ### CI and production E2E secrets
 
@@ -302,63 +336,78 @@ GitHub Actions workflows:
 - `check-html-links.yml`: HTML link validation.
 - `public-brand-contract.yml`: public branding contract checks.
 
-Deployment is configured via `render.yaml` targeting Render.com. Health check path: `/ready`.
+Deployment is configured via `render.yaml` targeting Render.com. Health check path: `/ready`. A multi-stage `Dockerfile` is also provided for containerised deployments (Python 3.11-slim, non-root `appuser`).
 
 ## Database and migrations
 
 The baseline database definition is `database/full_schema_bootstrap.sql`. It is idempotent and creates the core schema, indexes, RLS policies, grants, and database functions.
 
-Incremental migrations are stored in `database/migrations/` and are applied in filename order. The migration runner records each migration name and SHA-256 checksum in `public.schema_migrations`.
+Incremental migrations are stored in `database/migrations/` and are applied in filename order. The migration runner records each migration name and SHA-256 checksum in `public.schema_migrations`. A PostgreSQL advisory lock (`pg_advisory_xact_lock`) prevents concurrent migration runs.
 
 Important database functions:
 
 - `user_owns_business`: tenant ownership helper used by RLS policies.
-- `mark_email_verified`: controlled email-verification state transition.
+- `mark_email_verified`: controlled email-verification state transition (SECURITY DEFINER).
 - `claim_webhook_event`: webhook idempotency/replay claim.
 - `update_order_payment_atomic`: atomic order/payment update for payment events.
 - `consume_site_lead_rate_limit`: transactional site-builder lead rate limiting.
+- `get_user_analytics_overview`: aggregated analytics RPC (with fallback to direct queries).
 
 ## Repository layout
 
 ```text
 backend/
-  middleware/       Authentication, tenant guards, rate limits, request context
-  models/           Pydantic schemas
-  routers/          FastAPI route handlers (auth, businesses, products, chat,
-                    orders, payments, analytics, dashboard, site_builder,
-                    stripe_webhook, whatsapp, reconciliation, api_keys,
-                    admin, onboarding, subscription, widget, dev_simulator)
+  middleware/       Auth, tenant guards, rate limits, correlation IDs, request context
+  models/           Pydantic schemas (schemas.py)
+  routers/          FastAPI route handlers (25 router files)
   scripts/          Migration and admin utility scripts
   services/         Stripe, PayMe, Cardcom, sessions, migrations, monitoring,
                     reconciliation, billing, money, product search,
-                    widget auth, WhatsApp, email, AI (Gemini)
+                    widget auth, webhook security, WhatsApp encryption, email, AI (Gemini)
   static/           Backend-delivered static assets (robots.txt, sitemap.xml)
   config.py         Centralized settings via pydantic-settings
-  dependencies.py   Request-scoped Supabase client providers
+  dependencies.py   Request-scoped Supabase client providers (not yet used by all routers)
 database/
   full_schema_bootstrap.sql
-  migrations/
-docs/               API, onboarding, production E2E, infrastructure phase notes
+  migrations/       Incremental SQL migrations (applied in filename order)
+docs/
+  infra/            Phase-by-phase infrastructure notes (security, multitenancy, billing, etc.)
+  API.md            API endpoint reference
+  ONBOARDING.md     User onboarding guide
+  PRODUCTION_E2E.md Playwright E2E test instructions
+  REBRAND.md        Talk2Pay / ConversaPay rebranding notes
 frontend/
-  css/              Global styles
-  html/             All application HTML pages
-  images/
-  js/               Dashboard, widget, onboarding, email-guard scripts
-scripts/            HTML link checker and UI quality gate
-Site Builder/       Standalone site-builder sub-application
-tests/              Python integration and contract tests
-tests/e2e/          Playwright production E2E tests
+  html/             All application HTML pages + conversapay-ui.css
+  js/               Dashboard, widget, onboarding, email-guard, premium-builder scripts
+scripts/            HTML link checker and UI quality gate (CI)
+Site Builder/       Standalone site-builder sub-application (PREMIUM only)
+  backend/          Empty package stubs (logic lives in backend/routers/site_builder.py)
+  frontend/         index.html SPA
 wordpress-plugin/   WordPress chat widget plugin (PHP)
+  conversapay-chat.php
+  admin.css
 main.py             FastAPI application entrypoint (v2.5.0)
 render.yaml         Render.com deployment configuration
+Dockerfile          Multi-stage Docker build (Python 3.11-slim)
 requirements.txt    Python dependencies
-package.json        Playwright tooling
+PROJECT_MAP.md      Architectural map of every file in the repository
+PROJECT_SUMMARY.md  One-line description of every file (legacy, superseded by PROJECT_MAP.md)
+SUPABASE_SETUP.md   Supabase dashboard configuration notes (Google OAuth, redirect URLs)
+unify_html.ps1      PowerShell utility to normalize CSS references across HTML files
 ```
 
-## Current implementation notes
+## Known issues
 
-- The main branch retains the synchronous Supabase client architecture for compatibility with existing authentication and middleware behavior.
-- Request-scoped dependency providers exist in `backend/dependencies.py`, but not every router has been migrated to consume them yet.
-- The active payment provider is runtime-configurable via `PAYMENT_PROVIDER`. Cardcom is integrated at the service level; its webhook router is a deprecated stub.
+- `backend/routers/cardcom_webhook.py` is a deprecated stub with no active handler. The Cardcom integration exists at the service level (`backend/services/cardcom_service.py`) but is not wired into any router.
+- `backend/services/product_service.py` implements keyword-scored product search but is not imported by any router. The chat router fetches products directly via Supabase queries.
+- `Dockerfile.txt` and `gitignore.txt` are plain-text duplicates of `Dockerfile` and `.gitignore` respectively (likely legacy artifacts).
+- Version drift: `backend/__init__.py` declares `__version__ = "2.0.0"` while `main.py` declares `version="2.5.0"`. The authoritative version is `2.5.0`.
+
+## Implementation notes
+
+- The main branch retains the synchronous Supabase client architecture. Most routers create their own module-level `create_client()` instance rather than using the request-scoped providers in `backend/dependencies.py`. Migration to the dependency-injection pattern is incomplete.
+- `Site Builder/backend/` contains only empty `__init__.py` stubs. All site-builder logic lives in `backend/routers/site_builder.py` and is served by the main FastAPI app.
 - The background migration task keeps liveness fast; `/ready` is the appropriate signal for database-backed readiness.
 - `billing_reconciliation.py` provides pure billing-state helpers (effective plan, retry logic) used by reconciliation jobs and webhook handlers.
+- `request_context.py` defines a second `CorrelationIdMiddleware` class. The one registered in `main.py` is from `correlation.py`. Both are functionally similar; `request_context.py` also provides `JsonLogFormatter`.
+- The `ui_quality_gate.py` script checks for tokens (`APPLE_POLISH_LINK`, `X-ConversaPay-Release`) that do not appear in the current `main.py`. This gate will fail unless those tokens are present — **not uncertain, confirmed by code inspection**.

@@ -16,16 +16,13 @@ AI-powered website builder that generates beautiful, responsive landing pages us
 The builder is served as part of the Talk2Pay product. The directory name and domain paths retain `conversapay` for compatibility with existing deployments and clients.
 
 ```
-conversapay-site-builder/
+Site Builder/
 ├── backend/
 │   ├── __init__.py
-│   ├── config.py
-│   ├── main.py
 │   └── routers/
-├── frontend/
-│   └── index.html
-├── requirements.txt
-└── README.md
+│       └── __init__.py
+└── frontend/
+    └── index.html
 ```
 
 ## 🔧 Installation
