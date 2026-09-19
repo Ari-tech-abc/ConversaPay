@@ -65,6 +65,13 @@ def _customer_name_parts(value: str | None) -> tuple[str, str]:
     return parts[0], " ".join(parts[1:])
 
 
+def _clean_provider_id(value: Any) -> str | None:
+    if value is None:
+        return None
+    cleaned = str(value).strip()
+    return cleaned or None
+
+
 class StripeCheckoutAdapter:
     provider = "stripe"
 
@@ -83,10 +90,20 @@ class StripeCheckoutAdapter:
             )
         except Exception as exc:
             raise PaymentAdapterError(f"Stripe checkout creation failed: {exc}") from exc
+
         checkout_url = str(session.get("url") or "").strip()
+        provider_session_id = _clean_provider_id(session.get("session_id") or session.get("id"))
         if not checkout_url:
             raise PaymentAdapterError("Stripe did not return a checkout URL")
-        return CheckoutResult(provider=self.provider, checkout_url=checkout_url, provider_session_id=session.get("session_id"), raw=session)
+        if not provider_session_id:
+            raise PaymentAdapterError("Stripe did not return a checkout session ID")
+
+        return CheckoutResult(
+            provider=self.provider,
+            checkout_url=checkout_url,
+            provider_session_id=provider_session_id,
+            raw=session,
+        )
 
 
 class PayMeCheckoutAdapter:
@@ -146,7 +163,7 @@ class PayMeCheckoutAdapter:
         for key in ("payment_url", "sale_url", "redirect_url", "url", "paymentUrl", "saleUrl"):
             value = data.get(key)
             if isinstance(value, str) and value.strip():
-                return value.strip(), str(data.get("sale_id") or data.get("id") or "") or None
+                return value.strip(), _clean_provider_id(data.get("sale_id") or data.get("id"))
         nested = data.get("data")
         if isinstance(nested, dict):
             return PayMeCheckoutAdapter._extract_url(nested)
