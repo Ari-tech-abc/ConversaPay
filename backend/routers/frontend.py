@@ -24,7 +24,7 @@ def _safe_html_path(filename: str):
 
 def _normalize_copy(page: str) -> str:
     """Localize visible HTML copy without modifying JavaScript/CSS source code."""
-    parts = re.split(r'(<(?:script|style)\b[^>]*>.*?</(?:script|style)>)', page, flags=re.I | re.S)
+    parts = re.split(r'(<(?:script|style)\\b[^>]*>.*?</(?:script|style)>)', page, flags=re.I | re.S)
     for index in range(0, len(parts), 2):
         for source, target in COPY_REPLACEMENTS:
             parts[index] = parts[index].replace(source, target)
@@ -32,8 +32,10 @@ def _normalize_copy(page: str) -> str:
 
 def _brand_markup(page: str, filename: str = "") -> str:
     page = _normalize_copy(page)
-    page = re.sub(r'<a\b[^>]*class=["\'][^>]*\bcp-brand\b[^>]*["\'][^>]*>.*?</a>', lambda match: f'<a class="cp-brand" href="/"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="Talk2Pay" width="220" height="38"></a>', page, flags=re.I | re.S)
-    if filename == "dashboard.html": page = page.replace("</head>", f'<script src="{VERIFICATION_GUARD_SRC}" defer></script></head>', 1)
+    page = re.sub(r'<a\\b[^>]*class=[\"\\'][^>]*\\bcp-brand\\b[^>]*[\"\\'][^>]*>.*?</a>', lambda match: f'<a class="cp-brand" href="/"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="Talk2Pay" width="220" height="38"></a>', page, flags=re.I | re.S)
+    if filename == "dashboard.html":
+        page = re.sub(r'<button\\b[^>]*\\bid=[\"\\']editBusiness[\"\\'][^>]*>.*?</button>', "", page, flags=re.I | re.S)
+        page = page.replace("</head>", f'<script src="{VERIFICATION_GUARD_SRC}" defer></script></head>', 1)
     if 'rel="icon"' not in page.lower(): page = page.replace("</head>", f'<link rel="icon" type="image/png" href="{FAVICON_SRC}"></head>', 1)
     return page
 
