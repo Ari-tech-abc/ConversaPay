@@ -100,8 +100,9 @@ def _subscription_plan_from_stripe(session: dict[str, Any], subscription: dict[s
             price_metadata = price.get("metadata") or {}
             candidates.extend([price_metadata.get("plan_type"), price_metadata.get("plan"), price.get("lookup_key"), price.get("nickname"), price.get("id")])
             product = price.get("product") or {}
-            product_metadata = product.get("metadata") or {}
-            candidates.extend([product_metadata.get("plan_type"), product_metadata.get("plan"), product.get("name")])
+            if isinstance(product, dict):
+                product_metadata = product.get("metadata") or {}
+                candidates.extend([product_metadata.get("plan_type"), product_metadata.get("plan"), product.get("name")])
     for candidate in candidates:
         plan = normalize_plan_type(candidate)
         if plan in {"pro", "premium"}:
