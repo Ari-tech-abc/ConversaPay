@@ -10,7 +10,7 @@ returns boolean
 language plpgsql
 security definer
 set search_path = public
-as $$
+as $
 declare
     inserted_id uuid;
     current_status text;
