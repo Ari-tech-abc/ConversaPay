@@ -82,8 +82,9 @@ as $$
     update public.payment_webhook_events
        set processing_status = 'failed',
            error_message = left(coalesce(p_error_message, 'Unknown webhook error'), 2000)
-     where provider_event_id = p_event_id;
-$$;
+     where provider = p_provider
+       and provider_event_id = p_event_id;
+$;
 
 revoke all on function public.claim_webhook_event(text, text, text) from public;
 grant execute on function public.claim_webhook_event(text, text, text) to service_role;
