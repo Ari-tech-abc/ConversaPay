@@ -80,13 +80,7 @@ async def create_subscription_checkout_session(request: SubscriptionCreate, curr
 def _extract_subscription_fields(session: dict[str, Any]) -> tuple[str | None, str | None, str | None, bool, dict[str, Any] | None]:
     subscription = session.get("subscription")
     if isinstance(subscription, dict):
-        return (
-            subscription.get("id"),
-            subscription.get("status"),
-            period_end_iso(subscription.get("current_period_end")),
-            bool(subscription.get("cancel_at_period_end", False)),
-            subscription,
-        )
+        return (subscription.get("id"), subscription.get("status"), period_end_iso(subscription.get("current_period_end")), bool(subscription.get("cancel_at_period_end", False)), subscription)
     if isinstance(subscription, str):
         return subscription, None, None, False, None
     return None, None, None, False, None
@@ -132,15 +126,7 @@ async def confirm_checkout_session(session_id: str = Query(..., min_length=1), c
     payment_status = str(session.get("payment_status") or "").lower()
     session_status = str(session.get("status") or "").lower()
     mode = session.get("mode")
-    response: dict[str, Any] = {
-        "session_id": session.get("id") or session_id,
-        "mode": mode,
-        "status": "pending",
-        "payment_status": payment_status or None,
-        "session_status": session_status or None,
-        "confirmed": False,
-        "subscription_state_source": "stripe_confirmed",
-    }
+    response: dict[str, Any] = {"session_id": session.get("id") or session_id, "mode": mode, "status": "pending", "payment_status": payment_status or None, "session_status": session_status or None, "confirmed": False, "subscription_state_source": "stripe_confirmed"}
 
     if mode != "subscription":
         if payment_status in CONFIRMED_PAYMENT_STATUSES and session_status in {"complete", ""}:
@@ -164,35 +150,15 @@ async def confirm_checkout_session(session_id: str = Query(..., min_length=1), c
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Subscription does not belong to the current user")
 
     normalized_subscription_status = str(subscription_status or "").lower()
-    paid_or_active = payment_status in CONFIRMED_PAYMENT_STATUSES or (
-        session_status == "complete" and normalized_subscription_status in ACTIVE_SUBSCRIPTION_STATUSES
-    )
+    paid_or_active = payment_status in CONFIRMED_PAYMENT_STATUSES or (session_status == "complete" and normalized_subscription_status in ACTIVE_SUBSCRIPTION_STATUSES)
     if not paid_or_active:
-        response.update({
-            "subscription_status": normalized_subscription_status or None,
-            "status": "pending",
-        })
-        logger.info(
-            "Stripe checkout still pending (session_id=%s session_status=%s payment_status=%s subscription_status=%s)",
-            session_id,
-            session_status or "unknown",
-            payment_status or "unknown",
-            normalized_subscription_status or "unknown",
-        )
+        response.update({"subscription_status": normalized_subscription_status or None, "status": "pending"})
+        logger.info("Stripe checkout still pending (session_id=%s session_status=%s payment_status=%s subscription_status=%s)", session_id, session_status or "unknown", payment_status or "unknown", normalized_subscription_status or "unknown")
         return response
 
     plan_type = _subscription_plan_from_stripe(session, subscription)
     try:
-        apply_subscription_state(
-            user_id=current_user.user_id,
-            plan_type=plan_type,
-            subscription_status=subscription_status,
-            subscription_expires_at=subscription_expires_at,
-            customer_id=(subscription or {}).get("customer") or session.get("customer"),
-            cancel_at_period_end=cancel_at_period_end,
-            stripe_subscription_id=subscription_id,
-            stripe_subscription=subscription or session.get("subscription"),
-        )
+        apply_subscription_state(user_id=current_user.user_id, plan_type=plan_type, subscription_status=subscription_status, subscription_expires_at=subscription_expires_at, customer_id=(subscription or {}).get("customer") or session.get("customer"), cancel_at_period_end=cancel_at_period_end, stripe_subscription_id=subscription_id, stripe_subscription=subscription or session.get("subscription"))
     except Exception as exc:
         logger.error("Immediate plan reconciliation failed (user_id=%s session_id=%s plan_type=%s): %s", current_user.user_id, session_id, plan_type, exc, exc_info=True)
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Stripe confirmed the payment but syncing the profile failed. Please retry in a moment.") from exc
@@ -204,19 +170,7 @@ async def confirm_checkout_session(session_id: str = Query(..., min_length=1), c
 
 def _checkout_order_from_row(order: dict[str, Any], request: dict[str, Any]) -> CheckoutOrder:
     customer_info = order.get("customer_info") or {}
-    return CheckoutOrder(
-        order_id=str(order["id"]),
-        order_number=str(order.get("order_number") or order["id"]),
-        amount=Decimal(str(order.get("total") or "0")),
-        currency=str(order.get("currency") or "ILS").upper(),
-        items=list(order.get("items") or []),
-        customer_email=request.get("customer_email") or customer_info.get("email"),
-        customer_name=request.get("customer_name") or customer_info.get("name"),
-        success_url=settings.PAYME_SUCCESS_URL if settings.PAYMENT_PROVIDER.lower() == "payme" else None,
-        cancel_url=settings.PAYME_CANCEL_URL if settings.PAYMENT_PROVIDER.lower() == "payme" else None,
-        callback_url=settings.PAYME_CALLBACK_URL if settings.PAYMENT_PROVIDER.lower() == "payme" else None,
-        metadata={"business_id": str(order.get("business_id") or "")},
-    )
+    return CheckoutOrder(order_id=str(order["id"]), order_number=str(order.get("order_number") or order["id"]), amount=Decimal(str(order.get("total") or "0")), currency=str(order.get("currency") or "ILS").upper(), items=list(order.get("items") or []), customer_email=request.get("customer_email") or customer_info.get("email"), customer_name=request.get("customer_name") or customer_info.get("name"), success_url=settings.PAYME_SUCCESS_URL if settings.PAYMENT_PROVIDER.lower() == "payme" else None, cancel_url=settings.PAYME_CANCEL_URL if settings.PAYMENT_PROVIDER.lower() == "payme" else None, callback_url=settings.PAYME_CALLBACK_URL if settings.PAYMENT_PROVIDER.lower() == "payme" else None, metadata={"business_id": str(order.get("business_id") or "")})
 
 
 @router.post("/checkout-session", response_model=dict)
@@ -240,23 +194,8 @@ async def create_order_checkout_session(request: dict[str, Any], current_user: A
         logger.error("Order checkout creation failed (order_id=%s provider=%s): %s", order_id, provider, exc, exc_info=True)
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(exc)) from exc
 
-    payment = supabase.table("payments").insert({
-        "business_id": business.data[0]["id"],
-        "order_id": order_id,
-        "amount": order.data[0]["total"],
-        "currency": order.data[0].get("currency", "ILS"),
-        "status": "pending",
-        "customer_email": request.get("customer_email") or (order.data[0].get("customer_info") or {}).get("email"),
-        "customer_name": request.get("customer_name") or (order.data[0].get("customer_info") or {}).get("name"),
-        "metadata": {"provider": checkout.provider, "provider_session_id": checkout.provider_session_id, "checkout_url": checkout.checkout_url},
-    }).execute()
-    return {
-        "session_id": checkout.provider_session_id,
-        "url": checkout.checkout_url,
-        "checkout_url": checkout.checkout_url,
-        "provider": checkout.provider,
-        "payment_id": payment.data[0]["id"] if payment.data else None,
-    }
+    payment = supabase.table("payments").insert({"business_id": business.data[0]["id"], "order_id": order_id, "amount": order.data[0]["total"], "currency": order.data[0].get("currency", "ILS"), "status": "pending", "customer_email": request.get("customer_email") or (order.data[0].get("customer_info") or {}).get("email"), "customer_name": request.get("customer_name") or (order.data[0].get("customer_info") or {}).get("name"), "metadata": {"provider": checkout.provider, "provider_session_id": checkout.provider_session_id, "checkout_url": checkout.checkout_url}}).execute()
+    return {"session_id": checkout.provider_session_id, "url": checkout.checkout_url, "checkout_url": checkout.checkout_url, "provider": checkout.provider, "payment_id": payment.data[0]["id"] if payment.data else None}
 
 
 @router.get("/profile", response_model=ProfileResponse)
@@ -280,7 +219,7 @@ async def payment_canceled(provider: str | None = None, order_id: str | None = N
 
 @router.get("", response_model=list[PaymentResponse])
 async def get_payments(business_id: str, current_user: AuthUser = Depends(require_auth)) -> list[PaymentResponse]:
-    business = supabase.table("businesses").select("id").eq("business_id", business_id).execute()
+    business = supabase.table("businesses").select("id").eq("business_id", business_id).eq("owner_id", current_user.user_id).execute()
     if not business.data:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Business not found")
     result = supabase.table("payments").select("*").eq("business_id", business.data[0]["id"]).order("created_at", desc=True).execute()
