@@ -19,6 +19,69 @@ async def create_product(request:ProductCreate,current_user:AuthUser=Depends(req
     result=supabase.table("products").insert({"business_id":business_uuid,"item_key":item_key,"name":request.name.strip(),"description":request.description,"price":money_db(request.price),"currency":request.currency.upper(),"image_url":str(request.image_url) if request.image_url else None,"payment_link":str(request.payment_link) if request.payment_link else None,"is_active":request.is_active,"inventory_count":request.inventory_count,"metadata":request.metadata}).execute()
     if not result.data: raise HTTPException(500,"Failed to create product")
     return ProductResponse(**_db_product(result.data[0]))
+@router.post("/bulk")
+async def create_products_bulk(request: List[ProductCreate], current_user: AuthUser = Depends(require_auth)):
+    """Create many products in one authenticated request for dashboard imports."""
+    if not request:
+        return {"created": 0, "skipped": 0, "errors": [], "created_ids": []}
+    if len(request) > 500:
+        raise HTTPException(400, "Maximum 500 products per import")
+    business_ids = {str(item.business_id) for item in request}
+    if len(business_ids) != 1:
+        raise HTTPException(400, "All imported products must belong to the same business")
+    business_uuid = require_business_owner_for_business_id(str(request[0].business_id), current_user)
+
+    normalized = []
+    seen = set()
+    errors = []
+    for index, item in enumerate(request, start=1):
+        key = _normalized_item_key(item.item_key)
+        if key in seen:
+            errors.append({"row": index, "item_key": key, "reason": "duplicate_in_file"})
+            continue
+        seen.add(key)
+        normalized.append((index, item, key))
+
+    existing = supabase.table("products").select("item_key").eq("business_id", business_uuid).in_("item_key", [x[2] for x in normalized]).execute().data or []
+    existing_keys = {_normalized_item_key(x.get("item_key", "")) for x in existing}
+
+    rows = []
+    for index, item, key in normalized:
+        if key in existing_keys:
+            errors.append({"row": index, "item_key": key, "reason": "already_exists"})
+            continue
+        rows.append({
+            "business_id": business_uuid,
+            "item_key": key,
+            "name": item.name.strip(),
+            "description": item.description,
+            "price": money_db(item.price),
+            "currency": item.currency.upper(),
+            "image_url": str(item.image_url) if item.image_url else None,
+            "payment_link": str(item.payment_link) if item.payment_link else None,
+            "is_active": item.is_active,
+            "inventory_count": item.inventory_count,
+            "metadata": item.metadata,
+        })
+
+    if not rows:
+        return {"created": 0, "skipped": len(errors), "errors": errors, "created_ids": []}
+
+    try:
+        result = supabase.table("products").insert(rows).execute()
+    except Exception as exc:
+        logger.exception("Bulk product import failed")
+        raise HTTPException(500, "Bulk product import failed") from exc
+
+    created_rows = result.data or []
+    return {
+        "created": len(created_rows),
+        "skipped": len(errors),
+        "errors": errors,
+        "created_ids": [str(x["id"]) for x in created_rows if x.get("id")],
+    }
+
+
 @router.get("",response_model=List[ProductResponse])
 async def get_products(business_id:str=Query(...),active_only:bool=Query(True),current_user:AuthUser=Depends(require_auth)):
     q=supabase.table("products").select("*").eq("business_id",require_business_owner_for_business_id(business_id,current_user)); q=q.eq("is_active",True) if active_only else q
