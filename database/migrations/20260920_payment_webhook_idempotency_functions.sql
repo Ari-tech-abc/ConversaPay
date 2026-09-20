@@ -12,7 +12,9 @@ security definer
 set search_path = public
 as $$
 declare
-    claimed boolean := false;
+    inserted_id uuid;
+    current_status text;
+    current_updated_at timestamptz;
 begin
     insert into public.payment_webhook_events (
         provider,
@@ -25,22 +27,32 @@ begin
         p_event_type,
         'processing'
     )
-    on conflict (provider, provider_event_id) do update
-        set processing_status = case
-            when payment_webhook_events.processing_status = 'failed'
-                 and payment_webhook_events.updated_at < now() - interval '5 minutes'
-            then 'processing'
-            else payment_webhook_events.processing_status
-        end,
-        error_message = case
-            when payment_webhook_events.processing_status = 'failed'
-                 and payment_webhook_events.updated_at < now() - interval '5 minutes'
-            then null
-            else payment_webhook_events.error_message
-        end
-    returning processing_status = 'processing' into claimed;
+    on conflict (provider, provider_event_id) do nothing
+    returning id into inserted_id;
 
-    return coalesce(claimed, false);
+    if inserted_id is not null then
+        return true;
+    end if;
+
+    select processing_status, updated_at
+      into current_status, current_updated_at
+      from public.payment_webhook_events
+     where provider = p_provider
+       and provider_event_id = p_event_id
+     for update;
+
+    if current_status = 'failed'
+       and current_updated_at < now() - interval '5 minutes' then
+        update public.payment_webhook_events
+           set processing_status = 'processing',
+               error_message = null,
+               processed_at = null
+         where provider = p_provider
+           and provider_event_id = p_event_id;
+        return true;
+    end if;
+
+    return false;
 end;
 $$;
 
