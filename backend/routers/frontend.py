@@ -1,9 +1,12 @@
 """Crash-proof HTML and static asset delivery."""
 from __future__ import annotations
+
 import re
+
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
+
 from backend.config import settings
 
 router = APIRouter(tags=["frontend"])
@@ -11,60 +14,161 @@ settings.ensure_delivery_directories()
 router.mount("/static", StaticFiles(directory=settings.static_dir), name="static")
 router.mount("/frontend", StaticFiles(directory=settings.frontend_dir), name="frontend")
 router.mount("/images", StaticFiles(directory=settings.images_dir), name="images")
+
 FALLBACK_HTML = """<!doctype html><html lang=\"he\" dir=\"rtl\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Talk2Pay</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f1f8;color:#211b2b;font:16px system-ui,sans-serif}.box{width:min(620px,calc(100% - 40px));padding:40px;border:1px solid #ddd4e8;border-radius:24px;background:#fff;text-align:center}.code{font-size:3rem;font-weight:800;color:#6d42c5}a{color:#6d42c5;font-weight:700}</style></head><body><main class=\"box\"><div class=\"code\">404</div><h1>Talk2Pay</h1><p>העמוד המבוקש אינו זמין כרגע.</p><a href=\"/\">חזרה לדף הבית</a></main></body></html>"""
-COPY_REPLACEMENTS = (("ConversaPay", "Talk2Pay"), ("Production checklist", "רשימת בדיקות לפרודקשן"), ("Developer tools", "כלי פיתוח"), ("Dashboard", "לוח בקרה"), ("DASHBOARD", "לוח בקרה"), ("Billing", "חיוב"), ("Security", "אבטחה"))
+
+COPY_REPLACEMENTS = (
+    ("ConversaPay", "Talk2Pay"),
+    ("Production checklist", "רשימת בדיקות לפרודקשן"),
+    ("Developer tools", "כלי פיתוח"),
+    ("Dashboard", "לוח בקרה"),
+    ("DASHBOARD", "לוח בקרה"),
+    ("Billing", "חיוב"),
+    ("Security", "אבטחה"),
+)
+
 BRAND_LOGO_SRC = "/frontend/images/conversapay_logo_whitebg.png"
 FAVICON_SRC = "/frontend/images/favicon-32x32.png"
 VERIFICATION_GUARD_SRC = "/frontend/js/email-verification-guard.js"
 
+
 def _safe_html_path(filename: str):
     candidate = (settings.html_dir / filename).resolve()
-    if candidate.parent != settings.html_dir.resolve() or candidate.suffix.lower() != ".html": raise HTTPException(status_code=404, detail="Page not found")
+    if candidate.parent != settings.html_dir.resolve() or candidate.suffix.lower() != ".html":
+        raise HTTPException(status_code=404, detail="Page not found")
     return candidate
+
 
 def _normalize_copy(page: str) -> str:
     """Localize visible HTML copy without modifying JavaScript/CSS source code."""
-    parts = re.split(r'(<(?:script|style)\\b[^>]*>.*?</(?:script|style)>)', page, flags=re.I | re.S)
+    parts = re.split(r"(<(?:script|style)\\b[^>]*>.*?</(?:script|style)>)", page, flags=re.I | re.S)
     for index in range(0, len(parts), 2):
         for source, target in COPY_REPLACEMENTS:
             parts[index] = parts[index].replace(source, target)
     return "".join(parts)
 
+
 def _brand_markup(page: str, filename: str = "") -> str:
     page = _normalize_copy(page)
-    page = re.sub(r'<a\\b[^>]*class=[\"\\'][^>]*\\bcp-brand\\b[^>]*[\"\\'][^>]*>.*?</a>', lambda match: f'<a class="cp-brand" href="/"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="Talk2Pay" width="220" height="38"></a>', page, flags=re.I | re.S)
+    brand_pattern = r'''<a\b[^>]*class=["'][^>]*\bcp-brand\b[^>]*["'][^>]*>.*?</a>'''
+    page = re.sub(
+        brand_pattern,
+        lambda match: (
+            f'<a class="cp-brand" href="/"><img class="cp-brand-logo" '
+            f'src="{BRAND_LOGO_SRC}" alt="Talk2Pay" width="220" height="38"></a>'
+        ),
+        page,
+        flags=re.I | re.S,
+    )
     if filename == "dashboard.html":
-        page = re.sub(r'<button\\b[^>]*\\bid=[\"\\']editBusiness[\"\\'][^>]*>.*?</button>', "", page, flags=re.I | re.S)
-        page = page.replace("</head>", f'<script src="{VERIFICATION_GUARD_SRC}" defer></script></head>', 1)
-    if 'rel="icon"' not in page.lower(): page = page.replace("</head>", f'<link rel="icon" type="image/png" href="{FAVICON_SRC}"></head>', 1)
+        edit_business_pattern = r'''<button\b[^>]*\bid=["']editBusiness["'][^>]*>.*?</button>'''
+        page = re.sub(edit_business_pattern, "", page, flags=re.I | re.S)
+        page = page.replace(
+            "</head>",
+            f'<script src="{VERIFICATION_GUARD_SRC}" defer></script></head>',
+            1,
+        )
+    if 'rel="icon"' not in page.lower():
+        page = page.replace(
+            "</head>",
+            f'<link rel="icon" type="image/png" href="{FAVICON_SRC}"></head>',
+            1,
+        )
     return page
+
 
 def _html_response(filename: str, status_code: int = 200) -> HTMLResponse:
     path = _safe_html_path(filename)
-    if not path.is_file(): return HTMLResponse(FALLBACK_HTML, status_code=404)
-    return HTMLResponse(_brand_markup(path.read_text(encoding="utf-8"), filename), status_code=status_code, headers={"X-Delivery-Release": "safe-frontend-router"})
+    if not path.is_file():
+        return HTMLResponse(FALLBACK_HTML, status_code=404)
+    return HTMLResponse(
+        _brand_markup(path.read_text(encoding="utf-8"), filename),
+        status_code=status_code,
+        headers={"X-Delivery-Release": "safe-frontend-router"},
+    )
 
-PAGE_ROUTES = {"/": "home.html", "/home": "home.html", "/dashboard": "dashboard.html", "/dashboard.html": "dashboard.html", "/wordpress": "wordpress.html", "/wordpress.html": "wordpress.html", "/login": "login.html", "/login.html": "login.html", "/register": "register.html", "/register.html": "register.html", "/forgot-password": "forgot-password.html", "/forgot-password.html": "forgot-password.html", "/terms": "terms.html", "/terms.html": "terms.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html", "/cookies": "cookies.html", "/cookies.html": "cookies.html", "/refund-policy": "refund-policy.html", "/refund-policy.html": "refund-policy.html", "/payment/success": "success.html", "/payment-success.html": "success.html", "/success": "success.html", "/success.html": "success.html", "/payment/canceled": "canceled.html", "/payment-canceled.html": "canceled.html", "/canceled": "canceled.html", "/canceled.html": "canceled.html", "/upgrade": "upgrade.html", "/upgrade.html": "upgrade.html", "/profile": "profile.html", "/profile.html": "profile.html", "/settings": "settings.html", "/settings.html": "settings.html", "/setup-guide": "setup-guide.html", "/setup-guide.html": "setup-guide.html", "/auth/callback": "auth-callback.html"}
-for route, filename in PAGE_ROUTES.items(): router.add_api_route(route, lambda filename=filename: _html_response(filename), methods=["GET"], include_in_schema=False)
+
+PAGE_ROUTES = {
+    "/": "home.html",
+    "/home": "home.html",
+    "/dashboard": "dashboard.html",
+    "/dashboard.html": "dashboard.html",
+    "/wordpress": "wordpress.html",
+    "/wordpress.html": "wordpress.html",
+    "/login": "login.html",
+    "/login.html": "login.html",
+    "/register": "register.html",
+    "/register.html": "register.html",
+    "/forgot-password": "forgot-password.html",
+    "/forgot-password.html": "forgot-password.html",
+    "/terms": "terms.html",
+    "/terms.html": "terms.html",
+    "/privacy": "privacy.html",
+    "/privacy.html": "privacy.html",
+    "/cookies": "cookies.html",
+    "/cookies.html": "cookies.html",
+    "/refund-policy": "refund-policy.html",
+    "/refund-policy.html": "refund-policy.html",
+    "/payment/success": "success.html",
+    "/payment-success.html": "success.html",
+    "/success": "success.html",
+    "/success.html": "success.html",
+    "/payment/canceled": "canceled.html",
+    "/payment-canceled.html": "canceled.html",
+    "/canceled": "canceled.html",
+    "/canceled.html": "canceled.html",
+    "/upgrade": "upgrade.html",
+    "/upgrade.html": "upgrade.html",
+    "/profile": "profile.html",
+    "/profile.html": "profile.html",
+    "/settings": "settings.html",
+    "/settings.html": "settings.html",
+    "/setup-guide": "setup-guide.html",
+    "/setup-guide.html": "setup-guide.html",
+    "/auth/callback": "auth-callback.html",
+}
+
+for route, filename in PAGE_ROUTES.items():
+    router.add_api_route(
+        route,
+        lambda filename=filename: _html_response(filename),
+        methods=["GET"],
+        include_in_schema=False,
+    )
+
+
 @router.get("/404", include_in_schema=False)
 @router.get("/404.html", include_in_schema=False)
-async def not_found_page(): return _html_response("404.html", status_code=404)
+async def not_found_page():
+    return _html_response("404.html", status_code=404)
+
+
 @router.get("/conversapay-ui.css", include_in_schema=False)
 async def ui_stylesheet():
     path = settings.html_dir / "conversapay-ui.css"
-    if not path.is_file(): raise HTTPException(status_code=404, detail="Stylesheet not found")
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Stylesheet not found")
     return FileResponse(path, media_type="text/css")
+
+
 @router.get("/robots.txt", include_in_schema=False)
 async def robots():
     path = settings.static_dir / "robots.txt"
-    if not path.is_file(): return HTMLResponse("User-agent: *\nDisallow:", media_type="text/plain")
+    if not path.is_file():
+        return HTMLResponse("User-agent: *\nDisallow:", media_type="text/plain")
     return FileResponse(path, media_type="text/plain")
+
+
 @router.get("/sitemap.xml", include_in_schema=False)
 async def sitemap():
     path = settings.static_dir / "sitemap.xml"
-    if not path.is_file(): raise HTTPException(status_code=404, detail="Sitemap not found")
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="Sitemap not found")
     return FileResponse(path, media_type="application/xml")
+
+
 @router.get("/{path:path}", include_in_schema=False)
 async def frontend_fallback(path: str, request: Request):
-    if request.url.path.startswith(settings.API_PREFIX): raise HTTPException(status_code=404, detail="Not found")
+    if request.url.path.startswith(settings.API_PREFIX):
+        raise HTTPException(status_code=404, detail="Not found")
     return HTMLResponse(FALLBACK_HTML, status_code=404)
