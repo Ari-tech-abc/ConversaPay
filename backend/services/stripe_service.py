@@ -158,7 +158,7 @@ class StripeService:
         if not subscription_id:
             raise ValueError("subscription_id is required")
         try:
-            subscription = stripe.Subscription.retrieve(subscription_id)
+            subscription = stripe.Subscription.retrieve(subscription_id, expand=["items.data.price.product"])
         except stripe.error.StripeError as exc:
             logger.error("Stripe subscription retrieval failed (subscription_id=%s): %s", subscription_id, describe_stripe_error(exc), exc_info=True)
             raise StripeServiceError("Stripe subscription retrieval failed") from exc
