@@ -136,8 +136,8 @@ def apply_subscription_state(
 
 
 def mark_webhook_processed(event_id: str) -> None:
-    supabase.table("webhook_events").update({"status": "processed", "processed_at": datetime.now(timezone.utc).isoformat()}).eq("provider", "stripe").eq("event_id", event_id).execute()
+    supabase.rpc("mark_webhook_processed", {"p_provider": "stripe", "p_event_id": event_id}).execute()
 
 
 def mark_webhook_failed(event_id: str, error: str) -> None:
-    supabase.table("webhook_events").update({"status": "failed", "last_error": error[:1000]}).eq("provider", "stripe").eq("event_id", event_id).execute()
+    supabase.rpc("mark_webhook_failed", {"p_provider": "stripe", "p_event_id": event_id, "p_error_message": error[:2000]}).execute()
