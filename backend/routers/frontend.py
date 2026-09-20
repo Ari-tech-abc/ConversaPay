@@ -23,8 +23,12 @@ def _safe_html_path(filename: str):
     return candidate
 
 def _normalize_copy(page: str) -> str:
-    for source, target in COPY_REPLACEMENTS: page = page.replace(source, target)
-    return page
+    """Localize visible HTML copy without modifying JavaScript/CSS source code."""
+    parts = re.split(r'(<(?:script|style)\b[^>]*>.*?</(?:script|style)>)', page, flags=re.I | re.S)
+    for index in range(0, len(parts), 2):
+        for source, target in COPY_REPLACEMENTS:
+            parts[index] = parts[index].replace(source, target)
+    return "".join(parts)
 
 def _brand_markup(page: str, filename: str = "") -> str:
     page = _normalize_copy(page)
