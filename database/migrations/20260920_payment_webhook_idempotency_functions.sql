@@ -56,7 +56,10 @@ begin
 end;
 $$;
 
-create or replace function public.mark_webhook_processed(p_event_id text)
+drop function if exists public.mark_webhook_processed(text);
+drop function if exists public.mark_webhook_failed(text, text);
+
+create or replace function public.mark_webhook_processed(p_provider text, p_event_id text)
 returns void
 language sql
 security definer
@@ -66,10 +69,11 @@ as $$
        set processing_status = 'processed',
            processed_at = now(),
            error_message = null
-     where provider_event_id = p_event_id;
+     where provider = p_provider
+       and provider_event_id = p_event_id;
 $$;
 
-create or replace function public.mark_webhook_failed(p_event_id text, p_error_message text)
+create or replace function public.mark_webhook_failed(p_provider text, p_event_id text, p_error_message text)
 returns void
 language sql
 security definer
@@ -84,8 +88,8 @@ $$;
 revoke all on function public.claim_webhook_event(text, text, text) from public;
 grant execute on function public.claim_webhook_event(text, text, text) to service_role;
 
-revoke all on function public.mark_webhook_processed(text) from public;
-grant execute on function public.mark_webhook_processed(text) to service_role;
+revoke all on function public.mark_webhook_processed(text, text) from public;
+grant execute on function public.mark_webhook_processed(text, text) to service_role;
 
-revoke all on function public.mark_webhook_failed(text, text) from public;
-grant execute on function public.mark_webhook_failed(text, text) to service_role;
+revoke all on function public.mark_webhook_failed(text, text, text) from public;
+grant execute on function public.mark_webhook_failed(text, text, text) to service_role;
