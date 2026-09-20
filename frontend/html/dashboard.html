@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f8f9fc">
-  <title>ConversaPay | Dashboard</title>
-  <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+  <title>לוח הבקרה | קונברסה פיי</title>
+  
   <style>
     :root{--d-bg:#f7f8fc;--d-card:#fff;--d-text:#171923;--d-muted:#70758a;--d-line:#e7e9f0;--d-primary:#6d4aff;--d-primary-soft:#f0edff;--d-success:#16845b;--d-danger:#c53b4d;--d-radius:16px;--d-shadow:0 8px 28px rgba(25,20,60,.06)}
     *{box-sizing:border-box}.dashboard-page{margin:0;background:var(--d-bg);color:var(--d-text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}.dashboard{min-height:100vh;display:grid;grid-template-columns:230px 1fr}
@@ -24,14 +24,16 @@
     .loading{padding:30px;text-align:center;color:var(--d-muted);font-size:13px}.locked{padding:13px;background:#faf9ff;border:1px dashed #d8d0ff;border-radius:10px;color:#6b5bb5;font-size:12px;line-height:1.5}
     @media(max-width:900px){.dashboard{grid-template-columns:1fr}.sidebar{display:none}.main{padding:22px 16px 40px}.grid4{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}.top{align-items:flex-start}.top-actions .btn{display:none}}
     @media(max-width:560px){.grid4{grid-template-columns:1fr 1fr}.hero{align-items:flex-start;flex-direction:column}.fields{grid-template-columns:1fr}.field.full{grid-column:auto}.top h1{font-size:22px}}
-  </style>
+  
+    #businessGate{position:fixed;inset:0;z-index:9999;background:#f7f8fc;display:grid;place-items:center;padding:24px}#businessGate .gate-card{width:min(460px,100%);background:#fff;border:1px solid #e7e9f0;border-radius:18px;padding:30px;box-shadow:0 12px 40px rgba(25,20,60,.08);display:grid;gap:12px;text-align:right}#businessGate .gate-icon{width:42px;height:42px;border-radius:12px;background:#171923;color:#fff;display:grid;place-items:center;font-weight:800}#businessGate h2{margin:0;font-size:23px}#businessGate p{margin:0 0 8px;color:#70758a;font-size:13px;line-height:1.6}#businessGate label{font-size:12px;font-weight:700}#businessGate input{width:100%;border:1px solid #e7e9f0;border-radius:10px;padding:11px 12px;font:14px inherit}#businessGate input:focus{outline:2px solid #6d4aff}.gate-error{min-height:18px;color:#c53b4d;font-size:12px}
+</style>
 </head>
 <body class="dashboard-page">
 <div class="dashboard">
   <aside class="sidebar">
     <a class="brand" href="/">
-      <span class="brand-mark">CP</span>
-      <span><strong>ConversaPay</strong><small>AI COMMERCE</small></span>
+      <span class="brand-mark">ק</span>
+      <span><strong>קונברסה פיי</strong><small>מסחר חכם</small></span>
     </a>
     <nav class="nav" aria-label="ניווט">
       <a class="active" href="/dashboard">⌂ <span>סקירה</span></a>
@@ -55,7 +57,7 @@
       </div>
     </header>
 
-    <div class="content">
+    <div class="content" id="dashboardContent" style="visibility:hidden">
       <div id="notice" class="notice hidden"></div>
 
       <section class="hero">
@@ -117,7 +119,7 @@
 <script>
 (() => {
   const API='/api/v1';
-  const state={token:localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token'),me:null,features:null,business:null,products:[],editing:null};
+  const state={ready:false,token:localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token'),me:null,features:null,business:null,products:[],editing:null};
 
   const $=id=>document.getElementById(id);
   const escapeHtml=v=>{const d=document.createElement('div');d.textContent=v??'';return d.innerHTML};
@@ -129,7 +131,7 @@
   function notice(message,error=false){const n=$('notice');n.textContent=message;n.classList.toggle('error',error);n.classList.remove('hidden');if(!error)setTimeout(()=>n.classList.add('hidden'),3000)}
   async function api(path,options={}){const r=await fetch(API+path,{...options,headers:headers(options.headers||{})});const data=await r.json().catch(()=>({}));if(r.status===401){logout();throw new Error('יש להתחבר מחדש')}if(!r.ok)throw new Error(data.detail||'הפעולה נכשלה');return data}
 
-  function openProduct(product=null){state.editing=product;$('productId').value=product?.id||'';$('productName').value=product?.name||'';$('productKey').value=product?.item_key||'';$('productPrice').value=product?.price??'';$('productPayment').value=product?.payment_link||'';$('productDescription').value=product?.description||'';$('productActive').checked=product?.is_active!==false;$('productKey').disabled=!!product;$('saveProduct').textContent=product?'עדכן מוצר':'שמור מוצר';$('productForm').classList.remove('hidden');$('productName').focus()}
+  function showDashboard(){state.ready=true;$('dashboardContent').style.visibility='visible';}\n  function showBusinessGate(){const wrap=document.createElement('div');wrap.id='businessGate';wrap.innerHTML='<div class="gate-card"><div class="gate-icon">ק</div><h2>מגדירים את העסק שלך</h2><p>כדי להשתמש בלוח הבקרה צריך ליצור קודם את העסק שלך.</p><label for="gateBusinessName">שם העסק</label><input id="gateBusinessName" maxlength="255" autocomplete="organization" placeholder="לדוגמה: סטודיו אריאל" required><div id="gateError" class="gate-error"></div><button class="btn primary" id="gateSave">יצירת העסק והמשך</button></div>';document.body.appendChild(wrap);$('gateSave').onclick=async()=>{const name=$('gateBusinessName').value.trim();if(name.length<2){$('gateError').textContent='נא להזין שם עסק באורך של 2 תווים לפחות.';return}const b=$('gateSave');b.disabled=true;b.textContent='יוצר את העסק...';$('gateError').textContent='';try{const slug='business_'+(crypto.randomUUID?crypto.randomUUID().replaceAll('-','').slice(0,20):Date.now());await api('/businesses',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({business_id:slug,business_name:name,description:'עסק של '+name})});location.reload()}catch(e){$('gateError').textContent=e.message||'לא ניתן ליצור את העסק';b.disabled=false;b.textContent='יצירת העסק והמשך'}};setTimeout(()=>$('gateBusinessName').focus(),50)}\n  function openProduct(product=null){state.editing=product;$('productId').value=product?.id||'';$('productName').value=product?.name||'';$('productKey').value=product?.item_key||'';$('productPrice').value=product?.price??'';$('productPayment').value=product?.payment_link||'';$('productDescription').value=product?.description||'';$('productActive').checked=product?.is_active!==false;$('productKey').disabled=!!product;$('saveProduct').textContent=product?'עדכן מוצר':'שמור מוצר';$('productForm').classList.remove('hidden');$('productName').focus()}
   function closeProduct(){$('productForm').classList.add('hidden');$('productForm').reset();$('productId').value='';$('productKey').disabled=false;state.editing=null}
   async function loadProducts(){if(!state.business?.id){state.products=[];renderProducts();return}state.products=await api('/products?business_id='+encodeURIComponent(state.business.id)+'&active_only=false');renderProducts()}
   function renderProducts(){const root=$('products');$('productSummary').textContent=state.products.length?state.products.length+' מוצרים במערכת':'עדיין אין מוצרים';if(!state.products.length){root.innerHTML='<div class="empty">אין מוצרים עדיין. הוסף את המוצר הראשון שלך.</div>';return}root.innerHTML=state.products.map(p=>'<div class="item"><div><strong>'+escapeHtml(p.name)+'</strong><small>'+escapeHtml(p.item_key)+' · '+money(p.price)+(p.is_active?'':' · לא פעיל')+'</small></div><div class="item-actions"><button class="btn mini" data-edit="'+p.id+'">ערוך</button><button class="btn mini" data-delete="'+p.id+'">מחק</button></div></div>').join('');root.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>{const p=state.products.find(x=>x.id===b.dataset.edit);openProduct(p)});root.querySelectorAll('[data-delete]').forEach(b=>b.onclick=()=>deleteProduct(b.dataset.delete))}
@@ -142,7 +144,7 @@
   async function testWidget(){const b=$('testWidget');if(!state.business?.id){notice('יש ליצור עסק לפני בדיקת ה-AI',true);return}if(window.ConversaPayWidget&&document.getElementById('conversapay-chat-widget')){window.ConversaPayWidget.open();return}b.disabled=true;b.textContent='טוען...';window.ConversaPayWidgetConfig={business_id:state.business.id,auth_token:state.token,upgrade_url:location.origin+'/upgrade'};const s=document.createElement('script');s.src=location.origin+'/frontend/js/widget.js';s.onload=()=>setTimeout(()=>{b.disabled=false;b.textContent='בדיקת AI Chat';window.ConversaPayWidget?.open()},400);s.onerror=()=>{b.disabled=false;b.textContent='בדיקת AI Chat';notice('טעינת ה-AI נכשלה',true)};document.body.appendChild(s)}
   async function renderBuilder(){const box=$('builderBox');if(state.features?.site_builder){box.innerHTML='<button class="btn primary" id="builderBtn" style="width:100%">פתח את בונה האתר</button>';$('builderBtn').onclick=async()=>{const b=$('builderBtn');b.disabled=true;b.textContent='פותח...';try{const d=await api('/site-builder/access',{method:'POST'});if(d.url)location.href=d.url;else throw new Error('לא התקבל קישור לבונה האתר')}catch(e){notice(e.message,true);b.disabled=false;b.textContent='פתח את בונה האתר'}}}else box.innerHTML='<div class="locked">בונה האתר זמין במסלול PREMIUM.</div>'}
 
-  async function load(){if(!state.token){logout();return}try{const [me,features,analytics,orders,businesses]=await Promise.all([api('/auth/me'),api('/dashboard/features'),api('/dashboard/analytics'),api('/dashboard/orders'),api('/businesses')]);state.me=me;state.features=features;state.business=Array.isArray(businesses)&&businesses.length?businesses[0]:null;$('userName').textContent=me.profile?.full_name||me.full_name||me.email?.split('@')[0]||'משתמש';$('profileLink').textContent=String($('userName').textContent).trim().charAt(0).toUpperCase()||'C';$('planBadge').textContent=planLabel(features.plan_type);$('sidePlan').textContent='מסלול '+planLabel(features.plan_type);$('businessName').textContent=state.business?.business_name||'עדיין לא נוצר עסק';$('revenue').textContent=money(analytics.total_revenue);$('deals').textContent=String(analytics.closed_deals??0);$('conversations').textContent=String(analytics.total_conversations??0);$('conversion').textContent=Number(analytics.conversion_rate||0).toFixed(1)+'%';renderOrders(orders);renderIntegrations();await loadProducts();await renderBuilder()}catch(e){notice(e.message,true)}}
+  async function load(){if(!state.token){logout();return}try{const businesses=await api('/businesses');if(!Array.isArray(businesses)||!businesses.length){showBusinessGate();return}state.business=businesses[0];const [me,features,analytics,orders]=await Promise.all([api('/auth/me'),api('/dashboard/features'),api('/dashboard/analytics'),api('/dashboard/orders')]);state.me=me;state.features=features;$('userName').textContent=me.profile?.full_name||me.full_name||me.email?.split('@')[0]||'משתמש';$('profileLink').textContent=String($('userName').textContent).trim().charAt(0).toUpperCase()||'C';$('planBadge').textContent=planLabel(features.plan_type);$('sidePlan').textContent='מסלול '+planLabel(features.plan_type);$('businessName').textContent=state.business?.business_name||'עדיין לא נוצר עסק';$('revenue').textContent=money(analytics.total_revenue);$('deals').textContent=String(analytics.closed_deals??0);$('conversations').textContent=String(analytics.total_conversations??0);$('conversion').textContent=Number(analytics.conversion_rate||0).toFixed(1)+'%';renderOrders(orders);renderIntegrations();await loadProducts();await renderBuilder();showDashboard()}catch(e){showDashboard();notice(e.message,true)}}
 
   $('logout').onclick=()=>{if(confirm('להתנתק מהמערכת?'))logout()};$('addProduct').onclick=()=>openProduct();$('addProductTop').onclick=()=>{openProduct();document.querySelector('.card').scrollIntoView({behavior:'smooth'})};$('cancelProduct').onclick=closeProduct;$('testWidget').onclick=testWidget;load();
 })();
