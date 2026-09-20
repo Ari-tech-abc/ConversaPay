@@ -61,13 +61,14 @@ def _brand_markup(page: str, filename: str = "") -> str:
         flags=re.I | re.S,
     )
     if filename == "dashboard.html":
-        edit_business_pattern = r'''<button\b[^>]*\bid=["']editBusiness["'][^>]*>.*?</button>'''
-        page = re.sub(edit_business_pattern, "", page, flags=re.I | re.S)
+        # Keep #editBusiness in the DOM so existing dashboard JavaScript
+        # can safely attach its handler, while hiding the button from users.
         page = page.replace(
             "</head>",
-            f'<script src="{VERIFICATION_GUARD_SRC}" defer></script></head>',
+            f'<style>#editBusiness{{display:none!important}}</style><script src="{VERIFICATION_GUARD_SRC}" defer></script></head>',
             1,
         )
+
     if 'rel="icon"' not in page.lower():
         page = page.replace(
             "</head>",
