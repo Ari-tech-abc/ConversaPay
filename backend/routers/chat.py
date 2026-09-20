@@ -4,8 +4,8 @@ from decimal import Decimal
 from fastapi import APIRouter, HTTPException, Request
 from supabase import create_client, Client
 from backend.config import settings
-from backend.middleware.auth import active_plan
-from backend.middleware.rate_limiter import check_rate_limit, free_chat_session_limiter
+from backend.middleware.auth import active_plan, get_current_user_optional
+from backend.middleware.rate_limiter import check_rate_limit, free_chat_session_limiter, free_dashboard_chat_limiter
 from backend.models.schemas import ChatRequest, ChatResponse
 from backend.services.gemini_service import gemini_service
 from backend.services.payment_adapters import CheckoutOrder, PaymentAdapterError, get_checkout_adapter
@@ -71,7 +71,21 @@ async def chat(request: ChatRequest, request_obj: Request):
             client=supabase,
         )
 
-        # Free-plan widget sessions are capped at 5 messages per hour.
+        # Dashboard preview quota is tied to the authenticated business owner.
+        # PRO/PREMIUM bypass this limiter completely.
+        if request_obj.headers.get("X-Talk2Pay-Dashboard") == "1":
+            dashboard_user = await get_current_user_optional(request_obj)
+            if dashboard_user and str(business.get("owner_id")) == str(dashboard_user.user_id) and plan_type == "free":
+                dashboard_key = str(dashboard_user.user_id)
+                if not free_dashboard_chat_limiter.is_allowed(dashboard_key):
+                    rem = free_dashboard_chat_limiter.remaining(dashboard_key)
+                    raise HTTPException(
+                        status_code=429,
+                        detail={"error": "free_dashboard_limit_reached", "message": "הגעת למגבלת 5 הודעות AI בשעה בדשבורד.", "remaining_requests": rem, "limit": 5},
+                        headers={"Retry-After": str(free_dashboard_chat_limiter.window_seconds)},
+                    )
+
+        # Free-plan public widget sessions are capped at 5 messages per hour.
         # Scoped to session_id so each visitor gets their own quota.
         if plan_type == "free" and request.session_id:
             session_key = f"{business['id']}:{request.session_id}"
