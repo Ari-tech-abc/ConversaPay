@@ -2,11 +2,11 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>ConversaPay - שדרוג וניהול מנוי</title>
+  <title>TALK2PAY - שדרוג וניהול מנוי</title>
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
 </head>
 <body class="cp-page">
-  <header class="cp-topbar"><a class="cp-brand" href="/dashboard"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a><a class="cp-backlink" href="/dashboard">חזרה לדאשבורד</a></header>
+  <header class="cp-topbar"><a class="cp-brand" href="/dashboard"><span class="cp-brand-mark">T2P</span><span>TALK2PAY</span></a><a class="cp-backlink" href="/dashboard">חזרה לדאשבורד</a></header>
   <main class="cp-shell billing-shell">
     <section class="cp-panel billing-hero"><span class="cp-kicker cp-text-center">BILLING</span><h1>ניהול המנוי</h1><p class="cp-muted">המסלול, תאריך החידוש והבקשות שלך במקום אחד.</p></section>
     <section class="cp-panel billing-status" aria-live="polite"><div class="billing-stat"><span class="cp-muted">המסלול הנוכחי</span><strong id="current">טוען...</strong></div><div class="billing-stat"><span class="cp-muted">תאריך סיום/חידוש המנוי</span><strong id="endDate">טוען...</strong></div><div class="billing-stat"><span class="cp-muted">ימים שנותרו</span><strong id="remainingDays">טוען...</strong></div></section>
@@ -14,7 +14,7 @@
     <section class="plans-grid" aria-label="מסלולים">
       <article class="cp-plan" id="plan-free"><span class="cp-badge">FREE</span><span class="current-label">המסלול הנוכחי</span><h2>חינמי</h2><div class="cp-price">₪0<small>/חודש</small></div><p class="cp-muted">מוצרים, פרופיל ואנליטיקות בסיסיות.</p><button disabled class="cp-button-secondary">המסלול הבסיסי</button></article>
       <article class="cp-plan" id="plan-pro"><span class="cp-badge good">PRO</span><span class="current-label">המסלול הנוכחי</span><h2>PRO</h2><div class="cp-price">₪200<small>/חודש</small></div><p class="cp-muted">הזמנות, דומיינים, API Keys והטמעה.</p><button class="cp-button" data-plan="pro">שדרג ל‑PRO</button></article>
-      <article class="cp-plan" id="plan-premium"><span class="cp-badge">PREMIUM</span><span class="current-label">המסלול הנוכחי</span><h2>PREMIUM</h2><div class="cp-price">₪350<small>/חודש</small></div><p class="cp-muted">Site Builder, WhatsApp Business ועד 10 API Keys.</p><button class="cp-button" data-plan="premium">שדרג ל‑PREMIUM</button></article>
+      <article class="cp-plan" id="plan-premium"><span class="cp-badge">PREMIUM</span><span class="current-label">המסלול הנוכחי</span><h2>PREMIUM</h2><div class="cp-price">₪350<small>/חודש</small></div><p class="cp-muted">WhatsApp Business ועד 10 מפתחות מערכת.</p><button class="cp-button" data-plan="premium">שדרג ל‑PREMIUM</button></article>
     </section>
     <section class="cp-panel" id="managePanel" hidden><div class="manage-row"><div><h2>ניהול מנוי / ביטול מנוי</h2><p class="cp-muted" id="manageCopy">הגישה תישאר פעילה עד תאריך הסיום.</p><p class="cp-muted" style="font-size:.88rem">ראו <a href="/refund-policy" target="_blank" rel="noopener">מדיניות ביטולים והחזרים</a></p></div><button class="cp-button-danger" id="openCancel" type="button">ביטול מנוי ובקשת החזר</button></div></section>
     <section id="invoices" class="cp-panel cp-stack"><h2>היסטוריית חשבוניות</h2><p class="cp-muted">חשבוניות זמינות יופיעו כאן לאחר השלמת תשלום.</p><div id="invoiceList" class="cp-list"></div></section>
