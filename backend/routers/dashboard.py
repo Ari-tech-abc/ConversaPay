@@ -6,6 +6,7 @@ from supabase import create_client
 from backend.config import settings
 from backend.middleware.auth import AuthUser,require_auth
 from backend.services.money import money_db,money
+from backend.middleware.rate_limiter import free_dashboard_chat_limiter
 router=APIRouter(prefix="/dashboard",tags=["dashboard"]); supabase=create_client(settings.SUPABASE_URL,settings.SUPABASE_SERVICE_ROLE_KEY)
 PLANS={"free":{"products":True,"analytics":True,"profile":True,"domains":False,"orders":False,"sales":False,"wordpress":False,"html_embed":False,"whatsapp":False,"site_builder":False,"api_key_limit":0,"domain_limit":0},"pro":{"products":True,"analytics":True,"profile":True,"domains":True,"orders":True,"sales":True,"wordpress":True,"html_embed":True,"whatsapp":False,"site_builder":False,"api_key_limit":3,"domain_limit":3},"premium":{"products":True,"analytics":True,"profile":True,"domains":True,"orders":True,"sales":True,"wordpress":True,"html_embed":True,"whatsapp":True,"site_builder":True,"api_key_limit":10,"domain_limit":10}}
 
@@ -70,6 +71,16 @@ async def features(current_user:AuthUser=Depends(require_auth)):
 @router.get('/limits')
 async def limits(current_user:AuthUser=Depends(require_auth)):
     p=require_verified(current_user); return {'plan_type':p['plan_type'],'domain_limit':PLANS[p['plan_type']]['domain_limit'],'api_key_limit':PLANS[p['plan_type']]['api_key_limit'],'features':PLANS[p['plan_type']]}
+@router.get('/ai-usage')
+async def ai_usage(current_user:AuthUser=Depends(require_auth)):
+    p=require_verified(current_user)
+    plan=p['plan_type']
+    if plan in {'pro','premium'}:
+        return {'plan_type':plan,'limited':False,'limit':None,'remaining':None}
+    remaining=free_dashboard_chat_limiter.remaining(str(current_user.user_id))
+    return {'plan_type':'free','limited':True,'limit':5,'remaining':remaining}
+
+
 @router.get('/analytics')
 async def analytics(current_user:AuthUser=Depends(require_auth)):
     require_verified(current_user); businesses=supabase.table('businesses').select('id,business_name').eq('owner_id',current_user.user_id).execute()
