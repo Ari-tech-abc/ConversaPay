@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f8f9fc">
-  <title>לוח הבקרה | קונברסה פיי</title>
+  <title>לוח הבקרה | TALK2PAY</title>
   
   <style>
     :root{--d-bg:#f7f8fc;--d-card:#fff;--d-text:#171923;--d-muted:#70758a;--d-line:#e7e9f0;--d-primary:#6d4aff;--d-primary-soft:#f0edff;--d-success:#16845b;--d-danger:#c53b4d;--d-radius:16px;--d-shadow:0 8px 28px rgba(25,20,60,.06)}
@@ -32,8 +32,8 @@
 <div class="dashboard">
   <aside class="sidebar">
     <a class="brand" href="/">
-      <span class="brand-mark">ק</span>
-      <span><strong>קונברסה פיי</strong><small>מסחר חכם</small></span>
+      <span class="brand-mark">T2P</span>
+      <span><strong>TALK2PAY</strong><small>מסחר חכם</small></span>
     </a>
     <nav class="nav" aria-label="ניווט">
       <a class="active" href="/dashboard">⌂ <span>סקירה</span></a>
@@ -42,7 +42,7 @@
       <a href="/settings">⚙ <span>הגדרות</span></a>
     </nav>
     <div class="sidebar-bottom">
-      <p id="sidePlan">מסלול חינמי</p>
+      <p id="sidePlan">מסלול FREE</p>
       <a class="btn primary" href="/upgrade">שדרוג מסלול</a>
     </div>
   </aside>
@@ -62,7 +62,7 @@
 
       <section class="hero">
         <div><h2>מרכז השליטה שלך</h2><p>מוצרים, שיחות, מכירות והטמעה — במקום אחד.</p></div>
-        <span class="plan" id="planBadge">חינמי</span>
+        <span class="plan" id="planBadge">FREE</span>
       </section>
 
       <section class="grid4">
@@ -131,7 +131,7 @@
   function notice(message,error=false){const n=$('notice');n.textContent=message;n.classList.toggle('error',error);n.classList.remove('hidden');if(!error)setTimeout(()=>n.classList.add('hidden'),3000)}
   async function api(path,options={}){const r=await fetch(API+path,{...options,headers:headers(options.headers||{})});const data=await r.json().catch(()=>({}));if(r.status===401){logout();throw new Error('יש להתחבר מחדש')}if(!r.ok)throw new Error(data.detail||'הפעולה נכשלה');return data}
 
-  function showDashboard(){state.ready=true;$('dashboardContent').style.visibility='visible';} function showBusinessGate(){const wrap=document.createElement('div');wrap.id='businessGate';wrap.innerHTML='<div class="gate-card"><div class="gate-icon">ק</div><h2>מגדירים את העסק שלך</h2><p>כדי להשתמש בלוח הבקרה צריך ליצור קודם את העסק שלך.</p><label for="gateBusinessName">שם העסק</label><input id="gateBusinessName" maxlength="255" autocomplete="organization" placeholder="לדוגמה: סטודיו אריאל" required><div id="gateError" class="gate-error"></div><button class="btn primary" id="gateSave">יצירת העסק והמשך</button></div>';document.body.appendChild(wrap);$('gateSave').onclick=async()=>{const name=$('gateBusinessName').value.trim();if(name.length<2){$('gateError').textContent='נא להזין שם עסק באורך של 2 תווים לפחות.';return}const b=$('gateSave');b.disabled=true;b.textContent='יוצר את העסק...';$('gateError').textContent='';try{const slug='business_'+(crypto.randomUUID?crypto.randomUUID().replaceAll('-','').slice(0,20):Date.now());await api('/businesses',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({business_id:slug,business_name:name,description:'עסק של '+name})});location.reload()}catch(e){$('gateError').textContent=e.message||'לא ניתן ליצור את העסק';b.disabled=false;b.textContent='יצירת העסק והמשך'}};setTimeout(()=>$('gateBusinessName').focus(),50)}
+  function showDashboard(){state.ready=true;$('dashboardContent').style.visibility='visible';} function showBusinessGate(){const wrap=document.createElement('div');wrap.id='businessGate';wrap.innerHTML='<div class="gate-card"><div class="gate-icon">T2P</div><h2>מגדירים את העסק שלך</h2><p>כדי להשתמש בלוח הבקרה צריך ליצור קודם את העסק שלך.</p><label for="gateBusinessName">שם העסק</label><input id="gateBusinessName" maxlength="255" autocomplete="organization" placeholder="לדוגמה: סטודיו אריאל" required><div id="gateError" class="gate-error"></div><button class="btn primary" id="gateSave">יצירת העסק והמשך</button></div>';document.body.appendChild(wrap);$('gateSave').onclick=async()=>{const name=$('gateBusinessName').value.trim();if(name.length<2){$('gateError').textContent='נא להזין שם עסק באורך של 2 תווים לפחות.';return}const b=$('gateSave');b.disabled=true;b.textContent='יוצר את העסק...';$('gateError').textContent='';try{const slug='business_'+(crypto.randomUUID?crypto.randomUUID().replaceAll('-','').slice(0,20):Date.now());await api('/businesses',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({business_id:slug,business_name:name,description:'עסק של '+name})});location.reload()}catch(e){$('gateError').textContent=e.message||'לא ניתן ליצור את העסק';b.disabled=false;b.textContent='יצירת העסק והמשך'}};setTimeout(()=>$('gateBusinessName').focus(),50)}
   function openBusinessEditor(){
     if(!state.business?.id)return;
     const name=prompt('שם העסק',state.business.business_name||'');
@@ -158,7 +158,7 @@
   async function testWidget(){const b=$('testWidget');if(!state.business?.id){notice('יש ליצור עסק לפני בדיקת ה-AI',true);return}if(window.ConversaPayWidget&&document.getElementById('conversapay-chat-widget')){window.ConversaPayWidget.open();return}b.disabled=true;b.textContent='טוען...';window.ConversaPayWidgetConfig={business_id:state.business.id,auth_token:state.token,upgrade_url:location.origin+'/upgrade'};const s=document.createElement('script');s.src=location.origin+'/frontend/js/widget.js';s.onload=()=>setTimeout(()=>{b.disabled=false;b.textContent='בדיקת צ׳אט חכם';window.ConversaPayWidget?.open()},400);s.onerror=()=>{b.disabled=false;b.textContent='בדיקת צ׳אט חכם';notice('טעינת ה-AI נכשלה',true)};document.body.appendChild(s)}
   async function renderBuilder(){const box=$('builderBox');if(state.features?.site_builder){box.innerHTML='<button class="btn primary" id="builderBtn" style="width:100%">פתיחת בונה האתר</button>';$('builderBtn').onclick=async()=>{const b=$('builderBtn');b.disabled=true;b.textContent='פותח...';try{const d=await api('/site-builder/access',{method:'POST'});if(d.url)location.href=d.url;else throw new Error('לא התקבל קישור לבונה האתר')}catch(e){notice(e.message,true);b.disabled=false;b.textContent='פתיחת בונה האתר'}}}else box.innerHTML='<div class="locked">בונה האתר זמין במסלול פרימיום.</div>'}
 
-  async function load(){if(!state.token){logout();return}try{const businesses=await api('/businesses');if(!Array.isArray(businesses)||!businesses.length){showBusinessGate();return}state.business=businesses[0];const [me,features,analytics,orders]=await Promise.all([api('/auth/me'),api('/dashboard/features'),api('/dashboard/analytics'),api('/dashboard/orders')]);state.me=me;state.features=features;$('userName').textContent=me.profile?.full_name||me.full_name||me.email?.split('@')[0]||'משתמש';$('profileLink').textContent=String($('userName').textContent).trim().charAt(0).toUpperCase()||'א';$('planBadge').textContent=planLabel(features.plan_type);$('sidePlan').textContent='מסלול '+planLabel(features.plan_type);$('businessName').textContent=state.business?.business_name||'עדיין לא נוצר עסק';$('revenue').textContent=money(analytics.total_revenue);$('deals').textContent=String(analytics.closed_deals??0);$('conversations').textContent=String(analytics.total_conversations??0);$('conversion').textContent=Number(analytics.conversion_rate||0).toFixed(1)+'%';renderOrders(orders);renderIntegrations();await loadProducts();await renderBuilder();showDashboard()}catch(e){$('dashboardContent').style.visibility='visible';notice(e.message,true)}}
+  async function load(){if(!state.token){logout();return}try{const businesses=await api('/businesses');if(!Array.isArray(businesses)||!businesses.length){showBusinessGate();return}state.business=businesses[0];$('businessName').textContent=state.business.business_name||'';const results=await Promise.allSettled([api('/auth/me'),api('/dashboard/features'),api('/dashboard/analytics'),api('/dashboard/orders')]);const [meR,featuresR,analyticsR,ordersR]=results;state.me=meR.status==='fulfilled'?meR.value:null;state.features=featuresR.status==='fulfilled'?featuresR.value:{plan_type:'free'};const me=state.me||{};const features=state.features||{plan_type:'free'};const analytics=analyticsR.status==='fulfilled'?analyticsR.value:{};const orders=ordersR.status==='fulfilled'?ordersR.value:{orders:[]};$('userName').textContent=me.profile?.full_name||me.full_name||me.email?.split('@')[0]||'משתמש';$('profileLink').textContent=String($('userName').textContent).trim().charAt(0).toUpperCase()||'א';$('planBadge').textContent=planLabel(features.plan_type);$('sidePlan').textContent='מסלול '+planLabel(features.plan_type);$('revenue').textContent=money(analytics.total_revenue);$('deals').textContent=String(analytics.closed_deals??0);$('conversations').textContent=String(analytics.total_conversations??0);$('conversion').textContent=Number(analytics.conversion_rate||0).toFixed(1)+'%';renderOrders(orders);renderIntegrations();try{await loadProducts()}catch(e){$('products').innerHTML='<div class="empty">לא ניתן לטעון את המוצרים כרגע.</div>'}try{await renderBuilder()}catch(e){$('builderBox').innerHTML='<div class="locked">לא ניתן לטעון את בונה האתר כרגע.</div>'}showDashboard();if(results.some(r=>r.status==='rejected'))notice('חלק מנתוני לוח הבקרה לא נטענו כרגע',true)}catch(e){$('dashboardContent').style.visibility='visible';notice(e.message,true)}}
 
   $('logout').onclick=()=>{if(confirm('להתנתק מהמערכת?'))logout()};$('editBusinessTop').onclick=openBusinessEditor;$('addProduct').onclick=()=>openProduct();$('addProductTop').onclick=()=>{openProduct();document.querySelector('.card').scrollIntoView({behavior:'smooth'})};$('cancelProduct').onclick=closeProduct;$('testWidget').onclick=testWidget;load();
 })();
