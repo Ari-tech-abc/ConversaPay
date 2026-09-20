@@ -1,6 +1,8 @@
 -- Idempotency functions for the payment_webhook_events table.
 -- Apply after 20260920_payment_webhook_idempotency.sql.
 
+drop function if exists public.claim_webhook_event(text, text, text);
+
 create or replace function public.claim_webhook_event(
     p_provider text,
     p_event_id text,
