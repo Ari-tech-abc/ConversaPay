@@ -160,6 +160,10 @@ chat_rate_limiter = RateLimiter(requests_per_minute=10, name="chat")
 # Free-plan session cap: 5 messages per hour per session_id.
 free_chat_session_limiter = RateLimiter(requests_per_minute=5, window_seconds=3600, name="free_chat_session")
 
+# Free dashboard AI preview: 5 messages per hour per authenticated user.
+# PRO and PREMIUM never use this limiter.
+free_dashboard_chat_limiter = RateLimiter(requests_per_minute=5, window_seconds=3600, name="free_dashboard_chat")
+
 # Widget config is cheap to serve but was previously *unlimited*, making it
 # a free enumeration/scraping target. 30/min/key is generous for a normal
 # page load (one widget load = one config fetch) but stops scripted abuse.
