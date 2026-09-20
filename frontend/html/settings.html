@@ -13,86 +13,25 @@
   </header>
 
   <main class="cp-shell cp-stack" style="max-width:860px;margin-inline:auto;">
-    <section class="cp-card cp-stack">
-        <h1>הגדרות</h1>
-        <p class="cp-muted">כאן מנהלים את החיבורים של העסק ואת הגדרות WhatsApp.</p>
-    </section>
-
-    <section class="cp-grid-2" id="summaryGrid">
-      <article class="cp-panel">
-        <small class="cp-muted">PayMe</small>
-        <strong id="paymeStatus">—</strong>
-      </article>
-      <article class="cp-panel">
-        <small class="cp-muted">WhatsApp</small>
-        <strong id="whatsappStatus">—</strong>
-      </article>
-      <article class="cp-panel">
-        <small class="cp-muted">מגבלת דומיינים</small>
-        <strong id="domainLimit">0</strong>
-      </article>
-      <article class="cp-panel">
-        <small class="cp-muted">מגבלת מפתחות מערכת</small>
-        <strong id="apiKeyLimit">0</strong>
-      </article>
-    </section>
-
-    <section class="cp-card cp-stack">
-      <h2>חיבור WhatsApp Business</h2>
-      <p class="cp-muted">הכניסו את פרטי החיבור שקיבלתם מ-Meta כדי להפעיל את WhatsApp בעסק.</p>
-      <div id="notice" class="cp-notice" hidden></div>
-      <form id="whatsappForm" class="cp-stack">
-        <div class="cp-grid-2">
-          <div class="cp-field">
-            <label class="cp-label" for="phoneNumberId">Phone Number ID</label>
-            <input class="cp-input" id="phoneNumberId" placeholder="לדוגמה: 123456789012345">
-          </div>
-          <div class="cp-field">
-            <label class="cp-label" for="verifyToken">Verify Token</label>
-            <input class="cp-input" id="verifyToken" placeholder="בחר טוקן משלך לאימות ה-Webhook">
-          </div>
-          <div class="cp-field" style="grid-column:1/-1">
-            <label class="cp-label" for="accessToken">Access Token</label>
-            <input class="cp-input" id="accessToken" placeholder="Paste Meta access token here">
-          </div>
-          <div class="cp-field" style="grid-column:1/-1">
-            <label class="cp-label">Webhook URL</label>
-            <div class="cp-code" id="webhookUrl">טוען...</div>
-          </div>
-        </div>
-        <div class="cp-actions">
-          <button class="cp-button" type="submit" id="saveWhatsApp">שמירת הגדרות WhatsApp</button>
-          <button class="cp-button-secondary" type="button" id="copyWebhook">העתקת כתובת Webhook</button>
-          <a class="cp-button-secondary" href="/setup-guide">מדריך חיבור</a>
-        </div>
-      </form>
-    </section>
-
-    <section class="cp-card cp-stack">
-      <h2>עזרה מהירה</h2>
-      <p class="cp-muted">רק כדי לוודא שהחיבור עובד חלק.</p>
-      <div class="cp-list">
-        <div class="cp-list-item"><strong>1. Meta App</strong><span class="cp-muted">הפעל WhatsApp Business Platform בתוך Meta Developers.</span></div>
-        <div class="cp-list-item"><strong>2. שלושת השדות</strong><span class="cp-muted">צריך Phone Number ID, Access Token ו-Verify Token.</span></div>
-        <div class="cp-list-item"><strong>3. בדיקת Webhook</strong><span class="cp-muted">אותו Verify Token צריך להופיע גם כאן וגם בהגדרות ה-Webhook ב-Meta.</span></div>
-      </div>
-    </section>
+    <section class="cp-card cp-stack"><h1>הגדרות</h1><p class="cp-muted">ניהול העסק, שפת הממשק והחיבורים של TALK2PAY.</p></section>
+    <section class="cp-card cp-stack"><div><h2>שפת הממשק</h2><p class="cp-muted">בחר את השפה שבה יוצג לוח הבקרה.</p></div><div class="cp-field" style="max-width:360px"><label class="cp-label" for="language">שפה</label><select class="cp-input" id="language"><option value="he">עברית</option><option value="en">English</option></select></div><div id="languageNotice" class="cp-notice" hidden></div></section>
+    <section class="cp-card cp-stack"><div><h2>פרטי העסק</h2><p class="cp-muted">השם יוצג ללקוחות ובצ׳אט של העסק בדיוק כפי שהזנת אותו.</p></div><form id="businessForm" class="cp-stack"><div class="cp-field"><label class="cp-label" for="businessName">שם העסק</label><input class="cp-input" id="businessName" maxlength="255" required></div><div class="cp-actions"><button class="cp-button" type="submit" id="saveBusiness">שמירת פרטי העסק</button></div></form></section>
+    <section class="cp-card cp-stack"><div><h2>המסלול שלך</h2><p class="cp-muted">היכולות הזמינות במערכת תלויות במסלול הפעיל.</p></div><div class="cp-grid-2"><article class="cp-panel"><small class="cp-muted">מסלול</small><strong id="planStatus">—</strong></article><article class="cp-panel"><small class="cp-muted">סטטוס</small><strong id="subscriptionStatus">—</strong></article></div><div class="cp-actions"><a class="cp-button" href="/upgrade">ניהול מסלול</a></div></section>
+    <section class="cp-card cp-stack" id="whatsappSection" hidden><div><h2>WhatsApp Business</h2><p class="cp-muted">חיבור WhatsApp זמין במסלול PREMIUM.</p></div><div id="notice" class="cp-notice" hidden></div><form id="whatsappForm" class="cp-stack"><div class="cp-grid-2"><div class="cp-field"><label class="cp-label" for="phoneNumberId">Phone Number ID</label><input class="cp-input" id="phoneNumberId"></div><div class="cp-field"><label class="cp-label" for="verifyToken">Verify Token</label><input class="cp-input" id="verifyToken"></div><div class="cp-field" style="grid-column:1/-1"><label class="cp-label" for="accessToken">Access Token</label><input class="cp-input" id="accessToken"></div><div class="cp-field" style="grid-column:1/-1"><label class="cp-label">Webhook URL</label><div class="cp-code" id="webhookUrl">טוען...</div></div></div><div class="cp-actions"><button class="cp-button" type="submit" id="saveWhatsApp">שמירת חיבור WhatsApp</button><button class="cp-button-secondary" type="button" id="copyWebhook">העתקת Webhook</button><a class="cp-button-secondary" href="/setup-guide">מדריך חיבור</a></div></form></section>
+    <section class="cp-card cp-stack"><h2>קישורים</h2><div class="cp-actions"><a class="cp-button-secondary" href="/dashboard">חזרה לדאשבורד</a><a class="cp-button-secondary" href="/setup-guide">מדריך הטמעה</a></div></section>
   </main>
-
   <script>
-    const API='/api/v1';
-    const token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token');
-    const auth=token?{Authorization:`Bearer ${token}`}:null;
-    const $=(id)=>document.getElementById(id);
-    if(!token){location.href='/login';}
-    function showNotice(message,isError=false){const notice=$('notice');notice.textContent=message;notice.className=isError?'cp-notice error':'cp-notice';notice.hidden=false}
-    function clearSessionAndRedirect(){['access_token','conversapay_auth_token','conversapay_user','user_id','email'].forEach((key)=>{localStorage.removeItem(key);sessionStorage.removeItem(key)});location.href='/login'}
-    function setWebhookUrl(){$('webhookUrl').textContent=`${window.location.origin}/api/v1/whatsapp/webhook`}
-    async function loadSettings(){setWebhookUrl();try{const response=await fetch(`${API}/dashboard/settings`,{headers:auth});if(response.status===401){clearSessionAndRedirect();return}if(!response.ok)throw new Error('לא ניתן לטעון את ההגדרות');const data=await response.json();$('paymeStatus').textContent=data.payme_id?'מחובר':'לא מוגדר';$('whatsappStatus').textContent=data.whatsapp_phone?'מחובר':'מוכן לחיבור';$('domainLimit').textContent=String(Number(data.domain_limit||0));$('apiKeyLimit').textContent=String(Number(data.api_key_limit||0));$('phoneNumberId').value=data.whatsapp_phone||''}catch(error){showNotice(error.message||'שגיאה בטעינת ההגדרות',true)}}
-    async function loadProfileSettings(){try{const response=await fetch(`${API}/auth/me`,{headers:auth});if(response.status===401){clearSessionAndRedirect();return}if(!response.ok)return;const data=await response.json();const profile=data.profile||{};$('phoneNumberId').value=profile.whatsapp_phone_number_id||$('phoneNumberId').value;$('accessToken').value=profile.whatsapp_access_token||'';$('verifyToken').value=profile.whatsapp_verify_token||''}catch(_){}}
-    $('copyWebhook').onclick=async()=>{try{await navigator.clipboard.writeText($('webhookUrl').textContent);$('copyWebhook').textContent='הועתק ✓';setTimeout(()=>$('copyWebhook').textContent='העתק Webhook',1600)}catch(_){showNotice('לא ניתן להעתיק אוטומטית',true)}};
-    $('whatsappForm').onsubmit=async(event)=>{event.preventDefault();$('saveWhatsApp').disabled=true;const original=$('saveWhatsApp').textContent;$('saveWhatsApp').textContent='שומר...';try{const response=await fetch(`${API}/auth/whatsapp-settings`,{method:'PUT',headers:{...auth,'Content-Type':'application/json'},body:JSON.stringify({whatsapp_phone_number_id:$('phoneNumberId').value.trim(),whatsapp_access_token:$('accessToken').value.trim(),whatsapp_verify_token:$('verifyToken').value.trim()})});if(response.status===401){clearSessionAndRedirect();return}const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.detail||'שמירת הגדרות WhatsApp נכשלה');showNotice('הגדרות WhatsApp נשמרו בהצלחה');await loadSettings()}catch(error){showNotice(error.message||'שגיאה בשמירה',true)}finally{$('saveWhatsApp').disabled=false;$('saveWhatsApp').textContent=original}};
-    loadSettings();loadProfileSettings();
+const API='/api/v1',token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token'),auth=token?{Authorization:'Bearer '+token}:null,$=id=>document.getElementById(id);
+if(!token)location.href='/login';
+const lang=$('language');lang.value=localStorage.getItem('talk2pay_language')||'he';lang.onchange=()=>{localStorage.setItem('talk2pay_language',lang.value);$('languageNotice').textContent=lang.value==='en'?'Language saved.':'השפה נשמרה.';$('languageNotice').hidden=false;setTimeout(()=>location.href='/dashboard',350)};
+function clearSessionAndRedirect(){['access_token','conversapay_auth_token','conversapay_user','user_id','email'].forEach(k=>{localStorage.removeItem(k);sessionStorage.removeItem(k)});location.href='/login'}
+function notice(m,e=false){const n=$('notice');n.textContent=m;n.className=e?'cp-notice error':'cp-notice';n.hidden=false}
+async function get(path){const r=await fetch(API+path,{headers:auth});if(r.status===401){clearSessionAndRedirect();return null}if(!r.ok)throw Error('לא ניתן לטעון את הנתונים');return r.json()}
+async function load(){try{const [settings,me,businesses]=await Promise.all([get('/dashboard/settings'),get('/auth/me'),get('/businesses')]);if(!settings)return;const profile=me?.profile||{},business=Array.isArray(businesses)&&businesses[0];$('businessName').value=business?.business_name||'';const plan=String(settings.plan_type||profile.plan_type||'free').toUpperCase();$('planStatus').textContent=plan;$('subscriptionStatus').textContent=settings.subscription_active===false?'לא פעיל':'פעיל';$('whatsappSection').hidden=plan!=='PREMIUM';$('phoneNumberId').value=settings.whatsapp_phone||profile.whatsapp_phone_number_id||'';$('accessToken').value=profile.whatsapp_access_token||'';$('verifyToken').value=profile.whatsapp_verify_token||'';$('webhookUrl').textContent=window.location.origin+'/api/v1/whatsapp/webhook'}catch(e){notice(e.message,true)}}
+$('businessForm').onsubmit=async e=>{e.preventDefault();const businesses=await get('/businesses');const b=Array.isArray(businesses)?businesses[0]:null;if(!b)return;const btn=$('saveBusiness');btn.disabled=true;btn.textContent='שומר...';try{const r=await fetch(API+'/businesses/'+encodeURIComponent(b.id),{method:'PATCH',headers:{...auth,'Content-Type':'application/json'},body:JSON.stringify({business_name:$('businessName').value.trim()})});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.detail||'שמירת פרטי העסק נכשלה');notice('פרטי העסק נשמרו בהצלחה')}catch(e){notice(e.message,true)}finally{btn.disabled=false;btn.textContent='שמירת פרטי העסק'}};
+$('copyWebhook').onclick=async()=>{try{await navigator.clipboard.writeText($('webhookUrl').textContent);$('copyWebhook').textContent='הועתק ✓';setTimeout(()=>$('copyWebhook').textContent='העתקת Webhook',1600)}catch(_){notice('לא ניתן להעתיק אוטומטית',true)}};
+$('whatsappForm').onsubmit=async e=>{e.preventDefault();const btn=$('saveWhatsApp');btn.disabled=true;try{const r=await fetch(API+'/auth/whatsapp-settings',{method:'PUT',headers:{...auth,'Content-Type':'application/json'},body:JSON.stringify({whatsapp_phone_number_id:$('phoneNumberId').value.trim(),whatsapp_access_token:$('accessToken').value.trim(),whatsapp_verify_token:$('verifyToken').value.trim()})});const d=await r.json().catch(()=>({}));if(!r.ok)throw Error(d.detail||'שמירת חיבור WhatsApp נכשלה');notice('חיבור WhatsApp נשמר בהצלחה')}catch(e){notice(e.message,true)}finally{btn.disabled=false}};
+load();
   </script>
 </body>
 </html>
