@@ -13,3 +13,5 @@ GRANT INSERT ON TABLE public.conversations TO service_role;
 GRANT UPDATE ON TABLE public.conversations TO service_role;
 GRANT SELECT ON TABLE public.messages TO service_role;
 GRANT INSERT ON TABLE public.messages TO service_role;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.products TO service_role;
