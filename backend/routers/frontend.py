@@ -17,19 +17,12 @@ router.mount("/images", StaticFiles(directory=settings.images_dir), name="images
 
 FALLBACK_HTML = """<!doctype html><html lang=\"he\" dir=\"rtl\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Talk2Pay</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f1f8;color:#211b2b;font:16px system-ui,sans-serif}.box{width:min(620px,calc(100% - 40px));padding:40px;border:1px solid #ddd4e8;border-radius:24px;background:#fff;text-align:center}.code{font-size:3rem;font-weight:800;color:#6d42c5}a{color:#6d42c5;font-weight:700}</style></head><body><main class=\"box\"><div class=\"code\">404</div><h1>Talk2Pay</h1><p>העמוד המבוקש אינו זמין כרגע.</p><a href=\"/\">חזרה לדף הבית</a></main></body></html>"""
 
-COPY_REPLACEMENTS = (
-    ("ConversaPay", "Talk2Pay"),
-    ("Production checklist", "רשימת בדיקות לפרודקשן"),
-    ("Developer tools", "כלי פיתוח"),
-    ("Dashboard", "לוח בקרה"),
-    ("DASHBOARD", "לוח בקרה"),
-    ("Billing", "חיוב"),
-    ("Security", "אבטחה"),
-)
-
+COPY_REPLACEMENTS = (("ConversaPay", "Talk2Pay"), ("Production checklist", "רשימת בדיקות לפרודקשן"), ("Developer tools", "כלי פיתוח"), ("Dashboard", "לוח בקרה"), ("DASHBOARD", "לוח בקרה"), ("Billing", "חיוב"), ("Security", "אבטחה"))
 BRAND_LOGO_SRC = "/frontend/images/conversapay_logo_whitebg.png"
 FAVICON_SRC = "/frontend/images/favicon-32x32.png"
 VERIFICATION_GUARD_SRC = "/frontend/js/email-verification-guard.js"
+LANGUAGE_SCRIPT_SRC = "/frontend/js/language-switcher.js"
+LANGUAGE_STYLE_SRC = "/frontend/css/language-switcher.css"
 
 
 def _safe_html_path(filename: str):
@@ -40,7 +33,6 @@ def _safe_html_path(filename: str):
 
 
 def _normalize_copy(page: str) -> str:
-    """Localize visible HTML copy without modifying JavaScript/CSS source code."""
     parts = re.split(r"(<(?:script|style)\\b[^>]*>.*?</(?:script|style)>)", page, flags=re.I | re.S)
     for index in range(0, len(parts), 2):
         for source, target in COPY_REPLACEMENTS:
@@ -50,31 +42,14 @@ def _normalize_copy(page: str) -> str:
 
 def _brand_markup(page: str, filename: str = "") -> str:
     page = _normalize_copy(page)
-    brand_pattern = r'''<a\b[^>]*class=["'][^>]*\bcp-brand\b[^>]*["'][^>]*>.*?</a>'''
-    page = re.sub(
-        brand_pattern,
-        lambda match: (
-            f'<a class="cp-brand" href="/"><img class="cp-brand-logo" '
-            f'src="{BRAND_LOGO_SRC}" alt="Talk2Pay" width="220" height="38"></a>'
-        ),
-        page,
-        flags=re.I | re.S,
-    )
+    page = re.sub(r'''<a\b[^>]*class=["'][^>]*\bcp-brand\b[^>]*["'][^>]*>.*?</a>''', lambda match: f'<a class="cp-brand" href="/"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="Talk2Pay" width="220" height="38"></a>', page, flags=re.I | re.S)
+    if filename != "home.html":
+        injection = f'<link rel="stylesheet" href="{LANGUAGE_STYLE_SRC}"><script src="{LANGUAGE_SCRIPT_SRC}" defer></script>'
+        page = page.replace("</head>", injection + "</head>", 1)
     if filename == "dashboard.html":
-        # Keep #editBusiness in the DOM so existing dashboard JavaScript
-        # can safely attach its handler, while hiding the button from users.
-        page = page.replace(
-            "</head>",
-            f'<style>#editBusiness{{display:none!important}}</style><script src="{VERIFICATION_GUARD_SRC}" defer></script></head>',
-            1,
-        )
-
+        page = page.replace("</head>", f'<style>#editBusiness{{display:none!important}}</style><script src="{VERIFICATION_GUARD_SRC}" defer></script></head>', 1)
     if 'rel="icon"' not in page.lower():
-        page = page.replace(
-            "</head>",
-            f'<link rel="icon" type="image/png" href="{FAVICON_SRC}"></head>',
-            1,
-        )
+        page = page.replace("</head>", f'<link rel="icon" type="image/png" href="{FAVICON_SRC}"></head>', 1)
     return page
 
 
@@ -82,60 +57,23 @@ def _html_response(filename: str, status_code: int = 200) -> HTMLResponse:
     path = _safe_html_path(filename)
     if not path.is_file():
         return HTMLResponse(FALLBACK_HTML, status_code=404)
-    return HTMLResponse(
-        _brand_markup(path.read_text(encoding="utf-8"), filename),
-        status_code=status_code,
-        headers={"X-Delivery-Release": "safe-frontend-router"},
-    )
+    return HTMLResponse(_brand_markup(path.read_text(encoding="utf-8"), filename), status_code=status_code, headers={"X-Delivery-Release": "safe-frontend-router"})
 
 
 PAGE_ROUTES = {
-    "/": "home.html",
-    "/home": "home.html",
-    "/dashboard": "dashboard.html",
-    "/dashboard.html": "dashboard.html",
-    "/wordpress": "wordpress.html",
-    "/wordpress.html": "wordpress.html",
-    "/login": "login.html",
-    "/login.html": "login.html",
-    "/register": "register.html",
-    "/register.html": "register.html",
-    "/forgot-password": "forgot-password.html",
-    "/forgot-password.html": "forgot-password.html",
-    "/terms": "terms.html",
-    "/terms.html": "terms.html",
-    "/privacy": "privacy.html",
-    "/privacy.html": "privacy.html",
-    "/cookies": "cookies.html",
-    "/cookies.html": "cookies.html",
-    "/refund-policy": "refund-policy.html",
-    "/refund-policy.html": "refund-policy.html",
-    "/payment/success": "success.html",
-    "/payment-success.html": "success.html",
-    "/success": "success.html",
-    "/success.html": "success.html",
-    "/payment/canceled": "canceled.html",
-    "/payment-canceled.html": "canceled.html",
-    "/canceled": "canceled.html",
-    "/canceled.html": "canceled.html",
-    "/upgrade": "upgrade.html",
-    "/upgrade.html": "upgrade.html",
-    "/profile": "profile.html",
-    "/profile.html": "profile.html",
-    "/settings": "settings.html",
-    "/settings.html": "settings.html",
-    "/setup-guide": "setup-guide.html",
-    "/setup-guide.html": "setup-guide.html",
+    "/": "home.html", "/home": "home.html", "/dashboard": "dashboard.html", "/dashboard.html": "dashboard.html",
+    "/wordpress": "wordpress.html", "/wordpress.html": "wordpress.html", "/login": "login.html", "/login.html": "login.html",
+    "/register": "register.html", "/register.html": "register.html", "/forgot-password": "forgot-password.html", "/forgot-password.html": "forgot-password.html",
+    "/terms": "terms.html", "/terms.html": "terms.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html",
+    "/cookies": "cookies.html", "/cookies.html": "cookies.html", "/refund-policy": "refund-policy.html", "/refund-policy.html": "refund-policy.html",
+    "/payment/success": "success.html", "/payment-success.html": "success.html", "/success": "success.html", "/success.html": "success.html",
+    "/payment/canceled": "canceled.html", "/payment-canceled.html": "canceled.html", "/canceled": "canceled.html", "/canceled.html": "canceled.html",
+    "/upgrade": "upgrade.html", "/upgrade.html": "upgrade.html", "/profile": "profile.html", "/profile.html": "profile.html",
+    "/settings": "settings.html", "/settings.html": "settings.html", "/setup-guide": "setup-guide.html", "/setup-guide.html": "setup-guide.html",
     "/auth/callback": "auth-callback.html",
 }
-
 for route, filename in PAGE_ROUTES.items():
-    router.add_api_route(
-        route,
-        lambda filename=filename: _html_response(filename),
-        methods=["GET"],
-        include_in_schema=False,
-    )
+    router.add_api_route(route, lambda filename=filename: _html_response(filename), methods=["GET"], include_in_schema=False)
 
 
 @router.get("/404", include_in_schema=False)
@@ -156,7 +94,7 @@ async def ui_stylesheet():
 async def robots():
     path = settings.static_dir / "robots.txt"
     if not path.is_file():
-        return HTMLResponse("User-agent: *\nDisallow:", media_type="text/plain")
+        return HTMLResponse("User-agent: *\\nDisallow:", media_type="text/plain")
     return FileResponse(path, media_type="text/plain")
 
 
