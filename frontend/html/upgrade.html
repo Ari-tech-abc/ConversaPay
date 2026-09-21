@@ -22,7 +22,8 @@
   </main>
   <dialog id="cancelDialog" class="cancel-dialog"><form method="dialog" class="dialog-body" id="cancelForm"><h2>ביטול מנוי ובקשת החזר</h2><p class="cp-muted" id="cancelWarning">בביטול המנוי, הגישה למסלול תישאר עד לתאריך הסיום והחיוב המחזורי יבוטל.</p><label class="cp-label" for="cancelReason">סיבת הביטול או בקשת ההחזר</label><textarea id="cancelReason" minlength="3" maxlength="4000" required placeholder="כתבו בקצרה מה לא עבד או מה תרצו שנבדוק"></textarea><label class="checkbox-row"><input id="requestRefund" type="checkbox" checked><span>אני מבקש/ת שגם בקשת החזר תיבדק</span></label><div id="cancelNotice" class="cp-notice error" hidden></div><div class="dialog-actions"><button class="cp-button-danger" id="submitCancel" value="default" type="submit">שליחת בקשה</button><button class="cp-button-secondary" value="cancel" type="button" id="closeCancel">חזרה</button></div></form></dialog>
   <script>
-const tr=(he,en)=>(localStorage.getItem('conversapay-language')||localStorage.getItem('talk2pay_language'))==='en'?en:he;\nconst API='/api/v1',token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token');
+const tr=(he,en)=>(localStorage.getItem('conversapay-language')||localStorage.getItem('talk2pay_language'))==='en'?en:he;
+const API='/api/v1',token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token');
     if(!token)location.href='/login';
     const $=id=>document.getElementById(id),auth={Authorization:`Bearer ${token}`};let lifecycle=null;
     function formatDate(value){if(!value)return'לא מוגדר';const d=new Date(value);return Number.isNaN(d.getTime())?'לא מוגדר':d.toLocaleDateString('he-IL',{day:'2-digit',month:'2-digit',year:'numeric'})}
