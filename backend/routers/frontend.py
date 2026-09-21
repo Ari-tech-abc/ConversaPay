@@ -22,13 +22,14 @@ VERIFICATION_GUARD_SRC = "/frontend/js/email-verification-guard.js"
 LANGUAGE_SCRIPT_SRC = "/frontend/js/language-switcher.js"
 CORE_LANGUAGE_SCRIPT_SRC = "/frontend/js/core-language.js"
 LANGUAGE_STYLE_SRC = "/frontend/css/language-switcher.css"
+MOBILE_UI_STYLE_SRC = "/frontend/css/mobile-ui.css"
 SYSTEM_MODAL_STYLE_SRC = "/frontend/css/system-modal.css"
 SYSTEM_ERRORS_SRC = "/frontend/js/system-errors.js"
 DASHBOARD_POLISH_SRC = "/frontend/css/dashboard-polish.css"
 DASHBOARD_INSTANT_CACHE_SRC = "/frontend/js/dashboard-instant-cache.js"
 ONBOARDING_CATEGORY_LABELS_SRC = "/frontend/css/onboarding-category-labels.css"
 APP_POLISH_SRC = "/frontend/css/app-polish.css"
-CORE_LANGUAGE_PAGES = {"login.html", "register.html", "privacy.html", "terms.html"}
+CORE_LANGUAGE_PAGES = {"login.html", "register.html", "privacy.html", "terms.html", "success.html", "canceled.html"}
 
 
 def _safe_html_path(filename: str):
@@ -47,8 +48,6 @@ def _normalize_copy(page: str) -> str:
 
 
 def _repair_i18n_markup(page: str) -> str:
-    # Older legal pages accidentally missed the closing quote on data-i18n-en.
-    # Repair before the browser parses the HTML so semantic translations are reliable.
     return re.sub(r'data-i18n-en="([^"<>]*?)>([^<]*)', r'data-i18n-en="\1">\2', page)
 
 
@@ -68,6 +67,8 @@ def _brand_markup(page: str, filename: str = "") -> str:
         page = page.replace("</head>", f'<script src="{SYSTEM_ERRORS_SRC}" defer></script></head>', 1)
     if filename != "home.html" and APP_POLISH_SRC not in page:
         page = page.replace("</head>", f'<link rel="stylesheet" href="{APP_POLISH_SRC}"></head>', 1)
+    if filename != "home.html" and MOBILE_UI_STYLE_SRC not in page:
+        page = page.replace("</head>", f'<link rel="stylesheet" href="{MOBILE_UI_STYLE_SRC}"></head>', 1)
 
     if filename in CORE_LANGUAGE_PAGES:
         page = re.sub(r'<script\s+src=["\']/frontend/js/language-switcher\.js["\'][^>]*></script>', '', page, flags=re.I)
@@ -85,10 +86,7 @@ def _brand_markup(page: str, filename: str = "") -> str:
             "<small>'+tr('זמין עכשיו','Available now')+'</small>",
             '<small data-i18n-he="זמין עכשיו" data-i18n-en="Available now">זמין עכשיו</small>',
         )
-        # The instant-cache may already remove the loader before the legacy loader path runs.
         page = page.replace("$('dashboardLoader').classList.add('hide')", "$('dashboardLoader')?.classList.add('hide')")
-        # Product refreshes happen in the background; they must never move the user's viewport.
-        # Keep explicit scrolling only for deliberate user actions such as clicking Add product.
         page = page.replace(";$('productCard').scrollIntoView({behavior:'smooth',block:'nearest'})", "")
         dashboard_injection = (
             f'<link rel="stylesheet" href="{DASHBOARD_POLISH_SRC}">'
@@ -114,7 +112,7 @@ PAGE_ROUTES = {
     "/terms": "terms.html", "/terms.html": "terms.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html",
     "/cookies": "cookies.html", "/cookies.html": "cookies.html", "/refund-policy": "refund-policy.html", "/refund-policy.html": "refund-policy.html",
     "/payment/success": "success.html", "/payment-success.html": "success.html", "/success": "success.html", "/success.html": "success.html",
-    "/payment/canceled": "canceled.html", "/payment-canceled.html": "canceled.html", "/canceled": "canceled.html", "/canceled.html": "canceled.html", "/payment-canceled.html": "canceled.html",
+    "/payment/canceled": "canceled.html", "/payment-canceled.html": "canceled.html", "/canceled": "canceled.html", "/canceled.html": "canceled.html",
     "/upgrade": "upgrade.html", "/upgrade.html": "upgrade.html", "/profile": "profile.html", "/profile.html": "profile.html",
     "/settings": "settings.html", "/settings.html": "settings.html", "/setup-guide": "setup-guide.html", "/setup-guide.html": "setup-guide.html",
     "/auth/callback": "auth-callback.html", "/auth-callback.html": "auth-callback.html",
