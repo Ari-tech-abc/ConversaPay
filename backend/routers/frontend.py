@@ -24,6 +24,7 @@ LANGUAGE_STYLE_SRC = "/frontend/css/language-switcher.css"
 SYSTEM_MODAL_STYLE_SRC = "/frontend/css/system-modal.css"
 SYSTEM_ERRORS_SRC = "/frontend/js/system-errors.js"
 DASHBOARD_POLISH_SRC = "/frontend/css/dashboard-polish.css"
+DASHBOARD_INSTANT_CACHE_SRC = "/frontend/js/dashboard-instant-cache.js"
 ONBOARDING_CATEGORY_LABELS_SRC = "/frontend/css/onboarding-category-labels.css"
 APP_POLISH_SRC = "/frontend/css/app-polish.css"
 
@@ -69,7 +70,12 @@ def _brand_markup(page: str, filename: str = "") -> str:
             "<small>'+tr('זמין עכשיו','Available now')+'</small>",
             '<small data-i18n-he="זמין עכשיו" data-i18n-en="Available now">זמין עכשיו</small>',
         )
-        dashboard_injection = f'<link rel="stylesheet" href="{DASHBOARD_POLISH_SRC}"><style>#editBusiness{{display:none!important}}</style><script src="{VERIFICATION_GUARD_SRC}" defer></script>'
+        dashboard_injection = (
+            f'<link rel="stylesheet" href="{DASHBOARD_POLISH_SRC}">'
+            '<style>#editBusiness{display:none!important}</style>'
+            f'<script src="{DASHBOARD_INSTANT_CACHE_SRC}" defer></script>'
+            f'<script src="{VERIFICATION_GUARD_SRC}" defer></script>'
+        )
         page = page.replace("</head>", dashboard_injection + "</head>", 1)
     return page
 
