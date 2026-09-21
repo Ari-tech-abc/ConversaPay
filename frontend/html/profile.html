@@ -4,6 +4,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>ConversaPay | פרופיל והגדרות חשבון</title>
 <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+  <link rel="stylesheet" href="/frontend/css/language-switcher.css">
 </head>
 <body class="cp-page">
 <header class="cp-topbar"><a class="cp-brand" href="/dashboard"><span class="cp-brand-mark">T2P</span><span>TALK2PAY</span></a><a class="cp-backlink" href="/dashboard">חזרה לדאשבורד</a></header>
@@ -88,4 +89,5 @@ $('exportData').onclick=async()=>{try{const d=await api('/profile/export');const
 $('deleteAccount').onclick=async()=>{if(prompt('הקלד DELETE MY ACCOUNT לאישור מחיקת החשבון')!=='DELETE MY ACCOUNT')return;try{await api('/profile?confirm=DELETE%20MY%20ACCOUNT',{method:'DELETE'});localStorage.clear();sessionStorage.clear();location.href='/'}catch(e){show(e.message,true)}};
 load().catch(e=>show(e.message,true));
 </script>
+  <script src="/frontend/js/language-switcher.js"></script>
 </body></html>
