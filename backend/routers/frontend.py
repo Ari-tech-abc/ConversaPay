@@ -24,6 +24,7 @@ LANGUAGE_STYLE_SRC = "/frontend/css/language-switcher.css"
 SYSTEM_MODAL_STYLE_SRC = "/frontend/css/system-modal.css"
 SYSTEM_ERRORS_SRC = "/frontend/js/system-errors.js"
 DASHBOARD_POLISH_SRC = "/frontend/css/dashboard-polish.css"
+ONBOARDING_CATEGORY_LABELS_SRC = "/frontend/css/onboarding-category-labels.css"
 
 
 def _safe_html_path(filename: str):
@@ -58,6 +59,8 @@ def _brand_markup(page: str, filename: str = "") -> str:
         injection = f'<link rel="stylesheet" href="{LANGUAGE_STYLE_SRC}"><script src="{LANGUAGE_SCRIPT_SRC}" defer></script>'
         if LANGUAGE_SCRIPT_SRC not in page:
             page = page.replace("</head>", injection + "</head>", 1)
+    if filename == "onboarding.html" and ONBOARDING_CATEGORY_LABELS_SRC not in page:
+        page = page.replace("</head>", f'<link rel="stylesheet" href="{ONBOARDING_CATEGORY_LABELS_SRC}"></head>', 1)
     if filename == "dashboard.html":
         page = page.replace(
             "<small>'+tr('זמין עכשיו','Available now')+'</small>",
