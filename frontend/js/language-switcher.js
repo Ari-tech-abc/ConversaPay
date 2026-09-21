@@ -168,7 +168,7 @@
   "שגיאת סנכרון": "Synchronization error"
 };
   const HE_TO_EN_EXTENDED = Object.freeze(Object.assign({}, HE_TO_EN, EXTRA_HE_TO_EN));
-  const EN_TO_HE = Object.freeze(Object.fromEntries(Object.entries(HE_TO_EN).map(([he,en])=>[en,he])));
+  const EN_TO_HE = Object.freeze(Object.fromEntries(Object.entries(HE_TO_EN_EXTENDED).map(([he,en])=>[en,he])));
   const ATTRS=['placeholder','title','aria-label'];
   const originals=new WeakMap();
   const skip=new Set(['SCRIPT','STYLE','NOSCRIPT','TEXTAREA','CODE','PRE']);
