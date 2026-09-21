@@ -23,6 +23,7 @@ FAVICON_SRC = "/frontend/images/favicon-32x32.png"
 VERIFICATION_GUARD_SRC = "/frontend/js/email-verification-guard.js"
 LANGUAGE_SCRIPT_SRC = "/frontend/js/language-switcher.js"
 LANGUAGE_STYLE_SRC = "/frontend/css/language-switcher.css"
+SYSTEM_MODAL_STYLE_SRC = "/frontend/css/system-modal.css"
 
 
 def _safe_html_path(filename: str):
@@ -43,9 +44,13 @@ def _normalize_copy(page: str) -> str:
 def _brand_markup(page: str, filename: str = "") -> str:
     page = _normalize_copy(page)
     page = re.sub(r'''<a\b[^>]*class=["'][^>]*\bcp-brand\b[^>]*["'][^>]*>.*?</a>''', lambda match: f'<a class="cp-brand" href="/"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="Talk2Pay" width="220" height="38"></a>', page, flags=re.I | re.S)
+    common_style = f'<link rel="stylesheet" href="{SYSTEM_MODAL_STYLE_SRC}">'
+    if SYSTEM_MODAL_STYLE_SRC not in page:
+        page = page.replace("</head>", common_style + "</head>", 1)
     if filename != "home.html":
         injection = f'<link rel="stylesheet" href="{LANGUAGE_STYLE_SRC}"><script src="{LANGUAGE_SCRIPT_SRC}" defer></script>'
-        page = page.replace("</head>", injection + "</head>", 1)
+        if LANGUAGE_SCRIPT_SRC not in page:
+            page = page.replace("</head>", injection + "</head>", 1)
     if filename == "dashboard.html":
         page = page.replace(
             "<small>'+tr('זמין עכשיו','Available now')+'</small>",
@@ -67,7 +72,7 @@ def _html_response(filename: str, status_code: int = 200) -> HTMLResponse:
 PAGE_ROUTES = {
     "/": "home.html", "/home": "home.html", "/dashboard": "dashboard.html", "/dashboard.html": "dashboard.html",
     "/wordpress": "wordpress.html", "/wordpress.html": "wordpress.html", "/product-import": "product-import.html", "/product-import.html": "product-import.html", "/login": "login.html", "/login.html": "login.html",
-    "/register": "register.html", "/register.html": "register.html", "/forgot-password": "forgot-password.html", "/forgot-password.html": "forgot-password.html",
+    "/register": "register.html", "/register.html": "register.html", "/onboarding": "onboarding.html", "/onboarding.html": "onboarding.html", "/forgot-password": "forgot-password.html", "/forgot-password.html": "forgot-password.html",
     "/terms": "terms.html", "/terms.html": "terms.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html",
     "/cookies": "cookies.html", "/cookies.html": "cookies.html", "/refund-policy": "refund-policy.html", "/refund-policy.html": "refund-policy.html",
     "/payment/success": "success.html", "/payment-success.html": "success.html", "/success": "success.html", "/success.html": "success.html",
