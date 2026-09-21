@@ -20,6 +20,7 @@ FALLBACK_HTML = """<!doctype html><html lang=\"he\" dir=\"rtl\"><head><meta char
 COPY_REPLACEMENTS = (("ConversaPay", "Talk2Pay"), ("Production checklist", "רשימת בדיקות לפרודקשן"), ("Developer tools", "כלי פיתוח"), ("Dashboard", "לוח בקרה"), ("DASHBOARD", "לוח בקרה"), ("Billing", "חיוב"), ("Security", "אבטחה"))
 VERIFICATION_GUARD_SRC = "/frontend/js/email-verification-guard.js"
 LANGUAGE_SCRIPT_SRC = "/frontend/js/language-switcher.js"
+CORE_LANGUAGE_SCRIPT_SRC = "/frontend/js/core-language.js"
 LANGUAGE_STYLE_SRC = "/frontend/css/language-switcher.css"
 SYSTEM_MODAL_STYLE_SRC = "/frontend/css/system-modal.css"
 SYSTEM_ERRORS_SRC = "/frontend/js/system-errors.js"
@@ -27,6 +28,7 @@ DASHBOARD_POLISH_SRC = "/frontend/css/dashboard-polish.css"
 DASHBOARD_INSTANT_CACHE_SRC = "/frontend/js/dashboard-instant-cache.js"
 ONBOARDING_CATEGORY_LABELS_SRC = "/frontend/css/onboarding-category-labels.css"
 APP_POLISH_SRC = "/frontend/css/app-polish.css"
+CORE_LANGUAGE_PAGES = {"login.html", "register.html", "privacy.html", "terms.html"}
 
 
 def _safe_html_path(filename: str):
@@ -44,25 +46,38 @@ def _normalize_copy(page: str) -> str:
     return "".join(parts)
 
 
+def _repair_i18n_markup(page: str) -> str:
+    # Older legal pages accidentally missed the closing quote on data-i18n-en.
+    # Repair before the browser parses the HTML so semantic translations are reliable.
+    return re.sub(r'data-i18n-en="([^"<>]*?)>([^<]*)', r'data-i18n-en="\1">\2', page)
+
+
 def _brand_markup(page: str, filename: str = "") -> str:
-    page = _normalize_copy(page)
+    page = _repair_i18n_markup(_normalize_copy(page))
     page = re.sub(
         r'''<a\b[^>]*class=["'][^>]*\bcp-brand\b[^>]*["'][^>]*>.*?</a>''',
         lambda _match: '<a class="cp-brand" href="/"><span class="cp-brand-mark" aria-hidden="true">T2P</span><span>Talk2Pay</span></a>',
         page,
         flags=re.I | re.S,
     )
+    if filename == "login.html":
+        page = re.sub(r'<span class="login-kicker">.*?</span>', '', page, count=1, flags=re.S)
     if SYSTEM_MODAL_STYLE_SRC not in page:
         page = page.replace("</head>", f'<link rel="stylesheet" href="{SYSTEM_MODAL_STYLE_SRC}"></head>', 1)
     if SYSTEM_ERRORS_SRC not in page:
         page = page.replace("</head>", f'<script src="{SYSTEM_ERRORS_SRC}" defer></script></head>', 1)
     if filename != "home.html" and APP_POLISH_SRC not in page:
         page = page.replace("</head>", f'<link rel="stylesheet" href="{APP_POLISH_SRC}"></head>', 1)
-    # Onboarding owns its bilingual RTL/LTR rendering and intentionally has no language button.
-    if filename not in {"home.html", "onboarding.html"}:
+
+    if filename in CORE_LANGUAGE_PAGES:
+        page = re.sub(r'<script\s+src=["\']/frontend/js/language-switcher\.js["\'][^>]*></script>', '', page, flags=re.I)
+        if CORE_LANGUAGE_SCRIPT_SRC not in page:
+            page = page.replace("</head>", f'<link rel="stylesheet" href="{LANGUAGE_STYLE_SRC}"><script src="{CORE_LANGUAGE_SCRIPT_SRC}" defer></script></head>', 1)
+    elif filename not in {"home.html", "onboarding.html"}:
         injection = f'<link rel="stylesheet" href="{LANGUAGE_STYLE_SRC}"><script src="{LANGUAGE_SCRIPT_SRC}" defer></script>'
         if LANGUAGE_SCRIPT_SRC not in page:
             page = page.replace("</head>", injection + "</head>", 1)
+
     if filename == "onboarding.html" and ONBOARDING_CATEGORY_LABELS_SRC not in page:
         page = page.replace("</head>", f'<link rel="stylesheet" href="{ONBOARDING_CATEGORY_LABELS_SRC}"></head>', 1)
     if filename == "dashboard.html":
@@ -70,6 +85,8 @@ def _brand_markup(page: str, filename: str = "") -> str:
             "<small>'+tr('זמין עכשיו','Available now')+'</small>",
             '<small data-i18n-he="זמין עכשיו" data-i18n-en="Available now">זמין עכשיו</small>',
         )
+        # The instant-cache may already remove the loader before the legacy loader path runs.
+        page = page.replace("$('dashboardLoader').classList.add('hide')", "$('dashboardLoader')?.classList.add('hide')")
         dashboard_injection = (
             f'<link rel="stylesheet" href="{DASHBOARD_POLISH_SRC}">'
             '<style>#editBusiness{display:none!important}</style>'
