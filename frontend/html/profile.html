@@ -66,7 +66,8 @@
   </div>
 </main>
 <script>
-const tr=(he,en)=>(localStorage.getItem('conversapay-language')||localStorage.getItem('talk2pay_language'))==='en'?en:he;\nconst API='/api/v1',token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token');if(!token)location.href='/login';
+const tr=(he,en)=>(localStorage.getItem('conversapay-language')||localStorage.getItem('talk2pay_language'))==='en'?en:he;
+const API='/api/v1',token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token');if(!token)location.href='/login';
 const $=id=>document.getElementById(id),auth={Authorization:`Bearer ${token}`};
 function show(message,error=false){const n=$('notice');n.textContent=message;n.className=`cp-notice ${error?'error':''}`;n.classList.remove('hidden')}
 async function api(path,options={}){const r=await fetch(API+path,{...options,headers:{...auth,...(options.headers||{})}});const d=await r.json().catch(()=>({}));if(r.status===401){localStorage.clear();sessionStorage.clear();location.href='/login';throw Error(tr('נדרשת התחברות','Sign-in required'))}if(!r.ok)throw Error(d.detail||tr('הפעולה נכשלה','The action failed'));return d}
