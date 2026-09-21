@@ -53,7 +53,8 @@ def _brand_markup(page: str, filename: str = "") -> str:
         page = page.replace("</head>", f'<link rel="stylesheet" href="{SYSTEM_MODAL_STYLE_SRC}"></head>', 1)
     if SYSTEM_ERRORS_SRC not in page:
         page = page.replace("</head>", f'<script src="{SYSTEM_ERRORS_SRC}" defer></script></head>', 1)
-    if filename != "home.html":
+    # Onboarding owns its bilingual RTL/LTR rendering and intentionally has no language button.
+    if filename not in {"home.html", "onboarding.html"}:
         injection = f'<link rel="stylesheet" href="{LANGUAGE_STYLE_SRC}"><script src="{LANGUAGE_SCRIPT_SRC}" defer></script>'
         if LANGUAGE_SCRIPT_SRC not in page:
             page = page.replace("</head>", injection + "</head>", 1)
