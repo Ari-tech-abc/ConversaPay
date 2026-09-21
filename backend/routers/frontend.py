@@ -87,6 +87,9 @@ def _brand_markup(page: str, filename: str = "") -> str:
         )
         # The instant-cache may already remove the loader before the legacy loader path runs.
         page = page.replace("$('dashboardLoader').classList.add('hide')", "$('dashboardLoader')?.classList.add('hide')")
+        # Product refreshes happen in the background; they must never move the user's viewport.
+        # Keep explicit scrolling only for deliberate user actions such as clicking Add product.
+        page = page.replace(";$('productCard').scrollIntoView({behavior:'smooth',block:'nearest'})", "")
         dashboard_injection = (
             f'<link rel="stylesheet" href="{DASHBOARD_POLISH_SRC}">'
             '<style>#editBusiness{display:none!important}</style>'
@@ -111,7 +114,7 @@ PAGE_ROUTES = {
     "/terms": "terms.html", "/terms.html": "terms.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html",
     "/cookies": "cookies.html", "/cookies.html": "cookies.html", "/refund-policy": "refund-policy.html", "/refund-policy.html": "refund-policy.html",
     "/payment/success": "success.html", "/payment-success.html": "success.html", "/success": "success.html", "/success.html": "success.html",
-    "/payment/canceled": "canceled.html", "/payment-canceled.html": "canceled.html", "/canceled": "canceled.html", "/canceled.html": "canceled.html",
+    "/payment/canceled": "canceled.html", "/payment-canceled.html": "canceled.html", "/canceled": "canceled.html", "/canceled.html": "canceled.html", "/payment-canceled.html": "canceled.html",
     "/upgrade": "upgrade.html", "/upgrade.html": "upgrade.html", "/profile": "profile.html", "/profile.html": "profile.html",
     "/settings": "settings.html", "/settings.html": "settings.html", "/setup-guide": "setup-guide.html", "/setup-guide.html": "setup-guide.html",
     "/auth/callback": "auth-callback.html", "/auth-callback.html": "auth-callback.html",
