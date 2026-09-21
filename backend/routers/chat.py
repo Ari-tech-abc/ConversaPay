@@ -1,4 +1,4 @@
-import logging, re, uuid
+import asyncio, logging, re, uuid
 from datetime import datetime
 from decimal import Decimal
 from fastapi import APIRouter, HTTPException, Request
@@ -15,6 +15,86 @@ from backend.services.widget_auth import authorize_widget_request
 
 logger = logging.getLogger(__name__); router = APIRouter(prefix="/chat", tags=["chat"])
 supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+_PRODUCT_FIELDS = "id,business_id,item_key,name,description,price,currency,image_url,payment_link,is_active,inventory_count,metadata"
+_STOP_WORDS = {
+    "אני","אתה","אתם","של","על","עם","יש","אם","מה","מי","איך","כמה","אפשר","רוצה","רוצה","צריך","צריכה","לי","לכם","לנו","זה","זאת","את","האם","גם","או","ויש","the","a","an","is","are","do","you","have","with","for","and","or","can","i","want","need","what","how",
+}
+
+
+def _search_terms(message: str) -> list[str]:
+    words = re.findall(r"[A-Za-z0-9_\-\u0590-\u05FF]+", message.lower())
+    result: list[str] = []
+    for word in words:
+        if len(word) < 2 or word in _STOP_WORDS or word in result:
+            continue
+        result.append(word)
+        if len(result) >= 5:
+            break
+    return result
+
+
+def _run_product_search(business_id: str, message: str, limit: int = 24) -> list[dict]:
+    """Return only a small relevant catalog slice instead of the whole tenant catalog."""
+    terms = _search_terms(message)
+    found: dict[str, dict] = {}
+    try:
+        for term in terms:
+            # Terms are restricted by _search_terms to letters/digits/_/-, which keeps
+            # the PostgREST OR expression safe while still supporting Hebrew and English.
+            pattern = f"%{term}%"
+            expression = f"name.ilike.{pattern},item_key.ilike.{pattern},description.ilike.{pattern}"
+            rows = (
+                supabase.table("products")
+                .select(_PRODUCT_FIELDS)
+                .eq("business_id", business_id)
+                .eq("is_active", True)
+                .or_(expression)
+                .limit(10)
+                .execute()
+                .data
+                or []
+            )
+            for row in rows:
+                found[str(row.get("id"))] = row
+                if len(found) >= limit:
+                    return list(found.values())[:limit]
+    except Exception as exc:
+        # A search syntax/provider edge case should not take chat down. Fall back to a
+        # bounded catalog sample; never fall back to select-all.
+        logger.warning("Relevant product search failed for business %s: %s", business_id, exc)
+
+    if found:
+        return list(found.values())[:limit]
+    return (
+        supabase.table("products")
+        .select(_PRODUCT_FIELDS)
+        .eq("business_id", business_id)
+        .eq("is_active", True)
+        .order("item_key")
+        .limit(limit)
+        .execute()
+        .data
+        or []
+    )
+
+
+async def _relevant_products(business_id: str, message: str, limit: int = 24) -> list[dict]:
+    return await asyncio.to_thread(_run_product_search, business_id, message, limit)
+
+
+async def _product_by_key(business_id: str, item_key: str) -> dict | None:
+    def fetch_product():
+        result = (
+            supabase.table("products")
+            .select(_PRODUCT_FIELDS)
+            .eq("business_id", business_id)
+            .eq("is_active", True)
+            .ilike("item_key", item_key)
+            .limit(1)
+            .execute()
+        )
+        return (result.data or [None])[0]
+    return await asyncio.to_thread(fetch_product)
 
 
 async def _create_order_checkout(order: dict, customer_info: dict | None) -> tuple[str, str | None, dict]:
@@ -45,10 +125,6 @@ async def _create_order_checkout(order: dict, customer_info: dict | None) -> tup
 
 @router.post("", response_model=ChatResponse)
 async def chat(request: ChatRequest, request_obj: Request):
-    # Scoped to business_id: one abusive tenant's traffic can no longer
-    # exhaust the shared-IP quota for every other tenant, and a single
-    # attacker can't burn Gemini spend across many businesses from one IP
-    # without also tripping the per-business limit.
     check_rate_limit(request_obj, extra_key=request.business_id)
     try:
         is_uuid = bool(re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", request.business_id, re.I))
@@ -60,9 +136,6 @@ async def chat(request: ChatRequest, request_obj: Request):
         profile = supabase.table("profiles").select("plan_type,subscription_expires_at").eq("user_id", business["owner_id"]).maybe_single().execute()
         plan_type = active_plan(profile.data or {})
 
-        # Authorization is API-key / demo-only. Origin, Referer, and Host
-        # headers are attacker-controlled and are never used to grant
-        # "internal" trust here — see services/widget_auth.py.
         await authorize_widget_request(
             requested_business_id=request.business_id,
             actual_business_id=business["id"],
@@ -71,8 +144,6 @@ async def chat(request: ChatRequest, request_obj: Request):
             client=supabase,
         )
 
-        # Dashboard preview quota is tied to the authenticated business owner.
-        # PRO/PREMIUM bypass this limiter completely.
         if request_obj.headers.get("X-Talk2Pay-Dashboard") == "1":
             dashboard_user = await get_current_user_optional(request_obj)
             if dashboard_user and str(business.get("owner_id")) == str(dashboard_user.user_id) and plan_type == "free":
@@ -85,11 +156,8 @@ async def chat(request: ChatRequest, request_obj: Request):
                         headers={"Retry-After": str(free_dashboard_chat_limiter.window_seconds)},
                     )
 
-        # Free-plan public widget sessions are capped at 5 messages per hour.
-        # Scoped to session_id so each visitor gets their own quota.
         if plan_type == "free" and request.session_id:
             session_key = f"{business['id']}:{request.session_id}"
-            remaining = free_chat_session_limiter.remaining(session_key)
             if not free_chat_session_limiter.is_allowed(session_key):
                 raise HTTPException(
                     status_code=429,
@@ -99,7 +167,7 @@ async def chat(request: ChatRequest, request_obj: Request):
 
         can_checkout = plan_type in ("pro", "premium")
         conversation = await session_service.get_or_create_conversation(business_id=business["id"], session_id=request.session_id or f"session_{uuid.uuid4().hex}", channel="web")
-        products = supabase.table("products").select("*").eq("business_id", business["id"]).eq("is_active", True).execute().data or []
+        products = await _relevant_products(business["id"], request.message, limit=24)
         customer_context = None; customer = None
         if request.customer_info:
             customer = await session_service.get_or_create_customer(business_id=business["id"], email=request.customer_info.get("email"), phone=request.customer_info.get("phone"), name=request.customer_info.get("name"))
@@ -113,12 +181,22 @@ async def chat(request: ChatRequest, request_obj: Request):
         response = ChatResponse(intent=answer.get("intent", "chat"), response=answer.get("response", ""), session_id=conversation["session_id"], conversation_id=conversation["id"])
         action = answer.get("action_data")
         if answer.get("intent") == "checkout" and action and can_checkout:
-            requested_key = str(action.get("item_key", "")).upper()
-            product = next((p for p in products if str(p.get("item_key", "")).upper() == requested_key), None)
+            requested_key = str(action.get("item_key", "")).strip()
+            product = next((p for p in products if str(p.get("item_key", "")).lower() == requested_key.lower()), None)
+            if not product and requested_key:
+                product = await _product_by_key(business["id"], requested_key)
             if product and product.get("payment_link"):
                 response.payment_url = product["payment_link"]
             elif product:
                 quantity = max(1, min(100, int(action.get("quantity", 1))))
+                inventory = product.get("inventory_count", -1)
+                try: inventory = int(inventory)
+                except (TypeError, ValueError): inventory = -1
+                if inventory == 0:
+                    response.intent = "chat"; response.response = "המוצר שבחרת אזל כרגע מהמלאי."; response.action_data = None
+                    return response
+                if inventory > 0:
+                    quantity = min(quantity, inventory)
                 price = money(product.get("price", 0)); total = multiply_money(price, quantity)
                 order_data = {"business_id": business["id"], "customer_id": customer.get("id") if customer else None, "conversation_id": conversation["id"], "order_number": f"ORD-{datetime.utcnow():%Y%m%d}-{uuid.uuid4().hex[:8].upper()}", "status": "pending", "payment_status": "pending", "subtotal": money_db(total), "tax": "0.00", "total": money_db(total), "currency": product.get("currency", "ILS"), "items": [{"product_id": product.get("id"), "item_key": product.get("item_key"), "name": product.get("name"), "quantity": quantity, "price": money_db(price)}], "customer_info": request.customer_info or {}, "created_at": datetime.utcnow().isoformat()}
                 created = supabase.table("orders").insert(order_data).execute()
@@ -129,7 +207,7 @@ async def chat(request: ChatRequest, request_obj: Request):
                     except PaymentAdapterError as exc:
                         logger.error("Chat checkout creation failed for order %s: %s", order.get("id"), exc, exc_info=True)
                         raise HTTPException(502, "Unable to create a payment checkout") from exc
-                    action.update({"order_id": order["id"], "order_number": order["order_number"], "provider": get_checkout_adapter().provider, "provider_session_id": provider_session_id})
+                    action.update({"order_id": order["id"], "order_number": order["order_number"], "provider": get_checkout_adapter().provider, "provider_session_id": provider_session_id, "quantity": quantity})
                     response.payment_url = checkout_url
                 response.action_data = action
         return response
