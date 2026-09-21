@@ -62,7 +62,7 @@ def _html_response(filename: str, status_code: int = 200) -> HTMLResponse:
 
 PAGE_ROUTES = {
     "/": "home.html", "/home": "home.html", "/dashboard": "dashboard.html", "/dashboard.html": "dashboard.html",
-    "/wordpress": "wordpress.html", "/wordpress.html": "wordpress.html", "/login": "login.html", "/login.html": "login.html",
+    "/wordpress": "wordpress.html", "/wordpress.html": "wordpress.html", "/product-import": "product-import.html", "/product-import.html": "product-import.html", "/login": "login.html", "/login.html": "login.html",
     "/register": "register.html", "/register.html": "register.html", "/forgot-password": "forgot-password.html", "/forgot-password.html": "forgot-password.html",
     "/terms": "terms.html", "/terms.html": "terms.html", "/privacy": "privacy.html", "/privacy.html": "privacy.html",
     "/cookies": "cookies.html", "/cookies.html": "cookies.html", "/refund-policy": "refund-policy.html", "/refund-policy.html": "refund-policy.html",
@@ -70,7 +70,7 @@ PAGE_ROUTES = {
     "/payment/canceled": "canceled.html", "/payment-canceled.html": "canceled.html", "/canceled": "canceled.html", "/canceled.html": "canceled.html",
     "/upgrade": "upgrade.html", "/upgrade.html": "upgrade.html", "/profile": "profile.html", "/profile.html": "profile.html",
     "/settings": "settings.html", "/settings.html": "settings.html", "/setup-guide": "setup-guide.html", "/setup-guide.html": "setup-guide.html",
-    "/auth/callback": "auth-callback.html",
+    "/auth/callback": "auth-callback.html", "/auth-callback.html": "auth-callback.html",
 }
 for route, filename in PAGE_ROUTES.items():
     router.add_api_route(route, lambda filename=filename: _html_response(filename), methods=["GET"], include_in_schema=False)
