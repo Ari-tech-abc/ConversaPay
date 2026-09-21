@@ -17,6 +17,7 @@ NAME_RE = re.compile(r"\bname\s*=\s*(['\"])(.*?)\1", re.IGNORECASE | re.DOTALL)
 ROUTES = {
     "/": "frontend/html/home.html", "/dashboard": "frontend/html/dashboard.html", "/dashboard.html": "frontend/html/dashboard.html",
     "/login": "frontend/html/login.html", "/login.html": "frontend/html/login.html", "/register": "frontend/html/register.html", "/register.html": "frontend/html/register.html",
+    "/onboarding": "frontend/html/onboarding.html", "/onboarding.html": "frontend/html/onboarding.html", "/product-import": "frontend/html/product-import.html", "/product-import.html": "frontend/html/product-import.html",
     "/forgot-password": "frontend/html/forgot-password.html", "/forgot-password.html": "frontend/html/forgot-password.html", "/terms": "frontend/html/terms.html", "/terms.html": "frontend/html/terms.html",
     "/privacy": "frontend/html/privacy.html", "/privacy.html": "frontend/html/privacy.html", "/cookies": "frontend/html/cookies.html", "/cookies.html": "frontend/html/cookies.html",
     "/refund-policy": "frontend/html/refund-policy.html", "/refund-policy.html": "frontend/html/refund-policy.html", "/pay": "frontend/html/pay.html", "/pay.html": "frontend/html/pay.html",
@@ -37,6 +38,10 @@ def line_number(text: str, position: int) -> int:
 def target_for(raw: str, source: Path) -> tuple[Path | None, str | None]:
     value = unquote(raw.strip())
     if not value or value.startswith(SKIP_SCHEMES):
+        return None, None
+    # JavaScript-generated HTML can contain attributes such as src="'+img+'".
+    # Those are runtime expressions rather than local file paths.
+    if "'+" in value or "+'" in value or '"+' in value or '+"' in value or "${" in value:
         return None, None
     parsed = urlparse(value)
     if parsed.scheme or parsed.netloc:
@@ -61,7 +66,7 @@ def declared_fragments(text: str) -> set[str]:
 
 def check_external(url: str) -> str | None:
     try:
-        request = Request(url, headers={"User-Agent": "ConversaPay-link-check/1.0"}, method="HEAD")
+        request = Request(url, headers={"User-Agent": "Talk2Pay-link-check/1.0"}, method="HEAD")
         with urlopen(request, timeout=8) as response:
             if response.status >= 400:
                 return f"HTTP {response.status}"
@@ -85,6 +90,8 @@ def main() -> int:
         for match in ATTR_RE.finditer(text):
             raw = match.group(2).strip()
             line = line_number(text, match.start())
+            if "'+" in raw or "+'" in raw or '"+' in raw or '+"' in raw or "${" in raw:
+                continue
             parsed = urlparse(raw)
             if parsed.scheme in ("http", "https") or parsed.netloc:
                 external_urls.add(raw.split("#", 1)[0])
