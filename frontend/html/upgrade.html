@@ -4,6 +4,7 @@
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title id="pageTitle">TALK2PAY - שדרוג וניהול מנוי</title>
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+  <link rel="stylesheet" href="/frontend/css/language-switcher.css">
 </head>
 <body class="cp-page">
   <header class="cp-topbar"><a class="cp-brand" href="/dashboard"><span class="cp-brand-mark">T2P</span><span>TALK2PAY</span></a><a class="cp-backlink" href="/dashboard" data-i18n="back">חזרה לדאשבורד</a></header>
@@ -40,5 +41,6 @@ if(plan!=='premium'){document.querySelectorAll('.cp-plan').forEach(card=>card.cl
     async function start(plan){const b=document.querySelector(`[data-plan="${plan}"]`),t=b.textContent;b.disabled=true;b.textContent='יוצר תשלום...';try{const me=await api('/auth/me');const d=await api('/payments/create-checkout-session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:me.user_id,email:me.email,plan_type:plan})});if(!d.url)throw Error('שגיאה ביצירת תשלום');location.href=d.url}catch(e){alert(e.message||'שגיאה ביצירת תשלום');b.disabled=false;b.textContent=t}}
     document.querySelectorAll('[data-plan]').forEach(b=>b.onclick=()=>start(b.dataset.plan));$('openCancel').onclick=()=>{$('cancelNotice').hidden=true;$('cancelDialog').showModal()};$('closeCancel').onclick=()=>$('cancelDialog').close();$('cancelForm').onsubmit=async e=>{e.preventDefault();const b=$('submitCancel');b.disabled=true;b.textContent='שולח...';$('cancelNotice').hidden=true;try{const d=await api('/subscription/cancel',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reason:$('cancelReason').value.trim(),request_refund:$('requestRefund').checked})});$('cancelDialog').close();$('cancelReason').value='';renderLifecycle(d)}catch(error){$('cancelNotice').hidden=false;$('cancelNotice').textContent=error.message||'שליחת הבקשה נכשלה'}finally{b.disabled=false;b.textContent='שליחת בקשה'}};load();
   </script>
+  <script src="/frontend/js/language-switcher.js"></script>
 </body>
 </html>
