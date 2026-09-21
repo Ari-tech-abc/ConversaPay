@@ -47,6 +47,10 @@ def _brand_markup(page: str, filename: str = "") -> str:
         injection = f'<link rel="stylesheet" href="{LANGUAGE_STYLE_SRC}"><script src="{LANGUAGE_SCRIPT_SRC}" defer></script>'
         page = page.replace("</head>", injection + "</head>", 1)
     if filename == "dashboard.html":
+        page = page.replace(
+            "<small>'+tr('זמין עכשיו','Available now')+'</small>",
+            '<small data-i18n-he="זמין עכשיו" data-i18n-en="Available now">זמין עכשיו</small>',
+        )
         page = page.replace("</head>", f'<style>#editBusiness{{display:none!important}}</style><script src="{VERIFICATION_GUARD_SRC}" defer></script></head>', 1)
     if 'rel="icon"' not in page.lower():
         page = page.replace("</head>", f'<link rel="icon" type="image/png" href="{FAVICON_SRC}"></head>', 1)
