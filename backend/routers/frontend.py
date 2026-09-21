@@ -24,6 +24,8 @@ VERIFICATION_GUARD_SRC = "/frontend/js/email-verification-guard.js"
 LANGUAGE_SCRIPT_SRC = "/frontend/js/language-switcher.js"
 LANGUAGE_STYLE_SRC = "/frontend/css/language-switcher.css"
 SYSTEM_MODAL_STYLE_SRC = "/frontend/css/system-modal.css"
+SYSTEM_ERRORS_SRC = "/frontend/js/system-errors.js"
+DASHBOARD_POLISH_SRC = "/frontend/css/dashboard-polish.css"
 
 
 def _safe_html_path(filename: str):
@@ -44,9 +46,10 @@ def _normalize_copy(page: str) -> str:
 def _brand_markup(page: str, filename: str = "") -> str:
     page = _normalize_copy(page)
     page = re.sub(r'''<a\b[^>]*class=["'][^>]*\bcp-brand\b[^>]*["'][^>]*>.*?</a>''', lambda match: f'<a class="cp-brand" href="/"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="Talk2Pay" width="220" height="38"></a>', page, flags=re.I | re.S)
-    common_style = f'<link rel="stylesheet" href="{SYSTEM_MODAL_STYLE_SRC}">'
     if SYSTEM_MODAL_STYLE_SRC not in page:
-        page = page.replace("</head>", common_style + "</head>", 1)
+        page = page.replace("</head>", f'<link rel="stylesheet" href="{SYSTEM_MODAL_STYLE_SRC}"></head>', 1)
+    if SYSTEM_ERRORS_SRC not in page:
+        page = page.replace("</head>", f'<script src="{SYSTEM_ERRORS_SRC}" defer></script></head>', 1)
     if filename != "home.html":
         injection = f'<link rel="stylesheet" href="{LANGUAGE_STYLE_SRC}"><script src="{LANGUAGE_SCRIPT_SRC}" defer></script>'
         if LANGUAGE_SCRIPT_SRC not in page:
@@ -56,7 +59,8 @@ def _brand_markup(page: str, filename: str = "") -> str:
             "<small>'+tr('זמין עכשיו','Available now')+'</small>",
             '<small data-i18n-he="זמין עכשיו" data-i18n-en="Available now">זמין עכשיו</small>',
         )
-        page = page.replace("</head>", f'<style>#editBusiness{{display:none!important}}</style><script src="{VERIFICATION_GUARD_SRC}" defer></script></head>', 1)
+        dashboard_injection = f'<link rel="stylesheet" href="{DASHBOARD_POLISH_SRC}"><style>#editBusiness{{display:none!important}}</style><script src="{VERIFICATION_GUARD_SRC}" defer></script>'
+        page = page.replace("</head>", dashboard_injection + "</head>", 1)
     if 'rel="icon"' not in page.lower():
         page = page.replace("</head>", f'<link rel="icon" type="image/png" href="{FAVICON_SRC}"></head>', 1)
     return page
