@@ -1,6 +1,5 @@
 (() => {
   const API = '/api/v1';
-  const message = 'חשבונך עדיין לא אומת. אנא בדוק את תיבת הדואר הנכנס ולחץ על קישור האימות.';
   const token = localStorage.getItem('access_token') || localStorage.getItem('conversapay_auth_token') || sessionStorage.getItem('access_token') || sessionStorage.getItem('conversapay_auth_token');
   let blocked = false;
 
@@ -11,31 +10,18 @@
     });
   }
 
-  function showVerificationModal() {
+  function showVerificationModal(message = 'חשבונך עדיין לא אומת. חזור למסך הכניסה ובקש קוד אימות חדש.') {
     if (blocked) return;
     blocked = true;
     const overlay = document.createElement('div');
     overlay.id = 'emailVerificationModal';
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-modal', 'true');
-    overlay.innerHTML = `<div style="position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:20px;background:rgba(3,10,20,.82)"><div style="max-width:520px;width:100%;padding:28px;border-radius:24px;background:#0d1b2d;color:#f7fbff;border:1px solid rgba(255,255,255,.14);box-shadow:0 20px 80px rgba(0,0,0,.4);text-align:center"><h2>נדרש אימות מייל</h2><p style="line-height:1.7">${message}</p><p id="verificationStatus" style="color:#a7f3d0"></p><div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button id="resendVerification" style="padding:12px 18px;border:0;border-radius:12px;background:#37d7ff;color:#07111f;font-weight:800;cursor:pointer">שלח מייל אימות שוב</button><button id="verificationLogout" style="padding:12px 18px;border:1px solid rgba(255,255,255,.2);border-radius:12px;background:transparent;color:#f7fbff;cursor:pointer">יציאה</button></div></div></div>`;
+    overlay.innerHTML = `<div style="position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:20px;background:rgba(20,18,38,.50);backdrop-filter:blur(12px)"><div style="max-width:560px;width:100%;padding:30px;border-radius:26px;background:#fff;color:#171923;border:1px solid #ded9fb;box-shadow:0 30px 90px rgba(31,24,67,.28);text-align:center;position:relative"><button id="verificationClose" aria-label="סגור" style="position:absolute;top:14px;left:14px;width:38px;height:38px;border:0;border-radius:12px;background:#f1f1f7;font-size:24px;cursor:pointer">×</button><div style="width:48px;height:48px;border-radius:16px;margin:0 auto 14px;display:grid;place-items:center;background:#eeecfd;color:#5b4fe8;font-weight:900">✉</div><h2>נדרש אימות מייל</h2><p style="line-height:1.7;color:#62667a">${message}</p><button id="verificationLogin" style="margin-top:14px;padding:12px 18px;border:0;border-radius:12px;background:#5b4fe8;color:#fff;font-weight:800;cursor:pointer">מעבר לכניסה</button></div></div>`;
     document.body.appendChild(overlay);
-    document.getElementById('resendVerification').onclick = async () => {
-      const button = document.getElementById('resendVerification');
-      const status = document.getElementById('verificationStatus');
-      button.disabled = true;
-      status.textContent = 'שולח...';
-      try {
-        const response = await fetch(`${API}/auth/resend-verification`, { method: 'POST', headers: token ? { Authorization: `Bearer ${token}` } : {} });
-        const data = await response.json().catch(() => ({}));
-        if (!response.ok) throw new Error(data.detail || 'לא ניתן לשלוח כרגע');
-        status.textContent = data.message || 'מייל האימות נשלח.';
-      } catch (error) {
-        status.textContent = error.message || 'לא ניתן לשלוח כרגע';
-        button.disabled = false;
-      }
-    };
-    document.getElementById('verificationLogout').onclick = () => { clearAuth(); location.href = '/login'; };
+    const leave = () => { clearAuth(); location.href = '/login'; };
+    document.getElementById('verificationClose').onclick = leave;
+    document.getElementById('verificationLogin').onclick = leave;
   }
 
   const originalFetch = window.fetch.bind(window);
@@ -53,12 +39,19 @@
     if (!token) return;
     try {
       const response = await originalFetch(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } });
+      if (response.status === 401) return;
       if (response.status === 403) {
         const data = await response.json().catch(() => ({}));
-        if (data.detail === 'EMAIL_NOT_VERIFIED') showVerificationModal();
+        if (data.detail === 'EMAIL_NOT_VERIFIED' || data.detail === 'email_not_verified') showVerificationModal();
+        return;
+      }
+      if (!response.ok) return;
+      const data = await response.json().catch(() => ({}));
+      if (data.requires_business_onboarding && location.pathname.startsWith('/dashboard')) {
+        location.replace('/onboarding');
       }
     } catch (_) {
-      // The dashboard's own request handling remains the source of truth for transient failures.
+      // Dashboard request handling remains the source of truth for transient failures.
     }
   }
 
