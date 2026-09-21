@@ -8,6 +8,7 @@
   <meta name="referrer" content="no-referrer">
   <meta name="theme-color" content="#f7f5fb">
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
+  <link rel="stylesheet" href="/frontend/css/language-switcher.css">
 </head>
 <body class="cp-page">
   <main class="cp-shell cp-center-shell">
@@ -63,4 +64,5 @@ const fail=reason=>{console.error('[OAuth callback]',reason);sessionStorage.setI
   location.replace(next);
 }catch(error){fail(error?.message||'Unknown callback error')}})();
 })();
-</script></body></html>
+</script>  <script src="/frontend/js/language-switcher.js"></script>
+</body></html>
