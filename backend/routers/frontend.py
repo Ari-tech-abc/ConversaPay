@@ -25,6 +25,7 @@ SYSTEM_MODAL_STYLE_SRC = "/frontend/css/system-modal.css"
 SYSTEM_ERRORS_SRC = "/frontend/js/system-errors.js"
 DASHBOARD_POLISH_SRC = "/frontend/css/dashboard-polish.css"
 ONBOARDING_CATEGORY_LABELS_SRC = "/frontend/css/onboarding-category-labels.css"
+APP_POLISH_SRC = "/frontend/css/app-polish.css"
 
 
 def _safe_html_path(filename: str):
@@ -35,7 +36,7 @@ def _safe_html_path(filename: str):
 
 
 def _normalize_copy(page: str) -> str:
-    parts = re.split(r"(<(?:script|style)\\b[^>]*>.*?</(?:script|style)>)", page, flags=re.I | re.S)
+    parts = re.split(r"(<(?:script|style)\b[^>]*>.*?</(?:script|style)>)", page, flags=re.I | re.S)
     for index in range(0, len(parts), 2):
         for source, target in COPY_REPLACEMENTS:
             parts[index] = parts[index].replace(source, target)
@@ -54,6 +55,8 @@ def _brand_markup(page: str, filename: str = "") -> str:
         page = page.replace("</head>", f'<link rel="stylesheet" href="{SYSTEM_MODAL_STYLE_SRC}"></head>', 1)
     if SYSTEM_ERRORS_SRC not in page:
         page = page.replace("</head>", f'<script src="{SYSTEM_ERRORS_SRC}" defer></script></head>', 1)
+    if filename != "home.html" and APP_POLISH_SRC not in page:
+        page = page.replace("</head>", f'<link rel="stylesheet" href="{APP_POLISH_SRC}"></head>', 1)
     # Onboarding owns its bilingual RTL/LTR rendering and intentionally has no language button.
     if filename not in {"home.html", "onboarding.html"}:
         injection = f'<link rel="stylesheet" href="{LANGUAGE_STYLE_SRC}"><script src="{LANGUAGE_SCRIPT_SRC}" defer></script>'
@@ -112,7 +115,7 @@ async def ui_stylesheet():
 async def robots():
     path = settings.static_dir / "robots.txt"
     if not path.is_file():
-        return HTMLResponse("User-agent: *\\nDisallow:", media_type="text/plain")
+        return HTMLResponse("User-agent: *\nDisallow:", media_type="text/plain")
     return FileResponse(path, media_type="text/plain")
 
 
