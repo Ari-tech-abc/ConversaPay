@@ -29,7 +29,7 @@ DASHBOARD_POLISH_SRC = "/frontend/css/dashboard-polish.css"
 DASHBOARD_INSTANT_CACHE_SRC = "/frontend/js/dashboard-instant-cache.js"
 ONBOARDING_CATEGORY_LABELS_SRC = "/frontend/css/onboarding-category-labels.css"
 APP_POLISH_SRC = "/frontend/css/app-polish.css"
-CORE_LANGUAGE_PAGES = {"login.html", "register.html", "privacy.html", "terms.html", "success.html", "canceled.html"}
+CORE_LANGUAGE_PAGES = {"login.html", "register.html", "privacy.html", "terms.html", "success.html", "canceled.html", "profile.html", "settings.html", "upgrade.html"}
 
 
 def _safe_html_path(filename: str):
@@ -81,6 +81,10 @@ def _brand_markup(page: str, filename: str = "") -> str:
 
     if filename == "onboarding.html" and ONBOARDING_CATEGORY_LABELS_SRC not in page:
         page = page.replace("</head>", f'<link rel="stylesheet" href="{ONBOARDING_CATEGORY_LABELS_SRC}"></head>', 1)
+    if filename == "upgrade.html":
+        old = "document.querySelectorAll('[data-plan]').forEach(b=>{b.disabled=b.dataset.plan===plan;b.textContent=b.disabled?'המסלול הנוכחי':(b.dataset.plan==='pro'?'שדרג ל‑PRO':'שדרג ל‑PREMIUM')})"
+        new = "document.querySelectorAll('[data-plan]').forEach(b=>{const target=b.dataset.plan;const lower=plan==='premium'&&target==='pro';b.disabled=target===plan||lower;b.textContent=target===plan?'המסלול הנוכחי':lower?'כלול ב‑PREMIUM':(target==='pro'?'שדרג ל‑PRO':'שדרג ל‑PREMIUM')})"
+        page = page.replace(old, new)
     if filename == "dashboard.html":
         page = page.replace(
             "<small>'+tr('זמין עכשיו','Available now')+'</small>",
