@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = 1;
+  const VERSION = 2;
   const MAX_AGE_MS = 1000 * 60 * 60 * 24 * 30;
   const METRICS = {
     revenue: { type: 'money', decimals: 2 },
@@ -10,9 +10,9 @@
     conversion: { type: 'percent', decimals: 1 },
   };
   const META_IDS = ['userName', 'businessName', 'plan', 'sidePlan'];
+  const SECTION_IDS = ['products', 'orders'];
   const metricState = new Map();
-  const metaObservers = [];
-  let snapshot = null;
+  const observers = [];
   let cacheKey = null;
   let saveTimer = null;
 
@@ -38,37 +38,25 @@
     }
   }
 
-  function parseValue(text, type) {
-    const cleaned = String(text ?? '')
-      .replace(/[₪,%\s]/g, '')
-      .replace(/,/g, '');
+  function parseValue(text) {
+    const cleaned = String(text ?? '').replace(/[₪,%\s]/g, '').replace(/,/g, '');
     const n = Number(cleaned);
     return Number.isFinite(n) ? n : null;
   }
 
   function formatValue(value, spec) {
-    if (spec.type === 'money') {
-      return '₪' + Number(value).toLocaleString('he-IL', {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: spec.decimals,
-      });
-    }
-    if (spec.type === 'percent') {
-      return Number(value).toFixed(spec.decimals) + '%';
-    }
+    if (spec.type === 'money') return '₪' + Number(value).toLocaleString('he-IL', { maximumFractionDigits: spec.decimals });
+    if (spec.type === 'percent') return Number(value).toFixed(spec.decimals) + '%';
     return Math.round(Number(value)).toLocaleString('he-IL');
   }
 
-  function easeOutCubic(t) {
-    return 1 - Math.pow(1 - t, 3);
-  }
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 
   function animationDuration(from, to) {
     const delta = Math.abs(to - from);
     if (!delta) return 0;
     const magnitude = Math.max(Math.abs(from), Math.abs(to), 1);
     const relative = Math.min(delta / magnitude, 1);
-    // Large jumps animate fast; small changes get enough time to be noticeable.
     return Math.max(320, Math.min(760, 560 - relative * 180 + Math.log10(delta + 1) * 38));
   }
 
@@ -91,8 +79,7 @@
     const started = performance.now();
     const render = now => {
       const t = Math.min(1, (now - started) / duration);
-      const eased = easeOutCubic(t);
-      const value = from + (to - from) * eased;
+      const value = from + (to - from) * easeOutCubic(t);
       el.textContent = formatValue(value, spec);
       if (t < 1) {
         state.raf = requestAnimationFrame(render);
@@ -101,8 +88,9 @@
         state.animating = false;
         state.current = to;
         state.raf = null;
-        el.closest('.stat')?.classList.add(to > from ? 'metric-updated-up' : 'metric-updated-down');
-        setTimeout(() => el.closest('.stat')?.classList.remove('metric-updated-up', 'metric-updated-down'), 700);
+        const card = el.closest('.stat');
+        card?.classList.add(to > from ? 'metric-updated-up' : 'metric-updated-down');
+        setTimeout(() => card?.classList.remove('metric-updated-up', 'metric-updated-down'), 700);
         saveSoon();
       }
     };
@@ -111,13 +99,11 @@
 
   function snapshotFromDom() {
     const metrics = {};
-    for (const [id, spec] of Object.entries(METRICS)) {
+    for (const [id] of Object.entries(METRICS)) {
       const el = document.getElementById(id);
       if (!el) continue;
       const state = metricState.get(id);
-      const value = state && Number.isFinite(state.current)
-        ? state.current
-        : parseValue(el.textContent, spec.type);
+      const value = state && Number.isFinite(state.current) ? state.current : parseValue(el.textContent);
       if (value !== null) metrics[id] = value;
     }
     const meta = {};
@@ -125,16 +111,29 @@
       const el = document.getElementById(id);
       if (el && String(el.textContent || '').trim()) meta[id] = el.textContent.trim();
     }
-    return { version: VERSION, savedAt: Date.now(), metrics, meta };
+    const sections = {};
+    for (const id of SECTION_IDS) {
+      const el = document.getElementById(id);
+      if (el && el.innerHTML.trim()) sections[id] = el.innerHTML;
+    }
+    const productSummary = document.getElementById('productSummary')?.textContent || '';
+    const pagination = document.getElementById('productPagination');
+    return {
+      version: VERSION,
+      savedAt: Date.now(),
+      metrics,
+      meta,
+      sections,
+      productSummary,
+      productPagination: pagination ? { html: pagination.innerHTML, hidden: pagination.hidden } : null,
+    };
   }
 
   function saveNow() {
     saveTimer = null;
     cacheKey = getKey() || cacheKey;
     if (!cacheKey) return;
-    try {
-      localStorage.setItem(cacheKey, JSON.stringify(snapshotFromDom()));
-    } catch (_) {}
+    try { localStorage.setItem(cacheKey, JSON.stringify(snapshotFromDom())); } catch (_) {}
   }
 
   function saveSoon() {
@@ -159,13 +158,27 @@
       const value = data.meta?.[id];
       if (el && value) el.textContent = value;
     }
+    for (const id of SECTION_IDS) {
+      const el = document.getElementById(id);
+      const html = data.sections?.[id];
+      if (el && typeof html === 'string' && html.trim()) {
+        el.innerHTML = html;
+        restored = true;
+      }
+    }
+    const summary = document.getElementById('productSummary');
+    if (summary && data.productSummary) summary.textContent = data.productSummary;
+    const pagination = document.getElementById('productPagination');
+    if (pagination && data.productPagination) {
+      pagination.innerHTML = data.productPagination.html || '';
+      pagination.hidden = Boolean(data.productPagination.hidden);
+    }
     if (restored) {
-      const content = document.getElementById('content');
-      if (content) content.style.visibility = 'visible';
+      document.getElementById('content')?.style.setProperty('visibility', 'visible');
       const loader = document.getElementById('dashboardLoader');
       if (loader) {
         loader.classList.add('hide');
-        setTimeout(() => loader.remove(), 180);
+        setTimeout(() => loader.isConnected && loader.remove(), 180);
       }
       document.documentElement.classList.add('dashboard-cache-restored');
     }
@@ -175,13 +188,12 @@
   function watchMetric(id, spec) {
     const el = document.getElementById(id);
     if (!el) return;
-    const initial = parseValue(el.textContent, spec.type);
+    const initial = parseValue(el.textContent);
     if (!metricState.has(id)) metricState.set(id, { current: initial ?? 0, animating: false, raf: null });
-
     const observer = new MutationObserver(() => {
       const state = metricState.get(id);
       if (!state || state.animating) return;
-      const incoming = parseValue(el.textContent, spec.type);
+      const incoming = parseValue(el.textContent);
       if (incoming === null) return;
       const current = Number.isFinite(state.current) ? state.current : incoming;
       if (Math.abs(incoming - current) < 0.00001) {
@@ -192,35 +204,29 @@
       animateMetric(el, current, incoming, spec);
     });
     observer.observe(el, { childList: true, characterData: true, subtree: true });
+    observers.push(observer);
   }
 
-  function watchMeta() {
-    for (const id of META_IDS) {
-      const el = document.getElementById(id);
-      if (!el) continue;
-      const observer = new MutationObserver(saveSoon);
-      observer.observe(el, { childList: true, characterData: true, subtree: true });
-      metaObservers.push(observer);
-    }
+  function watchSimple(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const observer = new MutationObserver(saveSoon);
+    observer.observe(el, { childList: true, characterData: true, subtree: true, attributes: id === 'productPagination' });
+    observers.push(observer);
   }
 
   function init() {
-    snapshot = readSnapshot();
-    restoreSnapshot(snapshot);
+    restoreSnapshot(readSnapshot());
     for (const [id, spec] of Object.entries(METRICS)) watchMetric(id, spec);
-    watchMeta();
-
-    // Save a fresh snapshot after the normal dashboard loader finishes, and when leaving.
+    [...META_IDS, ...SECTION_IDS, 'productSummary', 'productPagination'].forEach(watchSimple);
     const loader = document.getElementById('dashboardLoader');
     if (loader) {
-      new MutationObserver(() => {
-        if (loader.classList.contains('hide')) saveSoon();
-      }).observe(loader, { attributes: true, attributeFilter: ['class'] });
+      const observer = new MutationObserver(() => { if (loader.classList.contains('hide')) saveSoon(); });
+      observer.observe(loader, { attributes: true, attributeFilter: ['class'] });
+      observers.push(observer);
     }
     window.addEventListener('pagehide', saveNow);
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'hidden') saveNow();
-    });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') saveNow(); });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
