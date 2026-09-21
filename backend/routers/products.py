@@ -86,6 +86,31 @@ async def create_products_bulk(request: List[ProductCreate], current_user: AuthU
 async def get_products(business_id:str=Query(...),active_only:bool=Query(True),current_user:AuthUser=Depends(require_auth)):
     q=supabase.table("products").select("*").eq("business_id",require_business_owner_for_business_id(business_id,current_user)); q=q.eq("is_active",True) if active_only else q
     return [ProductResponse(**_db_product(x)) for x in (q.order("item_key").execute().data or [])]
+@router.get("/paged")
+async def get_products_paged(
+    business_id:str=Query(...),
+    active_only:bool=Query(False),
+    page:int=Query(1,ge=1),
+    page_size:int=Query(50,ge=1,le=100),
+    current_user:AuthUser=Depends(require_auth)
+):
+    business_uuid=require_business_owner_for_business_id(business_id,current_user)
+    q=supabase.table("products").select("*",count="exact").eq("business_id",business_uuid)
+    if active_only:
+        q=q.eq("is_active",True)
+    start=(page-1)*page_size
+    end=start+page_size-1
+    result=q.order("item_key").range(start,end).execute()
+    total=int(result.count or 0)
+    products=[ProductResponse(**_db_product(x)) for x in (result.data or [])]
+    return {
+        "products":products,
+        "total":total,
+        "page":page,
+        "page_size":page_size,
+        "total_pages":(total+page_size-1)//page_size if total else 0
+    }
+
 @router.get("/{product_id}",response_model=ProductResponse)
 async def get_product(product_id:str,current_user:AuthUser=Depends(require_auth)):
     result=supabase.table("products").select("*").eq("id",product_id).execute()
