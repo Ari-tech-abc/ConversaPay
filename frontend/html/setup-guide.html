@@ -37,8 +37,7 @@
     </section>
   </main>
   <script>
-    const L=localStorage.getItem('talk2pay_language')||'he';document.documentElement.lang=L;document.documentElement.dir=L==='en'?'ltr':'rtl';document.title=L==='en'?'TALK2PAY | Setup guide':'TALK2PAY | מדריך הטמעה';
-    const tabs=[...document.querySelectorAll('[data-tab]')],panels=[...document.querySelectorAll('.guide-panel')],query=new URLSearchParams(location.search);let active=query.get('tab')||'html';
+const tabs=[...document.querySelectorAll('[data-tab]')],panels=[...document.querySelectorAll('.guide-panel')],query=new URLSearchParams(location.search);let active=query.get('tab')||'html';
     function selectTab(name,updateUrl=true){if(!['wordpress','html','production'].includes(name))name='html';active=name;tabs.forEach(tab=>tab.setAttribute('aria-selected',String(tab.dataset.tab===name)));panels.forEach(panel=>panel.classList.toggle('active',panel.id===`panel-${name}`));if(updateUrl)history.replaceState(null,'',`/setup-guide?tab=${name}`)}
     tabs.forEach(tab=>tab.addEventListener('click',()=>selectTab(tab.dataset.tab)));
     async function copyTarget(target,button){const node=document.getElementById(target);if(!node)return;const original=button.textContent;try{await navigator.clipboard.writeText(node.textContent);button.textContent='הועתק ✓'}catch(_){button.textContent='סמנו והעתיקו';node.focus?.()}setTimeout(()=>button.textContent=original,1600)}
