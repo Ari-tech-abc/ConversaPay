@@ -43,7 +43,7 @@ def _normalize_copy(page: str) -> str:
 def _brand_markup(page: str, filename: str = "") -> str:
     page = _normalize_copy(page)
     page = re.sub(r'''<a\b[^>]*class=["'][^>]*\bcp-brand\b[^>]*["'][^>]*>.*?</a>''', lambda match: f'<a class="cp-brand" href="/"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="Talk2Pay" width="220" height="38"></a>', page, flags=re.I | re.S)
-    if filename not in {"home.html", "dashboard.html"}:
+    if filename != "home.html":
         injection = f'<link rel="stylesheet" href="{LANGUAGE_STYLE_SRC}"><script src="{LANGUAGE_SCRIPT_SRC}" defer></script>'
         page = page.replace("</head>", injection + "</head>", 1)
     if filename == "dashboard.html":
