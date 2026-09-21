@@ -18,8 +18,6 @@ router.mount("/images", StaticFiles(directory=settings.images_dir), name="images
 FALLBACK_HTML = """<!doctype html><html lang=\"he\" dir=\"rtl\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Talk2Pay</title><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f4f1f8;color:#211b2b;font:16px system-ui,sans-serif}.box{width:min(620px,calc(100% - 40px));padding:40px;border:1px solid #ddd4e8;border-radius:24px;background:#fff;text-align:center}.code{font-size:3rem;font-weight:800;color:#6d42c5}a{color:#6d42c5;font-weight:700}</style></head><body><main class=\"box\"><div class=\"code\">404</div><h1>Talk2Pay</h1><p>העמוד המבוקש אינו זמין כרגע.</p><a href=\"/\">חזרה לדף הבית</a></main></body></html>"""
 
 COPY_REPLACEMENTS = (("ConversaPay", "Talk2Pay"), ("Production checklist", "רשימת בדיקות לפרודקשן"), ("Developer tools", "כלי פיתוח"), ("Dashboard", "לוח בקרה"), ("DASHBOARD", "לוח בקרה"), ("Billing", "חיוב"), ("Security", "אבטחה"))
-BRAND_LOGO_SRC = "/frontend/images/conversapay_logo_whitebg.png"
-FAVICON_SRC = "/frontend/images/favicon-32x32.png"
 VERIFICATION_GUARD_SRC = "/frontend/js/email-verification-guard.js"
 LANGUAGE_SCRIPT_SRC = "/frontend/js/language-switcher.js"
 LANGUAGE_STYLE_SRC = "/frontend/css/language-switcher.css"
@@ -45,7 +43,12 @@ def _normalize_copy(page: str) -> str:
 
 def _brand_markup(page: str, filename: str = "") -> str:
     page = _normalize_copy(page)
-    page = re.sub(r'''<a\b[^>]*class=["'][^>]*\bcp-brand\b[^>]*["'][^>]*>.*?</a>''', lambda match: f'<a class="cp-brand" href="/"><img class="cp-brand-logo" src="{BRAND_LOGO_SRC}" alt="Talk2Pay" width="220" height="38"></a>', page, flags=re.I | re.S)
+    page = re.sub(
+        r'''<a\b[^>]*class=["'][^>]*\bcp-brand\b[^>]*["'][^>]*>.*?</a>''',
+        lambda _match: '<a class="cp-brand" href="/"><span class="cp-brand-mark" aria-hidden="true">T2P</span><span>Talk2Pay</span></a>',
+        page,
+        flags=re.I | re.S,
+    )
     if SYSTEM_MODAL_STYLE_SRC not in page:
         page = page.replace("</head>", f'<link rel="stylesheet" href="{SYSTEM_MODAL_STYLE_SRC}"></head>', 1)
     if SYSTEM_ERRORS_SRC not in page:
@@ -61,8 +64,6 @@ def _brand_markup(page: str, filename: str = "") -> str:
         )
         dashboard_injection = f'<link rel="stylesheet" href="{DASHBOARD_POLISH_SRC}"><style>#editBusiness{{display:none!important}}</style><script src="{VERIFICATION_GUARD_SRC}" defer></script>'
         page = page.replace("</head>", dashboard_injection + "</head>", 1)
-    if 'rel="icon"' not in page.lower():
-        page = page.replace("</head>", f'<link rel="icon" type="image/png" href="{FAVICON_SRC}"></head>', 1)
     return page
 
 
