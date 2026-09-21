@@ -9,19 +9,10 @@
   const originals=new WeakMap();
   let busy=false;
   const lang=()=>((localStorage.getItem(KEY)||localStorage.getItem(LEGACY))==='en'?'en':'he');
-  function apply(){
-    if(!document.body||busy)return;
-    busy=true;
-    const to=lang(),en=to==='en',map=en?MAP:REV;
-    document.documentElement.lang=to;document.documentElement.dir=en?'ltr':'rtl';document.body.classList.toggle('cp-lang-en',en);
-    document.querySelectorAll('[data-i18n-he]').forEach(el=>{const v=el.getAttribute(en?'data-i18n-en':'data-i18n-he');if(v!==null)el.textContent=v});
-    const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;const nodes=[];while((n=walker.nextNode()))nodes.push(n);
-    nodes.forEach(node=>{const p=node.parentElement;if(!p||skip.has(p.tagName)||p.closest('.cp-language-toggle'))return;if(!originals.has(node))originals.set(node,node.nodeValue);const source=originals.get(node),trim=String(source||'').trim(),v=map[trim];node.nodeValue=v?source.replace(trim,v):source});
-    document.querySelectorAll('[data-i18n-placeholder-he]').forEach(el=>el.setAttribute('placeholder',el.getAttribute(en?'data-i18n-placeholder-en':'data-i18n-placeholder-he')||''));
-    updateButton();busy=false;
-  }
+  const togglePaths=new Set(['/login','/login/','/login.html','/register','/register/','/register.html','/payment/success','/payment/success/','/success','/success.html','/payment-success.html','/payment/canceled','/payment/canceled/','/canceled','/canceled.html','/payment-canceled.html']);
+  function apply(){if(!document.body||busy)return;busy=true;const to=lang(),en=to==='en',map=en?MAP:REV;document.documentElement.lang=to;document.documentElement.dir=en?'ltr':'rtl';document.body.classList.toggle('cp-lang-en',en);document.querySelectorAll('[data-i18n-he]').forEach(el=>{const v=el.getAttribute(en?'data-i18n-en':'data-i18n-he');if(v!==null)el.textContent=v});const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;const nodes=[];while((n=walker.nextNode()))nodes.push(n);nodes.forEach(node=>{const p=node.parentElement;if(!p||skip.has(p.tagName)||p.closest('.cp-language-toggle'))return;if(!originals.has(node))originals.set(node,node.nodeValue);const source=originals.get(node),trim=String(source||'').trim(),v=map[trim];node.nodeValue=v?source.replace(trim,v):source});document.querySelectorAll('[data-i18n-placeholder-he]').forEach(el=>el.setAttribute('placeholder',el.getAttribute(en?'data-i18n-placeholder-en':'data-i18n-placeholder-he')||''));updateButton();busy=false}
   function updateButton(){const b=document.querySelector('[data-cp-language-toggle]');if(!b)return;const en=lang()==='en';b.replaceChildren();const icon=document.createElement('span');icon.setAttribute('aria-hidden','true');icon.textContent='🌐';const label=document.createElement('span');label.textContent=en?'עברית':'English';b.append(icon,label);b.setAttribute('aria-label',en?'Switch to Hebrew':'Switch to English')}
   function setLanguage(v){if(busy)return;localStorage.setItem(KEY,v);localStorage.setItem(LEGACY,v);requestAnimationFrame(apply)}
-  function init(){let b=document.querySelector('[data-cp-language-toggle]');if(!b){b=document.createElement('button');b.type='button';b.className='cp-language-toggle';b.dataset.cpLanguageToggle='true';b.addEventListener('click',()=>setLanguage(lang()==='en'?'he':'en'),{passive:true});document.body.appendChild(b)}apply();window.ConversaPayLanguage={get:lang,set:setLanguage,refresh:apply}}
+  function init(){let b=document.querySelector('[data-cp-language-toggle]');if(togglePaths.has(location.pathname)){if(!b){b=document.createElement('button');b.type='button';b.className='cp-language-toggle';b.dataset.cpLanguageToggle='true';b.addEventListener('click',()=>setLanguage(lang()==='en'?'he':'en'),{passive:true});document.body.appendChild(b)}}else if(b)b.remove();apply();window.ConversaPayLanguage={get:lang,set:setLanguage,refresh:apply}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
