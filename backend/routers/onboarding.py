@@ -82,26 +82,37 @@ def _auth_view(current_user: AuthUser) -> dict[str, Any]:
 
 @router.post("/signup-code", status_code=status.HTTP_201_CREATED)
 async def signup_with_code(request: SignupCodeRequest, request_obj: Request):
+    """Create an unconfirmed Supabase Auth user without sending Supabase's link email."""
     check_rate_limit(request_obj, extra_key=f"signup:{request.email.lower()}")
     try:
-        auth_response = supabase.auth.sign_up({
+        existing_profile = supabase.table("profiles").select("user_id,email_verified").eq("email", request.email).maybe_single().execute().data
+        if existing_profile:
+            raise HTTPException(400, "email_exists")
+
+        auth_response = supabase.auth.admin.create_user({
             "email": request.email,
             "password": request.password,
-            "options": {"data": {"full_name": request.full_name, "business_name": request.business_name}},
+            "email_confirm": False,
+            "user_metadata": {"full_name": request.full_name, "business_name": request.business_name},
         })
-        if not auth_response.user:
+        if not auth_response or not auth_response.user:
             raise HTTPException(400, "registration_failed")
 
+        user_id = auth_response.user.id
         code = _new_code()
         expires_at = (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat()
         profile = create_user_profile(
-            auth_response.user.id,
+            user_id,
             request.email,
             request.full_name,
             _code_hash(request.email, code),
             expires_at,
         )
         if not profile:
+            try:
+                supabase.auth.admin.delete_user(user_id)
+            except Exception:
+                logger.exception("Could not roll back orphan auth user %s", user_id)
             raise HTTPException(500, "server_error")
         if not email_service.send_verification_code(request.email, code, request.full_name):
             raise HTTPException(502, "verification_email_failed")
@@ -110,13 +121,14 @@ async def signup_with_code(request: SignupCodeRequest, request_obj: Request):
         raise
     except SupabaseAuthApiError as exc:
         text = str(exc).lower()
-        if "already" in text or "exists" in text or "registered" in text:
+        if "already" in text or "exists" in text or "registered" in text or "duplicate" in text:
             raise HTTPException(400, "email_exists") from exc
+        logger.error("Supabase admin registration error: %s", exc)
         raise HTTPException(400, "registration_failed") from exc
     except Exception as exc:
         logger.error("signup-code failed: %s", exc, exc_info=True)
         text = str(exc).lower()
-        if "duplicate" in text or "already" in text:
+        if "duplicate" in text or "already" in text or "exists" in text:
             raise HTTPException(400, "email_exists") from exc
         raise HTTPException(500, "server_error") from exc
 
@@ -129,6 +141,11 @@ async def verify_email_code(request: VerifyCodeRequest, request_obj: Request):
     if not profile:
         raise HTTPException(404, "verification_not_found")
     if profile.get("email_verified"):
+        # Repair Auth state for accounts whose profile was verified by an older flow.
+        try:
+            supabase.auth.admin.update_user_by_id(profile["user_id"], {"email_confirm": True})
+        except Exception as exc:
+            logger.warning("Could not repair Supabase Auth verification state: %s", exc)
         return {"verified": True}
 
     expires_raw = profile.get("email_verification_expires_at")
@@ -145,6 +162,13 @@ async def verify_email_code(request: VerifyCodeRequest, request_obj: Request):
     if not secrets.compare_digest(expected, _code_hash(request.email, request.code)):
         raise HTTPException(400, "verification_code_invalid")
 
+    # Both sources of truth must become verified: Supabase Auth protects API access,
+    # while profiles.email_verified is retained for the product's own state/UI.
+    try:
+        supabase.auth.admin.update_user_by_id(profile["user_id"], {"email_confirm": True})
+    except Exception as exc:
+        logger.error("Failed to confirm Supabase Auth email for %s: %s", profile["user_id"], exc, exc_info=True)
+        raise HTTPException(500, "verification_failed") from exc
     verified = supabase.rpc("mark_email_verified", {"p_user_id": profile["user_id"]}).execute()
     if not verified.data:
         raise HTTPException(500, "verification_failed")
@@ -156,6 +180,7 @@ async def resend_code(request: ResendCodeRequest, request_obj: Request):
     check_rate_limit(request_obj, extra_key=f"resend:{request.email.lower()}")
     result = supabase.table("profiles").select("*").eq("email", request.email).maybe_single().execute()
     profile = result.data or {}
+    # Deliberately return a neutral result for unknown addresses to avoid account enumeration.
     if not profile:
         return {"message": "verification_code_sent"}
     if profile.get("email_verified"):
@@ -182,6 +207,8 @@ async def get_current_user_with_onboarding(current_user: AuthUser = Depends(get_
 
 @router.get("/onboarding")
 async def get_onboarding(current_user: AuthUser = Depends(get_current_user)):
+    if not current_user.email_verified:
+        raise HTTPException(403, "EMAIL_NOT_VERIFIED")
     businesses = _owned_businesses(current_user.user_id)
     business = businesses[0] if businesses else None
     metadata: dict[str, Any] = {}
@@ -201,6 +228,8 @@ async def get_onboarding(current_user: AuthUser = Depends(get_current_user)):
 
 @router.post("/onboarding")
 async def save_onboarding(request: OnboardingRequest, current_user: AuthUser = Depends(get_current_user)):
+    if not current_user.email_verified:
+        raise HTTPException(403, "EMAIL_NOT_VERIFIED")
     category = request.business_category.strip()
     custom = request.custom_ai_instructions.strip()
     businesses = _owned_businesses(current_user.user_id)
