@@ -6,6 +6,7 @@
   const lang = (localStorage.getItem('conversapay-language') || localStorage.getItem('talk2pay_language') || 'he') === 'en' ? 'en' : 'he';
   const tr = (he, en) => lang === 'en' ? en : he;
   let selected = '';
+  let categoryDirty = false, instructionsDirty = false;
 
   function applyLanguage() {
     document.documentElement.lang = lang;
@@ -73,9 +74,9 @@
       const data = await response.json().catch(() => ({}));
       if (response.status === 401) { location.replace('/login'); return; }
       if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : tr('לא ניתן לטעון את ההגדרות', 'Could not load settings'));
-      if (data.completed) { location.replace('/dashboard'); return; }
-      selected = data.business_category || selected;
-      $('customInstructions').value = data.custom_ai_instructions || '';
+      if (data.completed && !categoryDirty && !instructionsDirty) { location.replace('/dashboard'); return; }
+      if (!categoryDirty) selected = data.business_category || selected;
+      if (!instructionsDirty) $('customInstructions').value = data.custom_ai_instructions || '';
       $('counter').textContent = $('customInstructions').value.length;
       restoreSelection();
       note.textContent = tr('ההגדרות הקיימות נטענו.', 'Existing settings loaded.');
@@ -129,7 +130,7 @@
   applyLanguage();
   document.querySelectorAll('.category-card').forEach(card => {
     card.setAttribute('aria-pressed', 'false');
-    card.addEventListener('click', () => choose(card));
+    card.addEventListener('click', () => { categoryDirty = true; choose(card); });
     const img = card.querySelector('img');
     if (img) img.addEventListener('error', () => {
       img.hidden = true;
@@ -138,7 +139,7 @@
   });
   $('toInstructions').addEventListener('click', () => setStep(2));
   $('backToCategories').addEventListener('click', () => setStep(1));
-  $('customInstructions').addEventListener('input', () => { $('counter').textContent = $('customInstructions').value.length; });
+  $('customInstructions').addEventListener('input', () => { instructionsDirty = true; $('counter').textContent = $('customInstructions').value.length; });
   $('finish').addEventListener('click', saveOnboarding);
   $('continueFree').addEventListener('click', () => location.replace('/dashboard'));
   $('upgradeClose').addEventListener('click', () => location.replace('/dashboard'));

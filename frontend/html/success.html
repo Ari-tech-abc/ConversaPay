@@ -18,7 +18,7 @@
       <span class="cp-kicker cp-text-center">אימות תשלום ושדרוג</span>
       <h1 id="title">אנחנו משלימים את השדרוג שלך</h1>
       <p class="cp-muted" id="description">אם התשלום ב-Stripe הושלם, המערכת תעדכן אוטומטית את המסלול ואת הפרופיל שלך.</p>
-      <span class="cp-badge warn" id="statusBadge">מצב בדיקות / Sandbox</span>
+      <span class="cp-badge warn" id="statusBadge">ממתין לאימות</span>
       <p id="statusText" class="cp-muted"></p>
       <div class="cp-panel cp-mt-md" id="details" hidden>
         <strong>פרטי בדיקה</strong>
@@ -30,26 +30,7 @@
       </div>
     </section>
   </main>
-  <script>
-    const API='/api/v1',params=new URLSearchParams(location.search),sessionId=params.get('session_id'),token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token'),MAX_ATTEMPTS=8;
-    const title=document.getElementById('title'),description=document.getElementById('description'),statusBadge=document.getElementById('statusBadge'),statusText=document.getElementById('statusText'),details=document.getElementById('details'),detailsText=document.getElementById('detailsText');
-    function setStatus(kind,label,text){statusBadge.className=`status-pill ${kind}`;statusBadge.textContent=label;statusText.textContent=text}function setDetails(text){details.hidden=false;detailsText.textContent=text}function wait(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
-    function redirectToDashboard(){setTimeout(()=>{location.href='/dashboard'},1800)}
-    async function confirmSession(attempt=0){
-      if(!sessionId){title.textContent='התשלום הושלם';description.textContent='לא התקבל session_id בכתובת, לכן לא ניתן לאמת אוטומטית את השדרוג. אפשר לחזור לדאשבורד ולרענן בעוד רגע.';setStatus('warn','נדרש אימות ידני','לא נמצא מזהה session בכתובת.');return}
-      setDetails(`Session ID: ${sessionId}`)
-      if(!token){title.textContent='התשלום התקבל';description.textContent='התשלום הועבר ל-Stripe, אבל צריך להתחבר כדי לסנכרן מיידית את הפרופיל והמסלול.';setStatus('warn','נדרשת התחברות','התחבר לחשבון ואז חזור לדאשבורד כדי לראות את העדכון.');return}
-      try{
-        const res=await fetch(`${API}/payments/confirm-session?session_id=${encodeURIComponent(sessionId)}`,{headers:{Authorization:`Bearer ${token}`}}),data=await res.json().catch(()=>({}));
-        if(!res.ok){if((res.status===502||res.status===503)&&attempt<MAX_ATTEMPTS){setStatus('warn','ממתין לסנכרון','Stripe אישר את החזרה, מנסה שוב לחבר את המסלול...');await wait(1200);return confirmSession(attempt+1)}throw new Error(data.detail||'אימות השדרוג נכשל')}
-        if(data.confirmed&&data.plan_type){const plan=String(data.plan_type||'pro').toUpperCase();title.textContent='התשלום נקלט והמנוי עודכן בהצלחה!';description.textContent=`החשבון והפרופיל עודכנו למסלול ${plan} מיד. מעבירים אותך לדאשבורד...`;setStatus('good',`מסלול ${plan} פעיל`,'הפרופיל סונכרן מיידית מול Stripe.');const extra=[];if(data.subscription_status)extra.push(`מצב מנוי: ${data.subscription_status}`);if(data.subscription_expires_at)extra.push(`תוקף נוכחי: ${data.subscription_expires_at}`);if(extra.length)setDetails(`Session ID: ${sessionId} | ${extra.join(' | ')}`);redirectToDashboard();return}
-        if(data.confirmed){title.textContent='התשלום אושר בהצלחה';description.textContent='Stripe אישר את התשלום. מעבירים אותך לדאשבורד...';setStatus('good','תשלום אושר','אין מסלול לסנכרון עבור התשלום הזה.');redirectToDashboard();return}
-        if(attempt<MAX_ATTEMPTS){setStatus('warn','ממתין לאישור Stripe','התשלום נקלט, ממתינים לאישור הסופי ומנסים שוב...');await wait(1500);return confirmSession(attempt+1)}
-        title.textContent='Stripe עדיין משלים את האישור';description.textContent='התשלום התקבל, אבל Stripe עדיין לא החזיר אישור סופי. חזור לדאשבורד בעוד כמה שניות, או רענן את העמוד.';setStatus('warn','ממתין לאישור Stripe','לא בוצע downgrade או שינוי חלקי.');
-      }catch(err){title.textContent='התשלום נקלט, אבל הסנכרון לא הושלם';description.textContent='קיבלנו חזרה מ-Stripe, אך הייתה בעיה באימות האוטומטי של השדרוג. אפשר לרענן ולנסות שוב.';setStatus('bad','שגיאת סנכרון',err.message||'לא ניתן היה לאמת את ה-session.')}
-    }
-    confirmSession();
-  </script>
+  <script src="/frontend/js/payment-result.js" defer></script>
   <script src="/frontend/js/language-switcher.js"></script>
 </body>
 </html>

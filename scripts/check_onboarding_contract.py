@@ -61,8 +61,8 @@ for marker in ['/settings','/setup-guide','/upgrade','id="addProductTop"','id="p
     need(marker in dashboard, f'dashboard missing {marker}', errors)
 need('inset-inline-start:0' in dash_css, 'profile icon must use logical inline-start for RTL/LTR placement', errors)
 
-# System errors are large blurred dismissible modals, except chat.
-need('backdrop-filter:blur' in system_css.replace(' ', ''), 'system error blur overlay missing', errors)
+# Notifications are dismissible and must not block forms; chat errors stay local.
+need('.cp-toast-wrap:has(.cp-toast){pointer-events:none!important}' in system_css.replace(' ', ''), 'notifications must not block form interaction', errors)
 need('cp-toast-close' in system_css and 'cp-toast-close' in system_js, 'dismiss X for system errors missing', errors)
 need('CHAT_EXCLUSIONS' in system_js and '#messages' in system_js, 'chat errors must stay inside chat', errors)
 

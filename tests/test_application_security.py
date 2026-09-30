@@ -100,6 +100,29 @@ class ApplicationSecurityTests(unittest.TestCase):
         self.assertEqual(decrypt_secret(payload["whatsapp_verify_token_encrypted"]),"test-verify-secret")
         self.assertNotIn("whatsapp_access_token",response)
 
+    def test_billing_usage_counts_only_the_current_utc_month(self):
+        db=MagicMock()
+        db.table.return_value.select.return_value.eq.return_value.gte.return_value.lt.return_value.execute.return_value.count=7
+        with patch.object(profile,"supabase",db), patch.object(profile,"get_user_profile",return_value={"plan_type":"free"}):
+            response=self.client.get('/api/v1/profile/billing')
+        self.assertEqual(response.status_code,200)
+        usage=response.json()["usage"]
+        self.assertEqual(usage["used"],7)
+        self.assertTrue(usage["available"])
+        start=usage["period_start"];end=usage["period_end"]
+        self.assertIn("-01T00:00:00+00:00",start)
+        self.assertGreater(end,start)
+        db.table.return_value.select.return_value.eq.return_value.gte.assert_called_once_with("created_at",start)
+        db.table.return_value.select.return_value.eq.return_value.gte.return_value.lt.assert_called_once_with("created_at",end)
+
+    def test_failed_usage_count_is_unavailable_instead_of_zero(self):
+        db=MagicMock()
+        db.table.return_value.select.return_value.eq.return_value.gte.return_value.lt.return_value.execute.side_effect=RuntimeError("offline")
+        with patch.object(profile,"supabase",db), patch.object(profile,"get_user_profile",return_value={"plan_type":"free"}):
+            response=self.client.get('/api/v1/profile/billing')
+        self.assertIsNone(response.json()["usage"]["used"])
+        self.assertFalse(response.json()["usage"]["available"])
+
     def test_identity_reset_uses_supported_sdk_and_neutral_response(self):
         db=MagicMock()
         db.table.return_value.select.return_value.eq.return_value.maybe_single.return_value.execute.return_value.data={"user_id":"offline-user"}

@@ -19,7 +19,7 @@ FALLBACK_HTML = """<!doctype html><html lang=\"he\" dir=\"rtl\"><head><meta char
 
 COPY_REPLACEMENTS = (("ConversaPay", "Talk2Pay"), ("Production checklist", "רשימת בדיקות לפרודקשן"), ("Developer tools", "כלי פיתוח"), ("Dashboard", "לוח בקרה"), ("DASHBOARD", "לוח בקרה"), ("Billing", "חיוב"), ("Security", "אבטחה"))
 VERIFICATION_GUARD_SRC = "/frontend/js/email-verification-guard.js"
-LANGUAGE_SCRIPT_SRC = "/frontend/js/language-switcher.js"
+LANGUAGE_SCRIPT_SRC = "/frontend/js/core-language.js"
 CORE_LANGUAGE_SCRIPT_SRC = "/frontend/js/core-language.js"
 LANGUAGE_STYLE_SRC = "/frontend/css/language-switcher.css"
 MOBILE_UI_STYLE_SRC = "/frontend/css/mobile-ui.css"
@@ -53,6 +53,9 @@ def _repair_i18n_markup(page: str) -> str:
 
 def _brand_markup(page: str, filename: str = "") -> str:
     page = _repair_i18n_markup(_normalize_copy(page))
+    page = re.sub(r'<script\s+src=["\']/frontend/js/language-switcher\.js["\'][^>]*></script>', '', page, flags=re.I)
+    if '/frontend/js/ux.js' not in page:
+        page = page.replace('</head>', '<script src="/frontend/js/ux.js"></script></head>', 1)
     page = re.sub(
         r'''<a\b[^>]*class=["'][^>]*\bcp-brand\b[^>]*["'][^>]*>.*?</a>''',
         lambda _match: '<a class="cp-brand" href="/"><span class="cp-brand-mark" aria-hidden="true">T2P</span><span>Talk2Pay</span></a>',

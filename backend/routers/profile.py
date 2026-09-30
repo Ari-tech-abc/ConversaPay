@@ -99,7 +99,7 @@ async def change_password(payload: PasswordPayload, current_user: AuthUser = Dep
 @router.get("/security")
 async def security_status(current_user: AuthUser = Depends(get_current_user)):
     row = get_user_profile(current_user.user_id) or {}
-    return {"two_factor_enabled": False, "two_factor_available": False, "sessions":[{"id":"current","device":"Current browser","ip":"Hidden by provider","last_active":_now(),"current":True}]}
+    return {"two_factor_enabled": False, "two_factor_available": False, "sessions_available": False, "sessions":[{"id":"current","device":"Current browser","ip":"Hidden by provider","last_active":_now(),"current":True}]}
 
 @router.post("/2fa/toggle")
 async def toggle_2fa(current_user: AuthUser = Depends(get_current_user)):
@@ -125,11 +125,13 @@ async def update_notifications(payload: PreferencesPayload, current_user: AuthUs
 
 @router.get("/billing")
 async def billing_summary(current_user: AuthUser = Depends(get_current_user)):
-    row = get_user_profile(current_user.user_id) or {}; plan = active_plan_from_row(row); used = 0
-    try: used = supabase.table("usage_logs").select("id", count="exact").eq("user_id", current_user.user_id).execute().count or 0
+    row = get_user_profile(current_user.user_id) or {}; plan = active_plan_from_row(row); used = None
+    period_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    period_end = period_start.replace(year=period_start.year+1, month=1) if period_start.month == 12 else period_start.replace(month=period_start.month+1)
+    try: used = supabase.table("usage_logs").select("id", count="exact").eq("user_id", current_user.user_id).gte("created_at", period_start.isoformat()).lt("created_at", period_end.isoformat()).execute().count or 0
     except Exception as exc: logger.warning("Usage summary unavailable for %s: %s", current_user.user_id, exc)
     view = _profile_view(row)
-    return {"plan_type":plan, "subscription_status":view["subscription_status"], "subscription_start_date":view["subscription_start_date"], "subscription_end_date":view["subscription_end_date"], "auto_renew":view["auto_renew"], "remaining_days":view["subscription_remaining_days"], "subscription_expires_at":view["subscription_expires_at"], "usage":{"used":used,"limit":{"free":1000,"pro":25000,"premium":100000}.get(plan,1000)},"manage_url":"/upgrade","invoices_url":"/upgrade#invoices"}
+    return {"plan_type":plan, "subscription_status":view["subscription_status"], "subscription_start_date":view["subscription_start_date"], "subscription_end_date":view["subscription_end_date"], "auto_renew":view["auto_renew"], "remaining_days":view["subscription_remaining_days"], "subscription_expires_at":view["subscription_expires_at"], "usage":{"used":used,"available":used is not None,"period_start":period_start.isoformat(),"period_end":period_end.isoformat(),"limit":{"free":1000,"pro":25000,"premium":100000}.get(plan,1000)},"manage_url":"/upgrade","invoices_url":"/upgrade#invoices"}
 
 @router.get("/export")
 async def export_account(current_user: AuthUser = Depends(get_current_user)):

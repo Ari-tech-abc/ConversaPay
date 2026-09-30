@@ -57,9 +57,9 @@
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: $('email').value.trim() }),
       });
-      if (!response.ok) throw new Error('request');
+      if (!response.ok) throw Object.assign(new Error('request'),{status:response.status});
       note('אם קיים חשבון, נשלח אליו קישור איפוס. בדוק את תיבת הדואר.');
-    } catch (_) { note('לא ניתן לשלוח את הקישור כרגע.', true); }
+    } catch (error) { note(window.Talk2PayUX?.error(error.status)||'לא ניתן לשלוח את הקישור כרגע.', true); }
     finally { button.disabled = false; }
   };
   $('resetForm').onsubmit = async event => {
@@ -74,12 +74,12 @@
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: recoveryToken, new_password: password }),
       });
-      if (!response.ok) throw new Error('reset');
+      if (!response.ok) throw Object.assign(new Error('reset'),{status:response.status});
       recoveryToken = null;
       ready = false;
       note('הסיסמה עודכנה. מעביר לכניסה...');
       setTimeout(() => location.replace('/login'), 1800);
-    } catch (_) { note('קישור האיפוס פג או אינו תקין. בקש קישור חדש.', true); button.disabled = false; }
+    } catch (error) { note(error.status===400?'קישור האיפוס פג או אינו תקין. בקש קישור חדש.':(window.Talk2PayUX?.error(error.status)||'השירות אינו זמין כרגע. נסה שוב.'), true); button.disabled = false; }
   };
   initializeRecovery();
 })();

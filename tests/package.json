@@ -2,7 +2,7 @@
   "name": "talk2pay-security-tests",
   "private": true,
   "scripts": {
-    "test": "node test_frontend_security.cjs && node test_database_security.cjs"
+    "test": "node test_frontend_security.cjs && node test_database_security.cjs && node test_ux_regressions.cjs"
   },
   "devDependencies": {
     "playwright": "1.62.1",
