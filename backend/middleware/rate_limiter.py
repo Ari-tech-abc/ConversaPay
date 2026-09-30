@@ -18,41 +18,30 @@ try:
 except ImportError:  # pragma: no cover, requirements installs redis-py
     redis = None
 
-_TRUSTED_PROXY_CIDRS: List[ipaddress.IPv4Network] = [
-    ipaddress.IPv4Network("127.0.0.0/8"),
-    ipaddress.IPv4Network("10.0.0.0/8"),
-    ipaddress.IPv4Network("172.16.0.0/12"),
-    ipaddress.IPv4Network("192.168.0.0/16"),
-]
-
-
-def _is_trusted_proxy(ip: str) -> bool:
-    try:
-        addr = ipaddress.ip_address(ip)
-        return any(addr in net for net in _TRUSTED_PROXY_CIDRS)
-    except ValueError:
-        return False
+def _trusted_proxy_networks():
+    # Trust is deployment-specific; private addresses are not inherently proxies.
+    return [ipaddress.ip_network(value.strip()) for value in settings.TRUSTED_PROXY_CIDRS.split(',') if value.strip()]
 
 
 def get_client_ip(request: Request) -> str:
-    direct_ip = request.client.host if request.client else "unknown"
-    if _is_trusted_proxy(direct_ip):
-        forwarded_for = request.headers.get("X-Forwarded-For")
-        if forwarded_for:
-            candidate = forwarded_for.split(",")[0].strip()
-            try:
-                ipaddress.ip_address(candidate)
-                return candidate
-            except ValueError:
-                pass
-        real_ip = request.headers.get("X-Real-IP", "").strip()
-        if real_ip:
-            try:
-                ipaddress.ip_address(real_ip)
-                return real_ip
-            except ValueError:
-                pass
-    return direct_ip
+    direct_ip = request.client.host if request.client else 'unknown'
+    try:
+        direct = ipaddress.ip_address(direct_ip)
+        networks = _trusted_proxy_networks()
+        trusted = lambda address: any(address in network for network in networks)
+        if not trusted(direct):
+            return direct_ip
+        forwarded = request.headers.get('X-Forwarded-For', '')
+        if not forwarded:
+            return direct_ip
+        chain = [ipaddress.ip_address(value.strip()) for value in forwarded.split(',')]
+        # Walk from the trusted peer towards the caller, ignoring spoofed prefixes.
+        for address in reversed(chain):
+            if not trusted(address):
+                return str(address)
+        return str(chain[0]) if chain else direct_ip
+    except ValueError:
+        return direct_ip
 
 
 class RateLimiter:

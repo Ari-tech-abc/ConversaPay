@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str
     DATABASE_URL: Optional[str] = None
     REDIS_URL: Optional[str] = None
+    TRUSTED_PROXY_CIDRS: str = ""
     MIGRATIONS_AUTO_APPLY: bool = True
     PAYMENT_PROVIDER: str = "stripe"
     STRIPE_SECRET_KEY: Optional[str] = None

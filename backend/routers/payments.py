@@ -16,7 +16,7 @@ from backend.middleware.auth import AuthUser, require_auth
 from backend.models.schemas import PaymentResponse, ProfileResponse, SubscriptionCreate, SubscriptionResponse
 from backend.services.payment_adapters import CheckoutOrder, PaymentAdapterError, get_checkout_adapter
 from backend.services.stripe_service import PLACEHOLDER_SECRET_KEY_PREFIX, STRIPE_KEY_MISSING_MESSAGE, StripeServiceError, describe_stripe_error, stripe_service
-from backend.services.subscription_service import apply_subscription_state, normalize_plan_type, period_end_iso
+from backend.services.subscription_service import apply_subscription_state, normalize_plan_type, period_end_iso, subscription_period_end
 
 logger = logging.getLogger(__name__)
 supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
@@ -80,7 +80,7 @@ async def create_subscription_checkout_session(request: SubscriptionCreate, curr
 def _extract_subscription_fields(session: dict[str, Any]) -> tuple[str | None, str | None, str | None, bool, dict[str, Any] | None]:
     subscription = session.get("subscription")
     if isinstance(subscription, dict):
-        return (subscription.get("id"), subscription.get("status"), period_end_iso(subscription.get("current_period_end")), bool(subscription.get("cancel_at_period_end", False)), subscription)
+        return (subscription.get("id"), subscription.get("status"), period_end_iso(subscription_period_end(subscription)), bool(subscription.get("cancel_at_period_end", False)), subscription)
     if isinstance(subscription, str):
         return subscription, None, None, False, None
     return None, None, None, False, None
@@ -107,7 +107,7 @@ def _subscription_plan_from_stripe(session: dict[str, Any], subscription: dict[s
         plan = normalize_plan_type(candidate)
         if plan in {"pro", "premium"}:
             return plan
-    return "pro"
+    raise HTTPException(400, "Subscription has no recognized plan")
 
 
 @router.get("/confirm-session", response_model=dict)
@@ -129,6 +129,9 @@ async def confirm_checkout_session(session_id: str = Query(..., min_length=1), c
     mode = session.get("mode")
     response: dict[str, Any] = {"session_id": session.get("id") or session_id, "mode": mode, "status": "pending", "payment_status": payment_status or None, "session_status": session_status or None, "confirmed": False, "subscription_state_source": "stripe_confirmed"}
 
+    if mode == "subscription" and metadata.get("user_id") != current_user.user_id:
+        raise HTTPException(403, "Session ownership metadata is required")
+
     if mode != "subscription":
         if payment_status in CONFIRMED_PAYMENT_STATUSES and session_status in {"complete", ""}:
             response.update({"confirmed": True, "status": "confirmed"})
@@ -142,7 +145,7 @@ async def confirm_checkout_session(session_id: str = Query(..., min_length=1), c
             raise HTTPException(_stripe_service_error_status(exc), str(exc)) from exc
         subscription_id = subscription.get("id") or subscription_id
         subscription_status = subscription.get("status")
-        subscription_expires_at = period_end_iso(subscription.get("current_period_end"))
+        subscription_expires_at = period_end_iso(subscription_period_end(subscription))
         cancel_at_period_end = bool(subscription.get("cancel_at_period_end", False))
 
     subscription_metadata = dict((subscription or {}).get("metadata") or {})
@@ -151,7 +154,7 @@ async def confirm_checkout_session(session_id: str = Query(..., min_length=1), c
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Subscription does not belong to the current user")
 
     normalized_subscription_status = str(subscription_status or "").lower()
-    paid_or_active = payment_status in CONFIRMED_PAYMENT_STATUSES or (session_status == "complete" and normalized_subscription_status in ACTIVE_SUBSCRIPTION_STATUSES)
+    paid_or_active = session_status == "complete" and normalized_subscription_status in ACTIVE_SUBSCRIPTION_STATUSES and bool(subscription_expires_at) and payment_status in CONFIRMED_PAYMENT_STATUSES
     if not paid_or_active:
         response.update({"subscription_status": normalized_subscription_status or None, "status": "pending"})
         logger.info("Stripe checkout still pending (session_id=%s session_status=%s payment_status=%s subscription_status=%s)", session_id, session_status or "unknown", payment_status or "unknown", normalized_subscription_status or "unknown")

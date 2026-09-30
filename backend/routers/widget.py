@@ -21,7 +21,7 @@ def plan_info(business_id, client):
     business = client.table("businesses").select("owner_id").eq("id", business_id).maybe_single().execute()
     if not business.data:
         return {"plan_type": "free", "active": False}
-    profile = client.table("profiles").select("plan_type,subscription_expires_at").eq("user_id", business.data["owner_id"]).maybe_single().execute()
+    profile = client.table("profiles").select("plan_type,subscription_status,subscription_expires_at,subscription_end_date").eq("user_id", business.data["owner_id"]).maybe_single().execute()
     plan = active_plan(profile.data or {})
     return {"plan_type": plan, "active": True}
 

@@ -24,6 +24,8 @@ from backend.models.schemas import (
     PasswordReset
 )
 from backend.services.email_service import email_service
+from backend.routers.safe_auth import safe_profile_view
+from backend.dependencies import create_auth_client
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +63,8 @@ def get_user_profile(user_id: str) -> Optional[dict]:
     try:
         result = supabase.table("profiles").select("*").eq("user_id", user_id).execute()
         if result.data:
-            return result.data[0]
+            from backend.services.whatsapp_security import secure_get_user_profile
+            return secure_get_user_profile(lambda _: result.data[0], update_profile_row, user_id)
     except Exception as e:
         logger.error(f"Error fetching user profile: {str(e)}")
     return None
@@ -81,13 +84,23 @@ def update_profile_row(user_id: str, changes: dict, select_fields: str = "*") ->
     the update itself.
     """
     try:
+        from backend.services.whatsapp_security import encrypt_secret, secret_hash, redact_profile
+        changes = dict(changes)
+        for field in ("whatsapp_access_token", "whatsapp_verify_token"):
+            if field in changes:
+                value = changes.pop(field)
+                if field + "_encrypted" not in changes:
+                    changes[field + "_encrypted"] = encrypt_secret(value)
+                changes[field] = None
+                if field == "whatsapp_verify_token" and "whatsapp_verify_token_hash" not in changes:
+                    changes["whatsapp_verify_token_hash"] = secret_hash(value)
         result = supabase.table("profiles")\
             .update(changes)\
             .eq("user_id", user_id)\
             .execute()
 
         if result.data:
-            return result.data[0]
+            return redact_profile(result.data[0])
 
         return get_user_profile(user_id)
     except Exception as e:
@@ -100,7 +113,7 @@ def create_user_profile(user_id: str, email: str, full_name: str, token: str, ex
     try:
         result = supabase.table("profiles").insert({
             "user_id": user_id,
-            "email": email,
+            "email": email.strip().lower(),
             "full_name": full_name,
             "plan_type": "free",
             "email_verified": False,
@@ -265,7 +278,7 @@ async def signup(request: UserRegister):
     """
     try:
         # Register user with Supabase Auth
-        auth_response = supabase.auth.sign_up({
+        auth_response = create_auth_client().auth.sign_up({
             "email": request.email,
             "password": request.password,
             "options": {
@@ -343,7 +356,7 @@ async def login(request: UserLogin):
     """
     try:
         # Authenticate with Supabase
-        auth_response = supabase.auth.sign_in_with_password({
+        auth_response = create_auth_client().auth.sign_in_with_password({
             "email": request.email,
             "password": request.password
         })
@@ -505,7 +518,13 @@ async def verify_email(token: str = Query(..., description="Email verification t
             </html>
             """)
         
-        # Mark email as verified via a SECURITY DEFINER RPC.
+        consumed = supabase.rpc("consume_email_verification", {
+            "p_user_id": profile["user_id"], "p_token": token,
+        }).execute()
+        if consumed.data is not True:
+            raise HTTPException(400, "Invalid or expired verification token")
+        supabase.auth.admin.update_user_by_id(profile["user_id"], {"email_confirm": True})
+        # Only confirmed Supabase Auth users may be marked verified.
         verify_result = supabase.rpc(
             "mark_email_verified", {"p_user_id": profile["user_id"]}
         ).execute()
@@ -570,20 +589,7 @@ async def logout(
         authorization = request.headers.get("Authorization", "")
         if authorization.startswith("Bearer "):
             access_token = authorization.split(" ", 1)[1]
-            try:
-                # Use a properly-initialized client (anon key as the project
-                # API key) and sign out via the user's access token.
-                user_client = create_client(
-                    settings.SUPABASE_URL,
-                    settings.SUPABASE_ANON_KEY
-                )
-                user_client.auth.sign_out(access_token)
-            except (AttributeError, TypeError):
-                # Fallback for gotrue-py versions without token param.
-                # Supabase JWTs are short-lived; client discards the token.
-                logger.debug("sign_out(token) not supported; client-side logout only")
-            except Exception as sign_out_err:
-                logger.debug(f"Server-side sign_out non-fatal: {sign_out_err}")
+            supabase.auth.admin.sign_out(access_token, "global")
 
         logger.info(f"User logged out: {current_user.email}")
         return MessageResponse(message="Logged out successfully")
@@ -611,7 +617,7 @@ async def request_password_reset(request: Request, request_data: PasswordResetRe
             f"IP: {client_ip}, User-Agent: {user_agent[:100]}"
         )
         
-        supabase.auth.reset_password_for_email(
+        create_auth_client(flow_type="implicit").auth.reset_password_for_email(
             str(request_data.email),
             {
                 "redirect_to": f"{settings.BASE_URL}/forgot-password.html"
@@ -699,9 +705,11 @@ async def confirm_password_reset(request: Request):
         client_ip = request.client.host if request.client else "unknown"
         user_agent = request.headers.get("user-agent", "unknown")
         
-        supabase.auth.update_user({
-            "password": request_data.new_password
-        }, request_data.token.strip())
+        auth_client = create_auth_client()
+        # set_session validates this caller's JWT; an empty refresh token cannot
+        # silently refresh an expired token or use another request's session.
+        auth_client.auth.set_session(request_data.token.strip(), "")
+        auth_client.auth.update_user({"password": request_data.new_password})
         
         logger.info(
             f"Password reset successful - IP: {client_ip}, "
@@ -765,7 +773,9 @@ async def verify_identity_for_reset(
         client_ip = request.client.host if request.client else "unknown"
         
         try:
-            user_lookup = supabase.auth.admin.get_user_by_email(email)
+            email = email.strip().lower()
+            profile_lookup = supabase.table("profiles").select("user_id").eq("email", email).maybe_single().execute()
+            user_lookup = supabase.auth.admin.get_user_by_id(profile_lookup.data["user_id"]) if profile_lookup.data else None
             if user_lookup and user_lookup.user:
                 user_id = user_lookup.user.id
                 
@@ -792,7 +802,7 @@ async def verify_identity_for_reset(
                 )
                 
                 return {
-                    "message": "Verification code sent to your email",
+                    "message": "If an account exists with this email, a verification code has been sent",
                     "email": email,
                     "expires_in_minutes": 10
                 }
@@ -825,7 +835,7 @@ async def get_current_user_info(current_user: AuthUser = Depends(get_current_use
     return UserInfoResponse(
         user_id=current_user.user_id,
         email=current_user.email,
-        profile=profile
+        profile=safe_profile_view(profile)
     )
 
 
@@ -839,7 +849,8 @@ async def update_whatsapp_settings(
     """
     body = await request.json()
     profile = get_user_profile(current_user.user_id)
-    if not profile or profile.get("plan_type") != "premium":
+    from backend.services.billing_reconciliation import active_plan_from_row
+    if not current_user.email_verified or not profile or active_plan_from_row(profile) != "premium":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="premium_required")
 
     result = update_profile_row(
@@ -882,7 +893,7 @@ async def update_current_user(
         if result:
             return {
                 "message": "Profile updated successfully",
-                "profile": result
+                "profile": safe_profile_view(result)
             }
         else:
             raise HTTPException(
@@ -906,6 +917,8 @@ async def update_current_user(
 
 @router.post("/oauth/session", response_model=dict)
 async def complete_oauth_session(current_user: AuthUser = Depends(get_current_user)):
+    if not current_user.email_verified:
+        raise HTTPException(403, "EMAIL_NOT_VERIFIED")
     """
     Finalize a Supabase OAuth (e.g. Google) sign-in.
 

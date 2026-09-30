@@ -8,6 +8,7 @@ import logging
 from supabase import Client, create_client
 
 from backend.config import settings
+from backend.services.billing_reconciliation import ACTIVE_STATUSES
 
 logger = logging.getLogger(__name__)
 supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
@@ -18,6 +19,15 @@ def period_end_iso(value: Any) -> str | None:
     if not value:
         return None
     return datetime.fromtimestamp(int(value), timezone.utc).isoformat()
+
+
+def subscription_period_end(subscription: dict) -> int | None:
+    direct = subscription.get('current_period_end')
+    if direct:
+        return direct
+    items = (subscription.get('items') or {}).get('data') or []
+    periods = [item.get('current_period_end') for item in items if item.get('current_period_end')]
+    return min(periods) if periods else None
 
 
 def _as_dict(value: Any) -> dict[str, Any]:
@@ -80,8 +90,8 @@ def _resolve_plan_type(plan_type: Any, stripe_subscription: Any) -> str:
         normalized = normalize_plan_type(candidate)
         if normalized in {"pro", "premium", "free"}:
             return normalized
-    # Preserve the legacy default for old Stripe objects that predate metadata.
-    return "pro"
+    # Missing plan identity never grants a paid tier.
+    return "free"
 
 
 def apply_subscription_state(
@@ -103,18 +113,18 @@ def apply_subscription_state(
         return
 
     plan = _resolve_plan_type(plan_type, stripe_subscription)
-    provider_status = str(subscription_status or subscription.get("status") or "active").lower()
-    expiry = subscription_expires_at or period_end_iso(subscription.get("current_period_end"))
+    provider_status = str(subscription_status or subscription.get("status") or "unknown").lower()
+    expiry = subscription_expires_at or period_end_iso(subscription_period_end(subscription))
     stripe_subscription_id = stripe_subscription_id or subscription.get("id")
     customer_id = customer_id or subscription.get("customer")
     auto_renew = not cancel_at_period_end
 
-    if provider_status in TERMINAL:
+    if provider_status not in ACTIVE_STATUSES:
         plan, expiry, auto_renew = "free", None, False
     elif cancel_at_period_end and plan in {"pro", "premium"}:
         provider_status = "pending_cancellation"
     if plan in {"pro", "premium"} and not expiry:
-        expiry = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+        plan, auto_renew = "free", False
 
     now = datetime.now(timezone.utc).isoformat()
     payload: dict[str, Any] = {

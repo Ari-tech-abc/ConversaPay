@@ -19,10 +19,7 @@ from backend.services.observability import initialize_error_tracking
 logger=logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(_:FastAPI):
-    monitoring_service.initialize(); initialize_error_tracking(); asyncio.create_task(_run_migrations_background()); yield
-async def _run_migrations_background():
-    try: await apply_migrations()
-    except Exception: logger.exception("Background database migrations failed")
+    monitoring_service.initialize(); initialize_error_tracking(); await apply_migrations(); yield
 app=FastAPI(title="Talk2Pay API",version="2.5.0",lifespan=lifespan,docs_url=None if settings.is_production else "/docs",redoc_url=None if settings.is_production else "/redoc")
 class DualCORSMiddleware(BaseHTTPMiddleware):
     PUBLIC_PREFIXES=(f"{settings.API_PREFIX}/chat",f"{settings.API_PREFIX}/widget",f"{settings.API_PREFIX}/webhooks/",f"{settings.API_PREFIX}/orders/",f"{settings.API_PREFIX}/site-builder/")

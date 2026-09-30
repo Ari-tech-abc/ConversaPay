@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from supabase import create_client
 from backend.config import settings
+from backend.services.billing_reconciliation import active_plan_from_row
 from backend.middleware.auth import AuthUser, require_auth
 from backend.middleware.tenant_guard import verify_resource_owner
 logger = logging.getLogger(__name__)
@@ -19,7 +20,7 @@ def _parse_datetime(value: Any) -> datetime | None:
         parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00")); return parsed if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
     except (TypeError, ValueError): return None
 def _status_payload(row: dict[str, Any]) -> dict[str, Any]:
-    now = datetime.now(timezone.utc); plan = str(row.get("plan_type") or "free").lower(); end_date = _parse_datetime(row.get("subscription_end_date") or row.get("subscription_expires_at")); start_date = _parse_datetime(row.get("subscription_start_date")); expired = bool(end_date and end_date <= now and plan != "free"); effective_plan = "free" if expired else plan
+    now = datetime.now(timezone.utc); plan = str(row.get("plan_type") or "free").lower(); end_date = _parse_datetime(row.get("subscription_end_date") or row.get("subscription_expires_at")); start_date = _parse_datetime(row.get("subscription_start_date")); expired = bool(end_date and end_date <= now and plan != "free"); effective_plan = active_plan_from_row(row)
     return {"plan_type": effective_plan, "stored_plan_type": plan, "subscription_status": "expired" if expired else (row.get("subscription_status") or "active"), "subscription_start_date": start_date.isoformat() if start_date else None, "subscription_end_date": end_date.isoformat() if end_date else None, "subscription_expires_at": end_date.isoformat() if end_date else None, "auto_renew": bool(row.get("auto_renew", True)) if not expired else False, "remaining_days": max(0, (end_date.date() - now.date()).days) if end_date else 0, "is_paid": effective_plan in {"pro", "premium"}, "stripe_subscription_id": row.get("stripe_subscription_id")}
 def _load_profile(user_id: str) -> dict[str, Any]:
     result = supabase.table("profiles").select("user_id,email,full_name,plan_type,subscription_status,subscription_start_date,subscription_end_date,subscription_expires_at,auto_renew,stripe_subscription_id").eq("user_id", user_id).limit(1).execute()

@@ -14,13 +14,15 @@ from supabase_auth.errors import AuthApiError as SupabaseAuthApiError
 
 from backend.config import settings
 from backend.middleware.auth import AuthUser, get_current_user
-from backend.middleware.rate_limiter import check_rate_limit
+from backend.middleware.rate_limiter import RateLimiter, check_rate_limit
+from backend.routers.safe_auth import safe_profile_view
 from backend.routers.auth import create_business_for_user, create_user_profile, get_user_profile, update_profile_row
 from backend.services.email_service import email_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/auth", tags=["authentication"])
 supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
+verification_account_limiter = RateLimiter(requests_per_minute=5, window_seconds=900, name="verification-account")
 
 
 class SignupCodeRequest(BaseModel):
@@ -75,13 +77,14 @@ def _auth_view(current_user: AuthUser) -> dict[str, Any]:
     return {
         "user_id": current_user.user_id,
         "email": current_user.email,
-        "profile": profile,
+        "profile": safe_profile_view(profile),
         "requires_business_onboarding": _onboarding_required(current_user.user_id, businesses),
     }
 
 
 @router.post("/signup-code", status_code=status.HTTP_201_CREATED)
 async def signup_with_code(request: SignupCodeRequest, request_obj: Request):
+    request.email = str(request.email).strip().lower()
     """Create an unconfirmed Supabase Auth user without sending Supabase's link email."""
     check_rate_limit(request_obj, extra_key=f"signup:{request.email.lower()}")
     try:
@@ -135,18 +138,20 @@ async def signup_with_code(request: SignupCodeRequest, request_obj: Request):
 
 @router.post("/verify-code")
 async def verify_email_code(request: VerifyCodeRequest, request_obj: Request):
+    request.email = str(request.email).strip().lower()
     check_rate_limit(request_obj, extra_key=f"verify:{request.email.lower()}")
+    if not verification_account_limiter.is_allowed(request.email.lower()):
+        raise HTTPException(429, "verification_attempts_exceeded", headers={"Retry-After": "900"})
     result = supabase.table("profiles").select("*").eq("email", request.email).maybe_single().execute()
     profile = result.data or {}
     if not profile:
         raise HTTPException(404, "verification_not_found")
     if profile.get("email_verified"):
-        # Repair Auth state for accounts whose profile was verified by an older flow.
-        try:
-            supabase.auth.admin.update_user_by_id(profile["user_id"], {"email_confirm": True})
-        except Exception as exc:
-            logger.warning("Could not repair Supabase Auth verification state: %s", exc)
-        return {"verified": True}
+        # A profile flag is never proof of control of the email address.
+        lookup = supabase.auth.admin.get_user_by_id(profile["user_id"])
+        if lookup and lookup.user and lookup.user.email_confirmed_at:
+            return {"verified": True}
+        raise HTTPException(400, "verification_required")
 
     expires_raw = profile.get("email_verification_expires_at")
     if not expires_raw:
@@ -160,6 +165,10 @@ async def verify_email_code(request: VerifyCodeRequest, request_obj: Request):
 
     expected = str(profile.get("email_verification_token") or "")
     if not secrets.compare_digest(expected, _code_hash(request.email, request.code)):
+        raise HTTPException(400, "verification_code_invalid")
+
+    consumed = supabase.rpc("consume_email_verification", {"p_user_id": profile["user_id"], "p_token": expected}).execute()
+    if consumed.data is not True:
         raise HTTPException(400, "verification_code_invalid")
 
     # Both sources of truth must become verified: Supabase Auth protects API access,
@@ -177,6 +186,7 @@ async def verify_email_code(request: VerifyCodeRequest, request_obj: Request):
 
 @router.post("/resend-code")
 async def resend_code(request: ResendCodeRequest, request_obj: Request):
+    request.email = str(request.email).strip().lower()
     check_rate_limit(request_obj, extra_key=f"resend:{request.email.lower()}")
     result = supabase.table("profiles").select("*").eq("email", request.email).maybe_single().execute()
     profile = result.data or {}
@@ -184,7 +194,9 @@ async def resend_code(request: ResendCodeRequest, request_obj: Request):
     if not profile:
         return {"message": "verification_code_sent"}
     if profile.get("email_verified"):
-        return {"message": "already_verified"}
+        lookup = supabase.auth.admin.get_user_by_id(profile["user_id"])
+        if lookup and lookup.user and lookup.user.email_confirmed_at:
+            return {"message": "already_verified"}
 
     code = _new_code()
     expires_at = (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat()
@@ -266,6 +278,8 @@ async def save_onboarding(request: OnboardingRequest, current_user: AuthUser = D
 
 @router.post("/oauth/session")
 async def complete_oauth_session_with_onboarding(current_user: AuthUser = Depends(get_current_user)):
+    if not current_user.email_verified:
+        raise HTTPException(403, "EMAIL_NOT_VERIFIED")
     try:
         full_name = ""
         business_name = ""

@@ -7,6 +7,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
 from supabase import create_client
 from backend.config import settings
+from backend.dependencies import create_auth_client
+from backend.services.billing_reconciliation import active_plan_from_row
 from backend.middleware.auth import AuthUser, get_current_user
 from backend.routers.auth import get_user_profile
 
@@ -59,7 +61,7 @@ def _profile_view(row: dict[str, Any] | None) -> dict[str, Any]:
     row = row or {}
     end_date = row.get("subscription_end_date") or row.get("subscription_expires_at")
     return {
-        "full_name": row.get("full_name") or "", "company_name": row.get("company_name") or "", "phone": row.get("phone") or "", "timezone": row.get("timezone") or "UTC", "avatar_url": row.get("avatar_url") or "", "notification_preferences": row.get("notification_preferences") or {"payment_success": True, "weekly_digest": True, "security_alerts": True, "product_updates": False}, "two_factor_enabled": bool(row.get("two_factor_enabled", False)), "plan_type": row.get("plan_type") or "free", "subscription_status": row.get("subscription_status") or "active", "subscription_start_date": row.get("subscription_start_date"), "subscription_end_date": end_date, "subscription_expires_at": end_date, "auto_renew": bool(row.get("auto_renew", True)), "stripe_subscription_id": row.get("stripe_subscription_id"), "subscription_remaining_days": _remaining_days(end_date), "subscription_active": _subscription_active(row.get("plan_type"), end_date), "subscription_expires_at": end_date,
+        "full_name": row.get("full_name") or "", "company_name": row.get("company_name") or "", "phone": row.get("phone") or "", "timezone": row.get("timezone") or "UTC", "avatar_url": row.get("avatar_url") or "", "notification_preferences": row.get("notification_preferences") or {"payment_success": True, "weekly_digest": True, "security_alerts": True, "product_updates": False}, "two_factor_enabled": False, "two_factor_available": False, "plan_type": row.get("plan_type") or "free", "subscription_status": row.get("subscription_status") or "active", "subscription_start_date": row.get("subscription_start_date"), "subscription_end_date": end_date, "subscription_expires_at": end_date, "auto_renew": bool(row.get("auto_renew", True)), "stripe_subscription_id": row.get("stripe_subscription_id"), "subscription_remaining_days": _remaining_days(end_date), "subscription_active": str(row.get("plan_type") or "free").lower() == "free" or active_plan_from_row(row) != "free", "subscription_expires_at": end_date,
     }
 
 def _remaining_days(value: Any) -> int:
@@ -87,7 +89,7 @@ async def update_profile(payload: ProfileUpdatePayload, current_user: AuthUser =
 @router.post("/password")
 async def change_password(payload: PasswordPayload, current_user: AuthUser = Depends(get_current_user)):
     try:
-        auth_check = supabase.auth.sign_in_with_password({"email": current_user.email, "password": payload.current_password})
+        auth_check = create_auth_client().auth.sign_in_with_password({"email": current_user.email, "password": payload.current_password})
         if not auth_check or not auth_check.user: raise HTTPException(400, "Current password is incorrect")
         supabase.auth.admin.update_user_by_id(current_user.user_id, {"password": payload.new_password})
         return {"message":"Password updated"}
@@ -97,17 +99,17 @@ async def change_password(payload: PasswordPayload, current_user: AuthUser = Dep
 @router.get("/security")
 async def security_status(current_user: AuthUser = Depends(get_current_user)):
     row = get_user_profile(current_user.user_id) or {}
-    return {"two_factor_enabled": bool(row.get("two_factor_enabled", False)), "sessions":[{"id":"current","device":"Current browser","ip":"Hidden by provider","last_active":_now(),"current":True}]}
+    return {"two_factor_enabled": False, "two_factor_available": False, "sessions":[{"id":"current","device":"Current browser","ip":"Hidden by provider","last_active":_now(),"current":True}]}
 
 @router.post("/2fa/toggle")
 async def toggle_2fa(current_user: AuthUser = Depends(get_current_user)):
-    row = get_user_profile(current_user.user_id) or {}; enabled = not bool(row.get("two_factor_enabled", False))
-    return {"two_factor_enabled":enabled, "profile":_profile_view(_safe_update(current_user.user_id,{"two_factor_enabled":enabled}))}
+    raise HTTPException(503, {"code":"mfa_unavailable", "message":"Two-factor authentication is not available yet."})
+
 
 @router.post("/sessions/revoke-others")
-async def revoke_other_sessions(current_user: AuthUser = Depends(get_current_user)):
+async def revoke_other_sessions(request: Request, current_user: AuthUser = Depends(get_current_user)):
     try:
-        result = supabase.auth.admin.sign_out(current_user.user_id, "others")
+        result = supabase.auth.admin.sign_out(request.headers["Authorization"].split(" ", 1)[1], "others")
         if getattr(result, "error", None): raise RuntimeError(str(result.error))
     except Exception as exc:
         logger.error("Failed to revoke sessions for %s: %s", current_user.user_id, exc, exc_info=True); raise HTTPException(502,"Unable to revoke other sessions") from exc
@@ -123,7 +125,7 @@ async def update_notifications(payload: PreferencesPayload, current_user: AuthUs
 
 @router.get("/billing")
 async def billing_summary(current_user: AuthUser = Depends(get_current_user)):
-    row = get_user_profile(current_user.user_id) or {}; plan = row.get("plan_type") or "free"; used = 0
+    row = get_user_profile(current_user.user_id) or {}; plan = active_plan_from_row(row); used = 0
     try: used = supabase.table("usage_logs").select("id", count="exact").eq("user_id", current_user.user_id).execute().count or 0
     except Exception as exc: logger.warning("Usage summary unavailable for %s: %s", current_user.user_id, exc)
     view = _profile_view(row)

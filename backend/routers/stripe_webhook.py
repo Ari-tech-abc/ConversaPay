@@ -10,7 +10,9 @@ from fastapi.responses import JSONResponse
 from supabase import Client, create_client
 
 from backend.config import settings
-from backend.services.subscription_service import apply_subscription_state, mark_webhook_failed, mark_webhook_processed, period_end_iso
+from backend.services.subscription_service import apply_subscription_state, mark_webhook_failed, mark_webhook_processed, period_end_iso, subscription_period_end
+
+from backend.services.payment_validation import checkout_amount
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/webhooks/stripe", tags=["stripe-webhook"], redirect_slashes=False)
@@ -40,10 +42,19 @@ def _lookup_user(customer_id: str | None = None, subscription_id: str | None = N
     return result.data[0]["user_id"] if result.data else None
 
 
-def _update_order(order_id: str, *, order_status: str, payment_status: str, metadata_updates: dict[str, Any], paid: bool = False) -> None:
-    result = supabase.rpc("update_order_payment_atomic", {"p_order_id": order_id, "p_order_status": order_status, "p_payment_status": payment_status, "p_metadata_updates": metadata_updates, "p_paid": paid}).execute()
-    if result.data is not True and str(result.data).lower() not in {"true", "[true]"}:
-        raise RuntimeError("Atomic order/payment update was not confirmed")
+def _update_order(order_id: str, *, session: dict, order_status: str, payment_status: str, metadata_updates: dict[str, Any], paid: bool = False) -> None:
+    amount, currency = checkout_amount(session)
+    session_id = session.get('id')
+    if not session_id:
+        raise ValueError('Missing provider session ID')
+    result = supabase.rpc('update_order_payment_atomic', {
+        'p_order_id': order_id, 'p_order_status': order_status, 'p_payment_status': payment_status,
+        'p_metadata_updates': metadata_updates, 'p_paid': paid,
+        'p_expected_amount': amount, 'p_expected_currency': currency,
+        'p_provider_session_id': session_id, 'p_provider': 'stripe',
+    }).execute()
+    if result.data is not True:
+        raise RuntimeError('Atomic order/payment validation or update failed')
 
 
 def _apply_from_event(*, user_id: str | None, plan_type: str | None, subscription_id: str | None, customer_id: str | None, context: dict[str, Any], stripe_subscription: dict[str, Any] | None = None) -> None:
@@ -60,7 +71,7 @@ def _apply_from_event(*, user_id: str | None, plan_type: str | None, subscriptio
 
 
 def _subscription_context(obj: dict[str, Any], subscription_id: str | None = None) -> dict[str, Any]:
-    return {"id": obj.get("id") or subscription_id, "metadata": dict(obj.get("metadata") or {}), "status": obj.get("status"), "current_period_end": period_end_iso(obj.get("current_period_end")), "customer": obj.get("customer"), "cancel_at_period_end": bool(obj.get("cancel_at_period_end", False))}
+    return {"id": obj.get("id") or subscription_id, "metadata": dict(obj.get("metadata") or {}), "status": obj.get("status"), "current_period_end": period_end_iso(subscription_period_end(obj)), "customer": obj.get("customer"), "cancel_at_period_end": bool(obj.get("cancel_at_period_end", False))}
 
 
 def _as_dict(obj: Any) -> dict[str, Any]:
@@ -106,8 +117,8 @@ async def stripe_webhook(request: Request) -> JSONResponse:
         checkout_completed = False
         if event_type in {"checkout.session.completed", "checkout.session.async_payment_succeeded"}:
             order_id = metadata.get("order_id")
-            if order_id:
-                _update_order(order_id, order_status="paid", payment_status="succeeded", paid=True, metadata_updates={"provider": "stripe", "session_id": obj.get("id"), "payment_intent": obj.get("payment_intent"), "customer": obj.get("customer")})
+            if order_id and obj.get("payment_status") == "paid":
+                _update_order(order_id, session=obj, order_status="paid", payment_status="succeeded", paid=True, metadata_updates={"provider": "stripe", "provider_session_id": obj.get("id"), "payment_intent": obj.get("payment_intent"), "customer": obj.get("customer")})
                 checkout_completed = True
             if obj.get("mode") == "subscription":
                 subscription_id = obj.get("subscription") if isinstance(obj.get("subscription"), str) else None
@@ -119,7 +130,7 @@ async def stripe_webhook(request: Request) -> JSONResponse:
         elif event_type == "checkout.session.async_payment_failed":
             order_id = metadata.get("order_id")
             if order_id:
-                _update_order(order_id, order_status="pending", payment_status="failed", metadata_updates={"provider": "stripe", "session_id": obj.get("id")})
+                _update_order(order_id, session=obj, order_status="pending", payment_status="failed", metadata_updates={"provider": "stripe", "provider_session_id": obj.get("id")})
         elif event_type.startswith("customer.subscription."):
             context = _subscription_context(obj)
             context["status"] = "canceled" if event_type == "customer.subscription.deleted" else context.get("status")

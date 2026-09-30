@@ -52,7 +52,11 @@ def secure_get_user_profile(original_get, original_update, user_id: str) -> dict
     legacy_access = profile.get("whatsapp_access_token")
     legacy_verify = profile.get("whatsapp_verify_token")
     if legacy_access or legacy_verify:
-        encrypted = {"whatsapp_access_token_encrypted": encrypt_secret(legacy_access),"whatsapp_verify_token_encrypted": encrypt_secret(legacy_verify),"whatsapp_verify_token_hash": secret_hash(legacy_verify),"whatsapp_access_token": None,"whatsapp_verify_token": None}
+        encrypted = {}
+        if legacy_access:
+            encrypted.update({"whatsapp_access_token_encrypted": encrypt_secret(legacy_access), "whatsapp_access_token": None})
+        if legacy_verify:
+            encrypted.update({"whatsapp_verify_token_encrypted": encrypt_secret(legacy_verify), "whatsapp_verify_token_hash": secret_hash(legacy_verify), "whatsapp_verify_token": None})
         try: original_update(user_id, encrypted)
         except Exception: pass
     return redact_profile(profile)

@@ -5,7 +5,6 @@ from typing import Optional
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, ConfigDict
 from backend.middleware.auth import AuthUser, get_current_user
-from backend.routers.auth import get_user_profile
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -29,8 +28,16 @@ class SafeMeResponse(BaseModel):
     profile: Optional[SafeProfileResponse] = None
 
 
+def safe_profile_view(raw: dict | None) -> dict | None:
+    if not raw:
+        return None
+    allowed = set(SafeProfileResponse.model_fields)
+    return SafeProfileResponse.model_validate({key: raw[key] for key in allowed if key in raw}).model_dump(mode="json")
+
+
 @router.get("/me", response_model=SafeMeResponse)
 async def safe_current_user_info(current_user: AuthUser = Depends(get_current_user)) -> SafeMeResponse:
+    from backend.routers.auth import get_user_profile
     raw = get_user_profile(current_user.user_id) or {}
     allowed = {
         "email", "full_name", "plan_type", "email_verified", "subscription_status",

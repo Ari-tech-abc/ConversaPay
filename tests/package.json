@@ -1,0 +1,11 @@
+{
+  "name": "talk2pay-security-tests",
+  "private": true,
+  "scripts": {
+    "test": "node test_frontend_security.cjs && node test_database_security.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1",
+    "@electric-sql/pglite": "0.5.8"
+  }
+}

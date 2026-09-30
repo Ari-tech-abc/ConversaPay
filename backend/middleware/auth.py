@@ -88,24 +88,13 @@ class RoleChecker:
 
 
 def active_plan(row: dict) -> str:
-    plan = str(row.get("plan_type") or "free").strip().lower()
-    plan = {"professional": "pro", "pro_monthly": "pro", "premium_monthly": "premium", "paid": "pro"}.get(plan, plan)
-    if plan not in {"free", "pro", "premium"}:
-        return "free"
-    if plan != "free" and row.get("subscription_expires_at"):
-        try:
-            exp = datetime.fromisoformat(str(row["subscription_expires_at"]).replace("Z", "+00:00"))
-            exp = exp if exp.tzinfo else exp.replace(tzinfo=timezone.utc)
-            if exp <= datetime.now(timezone.utc):
-                return "free"
-        except ValueError:
-            return "free"
-    return plan
+    from backend.services.billing_reconciliation import active_plan_from_row
+    return active_plan_from_row(row)
 
 
 def is_pro_user(user_id: str) -> bool:
     try:
-        result = supabase_service.table("profiles").select("plan_type,subscription_expires_at").eq("user_id", user_id).maybe_single().execute()
+        result = supabase_service.table("profiles").select("plan_type,subscription_status,subscription_expires_at,subscription_end_date").eq("user_id", user_id).maybe_single().execute()
         return active_plan(result.data or {}) in {"pro", "premium"}
     except Exception as exc:
         logger.error("Plan check error: %s", exc)

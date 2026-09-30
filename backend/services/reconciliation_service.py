@@ -10,13 +10,15 @@ from supabase import create_client
 from backend.config import settings
 from backend.services.stripe_service import StripeServiceError, stripe_service
 
+from backend.services.payment_validation import checkout_amount
+
 logger = logging.getLogger(__name__)
 supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
 
 
 PENDING_STATUSES = {"pending", "processing"}
-PAID_STATUSES = {"paid", "succeeded", "no_payment_required"}
-FAILED_STATUSES = {"unpaid", "failed", "canceled"}
+PAID_STATUSES = {"paid"}
+FAILED_STATUSES = {"failed", "canceled"}
 
 
 def _session_id_from_metadata(metadata: dict[str, Any]) -> str | None:
@@ -92,7 +94,10 @@ def reconcile_orders(
             else:
                 continue
 
-            supabase.rpc(
+            if (session.get("metadata") or {}).get("order_id") != row["order_id"]:
+                raise ValueError("Provider session belongs to a different order")
+            amount, currency = checkout_amount(session)
+            result = supabase.rpc(
                 "update_order_payment_atomic",
                 {
                     "p_order_id": row["order_id"],
@@ -102,8 +107,12 @@ def reconcile_orders(
                         session_id, payment_status
                     ),
                     "p_paid": paid,
+                    "p_expected_amount": amount, "p_expected_currency": currency,
+                    "p_provider_session_id": session_id, "p_provider": "stripe",
                 },
             ).execute()
+            if result.data is not True:
+                raise RuntimeError("Atomic order/payment validation failed")
             updated += 1
         except (StripeServiceError, ValueError, RuntimeError) as exc:
             failed += 1

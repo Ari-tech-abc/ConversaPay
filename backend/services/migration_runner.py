@@ -60,9 +60,27 @@ async def apply_migrations()->int:
                     await connection.execute(migration.sql)
                     await connection.execute("insert into public.schema_migrations(name, checksum) values($1, $2)",migration.name,migration.checksum)
                     count+=1
+                await encrypt_legacy_whatsapp_credentials(connection)
                 _set_migration_status("completed")
                 return count
         finally: await connection.close()
     except Exception:
         _set_migration_status("failed")
         raise
+
+
+async def encrypt_legacy_whatsapp_credentials(connection) -> int:
+    """Move existing plaintext credentials before the migration transaction commits."""
+    from backend.services.whatsapp_security import encrypt_secret, secret_hash
+    rows = await connection.fetch("SELECT id, whatsapp_access_token, whatsapp_verify_token FROM public.profiles WHERE whatsapp_access_token IS NOT NULL OR whatsapp_verify_token IS NOT NULL")
+    for row in rows:
+        access, verify = row['whatsapp_access_token'], row['whatsapp_verify_token']
+        await connection.execute(
+            """UPDATE public.profiles SET
+            whatsapp_access_token_encrypted = CASE WHEN whatsapp_access_token IS NOT NULL THEN $2 ELSE whatsapp_access_token_encrypted END,
+            whatsapp_verify_token_encrypted = CASE WHEN whatsapp_verify_token IS NOT NULL THEN $3 ELSE whatsapp_verify_token_encrypted END,
+            whatsapp_verify_token_hash = CASE WHEN whatsapp_verify_token IS NOT NULL THEN $4 ELSE whatsapp_verify_token_hash END,
+            whatsapp_access_token = NULL, whatsapp_verify_token = NULL WHERE id = $1""",
+            row['id'], encrypt_secret(access), encrypt_secret(verify), secret_hash(verify),
+        )
+    return len(rows)

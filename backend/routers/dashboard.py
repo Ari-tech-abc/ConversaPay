@@ -36,16 +36,9 @@ def normalize_subscription_status(value):
     return normalize_plan(value)
 
 def subscription_active(row):
-    plan=normalize_subscription_status(row.get('plan_type'))
-    if plan=='free':return True
-    status_value=str(row.get('subscription_status') or 'active').strip().lower()
-    if status_value in INACTIVE_SUBSCRIPTION_STATUSES:return False
-    raw=row.get('subscription_expires_at') or row.get('subscription_end_date')
-    if not raw:return True
-    try:
-        exp=datetime.fromisoformat(str(raw).replace('Z','+00:00'))
-        return (exp if exp.tzinfo else exp.replace(tzinfo=timezone.utc))>datetime.now(timezone.utc)
-    except (TypeError,ValueError):return False
+    from backend.services.billing_reconciliation import active_plan_from_row
+    return normalize_subscription_status(row.get('plan_type')) == 'free' or active_plan_from_row(row) != 'free'
+
 
 def get_active_paid_plan(row):
     """Return the normalized paid tier only when the subscription is still active."""

@@ -5,6 +5,8 @@ from supabase import Client, create_client
 import logging
 
 from backend.config import settings
+from backend.dependencies import create_auth_client
+from datetime import datetime, timedelta, timezone
 from backend.middleware.auth import AuthUser, get_current_user
 from backend.models.schemas import UserRegister
 from backend.routers.auth import create_user_profile, generate_verification_token, email_service
@@ -24,7 +26,7 @@ EMAIL_REDIRECT_TO = f"{settings.FRONTEND_URL.rstrip('/')}/auth/callback"
 @router.post("/signup", response_model=dict, status_code=status.HTTP_201_CREATED)
 async def signup(request: UserRegister):
     try:
-        auth_response = supabase.auth.sign_up({
+        auth_response = create_auth_client().auth.sign_up({
             "email": str(request.email),
             "password": request.password,
             "options": {
@@ -42,7 +44,7 @@ async def signup(request: UserRegister):
             str(request.email),
             request.full_name,
             token,
-            "2099-01-01T00:00:00+00:00",
+            (datetime.now(timezone.utc) + timedelta(hours=24)).isoformat(),
         )
         if not profile:
             raise HTTPException(status_code=500, detail="server_error")

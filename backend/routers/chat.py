@@ -133,7 +133,7 @@ async def chat(request: ChatRequest, request_obj: Request):
         if not business_result.data:
             raise HTTPException(404, "Business not found")
         business = business_result.data[0]
-        profile = supabase.table("profiles").select("plan_type,subscription_expires_at").eq("user_id", business["owner_id"]).maybe_single().execute()
+        profile = supabase.table("profiles").select("plan_type,subscription_status,subscription_expires_at,subscription_end_date").eq("user_id", business["owner_id"]).maybe_single().execute()
         plan_type = active_plan(profile.data or {})
 
         await authorize_widget_request(
