@@ -176,13 +176,13 @@
       .cp-toggle svg{width:26px;height:26px}
       .cp-toggle:focus-visible,.cp-input input:focus-visible,.cp-input button:focus-visible,.cp-head button:focus-visible{outline:3px solid #fff;outline-offset:3px}
       .cp-badge{position:absolute;top:-2px;${position === 'bottom-left' ? 'left:-2px' : 'right:-2px'};min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#ef4444;color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;border:2px solid #fff}
-      .cp-window{display:none;position:absolute;bottom:72px;${position === 'bottom-left' ? 'left:0' : 'right:0'};width:360px;height:min(520px,calc(100dvh - 110px));max-width:calc(100vw - 28px);background:var(--cp-widget-bg);color:#f5f7fa;border:1px solid #ffffff22;border-radius:20px;overflow:hidden;flex-direction:column;box-shadow:0 24px 70px #0008}
+      .cp-window{display:none;position:absolute;bottom:72px;${position === 'bottom-left' ? 'left:0' : 'right:0'};width:330px;height:min(430px,calc(100dvh - 120px));max-width:calc(100vw - 28px);background:var(--cp-widget-bg);color:#f5f7fa;border:1px solid #ffffff22;border-radius:20px;overflow:hidden;flex-direction:column;box-shadow:0 24px 70px #0008}
       .cp-window.open{display:flex;animation:cp-in .22s cubic-bezier(.16,1,.3,1)}
       .cp-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 16px;background:color-mix(in srgb,var(--cp-widget-bg),#fff 8%)}
       .cp-head-info{display:flex;align-items:center;gap:10px;min-width:0}
       .cp-avatar{width:34px;height:34px;border-radius:50%;background:var(--cp-widget-color);color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px;flex-shrink:0}
       .cp-head-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-      .cp-head button{background:none;border:0;color:#fff;font-size:22px;cursor:pointer;min-width:44px;min-height:44px}
+      .cp-head{flex-shrink:0}.cp-messages{min-height:0}.cp-head button{background:none;border:0;color:#fff;font-size:22px;cursor:pointer;min-width:44px;min-height:44px}
       .cp-messages{flex:1;overflow:auto;padding:15px;display:flex;flex-direction:column;gap:9px;scroll-behavior:smooth}
       .cp-message{max-width:82%;padding:10px 13px;border-radius:14px;white-space:pre-wrap;line-height:1.45}
       .cp-message.user{align-self:flex-start;background:var(--cp-widget-accent)}
@@ -207,7 +207,7 @@
       .cp-spin{width:16px;height:16px;border-radius:50%;border:2px solid #ffffff55;border-top-color:#fff;animation:cp-spin .7s linear infinite}
       @keyframes cp-spin{to{transform:rotate(360deg)}}
       @keyframes cp-in{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
-      @media(max-width:480px){#${ROOT}{right:10px;left:10px;bottom:max(10px,env(safe-area-inset-bottom));display:flex;justify-content:flex-end}.cp-window{position:fixed;inset:auto 10px max(78px,calc(env(safe-area-inset-bottom) + 68px));width:auto;max-width:none;height:min(620px,calc(100dvh - 100px))}}
+      @media(max-width:480px){#${ROOT}{right:10px;left:10px;bottom:max(10px,env(safe-area-inset-bottom));display:flex;justify-content:flex-end}.cp-window{position:fixed;inset:auto 10px max(78px,calc(env(safe-area-inset-bottom) + 68px));width:auto;max-width:none;height:min(430px,calc(100dvh - 110px))}}
       @media(prefers-reduced-motion:reduce){.cp-toggle,.cp-window.open,.cp-typing span,.cp-spin{animation:none!important}}
     `;
     document.head.appendChild(style);

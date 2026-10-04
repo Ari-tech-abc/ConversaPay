@@ -33,6 +33,20 @@ class BulkSettingsApiTests(unittest.TestCase):
                 self.assertEqual(response.status_code, 422)
         db.rpc.assert_not_called()
 
+    def test_large_catalog_starts_a_job_instead_of_one_long_delete(self):
+        db=MagicMock();db.rpc.return_value.execute.return_value.data={"job_id":PID,"status":"pending","total":15000}
+        with patch.object(products,"supabase",db),patch.object(products,"require_business_owner_for_business_id",return_value=BID):
+            response=self.client.post('/api/v1/products/bulk-delete',json={"business_id":BID,"all_products":True,"expected_count":15000})
+        self.assertEqual(response.json()["job_id"],PID)
+        self.assertEqual(db.rpc.call_args.args[0],"start_product_delete_job")
+
+    def test_job_progress_is_scoped_to_authenticated_owner(self):
+        db=MagicMock();db.table.return_value.select.return_value.eq.return_value.eq.return_value.limit.return_value.execute.return_value.data=[]
+        with patch.object(products,"supabase",db):
+            response=self.client.get('/api/v1/products/delete-jobs/'+PID)
+        self.assertEqual(response.status_code,404)
+        db.table.return_value.select.return_value.eq.return_value.eq.assert_called_once_with('user_id','owner-id')
+
     def test_changed_selection_returns_conflict_without_partial_delete(self):
         class Conflict(Exception):
             code = "P0001"

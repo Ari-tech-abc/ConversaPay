@@ -35,6 +35,13 @@ class BulkDeletePayload(BaseModel):
 async def delete_products_bulk(request: BulkDeletePayload, current_user: AuthUser = Depends(require_auth)):
     business_uuid = require_business_owner_for_business_id(str(request.business_id), current_user)
     try:
+        if request.all_products and request.expected_count > 500:
+            import asyncio
+            job = await asyncio.to_thread(lambda: supabase.rpc("start_product_delete_job", {
+                "p_user_id": current_user.user_id, "p_business_id": business_uuid,
+                "p_expected_count": request.expected_count,
+            }).execute())
+            return job.data
         result = supabase.rpc("delete_products_bulk", {
             "p_user_id": current_user.user_id, "p_business_id": business_uuid,
             "p_product_ids": [str(value) for value in request.product_ids],
@@ -50,6 +57,14 @@ async def delete_products_bulk(request: BulkDeletePayload, current_user: AuthUse
         logger.error("Bulk deletion RPC returned an unexpected result for %s", business_uuid)
         raise HTTPException(503, {"code": "bulk_delete_unavailable", "message": "Deletion confirmation is unavailable. Reload the catalog before retrying."})
     return {"deleted": result.data}
+
+@router.get("/delete-jobs/{job_id}")
+async def product_delete_status(job_id: UUID, current_user: AuthUser = Depends(require_auth)):
+    import asyncio
+    result = await asyncio.to_thread(lambda: supabase.table("product_delete_jobs").select("id,status,total,processed,deleted").eq("id", str(job_id)).eq("user_id", current_user.user_id).limit(1).execute())
+    if not result.data:
+        raise HTTPException(404, "Deletion job not found")
+    return result.data[0]
 @router.post("",response_model=ProductResponse,status_code=201)
 async def create_product(request:ProductCreate,current_user:AuthUser=Depends(require_auth)):
     business_uuid=require_business_owner_for_business_id(request.business_id,current_user); item_key=_normalized_item_key(request.item_key)

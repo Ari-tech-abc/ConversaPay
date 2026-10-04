@@ -116,7 +116,7 @@ class NotificationDeliveryTests(unittest.IsolatedAsyncioTestCase):
             finally:
                 stopped.set()
         worker = SimpleNamespace(run=run)
-        with patch.object(main, 'apply_migrations', new=AsyncMock()), patch.object(main.monitoring_service, 'initialize'), patch.object(main, 'initialize_error_tracking'), patch('backend.services.notification_service.delivery_configured', return_value=True), patch('backend.services.notification_service.NotificationWorker', return_value=worker):
+        with patch.object(main, 'apply_migrations', new=AsyncMock()), patch.object(main.monitoring_service, 'initialize'), patch.object(main, 'initialize_error_tracking'), patch('backend.services.notification_service.delivery_configured', return_value=True), patch('backend.services.notification_service.NotificationWorker', return_value=worker), patch('backend.services.product_delete_worker.run_product_deletions', new=AsyncMock()):
             async with main.lifespan(main.app):
                 await asyncio.wait_for(started.wait(), timeout=1)
                 main.apply_migrations.assert_awaited_once()

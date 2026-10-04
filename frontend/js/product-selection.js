@@ -20,9 +20,34 @@ window.Talk2PayProductSelection = ({ getState, api, reload, note, tr }) => {
   bar.append(pageLabel, count, all, clear, remove);
   root.before(bar);
   const selected = new Set();
-  let entireCatalog = false, busy = false;
+  let entireCatalog = false, busy = false, activeJob = null, restoring = false;
+  const jobKey = () => 'talk2pay-product-delete-' + getState().business?.id;
+  async function followJob(id) {
+    activeJob = id; busy = true;
+    localStorage.setItem(jobKey(), id);
+    sync();
+    try {
+      let job;
+      do {
+        job = await api('/products/delete-jobs/' + encodeURIComponent(id));
+        count.textContent = tr('נמחקו ' + job.deleted + ' מתוך ' + job.total, 'Deleted ' + job.deleted + ' of ' + job.total);
+        if (job.status === 'pending') await new Promise(resolve => setTimeout(resolve, 1000));
+      } while (job.status === 'pending');
+      localStorage.removeItem(jobKey());
+      selected.clear(); entireCatalog = false;
+      await reload(1);
+      note(job.status === 'completed' ? tr(job.deleted + ' מוצרים נמחקו', job.deleted + ' products deleted') : tr('המחיקה נעצרה אחרי ' + job.deleted + ' מוצרים. אפשר לבחור שוב את המוצרים שנותרו.', 'Deletion stopped after ' + job.deleted + ' products. Select the remaining products to retry.'), job.status !== 'completed');
+    } catch (error) {
+      if (error.status === 404) localStorage.removeItem(jobKey());
+      note(tr('המחיקה ממשיכה ברקע. רענון הדף יאפשר לבדוק את ההתקדמות.', 'Deletion continues in the background. Refresh the page to check progress.'), true);
+    } finally { activeJob = null; busy = false; sync(); }
+  }
   function sync() {
     const state = getState(), total = entireCatalog ? state.productTotal : selected.size;
+    if (!restoring && !activeJob && state.business && localStorage.getItem(jobKey())) {
+      restoring = true;
+      queueMicrotask(() => followJob(localStorage.getItem(jobKey())));
+    }
     bar.hidden = !state.productTotal && !selected.size;
     count.textContent = total ? tr(total + ' מוצרים נבחרו', total + ' products selected') : tr('לא נבחרו מוצרים', 'No products selected');
     pageBox.checked = entireCatalog || (state.products.length > 0 && state.products.every(p => selected.has(p.id)));
@@ -79,6 +104,7 @@ window.Talk2PayProductSelection = ({ getState, api, reload, note, tr }) => {
     busy = true; sync();
     try {
       const result = await api('/products/bulk-delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ business_id: state.business.id, product_ids: [...selected], all_products: entireCatalog, expected_count: expected }) });
+      if (result.job_id) { await followJob(result.job_id); return; }
       selected.clear(); entireCatalog = false;
       await reload(1);
       note(tr(result.deleted + ' מוצרים נמחקו', result.deleted + ' products deleted'));
