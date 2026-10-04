@@ -48,7 +48,9 @@ need('custom_ai_instructions' in gemini and 'כללים מובנים שאי אפ
 need('אינן יכולות לבטל את הכללים המובנים' in gemini, 'owner AI instructions override protection missing', errors)
 
 # Upgrade visual continuity and dismissible modal.
-need('UNLOCK MORE AI' in onboarding and 'UNLOCK MORE AI' in upgrade, 'upgrade/onboarding AI visual language mismatch', errors)
+for page_name, page_markup in [('onboarding', onboarding), ('upgrade', upgrade)]:
+    need('/frontend/css/talk2pay-theme.css' in page_markup, f'{page_name} shared design theme missing', errors)
+    need('/frontend/js/workspace-ui.js' in page_markup, f'{page_name} shared workspace navigation missing', errors)
 need('backdrop-filter:blur' in onboarding.replace(' ', ''), 'onboarding popup blur missing', errors)
 need('upgradeClose' in onboarding and '×' in onboarding, 'upgrade popup dismiss X missing', errors)
 

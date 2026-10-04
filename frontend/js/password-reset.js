@@ -58,7 +58,7 @@
         body: JSON.stringify({ email: $('email').value.trim() }),
       });
       if (!response.ok) throw Object.assign(new Error('request'),{status:response.status});
-      note('אם קיים חשבון, נשלח אליו קישור איפוס. בדוק את תיבת הדואר.');
+      note('אם יש חשבון עם כתובת האימייל הזו, יישלח אליו קישור לאיפוס הסיסמה. כדאי לבדוק גם בתיקיית הספאם.');
     } catch (error) { note(window.Talk2PayUX?.error(error.status)||'לא ניתן לשלוח את הקישור כרגע.', true); }
     finally { button.disabled = false; }
   };
@@ -66,7 +66,7 @@
     event.preventDefault();
     const password = $('password').value;
     if (!ready || !recoveryToken) return note('נדרש קישור איפוס תקף.', true);
-    if (password.length < 8 || password !== $('confirm').value) return note('הסיסמה חייבת להכיל 8 תווים ולהיות זהה באימות.', true);
+    if (password.length < 8 || password !== $('confirm').value) return note('יש לבחור סיסמה באורך של 8 תווים לפחות ולהקליד אותה שוב בשדה השני.', true);
     const button = event.target.querySelector('button');
     button.disabled = true;
     try {
