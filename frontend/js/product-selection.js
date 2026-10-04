@@ -43,10 +43,8 @@ window.Talk2PayProductSelection = ({ getState, api, reload, note, tr }) => {
       note(job.status === 'completed' ? tr(job.deleted + ' מוצרים נמחקו', job.deleted + ' products deleted') : tr('המחיקה נעצרה אחרי ' + job.deleted + ' מוצרים. אפשר לבחור שוב את המוצרים שנותרו.', 'Deletion stopped after ' + job.deleted + ' products. Select the remaining products to retry.'), job.status !== 'completed');
     } catch (error) {
       if (error.status === 404) localStorage.removeItem(jobKey());
-      note(tr('המחיקה ממשיכה ברקע. רענון הדף יאפשר לבדוק את ההתקדמות.', 'Deletion continues in the background. Refresh the page to check progress.'), true);
-    } finally { progress.hidden = true; activeJob = null; busy = false; sync(); }
       note(error.status === 404 ? tr('משימת המחיקה לא נמצאה. יש לרענן את הקטלוג ולבדוק את המוצרים שנותרו.', 'Deletion job was not found. Refresh the catalog to check the remaining products.') : tr('לא ניתן לבדוק כרגע את התקדמות המחיקה. יש לרענן את הדף לפני ניסיון נוסף.', 'Deletion progress is unavailable. Refresh the page before trying again.'), true);
-    } finally { activeJob = null; busy = false; sync(); }
+    } finally { progress.hidden = true; activeJob = null; busy = false; sync(); }
   }
   function sync() {
     const state = getState(), total = entireCatalog ? state.productTotal : selected.size;
