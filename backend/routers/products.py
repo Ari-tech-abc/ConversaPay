@@ -31,6 +31,14 @@ class BulkDeletePayload(BaseModel):
             raise ValueError("Selection count does not match")
         return self
 
+def _delete_unavailable(exc: Exception) -> HTTPException:
+    code = str(getattr(exc, "code", ""))
+    if code in {"PGRST202", "PGRST205", "42883", "42P01"}:
+        return HTTPException(503, {"code": "product_delete_schema_missing", "message": "Product deletion requires a database update. Contact the site administrator."})
+    if code == "42501":
+        return HTTPException(503, {"code": "product_delete_permissions_missing", "message": "Product deletion database permissions require an administrator update."})
+    return HTTPException(503, {"code": "bulk_delete_unavailable", "message": "Products could not be deleted right now."})
+
 @router.post("/bulk-delete")
 async def delete_products_bulk(request: BulkDeletePayload, current_user: AuthUser = Depends(require_auth)):
     business_uuid = require_business_owner_for_business_id(str(request.business_id), current_user)
@@ -52,7 +60,7 @@ async def delete_products_bulk(request: BulkDeletePayload, current_user: AuthUse
         if code == "P0001":
             raise HTTPException(409, {"code": "selection_changed", "message": "Product selection changed. Reload and select again."}) from exc
         logger.exception("Bulk deletion failed for business %s", business_uuid)
-        raise HTTPException(503, {"code": "bulk_delete_unavailable", "message": "Products could not be deleted right now."}) from exc
+        raise _delete_unavailable(exc) from exc
     if not isinstance(result.data, int) or result.data != request.expected_count:
         logger.error("Bulk deletion RPC returned an unexpected result for %s", business_uuid)
         raise HTTPException(503, {"code": "bulk_delete_unavailable", "message": "Deletion confirmation is unavailable. Reload the catalog before retrying."})
@@ -61,7 +69,11 @@ async def delete_products_bulk(request: BulkDeletePayload, current_user: AuthUse
 @router.get("/delete-jobs/{job_id}")
 async def product_delete_status(job_id: UUID, current_user: AuthUser = Depends(require_auth)):
     import asyncio
-    result = await asyncio.to_thread(lambda: supabase.table("product_delete_jobs").select("id,status,total,processed,deleted").eq("id", str(job_id)).eq("user_id", current_user.user_id).limit(1).execute())
+    try:
+        result = await asyncio.to_thread(lambda: supabase.table("product_delete_jobs").select("id,status,total,processed,deleted").eq("id", str(job_id)).eq("user_id", current_user.user_id).limit(1).execute())
+    except Exception as exc:
+        logger.exception("Product deletion progress unavailable")
+        raise _delete_unavailable(exc) from exc
     if not result.data:
         raise HTTPException(404, "Deletion job not found")
     return result.data[0]

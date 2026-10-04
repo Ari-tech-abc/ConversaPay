@@ -14,7 +14,7 @@ const pages = JSON.parse(fixtures.stdout), bid = '00000000-0000-4000-8000-000000
    const page = await browser.newPage({ viewport: { width, height: 900 } }), errors = [];
    page.on('pageerror', e => errors.push(e.message));
    await page.addInitScript(lang => { localStorage.setItem('access_token', 'offline'); localStorage.setItem('conversapay-language', lang); }, lang);
-   let confirmation = true, conflict = false, deletionJob = null;
+   let confirmation = true, conflict = false, schemaMissing = false, deletionJob = null;
    page.on('dialog', dialog => confirmation ? dialog.accept() : dialog.dismiss());
    await page.route('**/*', async route => {
     const url = new URL(route.request().url());
@@ -27,8 +27,9 @@ const pages = JSON.parse(fixtures.stdout), bid = '00000000-0000-4000-8000-000000
      else if (endpoint === '/dashboard/features') body = { plan_type: 'pro' };
      else if (endpoint === '/products/paged') { const n = Number(url.searchParams.get('page') || 1); body = { products: products.slice((n-1)*50, n*50), page: n, total: products.length, total_pages: Math.ceil(products.length/50) }; }
      else if (endpoint === '/products/bulk-delete') {
-      const payload = route.request().postDataJSON(); payloads.push(payload);
-      if (conflict) { status = 409; body = { detail: { code: 'selection_changed', message: 'Selection changed' } }; }
+      const payload = route.request().postDataJSON(); check(route.request().headers().authorization,'Bearer offline'); payloads.push(payload);
+      if (schemaMissing) { status = 503; body = { detail: { code: 'product_delete_schema_missing', message: 'Database update required' } }; }
+      else if (conflict) { status = 409; body = { detail: { code: 'selection_changed', message: 'Selection changed' } }; }
       else if(payload.expected_count>500){deletionJob={id:'00000000-0000-4000-8000-000000000009',status:'pending',total:payload.expected_count,deleted:0};body={job_id:deletionJob.id,status:'pending'};}
       else { const before = products.length; products = products.filter(p => !payload.all_products && !payload.product_ids.includes(p.id)); body = { deleted: before - products.length }; }
      } else if(endpoint.startsWith('/products/delete-jobs/')) {
@@ -76,7 +77,12 @@ const pages = JSON.parse(fixtures.stdout), bid = '00000000-0000-4000-8000-000000
    conflict = true; await page.locator('.product-delete-selected').click();
    await page.waitForFunction(() => !document.querySelector('.product-delete-selected').disabled);
    check(products.length, 53); check(payloads.at(-1).all_products, true); check(payloads.at(-1).expected_count, 53);
-   conflict = false; await page.locator('.product-delete-selected').click();
+   conflict = false; schemaMissing = true; await page.locator('.product-delete-selected').click();
+   await page.waitForFunction(()=>!document.querySelector('.product-delete-selected').disabled);
+   check(products.length,53);
+   check((await page.locator('#notice').textContent()).includes(lang==='he'?'עדכון במסד הנתונים':'database update'),true);
+   check(payloads.at(-1).all_products,true);
+   schemaMissing = false; await page.locator('.product-delete-selected').click();
    await page.waitForFunction(() => document.querySelector('.product-selection-bar').hidden);
    check(products.length, 0);
    products=Array.from({length:1500},(_,i)=>({id:'large-'+i,name:'Large '+i,item_key:'large-'+i,price:10,is_active:true}));
