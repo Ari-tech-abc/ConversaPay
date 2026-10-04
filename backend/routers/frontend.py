@@ -29,7 +29,9 @@ DASHBOARD_POLISH_SRC = "/frontend/css/dashboard-polish.css"
 DASHBOARD_INSTANT_CACHE_SRC = "/frontend/js/dashboard-instant-cache.js"
 ONBOARDING_CATEGORY_LABELS_SRC = "/frontend/css/onboarding-category-labels.css"
 APP_POLISH_SRC = "/frontend/css/app-polish.css"
-CORE_LANGUAGE_PAGES = {"login.html", "register.html", "privacy.html", "terms.html", "success.html", "canceled.html", "profile.html", "settings.html", "upgrade.html"}
+APP_THEME_SRC = "/frontend/css/talk2pay-theme.css"
+WORKSPACE_UI_SRC = "/frontend/js/workspace-ui.js"
+CORE_LANGUAGE_PAGES = {"home.html", "login.html", "register.html", "privacy.html", "terms.html", "success.html", "canceled.html", "profile.html", "settings.html", "upgrade.html", "onboarding.html"}
 
 
 def _safe_html_path(filename: str):
@@ -42,8 +44,13 @@ def _safe_html_path(filename: str):
 def _normalize_copy(page: str) -> str:
     parts = re.split(r"(<(?:script|style)\b[^>]*>.*?</(?:script|style)>)", page, flags=re.I | re.S)
     for index in range(0, len(parts), 2):
-        for source, target in COPY_REPLACEMENTS:
-            parts[index] = parts[index].replace(source, target)
+        # Keep English translation attributes intact while normalizing visible copy.
+        parts[index] = parts[index].replace("ConversaPay", "Talk2Pay")
+        markup = re.split(r"(<[^>]*>)", parts[index])
+        for text_index in range(0, len(markup), 2):
+            for source, target in COPY_REPLACEMENTS[1:]:
+                markup[text_index] = markup[text_index].replace(source, target)
+        parts[index] = "".join(markup)
     return "".join(parts)
 
 
@@ -102,6 +109,11 @@ def _brand_markup(page: str, filename: str = "") -> str:
             f'<script src="{VERIFICATION_GUARD_SRC}" defer></script>'
         )
         page = page.replace("</head>", dashboard_injection + "</head>", 1)
+    # Page-local and legacy polish rules precede the single approved theme.
+    page = re.sub(r'<link\s+rel="stylesheet"\s+href="/frontend/css/talk2pay-theme\.css"\s*>', '', page)
+    page = page.replace('</head>', f'<link rel="stylesheet" href="{APP_THEME_SRC}"></head>', 1)
+    if WORKSPACE_UI_SRC not in page:
+        page = page.replace('</head>', f'<script src="{WORKSPACE_UI_SRC}" defer></script></head>', 1)
     return page
 
 

@@ -7,24 +7,24 @@
   <title>ConversaPay | התשלום בוטל</title>
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
   <link rel="stylesheet" href="/frontend/css/language-switcher.css">
-</head>
-<body class="cp-page">
+<link rel="stylesheet" href="/frontend/css/talk2pay-theme.css"><script src="/frontend/js/workspace-ui.js" defer></script></head>
+<body data-t2p-page="canceled" class="cp-page">
   <header class="cp-topbar">
     <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
     <span class="cp-badge">Stripe</span>
   </header>
   <main class="cp-shell cp-center-shell">
     <section class="cp-card cp-text-center">
-      <span class="cp-kicker cp-text-center">לא בוצע חיוב</span>
+      <span class="cp-kicker cp-text-center">התשלום לא הושלם</span>
       <h1>התשלום בוטל</h1>
-      <p class="cp-muted">לא בוצע חיוב ולא נוצר שדרוג. אפשר לחזור לדאשבורד ולנסות שוב בכל רגע.</p>
-      <span class="cp-badge warn">מצב בדיקות / Sandbox</span>
+      <p class="cp-muted">תהליך התשלום בוטל והמסלול לא שודרג. אפשר לחזור לבחירת מסלול ולנסות שוב.</p>
+      <span class="cp-badge warn">אפשר לנסות שוב</span>
       <div class="cp-panel cp-mt-md">
         <strong>מה עכשיו?</strong>
-        <p class="cp-muted">בדוק את פרטי התשלום, את הגדרות Stripe Sandbox, ואם צריך נסה שוב ממסך השדרוג.</p>
+        <p class="cp-muted">לניסיון נוסף, חוזרים לבחירת מסלול ובודקים את פרטי התשלום.</p>
       </div>
       <div class="cp-actions">
-        <a class="cp-button" href="/dashboard">חזרה לדאשבורד</a>
+        <a class="cp-button" href="/dashboard">חזרה ללוח הבקרה</a>
         <a class="cp-button-secondary" href="/upgrade">חזרה לבחירת מסלול</a>
       </div>
     </section>

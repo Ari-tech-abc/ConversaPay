@@ -25,12 +25,12 @@
     .check strong{display:block;margin-bottom:4px}
     @media(max-width:760px){.guide-nav,.step-grid{grid-template-columns:1fr}}
   </style>
-</head>
-<body class="cp-page">
+<link rel="stylesheet" href="/frontend/css/talk2pay-theme.css"><script src="/frontend/js/workspace-ui.js" defer></script></head>
+<body data-t2p-page="setup-guide" class="cp-page">
   <header class="cp-topbar">
     <a class="cp-brand" href="/dashboard"><span class="cp-brand-mark">T2P</span><span>TALK2PAY</span></a>
     <nav class="cp-nav-toolbar" aria-label="ניווט">
-      <a class="cp-button-secondary" href="/dashboard" data-i18n-he="דאשבורד" data-i18n-en="Dashboard">דאשבורד</a>
+      <a class="cp-button-secondary" href="/dashboard" data-i18n-he="לוח הבקרה" data-i18n-en="Dashboard">לוח הבקרה</a>
       <a class="cp-button-secondary" href="/settings" data-i18n-he="הגדרות" data-i18n-en="Settings">הגדרות</a>
     </nav>
   </header>
@@ -38,9 +38,9 @@
   <main class="cp-shell guide-shell">
     <section class="guide-hero">
       <span class="cp-kicker" style="color:#ddd6fe" data-i18n-he="מדריך הטמעה" data-i18n-en="INTEGRATION GUIDE">מדריך הטמעה</span>
-      <h1 data-i18n-he="כך מטמיעים את הווידג׳ט באמת" data-i18n-en="How to embed the widget">כך מטמיעים את הווידג׳ט באמת</h1>
-      <p data-i18n-he="המדריך הזה תואם לזרימה שהמערכת מפעילה כיום: וידג׳ט חיצוני משתמש ב-Business UUID וב-Widget API Key, והשרת מאמת את המפתח לפני טעינת ההגדרה ושליחת הודעות."
-         data-i18n-en="This guide matches the current system flow: an external widget uses the Business UUID and Widget API Key, and the server validates the key before loading configuration and sending messages.">המדריך הזה תואם לזרימה שהמערכת מפעילה כיום: וידג׳ט חיצוני משתמש ב-Business UUID וב-Widget API Key, והשרת מאמת את המפתח לפני טעינת ההגדרה ושליחת הודעות.</p>
+      <h1 data-i18n-he="מחברים את הצ׳אט לאתר" data-i18n-en="Add chat to your website">מחברים את הצ׳אט לאתר</h1>
+      <p data-i18n-he="להטמעת הצ׳אט באתר צריך מזהה עסק (Business UUID) ומפתח וידג׳ט (Widget API Key). השרת בודק את המפתח לפני טעינת הצ׳אט ושליחת הודעות."
+         data-i18n-en="To add chat to your website, you need a Business UUID and a Widget API Key. The server checks the key before loading chat and sending messages.">להטמעת הצ׳אט באתר צריך מזהה עסק (Business UUID) ומפתח וידג׳ט (Widget API Key). השרת בודק את המפתח לפני טעינת הצ׳אט ושליחת הודעות.</p>
     </section>
 
     <section class="cp-panel cp-stack">
@@ -49,12 +49,12 @@
         <h2 data-i18n-he="מה צריך?" data-i18n-en="What you need">מה צריך?</h2>
       </div>
       <div class="step-grid">
-        <div class="step"><span class="step-num">1</span><strong data-i18n-he="עסק פעיל" data-i18n-en="An active business">עסק פעיל</strong><span class="cp-muted" data-i18n-he="צריך Business UUID אמיתי של העסק. זהו מזהה ה-UUID של הרשומה ב-businesses, לא שם העסק ולא slug כמו business_....">צריך Business UUID אמיתי של העסק. זהו מזהה ה-UUID של הרשומה ב-businesses, לא שם העסק ולא slug כמו business_....</span></div>
+        <div class="step"><span class="step-num">1</span><strong data-i18n-he="עסק פעיל" data-i18n-en="An active business">עסק פעיל</strong><span class="cp-muted" data-i18n-he="משתמשים במזהה העסק מסוג UUID, מתוך שדה id ברשומת העסק. שם העסק והמזהה שמתחיל ב-business_ אינם מתאימים להטמעה.">משתמשים במזהה העסק מסוג UUID, מתוך שדה id ברשומת העסק. שם העסק והמזהה שמתחיל ב-business_ אינם מתאימים להטמעה.</span></div>
         <div class="step"><span class="step-num">2</span><strong data-i18n-he="מסלול PRO או PREMIUM" data-i18n-en="PRO or PREMIUM plan">מסלול PRO או PREMIUM</strong><span class="cp-muted" data-i18n-he="גישה לווידג׳ט חיצוני של עסק אמיתי חסומה במסלול FREE.">גישה לווידג׳ט חיצוני של עסק אמיתי חסומה במסלול FREE.</span></div>
         <div class="step"><span class="step-num">3</span><strong data-i18n-he="Widget API Key" data-i18n-en="Widget API Key">Widget API Key</strong><span class="cp-muted" data-i18n-he="המפתח נשלח בכל בקשה לווידג׳ט בכותרת X-Widget-Key. הוא מוצג רק בזמן היצירה שלו.">המפתח נשלח בכל בקשה לווידג׳ט בכותרת X-Widget-Key. הוא מוצג רק בזמן היצירה שלו.</span></div>
       </div>
-      <div class="warn"><strong data-i18n-he="חשוב: מה לא היה נכון במדריך הישן" data-i18n-en="Important: what was wrong in the old guide">חשוב: מה לא היה נכון במדריך הישן</strong><br><span data-i18n-he="המערכת אינה מאמתת את הווידג׳ט לפי Origin/Referer, אין במסלול הנוכחי של הדאשבורד מסך ניהול מפתחות ייעודי, ואין צורך להוסיף API Secret לקוד האתר. לכן המדריך החדש לא מציג שלבים שלא קיימים בפועל."
- data-i18n-en="The system does not authorize the widget by Origin/Referer, the current dashboard does not expose a dedicated key-management screen, and an API Secret must never be placed in site code. The new guide therefore does not describe steps that do not actually exist.">המערכת אינה מאמתת את הווידג׳ט לפי Origin/Referer, אין במסלול הנוכחי של הדאשבורד מסך ניהול מפתחות ייעודי, ואין צורך להוסיף API Secret לקוד האתר. לכן המדריך החדש לא מציג שלבים שלא קיימים בפועל.</span></div>
+      <div class="warn"><strong data-i18n-he="יצירת מפתח וחיבור לאתר" data-i18n-en="Create a key and connect your website">יצירת מפתח וחיבור לאתר</strong><br><span data-i18n-he="יוצרים מפתח במסך הגדרות, תחת API ואינטגרציות, ושומרים אותו בזמן היצירה. להטמעה משתמשים במפתח הווידג׳ט בלבד. אין להוסיף API Secret לקוד האתר."
+ data-i18n-en="Create a key in Settings under API and integrations, and save it when it is created. Use only the widget key for the integration. Do not add an API Secret to your website code.">יוצרים מפתח במסך הגדרות, תחת API ואינטגרציות, ושומרים אותו בזמן היצירה. להטמעה משתמשים במפתח הווידג׳ט בלבד. אין להוסיף API Secret לקוד האתר.</span></div>
     </section>
 
     <section class="cp-panel cp-stack">
@@ -71,7 +71,7 @@
 
     <section class="guide-panel active" id="panel-html" role="tabpanel" aria-labelledby="tab-html">
       <article class="cp-panel cp-stack">
-        <div><h2 data-i18n-he="שלב 1 — יוצרים שלד HTML" data-i18n-en="Step 1 — Create the HTML skeleton">שלב 1 — יוצרים שלד HTML</h2><p class="cp-muted" data-i18n-he="הווידג׳ט לא דורש div מיוחד. הסקריפט מייצר בעצמו את הממשק ומוסיף אותו ל-body." data-i18n-en="The widget does not require a special div. The script creates its own UI and appends it to the body.">הווידג׳ט לא דורש div מיוחד. הסקריפט מייצר בעצמו את הממשק ומוסיף אותו ל-body.</p></div>
+        <div><h2 data-i18n-he="שלב 1: מכינים את עמוד האתר" data-i18n-en="Step 1: prepare your webpage">שלב 1: מכינים את עמוד האתר</h2><p class="cp-muted" data-i18n-he="הווידג׳ט לא דורש div מיוחד. הסקריפט מייצר בעצמו את הממשק ומוסיף אותו ל-body." data-i18n-en="The widget does not require a special div. The script creates its own UI and appends it to the body.">הווידג׳ט לא דורש div מיוחד. הסקריפט מייצר בעצמו את הממשק ומוסיף אותו ל-body.</p></div>
         <div class="code-wrap"><pre id="htmlSkeleton">&lt;!doctype html&gt;
 &lt;html lang="en"&gt;
 &lt;head&gt;
@@ -90,7 +90,7 @@
       </article>
 
       <article class="cp-panel cp-stack">
-        <div><h2 data-i18n-he="שלב 2 — מוסיפים את הסקריפט האמיתי" data-i18n-en="Step 2 — Add the real widget script">שלב 2 — מוסיפים את הסקריפט האמיתי</h2><p class="cp-muted" data-i18n-he="את הסקריפט אפשר לשים לפני &lt;/body&gt;. משתמשים בכתובת ה-widget.js שהמערכת עצמה מפרסמת." data-i18n-en="You can place the script before &lt;/body&gt;. Use the widget.js URL served by the system.">את הסקריפט אפשר לשים לפני &lt;/body&gt;. משתמשים בכתובת ה-widget.js שהמערכת עצמה מפרסמת.</p></div>
+        <div><h2 data-i18n-he="שלב 2: מוסיפים את סקריפט הווידג׳ט" data-i18n-en="Step 2: add the widget script">שלב 2: מוסיפים את סקריפט הווידג׳ט</h2><p class="cp-muted" data-i18n-he="את הסקריפט אפשר לשים לפני &lt;/body&gt;. משתמשים בכתובת ה-widget.js שהמערכת עצמה מפרסמת." data-i18n-en="You can place the script before &lt;/body&gt;. Use the widget.js URL served by the system.">את הסקריפט אפשר לשים לפני &lt;/body&gt;. משתמשים בכתובת ה-widget.js שהמערכת עצמה מפרסמת.</p></div>
         <div class="code-wrap"><pre id="htmlSnippet">&lt;script
   src="https://www.conversapay.org/frontend/js/widget.js"
   data-business-id="YOUR_BUSINESS_UUID"
@@ -102,7 +102,7 @@
       </article>
 
       <article class="cp-panel cp-stack">
-        <div><h2 data-i18n-he="שלב 3 — בודקים את הקוד" data-i18n-en="Step 3 — Test the embed">שלב 3 — בודקים את הקוד</h2></div>
+        <div><h2 data-i18n-he="שלב 3: בודקים את הצ׳אט" data-i18n-en="Step 3: test chat">שלב 3: בודקים את הצ׳אט</h2></div>
         <div class="check-grid">
           <div class="check"><strong data-i18n-he="העמוד נטען ב-HTTPS" data-i18n-en="The page loads over HTTPS">העמוד נטען ב-HTTPS</strong><span class="cp-muted" data-i18n-he="מומלץ להריץ אתר אמיתי ב-HTTPS." data-i18n-en="Use HTTPS for a real production website.">מומלץ להריץ אתר אמיתי ב-HTTPS.</span></div>
           <div class="check"><strong data-i18n-he="הווידג׳ט מופיע" data-i18n-en="The widget appears">הווידג׳ט מופיע</strong><span class="cp-muted" data-i18n-he="אם הוא לא מופיע, בדקו קודם Business UUID ו-Widget API Key." data-i18n-en="If it does not appear, first check the Business UUID and Widget API Key.">אם הוא לא מופיע, בדקו קודם Business UUID ו-Widget API Key.</span></div>
@@ -114,7 +114,7 @@
 
     <section class="guide-panel" id="panel-wordpress" role="tabpanel" aria-labelledby="tab-wordpress">
       <article class="cp-panel cp-stack">
-        <div><h2 data-i18n-he="שלב 1 — מתקינים את התוסף" data-i18n-en="Step 1 — Install the plugin">שלב 1 — מתקינים את התוסף</h2><p class="cp-muted" data-i18n-he="המערכת כוללת את wordpress-plugin/conversapay-chat.php. מתקינים אותו כתוסף WordPress ומפעילים אותו." data-i18n-en="The system includes wordpress-plugin/conversapay-chat.php. Install it as a WordPress plugin and activate it.">המערכת כוללת את wordpress-plugin/conversapay-chat.php. מתקינים אותו כתוסף WordPress ומפעילים אותו.</p></div>
+        <div><h2 data-i18n-he="שלב 1: מתקינים את התוסף" data-i18n-en="Step 1: install the plugin">שלב 1: מתקינים את התוסף</h2><p class="cp-muted" data-i18n-he="המערכת כוללת את wordpress-plugin/conversapay-chat.php. מתקינים אותו כתוסף WordPress ומפעילים אותו." data-i18n-en="The system includes wordpress-plugin/conversapay-chat.php. Install it as a WordPress plugin and activate it.">המערכת כוללת את wordpress-plugin/conversapay-chat.php. מתקינים אותו כתוסף WordPress ומפעילים אותו.</p></div>
         <div class="step-grid">
           <div class="step"><span class="step-num">1</span><strong data-i18n-he="Plugins → Add New → Upload Plugin" data-i18n-en="Plugins → Add New → Upload Plugin">Plugins → Add New → Upload Plugin</strong><span class="cp-muted" data-i18n-he="העלו את קובץ התוסף ZIP אם יש לכם חבילת ZIP." data-i18n-en="Upload the plugin ZIP if you have a ZIP package.">העלו את קובץ התוסף ZIP אם יש לכם חבילת ZIP.</span></div>
           <div class="step"><span class="step-num">2</span><strong data-i18n-he="מפעילים" data-i18n-en="Activate">מפעילים</strong><span class="cp-muted" data-i18n-he="הפעילו את Talk2Pay Chat." data-i18n-en="Activate Talk2Pay Chat.">הפעילו את Talk2Pay Chat.</span></div>
@@ -122,12 +122,12 @@
         </div>
       </article>
       <article class="cp-panel cp-stack">
-        <h2 data-i18n-he="שלב 2 — מגדירים את הווידג׳ט" data-i18n-en="Step 2 — Configure the widget">שלב 2 — מגדירים את הווידג׳ט</h2>
+        <h2 data-i18n-he="שלב 2: מגדירים את הווידג׳ט" data-i18n-en="Step 2: configure the widget">שלב 2: מגדירים את הווידג׳ט</h2>
         <p class="cp-muted" data-i18n-he="הדביקו Business UUID ו-Widget API Key, השאירו את כתובת השרת על https://www.conversapay.org אם זו כתובת המערכת שלכם, ובחרו מיקום וצבע." data-i18n-en="Paste the Business UUID and Widget API Key, keep the server URL at https://www.conversapay.org if that is your system URL, then choose position and color.">הדביקו Business UUID ו-Widget API Key, השאירו את כתובת השרת על https://www.conversapay.org אם זו כתובת המערכת שלכם, ובחרו מיקום וצבע.</p>
         <div class="note"><strong data-i18n-he="איך התוסף מטמיע?" data-i18n-en="How does the plugin embed it?">איך התוסף מטמיע?</strong><br><span data-i18n-he="התוסף מוסיף ל-wp_footer סקריפט widget.js עם data-business-id, data-api-key, data-position ו-data-color. אפשר גם להשתמש ב-shortcode [conversapay_chat]." data-i18n-en="The plugin adds widget.js to wp_footer with data-business-id, data-api-key, data-position and data-color. You can also use the [conversapay_chat] shortcode.">התוסף מוסיף ל-wp_footer סקריפט widget.js עם data-business-id, data-api-key, data-position ו-data-color. אפשר גם להשתמש ב-shortcode [conversapay_chat].</span></div>
       </article>
       <article class="cp-panel cp-stack">
-        <h2 data-i18n-he="שלב 3 — שליטה במיקום" data-i18n-en="Step 3 — Control placement">שלב 3 — שליטה במיקום</h2>
+        <h2 data-i18n-he="שלב 3: בוחרים באילו עמודים הצ׳אט יופיע" data-i18n-en="Step 3: choose where chat appears">שלב 3: בוחרים באילו עמודים הצ׳אט יופיע</h2>
         <div class="step-grid">
           <div class="step"><strong data-i18n-he="כל העמודים" data-i18n-en="All pages">כל העמודים</strong><span class="cp-muted" data-i18n-he="ברירת המחדל של התוסף." data-i18n-en="The plugin default.">ברירת המחדל של התוסף.</span></div>
           <div class="step"><strong data-i18n-he="דף הבית" data-i18n-en="Homepage">דף הבית</strong><span class="cp-muted" data-i18n-he="התוסף בודק is_front_page()." data-i18n-en="The plugin checks is_front_page().">התוסף בודק is_front_page().</span></div>
@@ -148,9 +148,9 @@
         </div>
       </article>
       <article class="cp-panel cp-stack">
-        <h2 data-i18n-he="הערה על יצירת API Key" data-i18n-en="Note about creating an API key">הערה על יצירת API Key</h2>
-        <p class="cp-muted" data-i18n-he="בגרסה הנוכחית קיימים ב-API endpoints ליצירה, רשימה וביטול של Widget API Keys, אבל אין בדאשבורד מסך UI ייעודי לניהול שלהם. לכן אל תחפש במדריך כפתור שאינו קיים."
-          data-i18n-en="The current version has API endpoints to create, list and revoke Widget API Keys, but the dashboard does not expose a dedicated key-management UI. The guide therefore does not tell you to click a button that does not exist.">בגרסה הנוכחית קיימים ב-API endpoints ליצירה, רשימה וביטול של Widget API Keys, אבל אין בדאשבורד מסך UI ייעודי לניהול שלהם. לכן אל תחפש במדריך כפתור שאינו קיים.</p>
+        <h2 data-i18n-he="ניהול מפתחות הווידג׳ט" data-i18n-en="Manage widget keys">ניהול מפתחות הווידג׳ט</h2>
+        <p class="cp-muted" data-i18n-he="במסך הגדרות, תחת API ואינטגרציות, אפשר ליצור מפתחות, להעתיק מפתח חדש ולבטל מפתח קיים. מפתח חדש מוצג פעם אחת בלבד."
+          data-i18n-en="In Settings under API and integrations, you can create keys, copy a new key and revoke an existing key. A new key is shown only once.">במסך הגדרות, תחת API ואינטגרציות, אפשר ליצור מפתחות, להעתיק מפתח חדש ולבטל מפתח קיים. מפתח חדש מוצג פעם אחת בלבד.</p>
       </article>
     </section>
   </main>

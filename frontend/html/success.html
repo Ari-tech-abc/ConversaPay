@@ -7,8 +7,8 @@
   <title>ConversaPay | השדרוג הושלם</title>
   <link rel="stylesheet" href="/frontend/html/conversapay-ui.css">
   <link rel="stylesheet" href="/frontend/css/language-switcher.css">
-</head>
-<body class="cp-page">
+<link rel="stylesheet" href="/frontend/css/talk2pay-theme.css"><script src="/frontend/js/workspace-ui.js" defer></script></head>
+<body data-t2p-page="success" class="cp-page">
   <header class="cp-topbar">
     <a class="cp-brand" href="/"><span class="cp-brand-mark">CP</span><span>ConversaPay</span></a>
     <span class="cp-badge">Stripe</span>
@@ -16,16 +16,16 @@
   <main class="cp-shell cp-center-shell">
     <section class="cp-card cp-text-center" aria-live="polite">
       <span class="cp-kicker cp-text-center">אימות תשלום ושדרוג</span>
-      <h1 id="title">אנחנו משלימים את השדרוג שלך</h1>
-      <p class="cp-muted" id="description">אם התשלום ב-Stripe הושלם, המערכת תעדכן אוטומטית את המסלול ואת הפרופיל שלך.</p>
+      <h1 id="title">בודקים את התשלום ומעדכנים את המסלול</h1>
+      <p class="cp-muted" id="description">לאחר אישור התשלום מספק הסליקה, המסלול בחשבון יעודכן אוטומטית.</p>
       <span class="cp-badge warn" id="statusBadge">ממתין לאימות</span>
       <p id="statusText" class="cp-muted"></p>
       <div class="cp-panel cp-mt-md" id="details" hidden>
-        <strong>פרטי בדיקה</strong>
+        <strong>פרטי האימות</strong>
         <p class="cp-muted" id="detailsText"></p>
       </div>
       <div class="cp-actions">
-        <a class="cp-button" href="/dashboard">חזרה לדאשבורד</a>
+        <a class="cp-button" href="/dashboard">חזרה ללוח הבקרה</a>
         <a class="cp-button-secondary" href="/upgrade">חזרה למסלולים</a>
       </div>
     </section>
