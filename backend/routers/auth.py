@@ -136,6 +136,8 @@ def create_business_for_user(user_id: str, business_name: str) -> Optional[str]:
         # Generate business_id from business name (lowercase, no spaces)
         business_id = business_name.lower().replace(' ', '_').replace('-', '_')
         business_id = ''.join(c for c in business_id if c.isalnum() or c == '_')
+        if business_id == "conversapay":
+            business_id = f"business_{user_id.replace('-', '_')}"
         
         # Ensure uniqueness by appending user ID if needed
         existing = supabase.table("businesses")\

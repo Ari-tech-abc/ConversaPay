@@ -29,7 +29,9 @@ def _verify_order_guest_token(order_id:str,token:str|None)->bool:
     try:
         padded=token+"="*((4-len(token)%4)%4)
         decoded=base64.urlsafe_b64decode(padded.encode("ascii"))
-        payload,signature=decoded.rsplit(b".",1)
+        # SHA256 signatures are binary and can themselves contain a dot.
+        if len(decoded)<34 or decoded[-33:-32]!=b".":return False
+        payload,signature=decoded[:-33],decoded[-32:]
         token_order_id,expires_at=payload.decode("utf-8").rsplit(".",1)
         expected=hmac.new(settings.SECRET_KEY.encode("utf-8"),payload,hashlib.sha256).digest()
         return token_order_id==order_id and int(expires_at)>=int(time.time()) and hmac.compare_digest(signature,expected)
@@ -55,6 +57,10 @@ def _catalog_order(request,business_uuid):
         items.append({"product_id":product["id"],"item_key":product["item_key"],"name":product["name"],"quantity":quantity,"price":money_db(price),"payment_link":product.get("payment_link")})
     return items,money_db(subtotal),currency or "ILS"
 def _order_payload(request,business_uuid):
+    # Service-role writes bypass RLS: validate every caller-supplied relation.
+    for table, related_id in (("customers",request.customer_id),("conversations",request.conversation_id)):
+        if related_id and not supabase.table(table).select("id").eq("id",related_id).eq("business_id",business_uuid).maybe_single().execute().data:
+            raise HTTPException(400,"Order references must belong to the same business")
     items,subtotal,currency=_catalog_order(request,business_uuid)
     return {"business_id":business_uuid,"customer_id":request.customer_id,"conversation_id":request.conversation_id,"order_number":_order_number(),"status":OrderStatus.PENDING.value,"payment_status":"pending","subtotal":subtotal,"tax":"0.00","total":subtotal,"currency":currency,"items":items,"customer_info":request.customer_info,"shipping_address":request.shipping_address,"notes":request.notes,"created_at":datetime.utcnow().isoformat()}
 @router.post("/pay",response_model=OrderResponse,status_code=status.HTTP_201_CREATED)

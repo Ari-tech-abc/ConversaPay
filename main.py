@@ -36,7 +36,7 @@ async def lifespan(_:FastAPI):
                 running_task.cancel()
                 with suppress(asyncio.CancelledError):
                     await running_task
-app=FastAPI(title="Talk2Pay API",version="2.5.0",lifespan=lifespan,docs_url=None if settings.is_production else "/docs",redoc_url=None if settings.is_production else "/redoc")
+app=FastAPI(title="Talk2Pay API",version="2.5.0",lifespan=lifespan,docs_url=None if settings.is_production else "/docs",redoc_url=None if settings.is_production else "/redoc",openapi_url=None if settings.is_production else "/openapi.json")
 class DualCORSMiddleware(BaseHTTPMiddleware):
     PUBLIC_PREFIXES=(f"{settings.API_PREFIX}/chat",f"{settings.API_PREFIX}/widget",f"{settings.API_PREFIX}/webhooks/",f"{settings.API_PREFIX}/orders/",f"{settings.API_PREFIX}/site-builder/")
     ALLOWED_METHODS="GET,POST,PUT,PATCH,DELETE,OPTIONS"; ALLOWED_HEADERS="Content-Type,Authorization,X-Builder-Token,X-Widget-Key,X-Webhook-Signature,X-Correlation-ID"
@@ -93,10 +93,10 @@ async def readiness():
     migration_status=get_migration_status(); checks={"database":"ok","redis":"skipped" if not settings.REDIS_URL else "ok","migrations":migration_status}; failures={}
     if migration_status in {"pending","in_progress","failed"}: failures["migrations"]=migration_status
     try: await _check_database()
-    except Exception as exc: checks["database"]="failed"; failures["database"]=str(exc); logger.error("Readiness database check failed: %s",exc)
+    except Exception as exc: checks["database"]="failed"; failures["database"]="unavailable"; logger.error("Readiness database check failed: %s",exc)
     if settings.REDIS_URL:
         try: await _check_redis()
-        except Exception as exc: checks["redis"]="failed"; failures["redis"]=str(exc); logger.error("Readiness Redis check failed: %s",exc)
+        except Exception as exc: checks["redis"]="failed"; failures["redis"]="unavailable"; logger.error("Readiness Redis check failed: %s",exc)
     if failures:return JSONResponse(status_code=503,content={"status":"not_ready","environment":settings.ENVIRONMENT,"checks":checks,"failures":failures})
     return {"status":"ready","environment":settings.ENVIRONMENT,"checks":checks}
 @app.get(f"{settings.API_PREFIX}/config/public",include_in_schema=False)

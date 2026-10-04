@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const VERSION = 2;
+  const VERSION = 3;
   const MAX_AGE_MS = 1000 * 60 * 60 * 24 * 30;
   const METRICS = {
     revenue: { type: 'money', decimals: 2 },
@@ -26,6 +26,11 @@
   }
 
   function readSnapshot() {
+    // Discard older snapshots containing executable HTML and customer orders.
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('talk2pay_dashboard_snapshot_v2:')) localStorage.removeItem(key);
+    }
     cacheKey = getKey();
     if (!cacheKey) return null;
     try {
@@ -111,27 +116,17 @@
       const el = document.getElementById(id);
       if (el && String(el.textContent || '').trim()) meta[id] = el.textContent.trim();
     }
-    const sections = {};
-    for (const id of SECTION_IDS) {
-      const el = document.getElementById(id);
-      if (el && el.innerHTML.trim()) sections[id] = el.innerHTML;
-    }
-    const productSummary = document.getElementById('productSummary')?.textContent || '';
-    const pagination = document.getElementById('productPagination');
     return {
       version: VERSION,
       savedAt: Date.now(),
       metrics,
       meta,
-      sections,
-      productSummary,
-      productPagination: pagination ? { html: pagination.innerHTML, hidden: pagination.hidden } : null,
     };
   }
 
   function saveNow() {
     saveTimer = null;
-    cacheKey = getKey() || cacheKey;
+    cacheKey = getKey();
     if (!cacheKey) return;
     try { localStorage.setItem(cacheKey, JSON.stringify(snapshotFromDom())); } catch (_) {}
   }
@@ -157,21 +152,6 @@
       const el = document.getElementById(id);
       const value = data.meta?.[id];
       if (el && value) el.textContent = value;
-    }
-    for (const id of SECTION_IDS) {
-      const el = document.getElementById(id);
-      const html = data.sections?.[id];
-      if (el && typeof html === 'string' && html.trim()) {
-        el.innerHTML = html;
-        restored = true;
-      }
-    }
-    const summary = document.getElementById('productSummary');
-    if (summary && data.productSummary) summary.textContent = data.productSummary;
-    const pagination = document.getElementById('productPagination');
-    if (pagination && data.productPagination) {
-      pagination.innerHTML = data.productPagination.html || '';
-      pagination.hidden = Boolean(data.productPagination.hidden);
     }
     if (restored) {
       document.getElementById('content')?.style.setProperty('visibility', 'visible');

@@ -72,7 +72,7 @@ async def _is_authenticated_owner(request: Request, actual_business_id: str) -> 
     invalid token just means this path doesn't apply, so the caller falls
     through to the demo/API-key checks."""
     user = await get_current_user_optional(request)
-    if not user:
+    if not user or not user.email_verified:
         return False
     try:
         require_business_owner_for_business_id(actual_business_id, user)

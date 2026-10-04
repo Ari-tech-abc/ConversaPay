@@ -50,6 +50,7 @@ def _secure_domain_settings(*,user_id,current_settings,incoming_settings):
 @router.post("",response_model=BusinessResponse,status_code=201)
 async def create_business(request:BusinessCreate,current_user:AuthUser=Depends(require_auth)):
     try:
+        if request.business_id == "conversapay": raise HTTPException(400,"This business ID is reserved")
         if supabase.table("businesses").select("id").eq("business_id",request.business_id).execute().data: raise HTTPException(400,"Business ID already exists")
         profile=supabase.table("profiles").select("plan_type,subscription_status,subscription_expires_at,subscription_end_date").eq("user_id",current_user.user_id).maybe_single().execute().data or {}; plan=normalize_plan(profile.get("plan_type")) if subscription_active(profile) else "free"; result=supabase.table("businesses").insert({"business_id":request.business_id,"business_name":request.business_name.strip(),"description":request.description,"owner_id":current_user.user_id,"subscription_tier":plan,"subscription_status":"active","is_active":True}).execute()
         if not result.data: raise HTTPException(500,"Failed to create business")

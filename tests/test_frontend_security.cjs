@@ -8,7 +8,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
   try {
     const page = await browser.newPage();
     await page.route('**/*', route => route.abort());
-    await page.setContent('<div id="preview"></div><div id="mapping"></div><button id="import"></button><div id="keyList"></div><span id="keyCount"></span>');
+    await page.setContent('<div id="preview"></div><div id="mapping"></div><button id="import"></button><section><form id="keyForm"><button></button></form><input id="keyName"><div id="keyList"></div><span id="keyCount"></span></section>');
     const importHtml = fs.readFileSync(path.join(__dirname, '../frontend/html/product-import.html'), 'utf8');
     const renderFunctions = importHtml.slice(importHtml.indexOf('function makeMapping()'), importHtml.indexOf("$('drop').onclick"));
     await page.addScriptTag({ content: "const $=id=>document.getElementById(id);let headers=[],rows=[],business={id:'offline'};const normalize=v=>String(v??'').trim();" + renderFunctions });
@@ -62,5 +62,25 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
     assert.equal(await recovery.evaluate(()=>localStorage.getItem('access_token')),'other-user-session');
     assert.deepEqual(await recovery.evaluate(()=>window.boundRecoveryTokens),{access_token:'recovery-access',refresh_token:'recovery-refresh'});
     console.log('PASS: recovery binds the link session, clears URL secrets, and never uses another stored login.');
+    const cachePage=await browser.newPage();
+    const cacheScript=fs.readFileSync(path.join(__dirname,'../frontend/js/dashboard-instant-cache.js'),'utf8');
+    await cachePage.route('**/*',route=>route.fulfill({contentType:'text/html',body:'<span id="revenue">0</span><div id="products"></div><div id="orders"></div><div id="productPagination"></div>'}));
+    await cachePage.goto('http://cache.security.test');
+    await cachePage.evaluate(value=>{
+      localStorage.setItem('user_id','cache-user');
+      localStorage.setItem('talk2pay_dashboard_snapshot_v2:cache-user',JSON.stringify({sections:{orders:'private customer data'}}));
+      localStorage.setItem('talk2pay_dashboard_snapshot_v3:cache-user',JSON.stringify({version:3,savedAt:Date.now(),metrics:{revenue:123},sections:{products:value,orders:value},productPagination:{html:value}}));
+    },payload);
+    await cachePage.addScriptTag({content:cacheScript});
+    assert.equal(await cachePage.locator('#revenue').textContent(),'₪123');
+    assert.equal(await cachePage.locator('img').count(),0);
+    assert.equal(await cachePage.evaluate(()=>localStorage.getItem('talk2pay_dashboard_snapshot_v2:cache-user')),null);
+    await cachePage.evaluate(()=>{document.getElementById('orders').textContent='private customer data';window.dispatchEvent(new Event('pagehide'));});
+    const snapshot=await cachePage.evaluate(()=>JSON.parse(localStorage.getItem('talk2pay_dashboard_snapshot_v3:cache-user')));
+    assert.equal(snapshot.sections,undefined);
+    assert.equal(snapshot.productPagination,undefined);
+    assert.equal(JSON.stringify(snapshot).includes('private customer data'),false);
+    assert.equal(await cachePage.evaluate(()=>window.__xss===true),false);
+    console.log('PASS: dashboard cache ignores injected HTML and does not persist customer order markup.');
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode=1; });

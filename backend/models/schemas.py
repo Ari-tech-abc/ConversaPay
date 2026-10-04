@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from decimal import Decimal
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, HttpUrl, TypeAdapter, field_validator
 from enum import Enum
 
 class SubscriptionTier(str, Enum): FREE="free"; PRO="pro"; PREMIUM="premium"
@@ -22,9 +22,20 @@ class BusinessResponse(BusinessBase):
     id:str; owner_id:str; subscription_tier:SubscriptionTier; subscription_status:SubscriptionStatus; settings:Dict[str,Any]={}; is_active:bool; created_at:datetime; updated_at:datetime
 class ProductBase(BaseModel):
     item_key:str=Field(...,min_length=1,max_length=100); name:str=Field(...,min_length=1,max_length=255); description:Optional[str]=None; price:Decimal=Field(...,ge=0); currency:str=Field(default="ILS",min_length=3,max_length=3); image_url:Optional[str]=None; payment_link:Optional[str]=None; is_active:bool=True; inventory_count:int=-1; metadata:Dict[str,Any]={}
-class ProductCreate(ProductBase): business_id:str
+def _safe_product_url(value):
+    if value is None or value == "":
+        return None
+    url = TypeAdapter(HttpUrl).validate_python(value)
+    if url.username or url.password:
+        raise ValueError("URL credentials are not allowed")
+    return str(url)
+
+class ProductCreate(ProductBase):
+    business_id:str
+    _validate_urls = field_validator("image_url", "payment_link", mode="before")(_safe_product_url)
 class ProductUpdate(BaseModel):
     item_key:Optional[str]=Field(None,min_length=1,max_length=100); name:Optional[str]=Field(None,min_length=1,max_length=255); description:Optional[str]=None; price:Optional[Decimal]=Field(None,ge=0); currency:Optional[str]=Field(None,min_length=3,max_length=3); image_url:Optional[str]=None; payment_link:Optional[str]=None; is_active:Optional[bool]=None; inventory_count:Optional[int]=None; metadata:Optional[Dict[str,Any]]=None
+    _validate_urls = field_validator("image_url", "payment_link", mode="before")(_safe_product_url)
 class ProductResponse(ProductBase): model_config=ConfigDict(from_attributes=True); id:str; business_id:str; created_at:datetime; updated_at:datetime
 class CustomerBase(BaseModel): email:Optional[EmailStr]=None; phone:Optional[str]=None; name:Optional[str]=None; metadata:Dict[str,Any]={}
 class CustomerCreate(CustomerBase): business_id:str
