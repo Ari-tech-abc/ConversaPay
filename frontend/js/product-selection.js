@@ -45,6 +45,8 @@ window.Talk2PayProductSelection = ({ getState, api, reload, note, tr }) => {
       if (error.status === 404) localStorage.removeItem(jobKey());
       note(tr('המחיקה ממשיכה ברקע. רענון הדף יאפשר לבדוק את ההתקדמות.', 'Deletion continues in the background. Refresh the page to check progress.'), true);
     } finally { progress.hidden = true; activeJob = null; busy = false; sync(); }
+      note(error.status === 404 ? tr('משימת המחיקה לא נמצאה. יש לרענן את הקטלוג ולבדוק את המוצרים שנותרו.', 'Deletion job was not found. Refresh the catalog to check the remaining products.') : tr('לא ניתן לבדוק כרגע את התקדמות המחיקה. יש לרענן את הדף לפני ניסיון נוסף.', 'Deletion progress is unavailable. Refresh the page before trying again.'), true);
+    } finally { activeJob = null; busy = false; sync(); }
   }
   function sync() {
     const state = getState(), total = entireCatalog ? state.productTotal : selected.size;
@@ -115,7 +117,8 @@ window.Talk2PayProductSelection = ({ getState, api, reload, note, tr }) => {
       await reload(1);
       note(tr(result.deleted + ' מוצרים נמחקו', result.deleted + ' products deleted'));
     } catch (error) {
-      note(error.code === 'selection_changed' ? tr('הקטלוג השתנה. יש לרענן ולבחור מחדש לפני המחיקה.', 'The catalog changed. Refresh and select again before deleting.') : tr('המחיקה לא הושלמה. אפשר לנסות שוב.', 'Deletion did not complete. Please try again.'), true);
+      const setupError = ['product_delete_schema_missing', 'product_delete_permissions_missing'].includes(error.code);
+      note(setupError ? tr('שירות המחיקה דורש עדכון במסד הנתונים של האתר. יש לפנות למנהל האתר.', 'Deletion requires a site database update. Contact the site administrator.') : error.code === 'selection_changed' ? tr('הקטלוג השתנה. יש לרענן ולבחור מחדש לפני המחיקה.', 'The catalog changed. Refresh and select again before deleting.') : tr('לא התקבל אישור למחיקה. יש לרענן את הקטלוג לפני ניסיון נוסף.', 'Deletion was not confirmed. Refresh the catalog before trying again.'), true);
     } finally { busy = false; sync(); }
   };
   return { sync, forget(id) { selected.delete(id); sync(); } };
