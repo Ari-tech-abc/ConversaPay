@@ -13,6 +13,7 @@ from backend.routers.email_verification import router as email_verification_rout
 from backend.routers.safe_auth import router as safe_auth_router
 from backend.routers.frontend import router as frontend_router
 from backend.routers.stripe_webhook import router as stripe_webhook_router
+from backend.routers.whatsapp import router as whatsapp_router
 from backend.services.migration_runner import apply_migrations, get_migration_status
 from backend.services.monitoring_service import monitoring_service
 from backend.services.observability import initialize_error_tracking
@@ -24,11 +25,13 @@ async def lifespan(_:FastAPI):
     task = asyncio.create_task(NotificationWorker().run()) if delivery_configured() else None
     from backend.services.product_delete_worker import run_product_deletions
     delete_task = asyncio.create_task(run_product_deletions())
+    from backend.services.whatsapp_service import WhatsAppWorker, configured as whatsapp_configured
+    whatsapp_task = asyncio.create_task(WhatsAppWorker().run()) if whatsapp_configured() else None
     try:
         yield
     finally:
         from contextlib import suppress
-        for running_task in (task, delete_task):
+        for running_task in (task, delete_task, whatsapp_task):
             if running_task:
                 running_task.cancel()
                 with suppress(asyncio.CancelledError):
@@ -100,6 +103,7 @@ async def readiness():
 async def public_config(): return {"supabase_url":settings.SUPABASE_URL,"supabase_anon_key":settings.SUPABASE_ANON_KEY}
 prefix=settings.API_PREFIX
 for selected_router,route_prefix,tag in ((onboarding.router,prefix,"authentication-onboarding"),(safe_auth_router,prefix,"authentication"),(email_verification_router,f"{prefix}/auth","authentication"),(auth.router,f"{prefix}/auth","authentication"),(profile.router,f"{prefix}/profile","profile"),(subscription.router,prefix,"subscription"),(businesses.router,prefix,"businesses"),(products.router,prefix,"products"),(chat.router,prefix,"chat"),(orders.router,prefix,"orders"),(payments.router,prefix,"payments"),(analytics.router,prefix,"analytics"),(widget.router,prefix,"widget"),(dashboard.router,prefix,"dashboard"),(api_keys.router,prefix,"api-keys"),(stripe_webhook_router,prefix,"stripe-webhook")): app.include_router(selected_router,prefix=route_prefix,tags=[tag])
+app.include_router(whatsapp_router, prefix=prefix)
 app.include_router(frontend_router)
 @app.exception_handler(404)
 async def api_not_found(_:Request,__): return JSONResponse(status_code=404,content={"error":"Not found","detail":"Not found"})

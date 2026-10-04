@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     PAYME_CALLBACK_URL: Optional[str] = None
     META_APP_SECRET: Optional[str] = None
     WHATSAPP_APP_SECRET: Optional[str] = None
+    WHATSAPP_ENABLED: bool = False
+    WHATSAPP_GRAPH_VERSION: str = "v23.0"
+    WHATSAPP_TEST_PHONE_NUMBER_IDS: str = ""
     RESEND_API_KEY: str
     EMAIL_FROM_ADDRESS: str
     EMAIL_FROM_NAME: str = "Talk2Pay"
