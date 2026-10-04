@@ -15,7 +15,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
    await page.goto('http://widget.test/');await page.locator('.cp-toggle').click();
    assert.equal(await page.locator('.cp-head button').evaluate(button=>{const r=button.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight&&button.contains(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2))}),true);checks++;
    assert.ok(await page.locator('.cp-window').evaluate(el=>el.getBoundingClientRect().height<=430));checks++;
-   await page.locator('.cp-head button').click();assert.equal(await page.locator('.cp-window').isVisible(),false);checks++;
+   await page.locator('.cp-head button').click();await page.locator('.cp-window').waitFor({state:'hidden'});assert.equal(await page.locator('.cp-window').isVisible(),false);checks++;
    await page.close();
   }
   console.log(`PASS: ${checks} embedded widget viewport/close checks`);

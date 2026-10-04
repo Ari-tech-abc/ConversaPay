@@ -59,7 +59,7 @@
   function cancel(){clearTimeout(timer);timer=null;scene.classList.remove('t2p-demo-resetting');}
   function allowed(){return visible&&!document.hidden&&!paused&&!reduced.matches;}
   function schedule(){cancel();if(!allowed())return;timer=setTimeout(()=>{if(!allowed())return;scene.classList.add('t2p-demo-resetting');timer=setTimeout(()=>{if(!allowed()){cancel();return;}scene.classList.remove('t2p-demo-playing');void scene.offsetWidth;scene.classList.remove('t2p-demo-resetting');scene.classList.add('t2p-demo-playing');schedule();},750);},13500);}
-  function update(){cancel();if(paused||reduced.matches){scene.classList.remove('t2p-demo-playing');}else if(allowed()){scene.classList.add('t2p-demo-playing');schedule();}if(control){const stopped=paused||reduced.matches;control.setAttribute('aria-pressed',String(stopped));control.setAttribute('aria-label',stopped?text('הפעלת הדגמת השיחה','Play conversation demo'):text('עצירת הדגמת השיחה','Pause conversation demo'));control.innerHTML=svg(stopped?'play':'pause');}}
+  function update(){cancel();if(paused||reduced.matches){scene.classList.remove('t2p-demo-playing');}else if(allowed()){scene.classList.add('t2p-demo-playing');schedule();}if(control){const stopped=paused||reduced.matches;control.setAttribute('aria-pressed',String(stopped));control.setAttribute('aria-label',stopped?text('הפעלת האנימציות','Play animations'):text('עצירת האנימציות','Pause animations'));control.innerHTML=svg(stopped?'play':'pause');}}
   control?.addEventListener('click',()=>{paused=!paused;update();});
   reduced.addEventListener('change',update);document.addEventListener('visibilitychange',update);
   new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;update();},{threshold:.15}).observe(scene);
@@ -81,7 +81,7 @@
    if(['#productCard','#ordersCard'].includes(location.hash)){const content=document.getElementById('content');const observer=new MutationObserver(()=>{if(getComputedStyle(content).visibility==='visible'){document.querySelector(location.hash)?.scrollIntoView({block:'start'});observer.disconnect();}});observer.observe(content,{attributes:true,attributeFilter:['style']});}
   }
   if(page==='settings'){const sections=document.querySelectorAll('.settings-shell>section');['settings-overview','business-settings','security-settings','notification-settings','billing-settings','api-settings','privacy-settings'].forEach((id,index)=>{if(sections[index])sections[index].id=id;});}
-  const reduced=matchMedia('(prefers-reduced-motion:reduce)');if(!reduced.matches){const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('t2p-enter');observer.unobserve(entry.target);}});},{threshold:.1});document.querySelectorAll('.cp-card,.cap-row,.plan,.stat').forEach(el=>observer.observe(el));}
+  const reduced=matchMedia('(prefers-reduced-motion:reduce)');if(!window.Talk2PayMotion&&!reduced.matches){const observer=new IntersectionObserver(entries=>{entries.forEach(entry=>{if(entry.isIntersecting){entry.target.classList.add('t2p-enter');observer.unobserve(entry.target);}});},{threshold:.1});document.querySelectorAll('.cp-card,.cap-row,.plan,.stat').forEach(el=>observer.observe(el));}
  }
  document.readyState==='loading'?document.addEventListener('DOMContentLoaded',init,{once:true}):init();
 })();

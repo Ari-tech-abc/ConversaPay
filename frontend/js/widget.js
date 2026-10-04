@@ -1,5 +1,6 @@
 (function () {
   'use strict';
+  let setWidgetOpen = null;
 
   const ROOT = 'conversapay-chat-widget';
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -176,15 +177,15 @@
       .cp-toggle svg{width:26px;height:26px}
       .cp-toggle:focus-visible,.cp-input input:focus-visible,.cp-input button:focus-visible,.cp-head button:focus-visible{outline:3px solid #fff;outline-offset:3px}
       .cp-badge{position:absolute;top:-2px;${position === 'bottom-left' ? 'left:-2px' : 'right:-2px'};min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#ef4444;color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;border:2px solid #fff}
-      .cp-window{display:none;position:absolute;bottom:72px;${position === 'bottom-left' ? 'left:0' : 'right:0'};width:330px;height:min(430px,calc(100dvh - 120px));max-width:calc(100vw - 28px);background:var(--cp-widget-bg);color:#f5f7fa;border:1px solid #ffffff22;border-radius:20px;overflow:hidden;flex-direction:column;box-shadow:0 24px 70px #0008}
-      .cp-window.open{display:flex;animation:cp-in .22s cubic-bezier(.16,1,.3,1)}
+      .cp-window{display:flex;visibility:hidden;opacity:0;pointer-events:none;transform:translateY(12px) scale(.97);transform-origin:bottom ${position === 'bottom-left' ? 'left' : 'right'};transition:opacity .18s ease,transform .24s cubic-bezier(.16,1,.3,1),visibility 0s .24s;position:absolute;bottom:72px;${position === 'bottom-left' ? 'left:0' : 'right:0'};width:330px;height:min(430px,calc(100dvh - 120px));max-width:calc(100vw - 28px);background:var(--cp-widget-bg);color:#f5f7fa;border:1px solid #ffffff22;border-radius:20px;overflow:hidden;flex-direction:column;box-shadow:0 24px 70px #0008}
+      .cp-window.open{visibility:visible;opacity:1;pointer-events:auto;transform:none;transition-delay:0s}
       .cp-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:15px 16px;background:color-mix(in srgb,var(--cp-widget-bg),#fff 8%)}
       .cp-head-info{display:flex;align-items:center;gap:10px;min-width:0}
       .cp-avatar{width:34px;height:34px;border-radius:50%;background:var(--cp-widget-color);color:#fff;display:grid;place-items:center;font-weight:800;font-size:14px;flex-shrink:0}
       .cp-head-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
       .cp-head{flex-shrink:0}.cp-messages{min-height:0}.cp-head button{background:none;border:0;color:#fff;font-size:22px;cursor:pointer;min-width:44px;min-height:44px}
       .cp-messages{flex:1;overflow:auto;padding:15px;display:flex;flex-direction:column;gap:9px;scroll-behavior:smooth}
-      .cp-message{max-width:82%;padding:10px 13px;border-radius:14px;white-space:pre-wrap;line-height:1.45}
+      .cp-message{animation:cp-message-in .2s ease-out;max-width:82%;padding:10px 13px;border-radius:14px;white-space:pre-wrap;line-height:1.45}
       .cp-message.user{align-self:flex-start;background:var(--cp-widget-accent)}
       .cp-message.bot{align-self:flex-end;background:#263c56}
       .cp-typing{display:flex;gap:4px;align-items:center;padding:12px 14px}
@@ -208,7 +209,8 @@
       @keyframes cp-spin{to{transform:rotate(360deg)}}
       @keyframes cp-in{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
       @media(max-width:480px){#${ROOT}{right:10px;left:10px;bottom:max(10px,env(safe-area-inset-bottom));display:flex;justify-content:flex-end}.cp-window{position:fixed;inset:auto 10px max(78px,calc(env(safe-area-inset-bottom) + 68px));width:auto;max-width:none;height:min(430px,calc(100dvh - 110px))}}
-      @media(prefers-reduced-motion:reduce){.cp-toggle,.cp-window.open,.cp-typing span,.cp-spin{animation:none!important}}
+      @keyframes cp-message-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+      @media(prefers-reduced-motion:reduce){.cp-toggle,.cp-window,.cp-message,.cp-typing span,.cp-spin{animation:none!important;transition:none!important}.cp-messages{scroll-behavior:auto}}
     `;
     document.head.appendChild(style);
 
@@ -225,11 +227,14 @@
 
     const win = root.querySelector('.cp-window');
     const toggle = root.querySelector('.cp-toggle');
+    win.inert = true; win.setAttribute('aria-hidden','true');
     const setOpen = (open) => {
+      win.inert = !open; win.setAttribute('aria-hidden',String(!open));
       win.classList.toggle('open', open);
       toggle.setAttribute('aria-expanded', String(open));
-      if (open) { root.querySelector('#cpInput').focus(); setUnread(0); }
+      if (open) { root.querySelector('#cpInput').focus(); setUnread(0); } else toggle.focus();
     };
+    setWidgetOpen = setOpen;
     toggle.addEventListener('click', () => setOpen(!win.classList.contains('open')));
     root.querySelector('.cp-head button').addEventListener('click', () => setOpen(false));
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && win.classList.contains('open')) setOpen(false); });
@@ -321,8 +326,8 @@
   }
 
   window.Talk2PayWidget = window.ConversaPayWidget = {
-    open: () => document.querySelector('.cp-window')?.classList.add('open'),
-    close: () => document.querySelector('.cp-window')?.classList.remove('open'),
+    open: () => setWidgetOpen?.(true),
+    close: () => setWidgetOpen?.(false),
   };
   document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', init) : init();
 }());

@@ -107,3 +107,36 @@ body[data-t2p-page=dashboard] .widget-panel{width:330px!important;height:min(430
 .widget-panel-head .whead{min-width:0}.widget-panel-head .whead strong{overflow-wrap:anywhere}
 #widgetClose{min-width:44px;min-height:44px;flex-shrink:0}
 .widget-panel-head{flex-wrap:wrap}.widget-panel-head .ai-limit-warning{width:100%;box-sizing:border-box}
+
+/* Approved motion: soft hero light, brief feedback, and readable static fallbacks. */
+.home-page .reveal{opacity:1;transform:none;transition:none}
+.hero-inner{position:relative;z-index:1}
+.t2p-hero-light{position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:inherit}
+.t2p-hero-light span{position:absolute;width:min(640px,90vw);height:min(640px,90vw);border-radius:50%;background:radial-gradient(circle,#c4f48855,transparent 66%);top:-40%;left:-15%;animation:t2p-light-drift 22s ease-in-out infinite alternate;animation-play-state:paused}
+.t2p-hero-light span+span{top:18%;left:52%;background:radial-gradient(circle,#97c5a02b,transparent 65%);animation-duration:28s;animation-delay:-8s}
+.t2p-motion-running .t2p-hero-light span{animation-play-state:running}
+@keyframes t2p-light-drift{from{transform:translate3d(-12px,-10px,0) scale(.95)}to{transform:translate3d(45px,26px,0) scale(1.08)}}
+button[data-saving=true]:after{content:"";width:14px;height:14px;flex:0 0 14px;border:2px solid currentColor;border-inline-end-color:transparent;border-radius:50%;animation:t2p-save-spin .65s linear infinite}
+button[data-saved=true]:after{content:"✓";font-size:17px;line-height:1;animation:t2p-saved .24s var(--t2p-ease)}
+@keyframes t2p-save-spin{to{transform:rotate(360deg)}}
+@keyframes t2p-saved{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+.product-selection-bar [role=status]{font-variant-numeric:tabular-nums}
+body[data-t2p-page=dashboard] .item{transition:background-color .18s ease,border-color .18s ease,box-shadow .18s ease}
+body[data-t2p-page=dashboard] .product-selected{box-shadow:inset 3px 0 0 var(--t2p-forest)}
+body:is([data-t2p-page=login],[data-t2p-page=register]) .t2p-auth-shell>.cp-card{view-transition-name:auth-panel}
+body:is([data-t2p-page=login],[data-t2p-page=register]) .t2p-auth-story{view-transition-name:auth-story}
+::view-transition-old(auth-panel){animation:t2p-auth-out .16s ease both}
+::view-transition-new(auth-panel){animation:t2p-auth-in .24s var(--t2p-ease) both}
+::view-transition-group(auth-story){animation-duration:.24s}
+@keyframes t2p-auth-out{to{opacity:0;transform:translateY(-6px)}}
+@keyframes t2p-auth-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.t2p-hero-light span{animation:none!important}::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}}
+
+::view-transition-old(root),::view-transition-new(root){animation:none}
+
+.product-delete-progress{display:block;width:96px;height:6px;overflow:hidden;border-radius:99px;background:var(--t2p-soft)}
+.product-delete-progress[hidden]{display:none}
+.product-delete-progress>span{display:block;width:100%;height:100%;border-radius:inherit;background:var(--t2p-forest);transform:scaleX(0);transform-origin:right;transition:transform .4s ease}
+html[dir=ltr] .product-delete-progress>span{transform-origin:left}
+.notice:not([hidden]),.cp-toast.success{animation:t2p-feedback-in .22s var(--t2p-ease)}
+@keyframes t2p-feedback-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}

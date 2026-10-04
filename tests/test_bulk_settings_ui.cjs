@@ -54,6 +54,7 @@ const pages = JSON.parse(fixtures.stdout), bid = '00000000-0000-4000-8000-000000
     });
     check(closeIsClickable,true);
     await page.locator('#widgetClose').click();
+    await page.waitForFunction(()=>document.querySelector('#widgetPanel').hidden);
     check(await page.locator('#widgetPanel').isVisible(),false);
    }
    await page.setViewportSize({width,height:900});
