@@ -56,6 +56,44 @@ class BulkSettingsApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 409)
         self.assertEqual(response.json()["detail"]["code"], "selection_changed")
 
+    def test_missing_deletion_schema_is_actionable_and_does_not_retry(self):
+        class MissingSchema(Exception):
+            code = "PGRST202"
+        for total in [1, 1500]:
+            db = MagicMock(); db.rpc.return_value.execute.side_effect = MissingSchema("private SQL details")
+            with patch.object(products, "supabase", db), patch.object(products, "require_business_owner_for_business_id", return_value=BID):
+                response = self.client.post('/api/v1/products/bulk-delete', json={"business_id": BID, "all_products": True, "expected_count": total})
+            self.assertEqual(response.status_code, 503)
+            self.assertEqual(response.json()["detail"]["code"], "product_delete_schema_missing")
+            self.assertNotIn("private", response.text)
+            db.rpc.assert_called_once()
+            db.table.assert_not_called()
+
+    def test_missing_progress_table_is_not_reported_as_a_running_job(self):
+        class MissingTable(Exception):
+            code = "PGRST205"
+        db = MagicMock(); db.table.return_value.select.return_value.eq.return_value.eq.return_value.limit.return_value.execute.side_effect = MissingTable("missing table")
+        with patch.object(products, "supabase", db):
+            response = self.client.get('/api/v1/products/delete-jobs/' + PID)
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.json()["detail"]["code"], "product_delete_schema_missing")
+
+    def test_missing_database_permissions_require_administrator_action(self):
+        class Denied(Exception):
+            code = "42501"
+        db = MagicMock(); db.rpc.return_value.execute.side_effect = Denied("permission denied")
+        with patch.object(products, "supabase", db), patch.object(products, "require_business_owner_for_business_id", return_value=BID):
+            response = self.client.post('/api/v1/products/bulk-delete', json={"business_id": BID, "product_ids": [PID], "expected_count": 1})
+        self.assertEqual(response.json()["detail"]["code"], "product_delete_permissions_missing")
+
+    def test_unauthenticated_deletion_never_calls_storage(self):
+        app.dependency_overrides.clear()
+        with patch.object(products, "supabase", MagicMock()) as db:
+            response = self.client.post('/api/v1/products/bulk-delete', json={"business_id": BID, "product_ids": [PID], "expected_count": 1})
+        self.assertIn(response.status_code, [401, 403])
+        db.rpc.assert_not_called()
+        db.table.assert_not_called()
+
     def test_storage_failure_never_reports_a_fake_free_plan(self):
         db = MagicMock(); db.table.return_value.select.return_value.eq.return_value.limit.return_value.execute.side_effect = RuntimeError("offline")
         with patch.object(profile, "supabase", db):
