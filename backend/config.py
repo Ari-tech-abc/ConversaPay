@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str
     EMAIL_FROM_ADDRESS: str
     EMAIL_FROM_NAME: str = "Talk2Pay"
+    NOTIFICATION_EMAILS_ENABLED: bool = True
     ADMIN_SECRET_PATH: str = ""
     WEBHOOK_VERIFY_TOKEN: Optional[str] = None
     WEBHOOK_SIGNING_SECRET: Optional[str] = None

@@ -24,9 +24,9 @@
     const node = document.createElement('div');
     node.className = `cp-toast ${type}`;
     node.setAttribute('role', type === 'error' ? 'alert' : 'status');
-    node.innerHTML = `<span class="cp-toast-icon">${type === 'error' ? '✕' : '✓'}</span><span></span><button class="cp-toast-close" type="button" aria-label="סגור">×</button>`;
-    node.children[1].textContent = clean;
-    node.children[2].onclick = () => node.remove();
+    node.innerHTML = `<span></span><button class="cp-toast-close" type="button" aria-label="${document.documentElement.lang === 'en' ? 'Close' : 'סגור'}">×</button>`;
+    node.children[0].textContent = clean;
+    node.children[1].onclick = () => node.remove();
     wrap.appendChild(node);
     return node;
   }

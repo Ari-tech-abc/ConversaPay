@@ -91,3 +91,11 @@ body[data-t2p-page=onboarding] .upgrade-card .primary{background:var(--t2p-fores
 .legal-table-scroll{max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain}.legal-table-scroll table{min-width:660px!important;table-layout:fixed}.legal-table-scroll :is(th,td){overflow-wrap:normal!important;word-break:normal!important;vertical-align:top;text-align:start}.legal-table-scroll:focus-visible{outline:2px solid var(--t2p-forest);outline-offset:3px}
 @media(max-width:560px){.cp-topbar{flex-wrap:wrap;gap:12px}.cp-nav-toolbar{flex-wrap:wrap;min-width:0}.guide-shell :is(.step,.check,.warn){min-width:0;overflow-wrap:anywhere}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.reveal{opacity:1!important;transform:none!important}.t2p-demo-resetting .t2p-demo-body,.t2p-demo-resetting .t2p-demo-confirm{opacity:1!important}}
+/* Product selection remains usable with long names and on narrow screens. */
+.product-selection-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 0;margin-bottom:10px;border-block:1px solid var(--t2p-line,#dce6dc)}
+.product-selection-bar label,.product-selection{display:flex;align-items:center;gap:8px;min-height:44px;cursor:pointer}
+.product-selection-bar label{font-size:14px}.product-selection-bar [role=status]{font-size:13px;flex:1;min-width:110px}
+.product-selection{flex:0 0 36px;justify-content:center;align-self:stretch}.product-selection input,.product-selection-bar input{width:18px!important;height:18px!important;accent-color:#123c31}
+#products .product-selected{background:#f0f7ec;border-color:#9abc94}#products .item>div:first-of-type{flex:1;min-width:0}
+.product-delete-selected{color:#a22727!important;border-color:#dcb4b4!important}.product-selection-bar button{min-height:44px}
+@media(max-width:560px){.product-selection-bar{gap:8px}#products .item{flex-wrap:wrap}#products .item-actions{margin-inline-start:auto;flex-wrap:wrap}}

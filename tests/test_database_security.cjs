@@ -10,7 +10,7 @@ const { uuid_ossp } = require(path.join(distPath, 'contrib/uuid_ossp.cjs'));
   const db = new PGlite({ extensions: { pgcrypto, uuid_ossp } });
   try {
     await db.exec(`CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role BYPASSRLS;
-      CREATE SCHEMA auth; CREATE TABLE auth.users(id UUID PRIMARY KEY, email_confirmed_at TIMESTAMPTZ);
+      CREATE SCHEMA auth; CREATE TABLE auth.users(id UUID PRIMARY KEY, email_confirmed_at TIMESTAMPTZ, encrypted_password TEXT);
       CREATE FUNCTION auth.uid() RETURNS UUID LANGUAGE SQL AS $$ SELECT nullif(current_setting('request.jwt.claim.sub', true),'')::uuid $$;
       GRANT USAGE ON SCHEMA public, auth TO anon, authenticated, service_role;
       ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated;

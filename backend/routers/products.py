@@ -6,12 +6,50 @@ from backend.config import settings
 from backend.middleware.auth import AuthUser,require_auth,require_business_owner_for_business_id
 from backend.models.schemas import ProductCreate,ProductUpdate,ProductResponse
 from backend.services.money import money_db
+from pydantic import BaseModel, Field, model_validator
+from uuid import UUID
 logger=logging.getLogger(__name__); router=APIRouter(prefix="/products",tags=["products"]); supabase:Client=create_client(settings.SUPABASE_URL,settings.SUPABASE_SERVICE_ROLE_KEY)
 def _normalized_item_key(value): return value.strip().upper()
 def _db_product(data):
     payload=dict(data)
     if "price" in payload: payload["price"]=money_db(payload["price"])
     return payload
+
+class BulkDeletePayload(BaseModel):
+    business_id: UUID
+    product_ids: list[UUID] = Field(default_factory=list, max_length=500)
+    all_products: bool = False
+    expected_count: int = Field(gt=0)
+
+    @model_validator(mode="after")
+    def validate_selection(self):
+        if self.all_products == bool(self.product_ids):
+            raise ValueError("Choose product IDs or the entire catalog")
+        if len(set(self.product_ids)) != len(self.product_ids):
+            raise ValueError("Product IDs must be unique")
+        if not self.all_products and self.expected_count != len(self.product_ids):
+            raise ValueError("Selection count does not match")
+        return self
+
+@router.post("/bulk-delete")
+async def delete_products_bulk(request: BulkDeletePayload, current_user: AuthUser = Depends(require_auth)):
+    business_uuid = require_business_owner_for_business_id(str(request.business_id), current_user)
+    try:
+        result = supabase.rpc("delete_products_bulk", {
+            "p_user_id": current_user.user_id, "p_business_id": business_uuid,
+            "p_product_ids": [str(value) for value in request.product_ids],
+            "p_all_products": request.all_products, "p_expected_count": request.expected_count,
+        }).execute()
+    except Exception as exc:
+        code = str(getattr(exc, "code", ""))
+        if code == "P0001":
+            raise HTTPException(409, {"code": "selection_changed", "message": "Product selection changed. Reload and select again."}) from exc
+        logger.exception("Bulk deletion failed for business %s", business_uuid)
+        raise HTTPException(503, {"code": "bulk_delete_unavailable", "message": "Products could not be deleted right now."}) from exc
+    if not isinstance(result.data, int) or result.data != request.expected_count:
+        logger.error("Bulk deletion RPC returned an unexpected result for %s", business_uuid)
+        raise HTTPException(503, {"code": "bulk_delete_unavailable", "message": "Deletion confirmation is unavailable. Reload the catalog before retrying."})
+    return {"deleted": result.data}
 @router.post("",response_model=ProductResponse,status_code=201)
 async def create_product(request:ProductCreate,current_user:AuthUser=Depends(require_auth)):
     business_uuid=require_business_owner_for_business_id(request.business_id,current_user); item_key=_normalized_item_key(request.item_key)

@@ -1,0 +1,81 @@
+const fs = require('node:fs'), path = require('node:path'), assert = require('node:assert/strict');
+const modulePath = process.env.PGLITE_MODULE || '@electric-sql/pglite';
+const { PGlite } = require(modulePath), dist = path.dirname(require.resolve(modulePath));
+const { pgcrypto } = require(path.join(dist, 'contrib/pgcrypto.cjs'));
+const { uuid_ossp } = require(path.join(dist, 'contrib/uuid_ossp.cjs'));
+(async () => {
+ const db = new PGlite({ extensions: { pgcrypto, uuid_ossp } }); let checks = 0;
+ const uid = '00000000-0000-4000-8000-000000000001', other = '00000000-0000-4000-8000-000000000002';
+ const bid = '00000000-0000-4000-8000-000000000003', foreign = '00000000-0000-4000-8000-000000000004';
+ const p1 = '00000000-0000-4000-8000-000000000005', p2 = '00000000-0000-4000-8000-000000000006', p3 = '00000000-0000-4000-8000-000000000007';
+ const value = async (sql, params = []) => (await db.query(sql, params)).rows[0].value;
+ const equal = (actual, expected) => { assert.deepEqual(actual, expected); checks++; };
+ try {
+  await db.exec(`CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role BYPASSRLS;
+   CREATE SCHEMA auth; CREATE TABLE auth.users(id uuid PRIMARY KEY,email_confirmed_at timestamptz,encrypted_password text);
+   CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+   GRANT USAGE ON SCHEMA public,auth TO anon,authenticated,service_role;`);
+  const root = path.join(__dirname, '../database');
+  for (const file of ['full_schema_bootstrap.sql', ...fs.readdirSync(path.join(root, 'migrations')).filter(f => f.endsWith('.sql')).sort().map(f => 'migrations/' + f)]) await db.exec(fs.readFileSync(path.join(root, file), 'utf8'));
+  for (const id of [uid, other]) {
+   await db.query('INSERT INTO auth.users(id,email_confirmed_at,encrypted_password) VALUES($1,now(),$2)', [id, 'old']);
+   await db.query("INSERT INTO profiles(user_id,email,email_verified,created_at) VALUES($1,'owner@example.com',true,now()-interval '20 days')", [id]);
+  }
+  for (const [id, owner] of [[bid, uid], [foreign, other]]) await db.query('INSERT INTO businesses(id,owner_id,business_id,business_name) VALUES($1,$2,$3,$3)', [id, owner, id]);
+  for (const [id, business] of [[p1, bid], [p2, bid], [p3, foreign]]) await db.query("INSERT INTO products(id,business_id,item_key,name,price) VALUES($1,$2,$3,$3,10)", [id, business, id]);
+  await assert.rejects(db.query('SELECT delete_products_bulk($1,$2,$3,false,2)', [uid, bid, [p1, p3]]), /Selection changed/); checks++;
+  equal(Number(await value('SELECT count(*) value FROM products')), 3);
+  await assert.rejects(db.query('SELECT delete_products_bulk($1,$2,$3,true,3)', [uid, bid, []]), /Selection changed/); checks++;
+  await assert.rejects(db.query('SELECT delete_products_bulk($1,$2,$3,false,1)', [other, bid, [p1]]), /Business not found/); checks++;
+  equal(await value('SELECT delete_products_bulk($1,$2,$3,false,1) value', [uid, bid, [p1]]), 1);
+  equal(await value('SELECT delete_products_bulk($1,$2,$3,true,1) value', [uid, bid, []]), 1);
+  equal(Number(await value('SELECT count(*) value FROM products WHERE business_id=$1', [foreign])), 1);
+  const order = (await db.query("INSERT INTO orders(business_id,order_number,total) VALUES($1,'ORDER-1',249) RETURNING id", [bid])).rows[0].id;
+  equal(Number(await value("SELECT count(*) value FROM notification_outbox WHERE category='payment_success'")), 0);
+  await db.query("UPDATE orders SET status='paid',payment_status='succeeded' WHERE id=$1", [order]);
+  await db.query("UPDATE orders SET status='paid' WHERE id=$1", [order]);
+  equal(Number(await value("SELECT count(*) value FROM notification_outbox WHERE category='payment_success'")), 1);
+  equal(await value("SELECT payload->>'total' value FROM notification_outbox WHERE category='payment_success'"), '249.00');
+  await db.query("UPDATE profiles SET notification_preferences=jsonb_set(notification_preferences,'{payment_success}','false') WHERE user_id=$1", [uid]);
+  await db.query("INSERT INTO orders(business_id,order_number,total,status) VALUES($1,'ORDER-2',10,'paid')", [bid]);
+  equal(Number(await value("SELECT count(*) value FROM notification_outbox WHERE category='payment_success'")), 1);
+  await db.query("UPDATE auth.users SET encrypted_password='changed' WHERE id=$1", [uid]);
+  equal(Number(await value("SELECT count(*) value FROM notification_outbox WHERE category='security_alerts'")), 1);
+  await db.query("UPDATE auth.users SET encrypted_password='changed' WHERE id=$1", [uid]);
+  equal(Number(await value("SELECT count(*) value FROM notification_outbox WHERE category='security_alerts'")), 1);
+  await db.query("INSERT INTO api_keys(business_id,name,key_hash,key_prefix) VALUES($1,'Website','hashed-only','prefix')", [bid]);
+  await db.query('UPDATE api_keys SET is_active=false WHERE business_id=$1', [bid]);
+  equal(Number(await value("SELECT count(*) value FROM notification_outbox WHERE category='security_alerts'")), 3);
+  equal(await value("SELECT bool_or(payload::text LIKE '%hashed-only%') value FROM notification_outbox"), false);
+  await db.query("INSERT INTO product_announcements(title,body) VALUES('New tools','Details')");
+  equal(Number(await value("SELECT count(*) value FROM notification_outbox WHERE category='product_updates'")), 0);
+  await db.query("UPDATE profiles SET notification_preferences=jsonb_set(notification_preferences,'{product_updates}','true') WHERE user_id=$1", [uid]);
+  await db.query("INSERT INTO product_announcements(title,body) VALUES('New tools','Details')");
+  equal(Number(await value("SELECT count(*) value FROM notification_outbox WHERE category='product_updates'")), 1);
+  await db.query('SELECT enqueue_weekly_digests()'); await db.query('SELECT enqueue_weekly_digests()');
+  equal(Number(await value("SELECT count(*) value FROM notification_outbox WHERE category='weekly_digest'")), 2);
+  const conversation = (await db.query("INSERT INTO conversations(business_id,session_id) VALUES($1,'test') RETURNING id", [bid])).rows[0].id;
+  await db.query("INSERT INTO messages(conversation_id,role,content) VALUES($1,'user','Hi'),($1,'assistant','Hello')", [conversation]);
+  await db.query("INSERT INTO messages(conversation_id,role,content,created_at) VALUES($1,'user','Old',now()-interval '40 days')", [conversation]);
+  await db.query("INSERT INTO payments(business_id,order_id,amount,status,paid_at) VALUES($1,$2,249,'succeeded',now())", [bid, order]);
+  const activity = await value("SELECT account_activity($1,date_trunc('month',now()),now()+interval '1 minute') value", [uid]);
+  equal(activity.messages, 1); equal(activity.paid_orders, 1); equal(activity.revenue_by_currency, { ILS: 249 });
+  const foreignActivity = await value("SELECT account_activity($1,date_trunc('month',now()),now()+interval '1 minute') value", [other]);
+  equal(foreignActivity.messages, 0);
+  await db.exec('BEGIN');
+  await db.query("INSERT INTO orders(business_id,order_number,total,status) VALUES($1,'ROLLBACK',10,'paid')", [foreign]);
+  await db.exec('ROLLBACK');
+  equal(Number(await value("SELECT count(*) value FROM notification_outbox WHERE payload->>'order_number'='ROLLBACK'")), 0);
+  const first = (await db.query('SELECT id FROM claim_notifications(2)')).rows;
+  const second = (await db.query('SELECT id FROM claim_notifications(2)')).rows;
+  equal(first.some(a => second.some(b => b.id === a.id)), false);
+  for (const role of ['anon', 'authenticated']) {
+   await db.exec('SET ROLE ' + role);
+   await assert.rejects(db.query('SELECT * FROM notification_outbox'), /permission denied/); checks++;
+   await assert.rejects(db.query('SELECT enqueue_weekly_digests()'), /permission denied/); checks++;
+   await assert.rejects(db.query('SELECT delete_products_bulk($1,$2,$3,true,1)', [uid,bid,[]]), /permission denied/); checks++;
+   await db.exec('RESET ROLE');
+  }
+  console.log(`PASS: ${checks} database checks for atomic bulk deletion, real activity, notification events, opt-in, deduplication, claims and tenant isolation`);
+ } finally { await db.close(); }
+})().catch(error => { console.error(error); process.exitCode = 1; });
