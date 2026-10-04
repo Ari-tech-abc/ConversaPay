@@ -99,3 +99,11 @@ body[data-t2p-page=onboarding] .upgrade-card .primary{background:var(--t2p-fores
 #products .product-selected{background:#f0f7ec;border-color:#9abc94}#products .item>div:first-of-type{flex:1;min-width:0}
 .product-delete-selected{color:#a22727!important;border-color:#dcb4b4!important}.product-selection-bar button{min-height:44px}
 @media(max-width:560px){.product-selection-bar{gap:8px}#products .item{flex-wrap:wrap}#products .item-actions{margin-inline-start:auto;flex-wrap:wrap}}
+/* Keep the entire preview above its launcher, including in landscape/zoom. */
+body[data-t2p-page=dashboard] .widget-panel{width:330px!important;height:min(430px,calc(100dvh - 240px))!important;max-height:calc(100dvh - 240px)!important;box-sizing:border-box}
+@media(max-height:500px){body[data-t2p-page=dashboard] .widget-panel{position:fixed!important;top:76px;bottom:12px!important;left:14px;height:auto!important;max-height:calc(100dvh - 88px)!important}}
+.widget-panel-head,.widget-panel .wform{flex-shrink:0}.widget-panel .messages{min-height:0}
+.widget-panel-head>div:first-child{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-width:0}
+.widget-panel-head .whead{min-width:0}.widget-panel-head .whead strong{overflow-wrap:anywhere}
+#widgetClose{min-width:44px;min-height:44px;flex-shrink:0}
+.widget-panel-head{flex-wrap:wrap}.widget-panel-head .ai-limit-warning{width:100%;box-sizing:border-box}

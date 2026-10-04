@@ -14,7 +14,7 @@ const pages = JSON.parse(fixtures.stdout), bid = '00000000-0000-4000-8000-000000
    const page = await browser.newPage({ viewport: { width, height: 900 } }), errors = [];
    page.on('pageerror', e => errors.push(e.message));
    await page.addInitScript(lang => { localStorage.setItem('access_token', 'offline'); localStorage.setItem('conversapay-language', lang); }, lang);
-   let confirmation = true, conflict = false;
+   let confirmation = true, conflict = false, deletionJob = null;
    page.on('dialog', dialog => confirmation ? dialog.accept() : dialog.dismiss());
    await page.route('**/*', async route => {
     const url = new URL(route.request().url());
@@ -29,7 +29,10 @@ const pages = JSON.parse(fixtures.stdout), bid = '00000000-0000-4000-8000-000000
      else if (endpoint === '/products/bulk-delete') {
       const payload = route.request().postDataJSON(); payloads.push(payload);
       if (conflict) { status = 409; body = { detail: { code: 'selection_changed', message: 'Selection changed' } }; }
+      else if(payload.expected_count>500){deletionJob={id:'00000000-0000-4000-8000-000000000009',status:'pending',total:payload.expected_count,deleted:0};body={job_id:deletionJob.id,status:'pending'};}
       else { const before = products.length; products = products.filter(p => !payload.all_products && !payload.product_ids.includes(p.id)); body = { deleted: before - products.length }; }
+     } else if(endpoint.startsWith('/products/delete-jobs/')) {
+      deletionJob.deleted=Math.min(deletionJob.total,deletionJob.deleted+500);deletionJob.status=deletionJob.deleted===deletionJob.total?'completed':'pending';if(deletionJob.status==='completed')products=[];body={...deletionJob};
      } else if (endpoint === '/profile/notifications') body = { preferences: { payment_success: true, weekly_digest: true, security_alerts: true, product_updates: false }, delivery: { enabled: width === 1440 } };
      else if (endpoint === '/profile/billing') body = { plan_type: 'pro', subscription_status: 'active', usage: { used: 37, available: true }, preview: { limit: null, remaining: null } };
      else if (endpoint === '/api-keys') { status = 500; body = { detail: 'An unexpected error occurred' }; }
@@ -42,6 +45,18 @@ const pages = JSON.parse(fixtures.stdout), bid = '00000000-0000-4000-8000-000000
    });
    await page.goto('http://bulk.test/dashboard');
    await page.waitForFunction(() => document.querySelectorAll('[data-select-product]').length === 50);
+   for (const height of [900,480,375]) {
+    await page.setViewportSize({width,height});
+    await page.locator('#widgetFab').click();
+    const closeIsClickable = await page.locator('#widgetClose').evaluate(button => {
+     const rect=button.getBoundingClientRect();
+     return rect.top>=0 && rect.bottom<=innerHeight && button.contains(document.elementFromPoint(rect.left+rect.width/2,rect.top+rect.height/2));
+    });
+    check(closeIsClickable,true);
+    await page.locator('#widgetClose').click();
+    check(await page.locator('#widgetPanel').isVisible(),false);
+   }
+   await page.setViewportSize({width,height:900});
    await page.locator('[data-select-product="product-0"]').check();
    await page.locator('#productPagination [data-page="2"]').first().click();
    await page.waitForFunction(() => document.querySelectorAll('[data-select-product]').length === 5);
@@ -64,6 +79,14 @@ const pages = JSON.parse(fixtures.stdout), bid = '00000000-0000-4000-8000-000000
    conflict = false; await page.locator('.product-delete-selected').click();
    await page.waitForFunction(() => document.querySelector('.product-selection-bar').hidden);
    check(products.length, 0);
+   products=Array.from({length:1500},(_,i)=>({id:'large-'+i,name:'Large '+i,item_key:'large-'+i,price:10,is_active:true}));
+   await page.reload();await page.waitForFunction(()=>document.querySelector('#productSummary').textContent.includes('1500'));
+   const callsBefore=payloads.length;
+   await page.locator('.product-selection-bar button').first().click();await page.locator('.product-delete-selected').click();
+   await page.waitForFunction(()=>Object.keys(localStorage).some(key=>key.startsWith('talk2pay-product-delete-')));
+   await page.reload();
+   await page.waitForFunction(()=>document.querySelector('.product-selection-bar')?.hidden);
+   check(products.length,0);check(payloads.length,callsBefore+1);check(payloads.at(-1).expected_count,1500);
    await page.goto('http://bulk.test/settings');
    await page.waitForSelector('#keyList + .settings-load-error, #keyList ~ .settings-load-error');
    check(await page.locator('#usageText').textContent(), '37');
