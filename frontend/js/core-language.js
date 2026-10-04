@@ -66,6 +66,7 @@ Object.assign(MAP,{"העוזר משתמש בקטלוג שלך כדי לענות 
 Object.assign(MAP,{'בחירת Premium':'Choose Premium'});
 Object.assign(MAP,{"הודעות לקוחות החודש (UTC)": "Customer messages this month (UTC)", "תצוגת AI מקדימה": "AI preview", "בחירת מוצרים": "Product selection", "בחירת העמוד": "Select page", "בחירת כל הקטלוג": "Select entire catalog", "ביטול הבחירה": "Clear selection", "מחיקת הנבחרים": "Delete selected", "לא נבחרו מוצרים": "No products selected", "נתוני השימוש אינם זמינים": "Usage data is unavailable", "ללא מגבלת המסלול החינמי": "No free-plan limit", "לא הצלחנו לטעון את מפתחות החיבור.": "Could not load integration keys.", "מפתחות חיבור זמינים במסלולי PRO ו־PREMIUM.": "Integration keys are available on PRO and PREMIUM plans."});
 Object.assign(MAP,{'סגירת הצ׳אט':'Close chat'});
+Object.assign(MAP,{'הפעלת האנימציות':'Play animations','עצירת האנימציות':'Pause animations','התקדמות המחיקה':'Deletion progress'});
 const REV=Object.fromEntries(Object.entries(MAP).map(([he,en])=>[en,he]));
 const records=new WeakMap();let titleSource=document.title;
 const lang=()=>((localStorage.getItem(KEY)||localStorage.getItem(LEGACY))==='en'?'en':'he');

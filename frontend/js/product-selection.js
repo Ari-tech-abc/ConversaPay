@@ -17,7 +17,10 @@ window.Talk2PayProductSelection = ({ getState, api, reload, note, tr }) => {
   clear.textContent = tr('ביטול הבחירה', 'Clear selection');
   remove.textContent = tr('מחיקת הנבחרים', 'Delete selected');
   remove.classList.add('product-delete-selected');
-  bar.append(pageLabel, count, all, clear, remove);
+  const progress = document.createElement('span'); progress.className = 'product-delete-progress'; progress.hidden = true;
+  progress.setAttribute('role', 'progressbar'); progress.setAttribute('aria-label', tr('התקדמות המחיקה', 'Deletion progress')); progress.setAttribute('aria-valuemin', '0');
+  const fill = document.createElement('span'); progress.append(fill);
+  bar.append(pageLabel, count, progress, all, clear, remove);
   root.before(bar);
   const selected = new Set();
   let entireCatalog = false, busy = false, activeJob = null, restoring = false;
@@ -30,6 +33,7 @@ window.Talk2PayProductSelection = ({ getState, api, reload, note, tr }) => {
       let job;
       do {
         job = await api('/products/delete-jobs/' + encodeURIComponent(id));
+        progress.hidden = false; progress.setAttribute('aria-valuemax', String(job.total)); progress.setAttribute('aria-valuenow', String(job.deleted)); fill.style.transform = 'scaleX(' + Math.min(1, job.deleted / Math.max(1, job.total)) + ')';
         count.textContent = tr('נמחקו ' + job.deleted + ' מתוך ' + job.total, 'Deleted ' + job.deleted + ' of ' + job.total);
         if (job.status === 'pending') await new Promise(resolve => setTimeout(resolve, 1000));
       } while (job.status === 'pending');
@@ -39,6 +43,8 @@ window.Talk2PayProductSelection = ({ getState, api, reload, note, tr }) => {
       note(job.status === 'completed' ? tr(job.deleted + ' מוצרים נמחקו', job.deleted + ' products deleted') : tr('המחיקה נעצרה אחרי ' + job.deleted + ' מוצרים. אפשר לבחור שוב את המוצרים שנותרו.', 'Deletion stopped after ' + job.deleted + ' products. Select the remaining products to retry.'), job.status !== 'completed');
     } catch (error) {
       if (error.status === 404) localStorage.removeItem(jobKey());
+      note(tr('המחיקה ממשיכה ברקע. רענון הדף יאפשר לבדוק את ההתקדמות.', 'Deletion continues in the background. Refresh the page to check progress.'), true);
+    } finally { progress.hidden = true; activeJob = null; busy = false; sync(); }
       note(error.status === 404 ? tr('משימת המחיקה לא נמצאה. יש לרענן את הקטלוג ולבדוק את המוצרים שנותרו.', 'Deletion job was not found. Refresh the catalog to check the remaining products.') : tr('לא ניתן לבדוק כרגע את התקדמות המחיקה. יש לרענן את הדף לפני ניסיון נוסף.', 'Deletion progress is unavailable. Refresh the page before trying again.'), true);
     } finally { activeJob = null; busy = false; sync(); }
   }
@@ -101,10 +107,12 @@ window.Talk2PayProductSelection = ({ getState, api, reload, note, tr }) => {
       ? tr('למחוק את כל ' + expected + ' המוצרים בקטלוג? הפעולה סופית. הזמנות קיימות יישמרו.', 'Delete all ' + expected + ' products in the catalog? This cannot be undone. Existing orders will be retained.')
       : tr('למחוק את ' + expected + ' המוצרים שנבחרו? הפעולה סופית. הזמנות קיימות יישמרו.', 'Delete the ' + expected + ' selected products? This cannot be undone. Existing orders will be retained.');
     if (!confirm(question)) return;
+    const animationIds = entireCatalog ? state.products.map(product => product.id) : [...selected];
     busy = true; sync();
     try {
       const result = await api('/products/bulk-delete', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ business_id: state.business.id, product_ids: [...selected], all_products: entireCatalog, expected_count: expected }) });
       if (result.job_id) { await followJob(result.job_id); return; }
+      await window.Talk2PayMotion?.removeRows(animationIds);
       selected.clear(); entireCatalog = false;
       await reload(1);
       note(tr(result.deleted + ' מוצרים נמחקו', result.deleted + ' products deleted'));
