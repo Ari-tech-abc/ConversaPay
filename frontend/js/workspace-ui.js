@@ -9,7 +9,7 @@
  const links=[
   ['/dashboard','סקירה כללית','Overview','overview'],['/dashboard#productCard','מוצרים','Products','box'],['/dashboard#ordersCard','הזמנות','Orders','bag'],['/product-import','ייבוא מוצרים','Import products','import'],
   ['/profile','פרופיל','Profile','profile'],['/settings','הגדרות','Settings','settings'],['/upgrade','מסלולים וחיוב','Plans and billing','card'],
-  ['/setup-guide','מדריך הטמעת הווידגט','Widget installation guide','guide'],['/wordpress','הטמעה ב־WordPress','WordPress integration','guide'],['/onboarding','הגדרת עוזר AI','AI assistant setup','chat'],['/settings#api-settings','API ואינטגרציות','API and integrations','settings']
+  ['/setup-guide','מדריך הטמעת הווידגט','Widget installation guide','guide'],['/wordpress','הטמעה ב־WordPress','WordPress integration','guide'],['/onboarding','הגדרת עוזר AI','AI assistant setup','chat'],['/settings#api-settings','API ואינטגרציות','API and integrations','settings'],['/settings#whatsapp-settings','חיבור WhatsApp','WhatsApp connection','chat']
  ];
  const workspacePages=new Set(['dashboard','settings','profile','upgrade','setup-guide','wordpress','product-import','onboarding']);
  function initWorkspace(){
