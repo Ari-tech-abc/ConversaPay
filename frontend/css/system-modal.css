@@ -4,3 +4,7 @@
 .cp-toast{width:100%!important;min-height:0!important;padding:18px!important;box-sizing:border-box;pointer-events:auto!important}
 .cp-toast>button:not(.cp-toast-close){grid-column:2;justify-self:start;min-height:40px}
 @media(max-width:640px){.cp-toast-wrap{inset:10px 10px auto auto!important;width:calc(100vw - 20px)!important;max-height:40dvh!important;padding:0!important}.cp-toast{margin:0!important}}
+.cp-toast:not(:has(.cp-toast-icon)){grid-template-columns:minmax(0,1fr) auto!important}
+.cp-toast:not(:has(.cp-toast-icon))>span{grid-column:1!important;overflow-wrap:anywhere}
+.cp-toast:not(:has(.cp-toast-icon))>.cp-toast-close{grid-column:2;grid-row:1}
+.settings-load-error{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px;flex-wrap:wrap}

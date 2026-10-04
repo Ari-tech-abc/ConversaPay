@@ -102,7 +102,8 @@ class ApplicationSecurityTests(unittest.TestCase):
 
     def test_billing_usage_counts_only_the_current_utc_month(self):
         db=MagicMock()
-        db.table.return_value.select.return_value.eq.return_value.gte.return_value.lt.return_value.execute.return_value.count=7
+        db.table.return_value.select.return_value.eq.return_value.limit.return_value.execute.return_value.data=[{"plan_type":"free"}]
+        db.rpc.return_value.execute.return_value.data={"messages":7}
         with patch.object(profile,"supabase",db), patch.object(profile,"get_user_profile",return_value={"plan_type":"free"}):
             response=self.client.get('/api/v1/profile/billing')
         self.assertEqual(response.status_code,200)
@@ -112,12 +113,14 @@ class ApplicationSecurityTests(unittest.TestCase):
         start=usage["period_start"];end=usage["period_end"]
         self.assertIn("-01T00:00:00+00:00",start)
         self.assertGreater(end,start)
-        db.table.return_value.select.return_value.eq.return_value.gte.assert_called_once_with("created_at",start)
-        db.table.return_value.select.return_value.eq.return_value.gte.return_value.lt.assert_called_once_with("created_at",end)
+        db.rpc.assert_called_once_with("account_activity", {"p_user_id":"offline-user", "p_start":start, "p_end":end})
+        self.assertIsNone(usage["limit"])
+        self.assertEqual(response.json()["preview"]["limit"],5)
 
     def test_failed_usage_count_is_unavailable_instead_of_zero(self):
         db=MagicMock()
-        db.table.return_value.select.return_value.eq.return_value.gte.return_value.lt.return_value.execute.side_effect=RuntimeError("offline")
+        db.table.return_value.select.return_value.eq.return_value.limit.return_value.execute.return_value.data=[{"plan_type":"free"}]
+        db.rpc.return_value.execute.side_effect=RuntimeError("offline")
         with patch.object(profile,"supabase",db), patch.object(profile,"get_user_profile",return_value={"plan_type":"free"}):
             response=self.client.get('/api/v1/profile/billing')
         self.assertIsNone(response.json()["usage"]["used"])

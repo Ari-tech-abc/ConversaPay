@@ -1,5 +1,5 @@
 """Tier-aware widget API key management with keyed hashes."""
-import hashlib, hmac, secrets
+import hashlib, hmac, secrets, logging
 from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -15,13 +15,22 @@ class KeyCreate(BaseModel):
 def _limit(plan: str) -> int: return {"free": 0, "pro": 3, "premium": 10}.get(plan, 0)
 def _hash(value: str) -> str: return hmac.new(settings.SECRET_KEY.encode(), value.encode(), hashlib.sha256).hexdigest()
 def _owned_business(business_id: str, user_id: str) -> bool:
-    result = supabase.table("businesses").select("id").eq("id", business_id).eq("owner_id", user_id).maybe_single().execute(); return bool(result.data)
+    try:
+        result = supabase.table("businesses").select("id").eq("id", business_id).eq("owner_id", user_id).limit(1).execute()
+    except Exception as exc:
+        logging.getLogger(__name__).exception("API key ownership lookup failed for business %s", business_id)
+        raise HTTPException(503, {"code": "api_keys_unavailable", "message": "API keys are temporarily unavailable."}) from exc
+    return bool(result.data)
 @router.get("")
 async def list_keys(business_id: str, current_user: AuthUser = Depends(require_auth)) -> Dict[str, Any]:
     if not _owned_business(business_id, current_user.user_id): raise HTTPException(404, "Business not found")
     plan = get_user_plan(current_user.user_id)["plan_type"]; limit = _limit(plan)
     if not limit: return {"plan_type": plan, "limit": 0, "keys": [], "locked": True, "lock_message": "Widget API keys are available in PRO and PREMIUM."}
-    result = supabase.table("api_keys").select("id,business_id,name,key_prefix,permissions,expires_at,is_active,last_used_at,created_at").eq("business_id", business_id).eq("is_active", True).order("created_at", desc=True).execute()
+    try:
+        result = supabase.table("api_keys").select("id,business_id,name,key_prefix,permissions,expires_at,is_active,last_used_at,created_at").eq("business_id", business_id).eq("is_active", True).order("created_at", desc=True).execute()
+    except Exception as exc:
+        logging.getLogger(__name__).exception("API key list load failed for business %s", business_id)
+        raise HTTPException(503, {"code": "api_keys_unavailable", "message": "API keys are temporarily unavailable."}) from exc
     return {"plan_type": plan, "limit": limit, "keys": result.data or [], "locked": False}
 @router.post("", status_code=status.HTTP_201_CREATED)
 async def create_key(payload: KeyCreate, current_user: AuthUser = Depends(require_auth)) -> Dict[str, Any]:

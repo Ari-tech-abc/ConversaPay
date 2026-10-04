@@ -37,6 +37,17 @@ class PreferencesPayload(BaseModel):
 
 def _now(): return datetime.now(timezone.utc).isoformat()
 
+def _settings_profile(user_id: str) -> dict:
+    # Unlike the legacy helper, a storage failure must not become a free plan.
+    try:
+        result = supabase.table("profiles").select("*").eq("user_id", user_id).limit(1).execute()
+    except Exception as exc:
+        logger.exception("Settings profile load failed for %s", user_id)
+        raise HTTPException(503, {"code": "settings_unavailable", "message": "Account settings are temporarily unavailable."}) from exc
+    if not result.data:
+        raise HTTPException(404, {"code": "profile_not_found", "message": "Account profile was not found."})
+    return result.data[0]
+
 def _profile_update_error(user_id: str, exc: Exception) -> None:
     error_code = str(getattr(exc, "code", "") or "").upper()
     error_message = str(getattr(exc, "message", "") or exc)
@@ -98,7 +109,6 @@ async def change_password(payload: PasswordPayload, current_user: AuthUser = Dep
 
 @router.get("/security")
 async def security_status(current_user: AuthUser = Depends(get_current_user)):
-    row = get_user_profile(current_user.user_id) or {}
     return {"two_factor_enabled": False, "two_factor_available": False, "sessions_available": False, "sessions":[{"id":"current","device":"Current browser","ip":"Hidden by provider","last_active":_now(),"current":True}]}
 
 @router.post("/2fa/toggle")
@@ -113,11 +123,17 @@ async def revoke_other_sessions(request: Request, current_user: AuthUser = Depen
         if getattr(result, "error", None): raise RuntimeError(str(result.error))
     except Exception as exc:
         logger.error("Failed to revoke sessions for %s: %s", current_user.user_id, exc, exc_info=True); raise HTTPException(502,"Unable to revoke other sessions") from exc
+    from backend.services.notification_service import enqueue_security_event
+    enqueue_security_event(supabase, current_user.user_id, "sessions_revoked")
     return {"message":"Other sessions revoked"}
 
 @router.get("/notifications")
 async def get_notifications(current_user: AuthUser = Depends(get_current_user)):
-    return {"preferences":_profile_view(get_user_profile(current_user.user_id)).get("notification_preferences")}
+    row = _settings_profile(current_user.user_id)
+    preferences = {"payment_success": True, "weekly_digest": True, "security_alerts": True, "product_updates": False}
+    preferences.update({key: value for key, value in (row.get("notification_preferences") or {}).items() if key in preferences and isinstance(value, bool)})
+    from backend.services.notification_service import delivery_status
+    return {"preferences": preferences, "delivery": delivery_status()}
 
 @router.put("/notifications")
 async def update_notifications(payload: PreferencesPayload, current_user: AuthUser = Depends(get_current_user)):
@@ -125,13 +141,19 @@ async def update_notifications(payload: PreferencesPayload, current_user: AuthUs
 
 @router.get("/billing")
 async def billing_summary(current_user: AuthUser = Depends(get_current_user)):
-    row = get_user_profile(current_user.user_id) or {}; plan = active_plan_from_row(row); used = None
+    row = _settings_profile(current_user.user_id); plan = active_plan_from_row(row); activity = None
     period_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     period_end = period_start.replace(year=period_start.year+1, month=1) if period_start.month == 12 else period_start.replace(month=period_start.month+1)
-    try: used = supabase.table("usage_logs").select("id", count="exact").eq("user_id", current_user.user_id).gte("created_at", period_start.isoformat()).lt("created_at", period_end.isoformat()).execute().count or 0
+    try:
+        activity = supabase.rpc("account_activity", {"p_user_id": current_user.user_id, "p_start": period_start.isoformat(), "p_end": period_end.isoformat()}).execute().data
     except Exception as exc: logger.warning("Usage summary unavailable for %s: %s", current_user.user_id, exc)
     view = _profile_view(row)
-    return {"plan_type":plan, "subscription_status":view["subscription_status"], "subscription_start_date":view["subscription_start_date"], "subscription_end_date":view["subscription_end_date"], "auto_renew":view["auto_renew"], "remaining_days":view["subscription_remaining_days"], "subscription_expires_at":view["subscription_expires_at"], "usage":{"used":used,"available":used is not None,"period_start":period_start.isoformat(),"period_end":period_end.isoformat(),"limit":{"free":1000,"pro":25000,"premium":100000}.get(plan,1000)},"manage_url":"/upgrade","invoices_url":"/upgrade#invoices"}
+    from backend.middleware.rate_limiter import free_dashboard_chat_limiter
+    preview_limit = 5 if plan == "free" else None
+    return {"plan_type":plan, "subscription_status":view["subscription_status"], "subscription_start_date":view["subscription_start_date"], "subscription_end_date":view["subscription_end_date"], "auto_renew":view["auto_renew"], "remaining_days":view["subscription_remaining_days"], "subscription_expires_at":view["subscription_expires_at"],
+        "usage":{"used":activity.get("messages") if isinstance(activity, dict) else None,"available":isinstance(activity, dict),"period_start":period_start.isoformat(),"period_end":period_end.isoformat(),"limit":None,"metric":"customer_messages","activity":activity},
+        "preview":{"limit":preview_limit,"remaining":free_dashboard_chat_limiter.remaining(str(current_user.user_id)) if preview_limit else None,"window_seconds":3600},
+        "manage_url":"/upgrade","invoices_url":"/upgrade#invoices"}
 
 @router.get("/export")
 async def export_account(current_user: AuthUser = Depends(get_current_user)):

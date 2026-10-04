@@ -19,7 +19,17 @@ from backend.services.observability import initialize_error_tracking
 logger=logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(_:FastAPI):
-    monitoring_service.initialize(); initialize_error_tracking(); await apply_migrations(); yield
+    monitoring_service.initialize(); initialize_error_tracking(); await apply_migrations()
+    from backend.services.notification_service import NotificationWorker, delivery_configured
+    task = asyncio.create_task(NotificationWorker().run()) if delivery_configured() else None
+    try:
+        yield
+    finally:
+        if task:
+            task.cancel()
+            from contextlib import suppress
+            with suppress(asyncio.CancelledError):
+                await task
 app=FastAPI(title="Talk2Pay API",version="2.5.0",lifespan=lifespan,docs_url=None if settings.is_production else "/docs",redoc_url=None if settings.is_production else "/redoc")
 class DualCORSMiddleware(BaseHTTPMiddleware):
     PUBLIC_PREFIXES=(f"{settings.API_PREFIX}/chat",f"{settings.API_PREFIX}/widget",f"{settings.API_PREFIX}/webhooks/",f"{settings.API_PREFIX}/orders/",f"{settings.API_PREFIX}/site-builder/")
