@@ -10,7 +10,9 @@
   if(url.origin!==location.origin||!url.pathname.startsWith('/api/'))return originalFetch(input,options);
   const controller=new AbortController(),external=options.signal||(input instanceof Request?input.signal:null);
   const abort=()=>controller.abort(external?.reason);if(external?.aborted)abort();else external?.addEventListener('abort',abort,{once:true});
-  const timer=setTimeout(()=>controller.abort(),15000);
+  // CPU model inference can outlast the normal API deadline.
+  const timeoutMs=/^\/api\/v1\/chat\/?$/.test(url.pathname)?110000:15000;
+  const timer=setTimeout(()=>controller.abort(),timeoutMs);
   try{return await originalFetch(input,{...options,signal:controller.signal})}finally{clearTimeout(timer);external?.removeEventListener('abort',abort)}
  };
  function init(){

@@ -308,8 +308,11 @@ class OllamaPlannerTests(unittest.TestCase):
         client.__aenter__.return_value=client
         client.post.return_value=response
         with patch.object(settings,"AI_PROVIDER","ollama"), patch.object(settings,"OLLAMA_BASE_URL","https://model.conversapay.org"), patch.object(settings,"OLLAMA_CF_ACCESS_CLIENT_ID",SecretStr("fake-client-id")), patch.object(settings,"OLLAMA_CF_ACCESS_CLIENT_SECRET",SecretStr("fake-client-secret")), patch("backend.services.gemini_service.httpx.AsyncClient",return_value=client) as factory:
-            asyncio.run(gemini_service.extract_plan("Price?",[PRODUCT]))
-            asyncio.run(gemini_service.generate_summary([]))
+            with patch.object(settings,"ENVIRONMENT","production"):
+                asyncio.run(gemini_service.extract_plan("Price?",[PRODUCT]))
+                asyncio.run(gemini_service.generate_summary([]))
+            for call in client.post.call_args_list:
+                self.assertEqual(call.kwargs["json"]["keep_alive"],-1)
             self.assertEqual(factory.call_count,2)
             for call in factory.call_args_list:
                 self.assertEqual(call.kwargs["headers"],{"CF-Access-Client-Id":"fake-client-id","CF-Access-Client-Secret":"fake-client-secret"})

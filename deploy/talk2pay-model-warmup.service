@@ -1,0 +1,15 @@
+[Unit]
+Description=Load the trained TALK2PAY model after Ollama starts
+Requires=ollama.service
+After=ollama.service network-online.target
+PartOf=ollama.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+ExecStart=/usr/bin/curl --fail --silent --show-error --max-time 180 --header "Content-Type: application/json" --data '{"model":"talk2pay-sales-v1:latest","stream":false,"keep_alive":-1}' http://127.0.0.1:11434/api/generate
+TimeoutStartSec=200
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
