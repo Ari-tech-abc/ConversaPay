@@ -175,9 +175,20 @@ uvicorn main:app --reload
 | `SUPABASE_URL` | URL של פרויקט Supabase |
 | `SUPABASE_ANON_KEY` | מפתח Supabase ציבורי |
 | `SUPABASE_SERVICE_ROLE_KEY` | מפתח service-role — לעולם לא לחשוף |
-| `GEMINI_API_KEY` | credential של Gemini AI |
 | `RESEND_API_KEY` | credential של ספק המייל |
 | `EMAIL_FROM_ADDRESS` | כתובת שולח למיילים transactional |
+
+### מודל המכירות
+
+| משתנה | תיאור |
+|---|---|
+| `AI_PROVIDER` | `ollama` להרצה מקומית, `gemini` לענן; בהיעדר ערך נבחר Ollama בפיתוח ו־Gemini ב־production |
+| `OLLAMA_BASE_URL` | ברירת מחדל `http://127.0.0.1:11434`; שירות Ollama צריך לפעול לצד שרת האפליקציה |
+| `OLLAMA_MODEL` | ברירת מחדל `talk2pay-sales-v1:latest`, המודל המאומן המקומי |
+| `OLLAMA_TIMEOUT_SECONDS` | ברירת מחדל 75 שניות; אין מעבר אוטומטי לענן בעת כשל |
+| `GEMINI_API_KEY` | נדרש רק כאשר נבחר Gemini |
+
+המודל מחלץ פעולה מובנית; מחירים, מלאי, אישורי תשלום וקישורי checkout נכתבים בצד השרת. הוראות ובדיקות: [מסלול מכירה מאומת](docs/VERIFIED_SALES_HE.md).
 
 ### DB ו-Runtime
 

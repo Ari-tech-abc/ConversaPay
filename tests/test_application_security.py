@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 # These values override local configuration. All provider operations below are mocked.
 os.environ.update({
+    "AI_PROVIDER":"gemini",
     "ENVIRONMENT":"test", "SECRET_KEY":"offline-security-test-secret-32-characters",
     "SUPABASE_URL":"https://offline-test.supabase.co", "SUPABASE_ANON_KEY":"offline-anon-key",
     "SUPABASE_SERVICE_ROLE_KEY":"offline-service-key", "GEMINI_API_KEY":"offline-gemini-key",

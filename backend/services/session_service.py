@@ -102,11 +102,11 @@ class SessionService:
             result = supabase.table("messages")\
                 .select("*")\
                 .eq("conversation_id", conversation_id)\
-                .order("created_at", desc=False)\
+                .order("created_at", desc=True)\
                 .limit(limit)\
                 .execute()
             
-            return result.data if result.data else []
+            return list(reversed(result.data)) if result.data else []
         
         except Exception as e:
             logger.error(f"Error fetching conversation history: {str(e)}")

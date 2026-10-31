@@ -59,7 +59,7 @@ class SubscriptionResponse(BaseModel): model_config=ConfigDict(from_attributes=T
 class PaymentBase(BaseModel): amount:Decimal=Field(...,ge=0); currency:str=Field(default="ILS",min_length=3,max_length=3); status:PaymentStatus=PaymentStatus.PENDING; payment_method:Optional[str]=None; customer_email:Optional[str]=None; customer_name:Optional[str]=None; metadata:Dict[str,Any]={}
 class PaymentCreate(PaymentBase): business_id:str; order_id:Optional[str]=None
 class PaymentResponse(PaymentBase): model_config=ConfigDict(from_attributes=True); id:str; business_id:str; order_id:Optional[str]=None; paid_at:Optional[datetime]=None; created_at:datetime; updated_at:datetime
-class ChatRequest(BaseModel): message:str=Field(...,min_length=1,max_length=2000); business_id:str; session_id:Optional[str]=Field(None,max_length=128,pattern=r'^[a-zA-Z0-9_\-]{1,128}$'); customer_info:Optional[Dict[str,Any]]=None
+class ChatRequest(BaseModel): message:str=Field(...,min_length=1,max_length=2000); business_id:str; session_id:Optional[str]=Field(None,max_length=128,pattern=r'^[a-zA-Z0-9_\-]{1,128}$'); customer_info:Optional[Dict[str,Any]]=None; confirmation_token:Optional[str]=Field(None,max_length=4096)
 class ChatResponse(BaseModel): intent:str; response:str; payment_url:Optional[str]=None; session_id:str; conversation_id:Optional[str]=None; action_data:Optional[Dict[str,Any]]=None
 class ProfileBase(BaseModel): email:EmailStr; full_name:Optional[str]=None
 class ProfileCreate(ProfileBase): user_id:str

@@ -1,6 +1,7 @@
 """Centralized environment and filesystem configuration."""
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Literal, Optional
+from pydantic import SecretStr
 
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -18,7 +19,13 @@ class Settings(BaseSettings):
     SUPABASE_URL: str
     SUPABASE_ANON_KEY: str
     SUPABASE_SERVICE_ROLE_KEY: str
-    GEMINI_API_KEY: str
+    GEMINI_API_KEY: Optional[str] = None
+    AI_PROVIDER: Optional[Literal["ollama", "gemini"]] = None
+    OLLAMA_BASE_URL: str = "http://127.0.0.1:11434"
+    OLLAMA_MODEL: str = "talk2pay-sales-v1:latest"
+    OLLAMA_TIMEOUT_SECONDS: int = 75
+    OLLAMA_CF_ACCESS_CLIENT_ID: Optional[SecretStr] = None
+    OLLAMA_CF_ACCESS_CLIENT_SECRET: Optional[SecretStr] = None
     DATABASE_URL: Optional[str] = None
     REDIS_URL: Optional[str] = None
     TRUSTED_PROXY_CIDRS: str = ""
@@ -58,6 +65,8 @@ class Settings(BaseSettings):
 
     def __init__(self, **data):
         super().__init__(**data)
+        if self.AI_PROVIDER is None:
+            self.AI_PROVIDER = "gemini" if self.is_production else "ollama"
         if self.is_production and self.DEBUG:
             raise ValueError("DEBUG must be False in production environment")
         if not self.SECRET_KEY or not self.SUPABASE_URL or not self.SUPABASE_ANON_KEY:

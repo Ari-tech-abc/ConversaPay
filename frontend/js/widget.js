@@ -25,6 +25,7 @@
   let msgCount = 0;
   let limitReached = false;
   let isFreeplan = false;
+  let currentQuoteToken = null;
 
   const escapeText = (value) => String(value ?? '');
 
@@ -63,6 +64,7 @@
     const item = document.createElement('div');
     item.className = `cp-message ${kind}`;
     item.setAttribute('role', 'listitem');
+    item.dir = 'auto';
     item.textContent = escapeText(text);
     messages.appendChild(item);
     scrollToBottom();
@@ -100,6 +102,42 @@
     messages.appendChild(card);
     scrollToBottom();
   };
+
+  function addQuoteCard(action) {
+    if (!action?.confirmation_token) return;
+    const messages = document.getElementById('cpMessages');
+    if (!messages) return;
+    document.querySelectorAll('.cp-quote-confirm').forEach(button => { button.disabled = true; });
+    currentQuoteToken = action.confirmation_token;
+    const card = document.createElement('div');
+    card.className = 'cp-message bot cp-checkout-card';
+    card.setAttribute('role', 'listitem');
+    const english = action.locale === 'en';
+    card.dir = english ? 'ltr' : 'rtl';
+    const title = document.createElement('div');
+    title.className = 'cp-checkout-title';
+    title.textContent = `${escapeText(action.product_name)} · ${escapeText(action.quantity)} · ${escapeText(action.total)} ${escapeText(action.currency)}`;
+    card.appendChild(title);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'cp-checkout-btn cp-quote-confirm';
+    button.style.minHeight = '44px';
+    button.style.width = '100%';
+    button.style.cursor = 'pointer';
+    button.textContent = english ? 'Confirm quote and create payment link' : 'אישור ההצעה ויצירת קישור תשלום';
+    button.addEventListener('click', async () => {
+      if (sending || button.disabled || currentQuoteToken !== action.confirmation_token) return;
+      button.disabled = true;
+      button.setAttribute('aria-busy', 'true');
+      button.textContent = english ? 'Creating payment link…' : 'יוצר קישור תשלום…';
+      await send(action.confirmation_token, english ? 'I confirm this quote.' : 'אני מאשר את ההצעה הזו.');
+      button.setAttribute('aria-busy', 'false');
+      button.textContent = english ? 'Confirmation sent' : 'האישור נשלח';
+    });
+    card.appendChild(button);
+    messages.appendChild(card);
+    scrollToBottom();
+  }
 
   function addUpgradeCard() {
     const messages = document.getElementById('cpMessages');
@@ -196,6 +234,8 @@
       .cp-checkout-title{font-weight:800;margin-bottom:4px}
       .cp-checkout-meta{font-size:.85rem;opacity:.8;margin-bottom:10px}
       .cp-checkout-btn{display:block;text-align:center;padding:10px 12px;border-radius:10px;background:#fff;color:color-mix(in srgb,var(--cp-widget-color),#000 20%);font-weight:800;text-decoration:none}
+      .cp-quote-confirm:focus-visible{outline:3px solid #fff;outline-offset:3px}
+      .cp-quote-confirm:disabled{opacity:.65;cursor:not-allowed!important}
       .cp-upgrade-card{background:linear-gradient(135deg,#1a1040,#0f2040);border:1px solid #7c5cfc55;max-width:92%}
       .cp-upgrade-title{font-weight:800;font-size:.95rem;margin-bottom:6px}
       .cp-upgrade-desc{font-size:.82rem;opacity:.8;margin-bottom:10px;line-height:1.5}
@@ -271,20 +311,25 @@
     return '\u05e9\u05d2\u05d9\u05d0\u05d4 \u05d1\u05ea\u05e7\u05e9\u05d5\u05e8\u05ea \u05e2\u05dd \u05d4\u05e9\u05e8\u05ea. \u05e0\u05e1\u05d4 \u05e9\u05d5\u05d1.';
   }
 
-  async function send() {
+  async function send(confirmationToken = null, confirmationMessage = null) {
+    // DOM event handlers pass an Event; only explicit button callbacks pass tokens.
+    if (typeof confirmationToken !== 'string') confirmationToken = null;
     if (sending || limitReached) return;
     const input = document.getElementById('cpInput');
-    const message = input?.value.trim();
+    const message = confirmationMessage || input?.value.trim();
     if (!message) return;
     addMessage(message, 'user');
     input.value = '';
     setSending(true);
     showTyping();
+    const controller = new AbortController();
+    const deadline = setTimeout(() => controller.abort(), 110000);
     try {
       const response = await fetch(`${origin}/api/v1/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Widget-Key': apiKey, ...authHeader() },
-        body: JSON.stringify({ message, business_id: businessId, session_id: sessionId, customer_info: {} }),
+        signal: controller.signal,
+        body: JSON.stringify({ message, business_id: businessId, session_id: sessionId, customer_info: {}, confirmation_token: confirmationToken }),
       });
       const data = await response.json().catch(() => ({}));
       hideTyping();
@@ -297,6 +342,8 @@
         addMessage(friendlyError(response.status), 'bot');
         return;
       }
+      currentQuoteToken = null;
+      document.querySelectorAll('.cp-quote-confirm').forEach(button => { button.disabled = true; });
       msgCount++;
       const wasClosed = !document.querySelector('.cp-window.open');
       addMessage(data.response || '\u05dc\u05d0 \u05d4\u05e6\u05dc\u05d7\u05ea\u05d9 \u05dc\u05e2\u05e0\u05d5\u05ea \u05db\u05e8\u05d2\u05e2.', 'bot');
@@ -304,11 +351,13 @@
         addMessage('\u05e9\u05d9\u05dd \u05dc\u05d1: \u05e0\u05d5\u05ea\u05e8\u05ea \u05dc\u05da \u05e2\u05d5\u05d3 \u05d4\u05d5\u05d3\u05e2\u05d4 \u05d0\u05d7\u05ea \u05d1\u05e9\u05e2\u05d4 \u05d6\u05d5. \u05d4\u05e9\u05ea\u05de\u05e9 \u05d1\u05d7\u05d5\u05db\u05de\u05d4 \ud83d\ude4f', 'bot');
       }
       if (data.payment_url) addCheckoutCard(data.payment_url, data.action_data);
+      if (data.intent === 'quote') addQuoteCard(data.action_data);
       if (wasClosed) setUnread(unreadCount + 1);
     } catch (_) {
       hideTyping();
       addMessage(friendlyError(), 'bot');
     } finally {
+      clearTimeout(deadline);
       setSending(false);
     }
   }
