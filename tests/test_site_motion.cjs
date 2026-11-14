@@ -31,11 +31,10 @@ const pages=JSON.parse(fixture.stdout),bid='00000000-0000-4000-8000-000000000001
     }
     const file=path.join(root,name);if(fs.existsSync(file)&&fs.statSync(file).isFile())return route.fulfill({body:fs.readFileSync(file),contentType:file.endsWith('.js')?'application/javascript':'text/css'});return route.abort();
    });
-   await page.goto('http://motion.test/home');await page.waitForSelector('.t2p-hero-light');
+   await page.goto('http://motion.test/home');await page.waitForSelector('[data-t2p-demo]');
    check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-   check(await page.locator('.t2p-hero-light span').count(),2);
-   check(await page.locator('.t2p-hero-light span').first().evaluate((el,reduced)=>reduced?getComputedStyle(el).animationName:getComputedStyle(el).animationPlayState,reduced),reduced?'none':'running');
-   if(!reduced){await page.locator('[data-t2p-motion]').click();await page.waitForFunction(()=>!document.querySelector('.hero-frame').classList.contains('t2p-motion-running'));check(await page.locator('.t2p-hero-light span').first().evaluate(el=>getComputedStyle(el).animationPlayState),'paused');}
+   check(await page.locator('.t2p-hero-light').count(),0);
+   if(!reduced){await page.locator('[data-t2p-demo]').scrollIntoViewIfNeeded();await page.waitForFunction(()=>document.querySelector('[data-t2p-demo]').classList.contains('t2p-demo-playing'));await page.locator('[data-t2p-motion]').click();check(await page.locator('[data-t2p-demo]').evaluate(el=>el.classList.contains('t2p-demo-playing')),false);}
    await page.locator('#capabilities').scrollIntoViewIfNeeded();await page.waitForSelector('[data-motion-revealed]');
    await page.waitForFunction(()=>getComputedStyle(document.querySelector('.section-title')).opacity==='1');check(await page.locator('.section-title').first().evaluate(el=>getComputedStyle(el).opacity),'1');
    await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));await page.waitForTimeout(500);await page.screenshot({path:path.join(shot,`motion-home-${width}-${reduced}.png`)});

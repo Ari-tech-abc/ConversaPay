@@ -12,6 +12,7 @@ from pydantic import BaseModel, EmailStr, Field
 from supabase import Client, create_client
 from supabase_auth.errors import AuthApiError as SupabaseAuthApiError
 
+from backend.services.password_policy import NewPassword
 from backend.config import settings
 from backend.middleware.auth import AuthUser, get_current_user
 from backend.middleware.rate_limiter import RateLimiter, check_rate_limit
@@ -27,7 +28,7 @@ verification_account_limiter = RateLimiter(requests_per_minute=5, window_seconds
 
 class SignupCodeRequest(BaseModel):
     email: EmailStr
-    password: str = Field(..., min_length=8, max_length=128)
+    password: NewPassword
     full_name: str = Field(..., min_length=1, max_length=255)
     business_name: str = Field(..., min_length=1, max_length=255)
 

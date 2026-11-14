@@ -3,6 +3,7 @@ from typing import Optional, List, Dict, Any
 from decimal import Decimal
 from pydantic import BaseModel, EmailStr, Field, ConfigDict, HttpUrl, TypeAdapter, field_validator
 from enum import Enum
+from backend.services.password_policy import NewPassword
 
 class SubscriptionTier(str, Enum): FREE="free"; PRO="pro"; PREMIUM="premium"
 class SubscriptionStatus(str, Enum): ACTIVE="active"; CANCELED="canceled"; PAST_DUE="past_due"
@@ -65,11 +66,11 @@ class ProfileBase(BaseModel): email:EmailStr; full_name:Optional[str]=None
 class ProfileCreate(ProfileBase): user_id:str
 class ProfileUpdate(BaseModel): full_name:Optional[str]=None; plan_type:Optional[str]=None; subscription_expires_at:Optional[datetime]=None; whatsapp_phone_number_id:Optional[str]=None; whatsapp_access_token:Optional[str]=None; whatsapp_verify_token:Optional[str]=None
 class ProfileResponse(ProfileBase): model_config=ConfigDict(from_attributes=True); id:str; user_id:str; plan_type:str="free"; subscription_expires_at:Optional[datetime]=None; whatsapp_phone_number_id:Optional[str]=None; whatsapp_access_token:Optional[str]=None; whatsapp_verify_token:Optional[str]=None; created_at:datetime; updated_at:datetime
-class UserRegister(BaseModel): email:EmailStr; password:str=Field(...,min_length=8); full_name:str=Field(...,min_length=1,max_length=255); business_name:str=Field(...,min_length=1,max_length=255)
+class UserRegister(BaseModel): email:EmailStr; password:NewPassword; full_name:str=Field(...,min_length=1,max_length=255); business_name:str=Field(...,min_length=1,max_length=255)
 class UserLogin(BaseModel): email:EmailStr; password:str
 class TokenResponse(BaseModel): access_token:str; token_type:str="bearer"; user_id:str; email:str
 class PasswordResetRequest(BaseModel): email:EmailStr
-class PasswordReset(BaseModel): token:str; new_password:str=Field(...,min_length=8)
+class PasswordReset(BaseModel): token:str; new_password:NewPassword
 class LogCreate(BaseModel): level:LogLevel; source:str; message:str; details:Dict[str,Any]={}; business_id:Optional[str]=None; user_agent:Optional[str]=None; ip_address:Optional[str]=None
 class LogResponse(BaseModel): model_config=ConfigDict(from_attributes=True); id:str; business_id:Optional[str]=None; level:LogLevel; source:str; message:str; details:Dict[str,Any]={}; user_agent:Optional[str]=None; ip_address:Optional[str]=None; created_at:datetime
 class ApiKeyBase(BaseModel): name:str=Field(...,min_length=1,max_length=255); permissions:List[str]=["read"]; expires_at:Optional[datetime]=None

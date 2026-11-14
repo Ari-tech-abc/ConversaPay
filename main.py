@@ -1,7 +1,10 @@
 """Talk2Pay API composition root. Delivery lives in backend.routers.frontend."""
 from contextlib import asynccontextmanager
 import asyncio, logging, asyncpg
+import httpx
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from backend.config import settings
@@ -78,10 +81,23 @@ async def health():
     if status in {"pending","in_progress","failed"}: return JSONResponse(status_code=503,content={"status":"not_ready","version":"2.5.0","environment":settings.ENVIRONMENT,"checks":{"migrations":status}})
     return {"status":"healthy","version":"2.5.0","environment":settings.ENVIRONMENT,"checks":{"migrations":status}}
 async def _check_database():
-    if not settings.DATABASE_URL: raise RuntimeError("DATABASE_URL is not configured")
-    connection=await asyncpg.connect(settings.DATABASE_URL,timeout=3)
-    try: await connection.execute("SELECT 1")
-    finally: await connection.close()
+    if settings.DATABASE_URL:
+        connection=await asyncpg.connect(settings.DATABASE_URL,timeout=3)
+        try: await connection.execute("SELECT 1")
+        finally: await connection.close()
+        return
+    # API-only installations use PostgREST for application data. Verify that real
+    # database path when direct PostgreSQL access is intentionally unconfigured.
+    async with httpx.AsyncClient(timeout=3, trust_env=False) as client:
+        response = await client.get(
+            settings.SUPABASE_URL.rstrip("/") + "/rest/v1/businesses",
+            params={"select": "id", "limit": "1"},
+            headers={"apikey": settings.SUPABASE_SERVICE_ROLE_KEY,
+                     "Authorization": "Bearer " + settings.SUPABASE_SERVICE_ROLE_KEY},
+        )
+        response.raise_for_status()
+        if not isinstance(response.json(), list):
+            raise RuntimeError("Unexpected database readiness response")
 async def _check_redis():
     if not settings.REDIS_URL:return
     import redis.asyncio as redis_async
@@ -105,6 +121,15 @@ prefix=settings.API_PREFIX
 for selected_router,route_prefix,tag in ((onboarding.router,prefix,"authentication-onboarding"),(safe_auth_router,prefix,"authentication"),(email_verification_router,f"{prefix}/auth","authentication"),(auth.router,f"{prefix}/auth","authentication"),(profile.router,f"{prefix}/profile","profile"),(subscription.router,prefix,"subscription"),(businesses.router,prefix,"businesses"),(products.router,prefix,"products"),(chat.router,prefix,"chat"),(orders.router,prefix,"orders"),(payments.router,prefix,"payments"),(analytics.router,prefix,"analytics"),(widget.router,prefix,"widget"),(dashboard.router,prefix,"dashboard"),(api_keys.router,prefix,"api-keys"),(stripe_webhook_router,prefix,"stripe-webhook")): app.include_router(selected_router,prefix=route_prefix,tags=[tag])
 app.include_router(whatsapp_router, prefix=prefix)
 app.include_router(frontend_router)
+@app.exception_handler(RequestValidationError)
+async def validation_error(_: Request, exc: RequestValidationError):
+    # Keep actionable field errors without echoing credentials into HTTP responses.
+    errors = jsonable_encoder(exc.errors())
+    for error in errors:
+        if any(str(part) in {"password", "new_password", "current_password", "token", "access_token"} for part in error.get("loc", ())):
+            error.pop("input", None)
+    return JSONResponse(status_code=422, content={"detail": errors})
+
 @app.exception_handler(404)
 async def api_not_found(_:Request,__): return JSONResponse(status_code=404,content={"error":"Not found","detail":"Not found"})
 @app.exception_handler(500)

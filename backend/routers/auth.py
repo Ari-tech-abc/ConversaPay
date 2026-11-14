@@ -692,11 +692,10 @@ async def confirm_password_reset(request: Request):
 
         try:
             request_data = PasswordReset(**payload)
-        except ValidationError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="A new password is required and must be at least 8 characters long."
-            )
+        except ValidationError as exc:
+            code = exc.errors(include_input=False)[0]["type"]
+            detail = "password_common" if code == "password_common" else "password_length"
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail) from None
 
         if len(request_data.new_password) < 8:
             raise HTTPException(

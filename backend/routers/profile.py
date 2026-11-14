@@ -6,6 +6,7 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
 from supabase import create_client
+from backend.services.password_policy import NewPassword
 from backend.config import settings
 from backend.dependencies import create_auth_client
 from backend.services.billing_reconciliation import active_plan_from_row
@@ -27,7 +28,7 @@ class ProfileUpdatePayload(BaseModel):
 
 class PasswordPayload(BaseModel):
     current_password: str = Field(..., min_length=1)
-    new_password: str = Field(..., min_length=8)
+    new_password: NewPassword
 
 class PreferencesPayload(BaseModel):
     payment_success: bool = True

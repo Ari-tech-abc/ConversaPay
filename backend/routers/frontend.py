@@ -114,6 +114,9 @@ def _brand_markup(page: str, filename: str = "") -> str:
     page = page.replace('</head>', f'<link rel="stylesheet" href="{APP_THEME_SRC}"></head>', 1)
     if WORKSPACE_UI_SRC not in page:
         page = page.replace('</head>', f'<script src="{WORKSPACE_UI_SRC}" defer></script></head>', 1)
+    if filename == "home.html":
+        page = re.sub(r'<link rel="stylesheet" href="/frontend/css/product-experience.css">', "", page)
+        page = page.replace("</head>", '<link rel="stylesheet" href="/frontend/css/product-experience.css"></head>', 1)
     return page
 
 

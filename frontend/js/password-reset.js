@@ -17,7 +17,7 @@
     if (!hasRecovery) return;
     $('request').hidden = true;
     $('reset').hidden = false;
-    const button = $('resetForm').querySelector('button');
+    const button = $('resetForm').querySelector('button[type=submit]');
     button.disabled = true;
     // Capture the parameters above before removing secrets from the address bar.
     history.replaceState({}, document.title, '/forgot-password');
@@ -50,7 +50,7 @@
   }
   $('requestForm').onsubmit = async event => {
     event.preventDefault();
-    const button = event.target.querySelector('button');
+    const button = event.target.querySelector('button[type=submit]');
     button.disabled = true;
     try {
       const response = await fetch(`${API}/auth/password-reset/request`, {
@@ -66,20 +66,25 @@
     event.preventDefault();
     const password = $('password').value;
     if (!ready || !recoveryToken) return note('נדרש קישור איפוס תקף.', true);
-    if (password.length < 8 || password !== $('confirm').value) return note('יש לבחור סיסמה באורך של 8 תווים לפחות ולהקליד אותה שוב בשדה השני.', true);
-    const button = event.target.querySelector('button');
+    if (password.length < 8 || password.length > 128) return note('יש לבחור סיסמה באורך 8 עד 128 תווים.', true);
+    const button = event.target.querySelector('button[type=submit]');
     button.disabled = true;
     try {
       const response = await fetch(`${API}/auth/password-reset/confirm`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: recoveryToken, new_password: password }),
       });
-      if (!response.ok) throw Object.assign(new Error('reset'),{status:response.status});
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw Object.assign(new Error('reset'), {status:response.status, detail:data.detail});
+      }
       recoveryToken = null;
       ready = false;
+      event.target.reset();
+      button.textContent = document.documentElement.lang === 'en' ? 'Password saved' : 'הסיסמה נשמרה';
       note('הסיסמה עודכנה. מעביר לכניסה...');
       setTimeout(() => location.replace('/login'), 1800);
-    } catch (error) { note(error.status===400?'קישור האיפוס פג או אינו תקין. בקש קישור חדש.':(window.Talk2PayUX?.error(error.status)||'השירות אינו זמין כרגע. נסה שוב.'), true); button.disabled = false; }
+    } catch (error) { note(window.Talk2PayPasswords?.error(error.detail)||(error.status===400?'קישור האיפוס פג או אינו תקין. בקש קישור חדש.':(window.Talk2PayUX?.error(error.status)||'השירות אינו זמין כרגע. נסה שוב.')), true); button.disabled = false; }
   };
   initializeRecovery();
 })();

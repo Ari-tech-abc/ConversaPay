@@ -257,4 +257,72 @@ class ApplicationSecurityTests(unittest.TestCase):
         self.assertNotIn("legacy-access",args[0])
 
 
+    def test_new_password_policy_is_shared_by_every_write_model(self):
+        from backend.models.schemas import UserRegister, PasswordReset, UserLogin
+        from backend.routers.onboarding import SignupCodeRequest
+        from backend.routers.profile import PasswordPayload
+        factories = [
+            lambda value: UserRegister(email='test@example.com', password=value, full_name='Test', business_name='Test'),
+            lambda value: SignupCodeRequest(email='test@example.com', password=value, full_name='Test', business_name='Test'),
+            lambda value: PasswordReset(token='recovery', new_password=value),
+            lambda value: PasswordPayload(current_password='existing', new_password=value),
+        ]
+        for factory in factories:
+            for value in ['Password123!', '12345678', 'aaaaaaaaaaaa', '        ', 'short', 'x' * 129]:
+                with self.subTest(value=value), self.assertRaises(ValidationError):
+                    factory(value)
+            for value in ['a memorable forest phrase', 'סיסמה ארוכה עם רווחים', 'Mixed-7-char-Phrase', '🌿' * 8 + 'different']:
+                factory(value)
+        # Existing accounts can still authenticate, even with older credentials.
+        self.assertEqual(UserLogin(email='test@example.com', password='Password123!').password, 'Password123!')
+
+    def test_password_rejection_does_not_echo_credentials_or_call_providers(self):
+        with patch.object(onboarding, 'supabase') as db:
+            response = self.client.post('/api/v1/auth/signup-code', json={
+                'email':'new@example.com', 'password':'Password123!', 'full_name':'Test', 'business_name':'Test'})
+        self.assertEqual(response.status_code, 422)
+        self.assertEqual(response.json()['detail'][0]['type'], 'password_common')
+        self.assertNotIn('Password123!', response.text)
+        db.auth.admin.create_user.assert_not_called()
+
+    def test_reset_rejects_common_password_before_using_recovery_token(self):
+        with patch.object(auth, 'create_auth_client') as create:
+            response = self.client.post('/api/v1/auth/password-reset/confirm', json={'token':'recovery', 'new_password':'Password123!'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['detail'], 'password_common')
+        create.assert_not_called()
+
+    def test_password_change_rejects_common_password_before_provider_calls(self):
+        with patch.object(profile, 'create_auth_client') as create, patch.object(profile, 'supabase') as db:
+            response = self.client.post('/api/v1/profile/password', json={'current_password':'old-secret', 'new_password':'Password123!'})
+        self.assertEqual(response.status_code, 422)
+        self.assertNotIn('Password123!', response.text)
+        create.assert_not_called()
+        db.auth.admin.update_user_by_id.assert_not_called()
+
+
+    def test_api_only_readiness_checks_the_actual_database_path(self):
+        response = MagicMock()
+        response.json.return_value = []
+        http = MagicMock()
+        http.get = AsyncMock(return_value=response)
+        manager = MagicMock()
+        manager.__aenter__ = AsyncMock(return_value=http)
+        manager.__aexit__ = AsyncMock(return_value=False)
+        with patch.object(settings, 'DATABASE_URL', ''), patch.object(main.httpx, 'AsyncClient', return_value=manager), patch.object(main.asyncpg, 'connect') as direct:
+            asyncio.run(main._check_database())
+        direct.assert_not_called()
+        response.raise_for_status.assert_called_once()
+        self.assertEqual(http.get.call_args.kwargs['params'], {'select':'id', 'limit':'1'})
+        self.assertEqual(http.get.call_args.args[0], settings.SUPABASE_URL.rstrip('/') + '/rest/v1/businesses')
+        response.raise_for_status.side_effect = RuntimeError('database unavailable')
+        with patch.object(settings, 'DATABASE_URL', ''), patch.object(main.httpx, 'AsyncClient', return_value=manager), self.assertRaises(RuntimeError):
+            asyncio.run(main._check_database())
+
+    def test_configured_direct_database_failure_remains_a_readiness_failure(self):
+        with patch.object(settings, 'DATABASE_URL', 'postgresql://configured-db'), patch.object(main.asyncpg, 'connect', AsyncMock(side_effect=RuntimeError('unavailable'))), patch.object(main.httpx, 'AsyncClient') as fallback, self.assertRaises(RuntimeError):
+            asyncio.run(main._check_database())
+        fallback.assert_not_called()
+
+
 if __name__ == '__main__': unittest.main()

@@ -57,7 +57,7 @@
  function init() {
   reveal();
   const hero = document.querySelector('.hero-frame');
-  if (hero) {
+  if (hero && !document.querySelector('[data-demo-scenario]')) {
    const light = document.createElement('div'); light.className = 't2p-hero-light'; light.setAttribute('aria-hidden', 'true');
    light.innerHTML = '<span></span><span></span>'; hero.prepend(light);
    const control = document.querySelector('[data-t2p-motion]'); let visible = true;
