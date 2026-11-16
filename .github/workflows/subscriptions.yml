@@ -1,0 +1,42 @@
+name: Subscription regressions
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'database/**'
+      - 'frontend/**'
+      - 'tests/**'
+      - 'main.py'
+      - '.github/workflows/subscriptions.yml'
+permissions:
+  contents: read
+jobs:
+  subscriptions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install test dependencies
+        run: |
+          pip install -r requirements.txt pytest
+          npm install --prefix tests --ignore-scripts --no-audit --no-fund
+          cd tests && npx playwright install --with-deps chromium
+      - name: Offline server regressions
+        run: pytest tests -q
+      - name: PostgreSQL billing and tenant isolation
+        run: |
+          node tests/test_subscription_database.cjs
+          node tests/test_database_security.cjs
+      - name: Billing flows and bilingual mobile layout
+        env:
+          TEST_PYTHON: python
+          PLAYWRIGHT_CHANNEL: chromium
+        run: |
+          node tests/test_subscription_management.cjs
+          node tests/test_site_copy.cjs upgrade settings

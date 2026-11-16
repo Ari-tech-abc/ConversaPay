@@ -14,6 +14,16 @@ def render_notification(category: str, payload: dict, frontend_url: str) -> tupl
     if category == "payment_success":
         title = "התקבל תשלום חדש"
         body = f"התשלום עבור הזמנה {payload.get('order_number', '')} הושלם.\nסכום: {payload.get('total', '')} {payload.get('currency', '')}"
+    elif category == "subscription_billing":
+        action = payload.get('action')
+        title = {'paid': 'תשלום המנוי התקבל', 'failed': 'תשלום חידוש המנוי לא הושלם', 'expired': 'תקופת המנוי ששולמה הסתיימה'}.get(action, 'עדכון לגבי המנוי שלך')
+        body = title + '\n'
+        if action == 'failed':
+            body += 'לא התקבל אישור לתשלום. אין לפתוח מנוי נוסף. יש לבדוק את מצב המנוי ולפנות לתמיכה להסדרת התשלום.\n'
+        if action == 'expired':
+            body += 'היכולות בתשלום אינן זמינות עד לקבלת אישור לתקופה נוספת.\n'
+        body += 'גישה לתקופה ששולמה עד: ' + str(payload.get('access_until') or '')[:10]
+        body += '\nניהול המנוי: ' + frontend_url.rstrip('/') + '/upgrade'
     elif category == "weekly_digest":
         title = "סיכום הפעילות השבועי שלך"
         period = f"{str(payload.get('period_start', ''))[:10]} עד {str(payload.get('period_end', ''))[:10]} (UTC)"

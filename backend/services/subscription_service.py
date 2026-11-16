@@ -160,7 +160,11 @@ def apply_subscription_state(
         "p_cancel_at_period_end": cancel_at_period_end, "p_attempt_id": attempt_id,
         "p_payment_confirmed": payment_confirmed,
     })
-    return result.get("applied") is True
+    applied = result.get("applied") is True
+    if applied:
+        from backend.services.subscription_history import record_invoice
+        record_invoice(db if db is not None else supabase, user_id, subscription, _resolve_plan_type(plan_type, subscription))
+    return applied
 
 
 

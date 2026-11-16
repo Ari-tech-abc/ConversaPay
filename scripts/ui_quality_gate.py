@@ -19,11 +19,11 @@ for path in html_files:
     if path.name in {"payment-success.html", "payment-canceled.html"} and "canonical" not in text:
         failures.append(f"{path.name}: legacy payment alias is not canonicalized")
 
-main_text = MAIN.read_text(encoding="utf-8")
+main_text = (ROOT / "backend/routers/frontend.py").read_text(encoding="utf-8")
 required_contracts = {
     '("ConversaPay", "Talk2Pay")': "Talk2Pay canonical copy map missing",
-    "APPLE_POLISH_LINK": "shared product polish stylesheet is not injected",
-    "X-ConversaPay-Release": "release marker missing",
+    "APP_POLISH_SRC": "shared product polish stylesheet is not injected",
+    "X-Delivery-Release": "release marker missing",
     "normalize_copy": "delivery-boundary copy normalization missing",
 }
 for token, message in required_contracts.items():

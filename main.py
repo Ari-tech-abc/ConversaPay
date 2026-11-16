@@ -30,11 +30,14 @@ async def lifespan(_:FastAPI):
     delete_task = asyncio.create_task(run_product_deletions())
     from backend.services.whatsapp_service import WhatsAppWorker, configured as whatsapp_configured
     whatsapp_task = asyncio.create_task(WhatsAppWorker().run()) if whatsapp_configured() else None
+    from backend.services.subscription_worker import run_subscription_worker
+    from backend.routers.subscription import supabase as billing_db
+    billing_task = asyncio.create_task(run_subscription_worker(billing_db)) if settings.SUBSCRIPTION_WORKER_ENABLED else None
     try:
         yield
     finally:
         from contextlib import suppress
-        for running_task in (task, delete_task, whatsapp_task):
+        for running_task in (task, delete_task, whatsapp_task, billing_task):
             if running_task:
                 running_task.cancel()
                 with suppress(asyncio.CancelledError):

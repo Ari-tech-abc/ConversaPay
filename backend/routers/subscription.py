@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/subscription", tags=["subscription"])
 supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
 class CancellationRequest(BaseModel): reason: str = Field(..., min_length=3, max_length=4000); request_refund: bool = True
+class PlanChangeRequest(BaseModel):
+    plan_type: str = Field(..., pattern='^(pro|premium)$')
 def _parse_datetime(value: Any) -> datetime | None:
     if not value: return None
     try:
@@ -39,7 +41,50 @@ def _load_profile(user_id: str) -> dict[str, Any]:
     return result.data[0]
 @router.get("/status")
 async def subscription_status(current_user: AuthUser = Depends(require_auth)):
-    return _status_payload(await asyncio.to_thread(_load_profile, current_user.user_id))
+    row = await asyncio.to_thread(_load_profile, current_user.user_id)
+    payload = _status_payload(row)
+    payload['next_billing_at'] = payload['subscription_end_date'] if payload['auto_renew'] and row.get('subscription_status') in {'active', 'trialing'} and payload['is_paid'] else None
+    payload['payment_action_required'] = row.get('subscription_status') in {'past_due', 'unpaid', 'incomplete'}
+    payload['plan_change_request_available'] = payload['is_paid'] and payload['auto_renew'] and row.get('subscription_status') in {'active', 'trialing'} and bool(payload['provider_subscription_id'])
+    return payload
+
+def _management_rows(user_id):
+    try:
+        invoices = supabase.table('subscription_invoices').select('id,status,amount_minor,currency,period_start,period_end,occurred_at').eq('user_id', user_id).order('occurred_at', desc=True).order('id').limit(50).execute().data or []
+        requests = supabase.table('subscription_plan_requests').select('id,current_plan,requested_plan,status,created_at').eq('user_id', user_id).eq('status', 'requested').limit(1).execute().data or []
+        cancellations = supabase.table('subscription_cancellations').select('id,status,created_at,confirmed_at,request_refund,provider_subscription_id').eq('user_id', user_id).order('created_at', desc=True).limit(1).execute().data or []
+        return {'invoices': invoices, 'plan_change_request': next(iter(requests), None), 'cancellation': next(iter(cancellations), None)}
+    except Exception:
+        raise HTTPException(503, 'billing_storage_unavailable') from None
+
+@router.get('/history')
+async def subscription_history(current_user: AuthUser = Depends(require_auth)):
+    return await asyncio.to_thread(_management_rows, current_user.user_id)
+
+@router.post('/plan-change')
+async def request_plan_change(payload: PlanChangeRequest, current_user: AuthUser = Depends(require_auth)):
+    try:
+        request = await asyncio.to_thread(billing_rpc, supabase, 'request_subscription_plan_change', {'p_user_id': current_user.user_id, 'p_plan': payload.plan_type})
+        if request.get('error'):
+            raise HTTPException(409, request['error'])
+        return {'request': request, 'provider_confirmed': False, 'effective_at': None, 'charge_created': False}
+    except BillingStorageUnavailable:
+        raise HTTPException(503, 'billing_storage_unavailable') from None
+
+@router.delete('/plan-change/{request_id}')
+async def withdraw_plan_change(request_id: str, current_user: AuthUser = Depends(require_auth)):
+    from uuid import UUID
+    try:
+        request_id = str(UUID(request_id))
+    except ValueError:
+        raise HTTPException(422, 'Invalid request ID') from None
+    try:
+        result = await asyncio.to_thread(lambda: supabase.table('subscription_plan_requests').update({'status': 'withdrawn', 'updated_at': datetime.now(timezone.utc).isoformat()}).eq('id', request_id).eq('user_id', current_user.user_id).eq('status', 'requested').execute())
+    except Exception:
+        raise HTTPException(503, 'billing_storage_unavailable') from None
+    if not result.data:
+        raise HTTPException(404, 'Request not found')
+    return {'withdrawn': True}
 @router.post("/cancel")
 async def cancel_subscription(payload: CancellationRequest, current_user: AuthUser = Depends(require_auth)):
     row = await asyncio.to_thread(_load_profile, current_user.user_id)

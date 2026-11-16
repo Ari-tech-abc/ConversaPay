@@ -11,6 +11,10 @@ services:
         value: production
       - key: DEBUG
         value: "false"
+      - key: SUBSCRIPTION_PROVIDER
+        value: isracard
+      - key: SUBSCRIPTION_WORKER_ENABLED
+        value: "true"
       - key: SECRET_KEY
         sync: false
       - key: DATABASE_URL

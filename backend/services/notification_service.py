@@ -12,7 +12,7 @@ from backend.config import settings
 from backend.services.notification_templates import render_notification
 
 logger = logging.getLogger(__name__)
-DEFAULTS = {"payment_success": True, "weekly_digest": True, "security_alerts": True, "product_updates": False}
+DEFAULTS = {"payment_success": True, "weekly_digest": True, "security_alerts": True, "product_updates": False, "subscription_billing": True}
 _runtime = {"running": False, "ready": False}
 
 

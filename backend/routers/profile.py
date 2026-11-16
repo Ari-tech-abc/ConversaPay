@@ -35,6 +35,7 @@ class PreferencesPayload(BaseModel):
     weekly_digest: bool = True
     security_alerts: bool = True
     product_updates: bool = False
+    subscription_billing: bool = True
 
 def _now(): return datetime.now(timezone.utc).isoformat()
 
@@ -73,7 +74,7 @@ def _profile_view(row: dict[str, Any] | None) -> dict[str, Any]:
     row = row or {}
     end_date = row.get("subscription_end_date") or row.get("subscription_expires_at")
     return {
-        "full_name": row.get("full_name") or "", "company_name": row.get("company_name") or "", "phone": row.get("phone") or "", "timezone": row.get("timezone") or "UTC", "avatar_url": row.get("avatar_url") or "", "notification_preferences": row.get("notification_preferences") or {"payment_success": True, "weekly_digest": True, "security_alerts": True, "product_updates": False}, "two_factor_enabled": False, "two_factor_available": False, "plan_type": row.get("plan_type") or "free", "subscription_status": row.get("subscription_status") or "active", "subscription_start_date": row.get("subscription_start_date"), "subscription_end_date": end_date, "subscription_expires_at": end_date, "auto_renew": bool(row.get("auto_renew", True)), "stripe_subscription_id": row.get("stripe_subscription_id"), "subscription_remaining_days": _remaining_days(end_date), "subscription_active": str(row.get("plan_type") or "free").lower() == "free" or active_plan_from_row(row) != "free", "subscription_expires_at": end_date,
+        "full_name": row.get("full_name") or "", "company_name": row.get("company_name") or "", "phone": row.get("phone") or "", "timezone": row.get("timezone") or "UTC", "avatar_url": row.get("avatar_url") or "", "notification_preferences": row.get("notification_preferences") or {"payment_success": True, "weekly_digest": True, "security_alerts": True, "product_updates": False, "subscription_billing": True}, "two_factor_enabled": False, "two_factor_available": False, "plan_type": row.get("plan_type") or "free", "subscription_status": row.get("subscription_status") or "active", "subscription_start_date": row.get("subscription_start_date"), "subscription_end_date": end_date, "subscription_expires_at": end_date, "auto_renew": bool(row.get("auto_renew", True)), "stripe_subscription_id": row.get("stripe_subscription_id"), "subscription_remaining_days": _remaining_days(end_date), "subscription_active": str(row.get("plan_type") or "free").lower() == "free" or active_plan_from_row(row) != "free", "subscription_expires_at": end_date,
     }
 
 def _remaining_days(value: Any) -> int:
@@ -131,7 +132,7 @@ async def revoke_other_sessions(request: Request, current_user: AuthUser = Depen
 @router.get("/notifications")
 async def get_notifications(current_user: AuthUser = Depends(get_current_user)):
     row = _settings_profile(current_user.user_id)
-    preferences = {"payment_success": True, "weekly_digest": True, "security_alerts": True, "product_updates": False}
+    preferences = {"payment_success": True, "weekly_digest": True, "security_alerts": True, "product_updates": False, "subscription_billing": True}
     preferences.update({key: value for key, value in (row.get("notification_preferences") or {}).items() if key in preferences and isinstance(value, bool)})
     from backend.services.notification_service import delivery_status
     return {"preferences": preferences, "delivery": delivery_status()}

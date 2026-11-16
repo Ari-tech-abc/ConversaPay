@@ -14,6 +14,7 @@ const {uuid_ossp}=require(path.join(dist,'contrib/uuid_ossp.cjs'));
  const root=path.join(__dirname,'../database');
  for(const file of ['full_schema_bootstrap.sql',...fs.readdirSync(path.join(root,'migrations')).filter(f=>f.endsWith('.sql')).sort().map(f=>'migrations/'+f)])await db.exec(fs.readFileSync(path.join(root,file),'utf8'));
  const one=async(sql,args=[]) => (await db.query(sql,args)).rows[0]?.value;
+ assert.equal((await one('SELECT public.subscription_storage_ready() AS value')).ready,true);
  const user='00000000-0000-4000-8000-000000000001',other='00000000-0000-4000-8000-000000000002';
  await db.query('INSERT INTO auth.users(id) VALUES($1),($2)',[user,other]);
  await db.query("INSERT INTO public.profiles(user_id,email) VALUES($1,'first@example.com'),($2,'second@example.com')",[user,other]);
@@ -45,6 +46,30 @@ const {uuid_ossp}=require(path.join(dist,'contrib/uuid_ossp.cjs'));
  assert.equal(new Date(await one('SELECT subscription_expires_at AS value FROM public.profiles WHERE user_id=$1',[user])).getUTCFullYear(),2099,'Unpaid renewal cannot extend access');
  await snapshot({end:null,proof:false});
  assert.equal(await one('SELECT plan_type AS value FROM public.profiles WHERE user_id=$1',[user]),'pro','Missing unconfirmed period preserves known paid access');
+ // Verified history is deduplicated; failed-to-paid recovery cannot regress.
+ await db.query('UPDATE public.profiles SET email_verified=true WHERE user_id=$1',[user]);
+ const invoice=(state='failed',id=user)=>one("SELECT public.record_subscription_invoice($1,'stripe','sub_one','in_one',$2,20000,'ILS',NULL,NULL,now()) AS value",[id,state]);
+ await invoice();await invoice();await invoice('paid');await invoice('failed');
+ assert.equal(await one("SELECT status AS value FROM public.subscription_invoices WHERE provider_invoice_id='in_one'"),'paid');
+ assert.equal(await one("SELECT count(*)::int AS value FROM public.subscription_invoices"),1);
+ assert.equal(await one("SELECT count(*)::int AS value FROM public.notification_outbox WHERE category='subscription_billing'"),2,'One failure and one recovery notification');
+ await assert.rejects(invoice('paid',other),/billing_subscription_mismatch/);
+ await snapshot();
+ const planRequest=()=>one("SELECT public.request_subscription_plan_change($1,'premium') AS value",[user]);
+ const change=await planRequest();assert.equal((await planRequest()).id,change.id,'One pending plan request');
+ assert.equal(await one('SELECT plan_type AS value FROM public.profiles WHERE user_id=$1',[user]),'pro','Request never changes entitlements');
+ assert.equal((await one("SELECT public.request_subscription_plan_change($1,'premium') AS value",[other])).error,'billing_plan_change_unavailable');
+ await db.query("UPDATE public.subscription_plan_requests SET created_at=now()-interval '2 days' WHERE id=$1",[change.id]);
+ assert.equal((await one('SELECT public.scan_subscription_operations() AS value')).open_alerts,1);
+ await one('SELECT public.scan_subscription_operations() AS value');
+ assert.equal(await one('SELECT count(*)::int AS value FROM public.subscription_operational_alerts'),1,'Alerts are deduplicated');
+ await db.query("UPDATE public.subscription_plan_requests SET status='withdrawn' WHERE id=$1",[change.id]);
+ assert.equal((await one('SELECT public.scan_subscription_operations() AS value')).open_alerts,0);
+ assert.equal(await one('SELECT resolved_at IS NOT NULL AS value FROM public.subscription_operational_alerts'),true);
+ for(const role of ['anon','authenticated']) {
+   assert.equal(await one("SELECT has_function_privilege($1,'public.scan_subscription_operations()','EXECUTE') AS value",[role]),false);
+   assert.equal(await one("SELECT has_table_privilege($1,'public.subscription_invoices','SELECT') AS value",[role]),false);
+ }
  const request=()=>one("SELECT public.request_subscription_cancellation($1,'stripe','sub_one','Cancel next renewal',true) AS value",[user]);
  const cancel=await request();assert.equal((await request()).id,cancel.id,'Cancellation retries reuse one operation');
  assert.equal(await one('SELECT auto_renew AS value FROM public.profiles WHERE user_id=$1',[user]),true,'Request alone never claims provider confirmation');
