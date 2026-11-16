@@ -24,8 +24,7 @@
   const isNew=input.autocomplete==='new-password';
   const wrap=document.createElement('div');wrap.className='t2p-password-input';
   input.before(wrap);wrap.append(input);
-  const toggle=document.createElement('button');toggle.type='button';toggle.className='t2p-password-toggle';toggle.setAttribute('aria-controls',input.id);toggle.setAttribute('aria-pressed','false');wrap.append(toggle);
-  if(isNew){const guardian=document.createElement('span');guardian.className='t2p-password-guardian';guardian.setAttribute('aria-hidden','true');guardian.innerHTML='<svg viewBox="0 0 32 18"><g><ellipse cx="10" cy="8" rx="3" ry="4"/><ellipse cx="22" cy="8" rx="3" ry="4"/></g><path d="M12 15q4 3 8 0"/></svg>';wrap.append(guardian);}
+  const toggle=document.createElement('button');toggle.type='button';toggle.className='t2p-password-toggle';toggle.setAttribute('aria-controls',input.id);toggle.setAttribute('aria-pressed','false');wrap.append(toggle);toggle.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="t2p-eye-slash" d="m3 3 18 18"/></svg>';
   let hideTimer,touched=false,submitted=false,announceTimer;
   const field=input.closest('.cp-field')||wrap.parentElement;
   const feedback=document.createElement('div');feedback.className='t2p-password-feedback';feedback.id=input.id+'-feedback';
@@ -34,7 +33,7 @@
   const meter=document.createElement('meter');meter.min=0;meter.max=3;meter.value=0;meter.className='t2p-password-meter';
   const description=(input.getAttribute('aria-describedby')||'').split(' ').filter(Boolean);
   if(isNew){feedback.append(meter,hint,live);field.append(feedback);description.push(feedback.id);input.setAttribute('aria-describedby',description.join(' '));}
-  function label(){const shown=input.type==='text';toggle.textContent=shown?t('הסתרה','Hide'):t('הצגה','Show');toggle.setAttribute('aria-label',shown?t('הסתרת הסיסמה','Hide password'):t('הצגת הסיסמה','Show password'));toggle.setAttribute('aria-pressed',String(shown));wrap.classList.toggle('is-revealed',shown);}
+  function label(){const shown=input.type==='text';const he=shown?'הסתרת הסיסמה':'הצגת הסיסמה';const name=t(he,shown?'Hide password':'Show password');toggle.setAttribute('data-ux-aria-label',he);toggle.setAttribute('aria-label',name);toggle.title=name;toggle.setAttribute('aria-pressed',String(shown));wrap.classList.toggle('is-revealed',shown);}
   function conceal(){clearTimeout(hideTimer);input.type='password';label();}
   toggle.addEventListener('click',()=>{const start=input.selectionStart,end=input.selectionEnd;if(input.type==='text')conceal();else{input.type='text';label();hideTimer=setTimeout(conceal,30000);}input.focus();if(start!==null)input.setSelectionRange(start,end);});
   input.addEventListener('blur',()=>{touched=true;render();});

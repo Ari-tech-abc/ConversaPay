@@ -41,6 +41,8 @@ const pages=JSON.parse(rendered.stdout),policy=JSON.parse(fs.readFileSync(path.j
    await page.evaluate(()=>{window.originalPasswordField=document.getElementById('password');});
    await page.locator('.t2p-password-toggle').click();assert.equal(await page.locator('#password').getAttribute('type'),'text');
    assert.equal(await page.locator('.t2p-password-toggle').getAttribute('aria-pressed'),'true');
+   assert.equal(await page.locator('.t2p-password-toggle').getAttribute('aria-label'),language==='en'?'Hide password':'הסתרת הסיסמה');
+   assert.equal(await page.locator('#password').inputValue(),generated);
    assert.equal(await page.evaluate(()=>originalPasswordField===document.getElementById('password')),true,'Visibility preserves the input element');
    await page.screenshot({path:path.join(shots,`password-${language}-375.png`),fullPage:true});
    await page.locator('.t2p-password-toggle').click();
@@ -60,8 +62,17 @@ const pages=JSON.parse(rendered.stdout),policy=JSON.parse(fs.readFileSync(path.j
    }
    await page.locator('#demo-replay').click();assert.equal(await page.locator('.t2p-demo-msg').nth(2).isVisible(),true);
    assert.equal(await page.locator('.plan-comparison table').count(),1);
+   for(const plan of ['free','pro','premium']){
+    await page.locator(`[data-plan-preview=${plan}]`).click();
+    assert.equal(await page.locator(`[data-plan-preview=${plan}]`).getAttribute('aria-pressed'),'true');
+    for(const other of ['free','pro','premium'])assert.equal(await page.locator(`.plan-comparison a[href="/register?plan=${other}"]`).isVisible(),other===plan);
+   }
+
    for(const width of [320,375,768,1440]){
     await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,`${language} fits ${width}`);
+    const hero=await page.evaluate(()=>{const copy=document.querySelector('.hero-copy').getBoundingClientRect(),demo=document.querySelector('.commerce-thread').getBoundingClientRect();return {copy:{top:copy.top,bottom:copy.bottom,left:copy.left,right:copy.right},demo:{top:demo.top,bottom:demo.bottom,left:demo.left,right:demo.right}};});
+    if(width===1440)assert.equal(hero.copy.top<hero.demo.bottom&&hero.demo.top<hero.copy.bottom,true,'Desktop hero copy and product share a row');
+    if(width===375)assert.equal(hero.copy.bottom<=hero.demo.top,true,'Mobile headline precedes product preview');
     if(width===375||width===1440)await page.screenshot({path:path.join(shots,`home-${language}-${width}.png`),fullPage:true});
    }
    assert.equal(await page.evaluate(()=>document.getAnimations().filter(a=>a.playState==='running').length),0,'Reduced motion has no running animations');

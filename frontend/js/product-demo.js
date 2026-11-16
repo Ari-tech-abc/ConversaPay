@@ -2,6 +2,11 @@
 (() => {
  'use strict';
  function init(){
+  const comparison=document.querySelector('.plan-comparison');
+  document.querySelectorAll('[data-plan-preview]').forEach(button=>button.addEventListener('click',()=>{
+   comparison.dataset.mobilePlan=button.dataset.planPreview;
+   document.querySelectorAll('[data-plan-preview]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+  }));
   const scene=document.querySelector('[data-t2p-demo]');if(!scene)return;
   const original=scene.innerHTML;
   const scenarios={
