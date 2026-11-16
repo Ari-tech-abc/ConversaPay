@@ -1,6 +1,7 @@
 """Stripe-backed subscription routes and provider-neutral order checkout."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from decimal import Decimal
 from pathlib import Path
@@ -21,7 +22,10 @@ from backend.services.subscription_service import apply_subscription_state, norm
 logger = logging.getLogger(__name__)
 supabase: Client = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
 router = APIRouter(prefix="/payments", tags=["payments"])
-PLAN_PRICES = {"pro": 200, "premium": 350}
+from backend.services.subscription_checkout import create_subscription_checkout, BillingConflict, BillingStorageUnavailable
+from backend.services.subscription_gateway import SubscriptionGatewayUnavailable
+from backend.services.subscription_catalog import PLANS, invoice_confirms_subscription, paid_subscription_period
+PLAN_PRICES = {key: plan.amount for key, plan in PLANS.items()}
 PLAN_PRICE_IDS = {"pro": settings.STRIPE_PRO_PRICE_ID, "premium": settings.STRIPE_PREMIUM_PRICE_ID}
 CONFIRMED_PAYMENT_STATUSES = {"paid", "no_payment_required"}
 ACTIVE_SUBSCRIPTION_STATUSES = {"active", "trialing"}
@@ -48,33 +52,17 @@ async def create_subscription_checkout_session(request: SubscriptionCreate, curr
     plan = normalize_plan_type(request.plan_type)
     if plan not in PLAN_PRICES:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Only PRO and PREMIUM can be purchased")
-    _require_stripe_secret_key()
-    metadata = {"user_id": current_user.user_id, "plan_type": plan}
-    price_id = PLAN_PRICE_IDS.get(plan)
-    log_context = f"user_id={current_user.user_id} plan={plan} price_id={price_id or 'inline_price_data'}"
     try:
-        session = (
-            stripe_service.create_checkout_session_with_price(price_id=price_id, mode="subscription", customer_email=current_user.email, metadata=metadata)
-            if price_id
-            else stripe_service.create_checkout_session(amount=PLAN_PRICES[plan], product_name=f"ConversaPay {plan.upper()} subscription", currency="ILS", mode="subscription", customer_email=current_user.email, metadata=metadata)
-        )
-    except HTTPException:
-        raise
-    except ValueError as exc:
-        logger.error("Invalid checkout session request (%s): %s", log_context, exc)
-        raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
-    except stripe.error.StripeError as exc:
-        reason = describe_stripe_error(exc)
-        logger.error("Stripe refused the checkout session (%s): %s", log_context, reason, exc_info=True)
-        code = status.HTTP_400_BAD_REQUEST if isinstance(exc, stripe.error.InvalidRequestError) else status.HTTP_502_BAD_GATEWAY
-        raise HTTPException(code, f"Stripe could not create the checkout session: {reason}") from exc
-    except StripeServiceError as exc:
-        logger.error("Checkout session creation failed (%s): %s", log_context, exc)
-        raise HTTPException(_stripe_service_error_status(exc), str(exc)) from exc
-    except Exception as exc:
-        logger.error("Unexpected error while creating checkout session (%s): %s: %s", log_context, type(exc).__name__, exc, exc_info=True)
-        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Unexpected error while creating the Stripe checkout session") from exc
+        session = await asyncio.to_thread(create_subscription_checkout, supabase, user_id=current_user.user_id, email=current_user.email, plan_type=plan)
+    except BillingConflict as exc:
+        raise HTTPException(409, str(exc)) from None
+    except (SubscriptionGatewayUnavailable, BillingStorageUnavailable) as exc:
+        raise HTTPException(503, str(exc)) from None
+    except Exception:
+        logger.exception("Subscription checkout could not be completed for user %s", current_user.user_id)
+        raise HTTPException(502, "billing_checkout_unavailable") from None
     return SubscriptionResponse(session_id=session["session_id"], url=session["url"], payme_sale_id=None)
+
 
 
 def _extract_subscription_fields(session: dict[str, Any]) -> tuple[str | None, str | None, str | None, bool, dict[str, Any] | None]:
@@ -114,7 +102,7 @@ def _subscription_plan_from_stripe(session: dict[str, Any], subscription: dict[s
 async def confirm_checkout_session(session_id: str = Query(..., min_length=1), current_user: AuthUser = Depends(require_auth)) -> dict[str, Any]:
     """Verify Stripe and reconcile a completed subscription before success.html advances."""
     try:
-        session = stripe_service.retrieve_checkout_session(session_id)
+        session = await asyncio.to_thread(stripe_service.retrieve_checkout_session, session_id)
     except ValueError as exc:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, str(exc)) from exc
     except StripeServiceError as exc:
@@ -138,9 +126,9 @@ async def confirm_checkout_session(session_id: str = Query(..., min_length=1), c
         return response
 
     subscription_id, subscription_status, subscription_expires_at, cancel_at_period_end, subscription = _extract_subscription_fields(session)
-    if isinstance(session.get("subscription"), str):
+    if subscription_id:
         try:
-            subscription = stripe_service.retrieve_subscription(session["subscription"])
+            subscription = await asyncio.to_thread(stripe_service.retrieve_subscription, subscription_id)
         except StripeServiceError as exc:
             raise HTTPException(_stripe_service_error_status(exc), str(exc)) from exc
         subscription_id = subscription.get("id") or subscription_id
@@ -161,8 +149,17 @@ async def confirm_checkout_session(session_id: str = Query(..., min_length=1), c
         return response
 
     plan_type = _subscription_plan_from_stripe(session, subscription)
+    expected = PLANS[plan_type]
+    if payment_status != "paid" or session.get("amount_total") != expected.amount_minor or str(session.get("currency") or "").upper() != expected.currency:
+        raise HTTPException(409, "billing_payment_mismatch")
+    if not invoice_confirms_subscription(subscription or {}, expected):
+        response["status"] = "pending"
+        return response
+    subscription_expires_at = period_end_iso(paid_subscription_period(subscription, expected)[1])
     try:
-        apply_subscription_state(user_id=current_user.user_id, plan_type=plan_type, subscription_status=subscription_status, subscription_expires_at=subscription_expires_at, customer_id=(subscription or {}).get("customer") or session.get("customer"), cancel_at_period_end=cancel_at_period_end, stripe_subscription_id=subscription_id, stripe_subscription=subscription or session.get("subscription"))
+        applied = await asyncio.to_thread(apply_subscription_state, user_id=current_user.user_id, plan_type=plan_type, subscription_status=subscription_status, subscription_expires_at=subscription_expires_at, customer_id=(subscription or {}).get("customer") or session.get("customer"), cancel_at_period_end=cancel_at_period_end, stripe_subscription_id=subscription_id, stripe_subscription=subscription or session.get("subscription"), payment_confirmed=True)
+        if applied is False:
+            raise ValueError("Subscription state conflict")
     except Exception as exc:
         logger.error("Immediate plan reconciliation failed (user_id=%s session_id=%s plan_type=%s): %s", current_user.user_id, session_id, plan_type, exc, exc_info=True)
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, "Stripe confirmed the payment but syncing the profile failed. Please retry in a moment.") from exc

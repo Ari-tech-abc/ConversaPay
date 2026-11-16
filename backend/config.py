@@ -31,6 +31,8 @@ class Settings(BaseSettings):
     TRUSTED_PROXY_CIDRS: str = ""
     MIGRATIONS_AUTO_APPLY: bool = True
     PAYMENT_PROVIDER: str = "stripe"
+    # Platform subscriptions are independent from merchant checkout payments.
+    SUBSCRIPTION_PROVIDER: Literal["stripe", "isracard"] = "stripe"
     STRIPE_SECRET_KEY: Optional[str] = None
     STRIPE_WEBHOOK_SECRET: Optional[str] = None
     STRIPE_PRO_PRICE_ID: Optional[str] = None

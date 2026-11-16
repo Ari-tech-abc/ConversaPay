@@ -97,11 +97,13 @@ class BillingTests(unittest.TestCase):
 
     def test_incomplete_subscription_has_no_invented_expiry(self):
         db = MagicMock()
-        scope = functions("backend/services/subscription_service.py", {"apply_subscription_state", "_as_dict", "_resolve_plan_type", "normalize_plan_type", "_subscription_plan_candidates", "period_end_iso", "subscription_period_end"}, supabase=db, ACTIVE_STATUSES=ACTIVE_STATUSES)
-        scope["apply_subscription_state"](user_id="u", plan_type="premium", subscription_status="incomplete", subscription_expires_at=None)
-        payload = db.table.return_value.update.call_args_list[0].args[0]
-        self.assertEqual(payload["plan_type"], "free")
-        self.assertIsNone(payload["subscription_expires_at"])
+        transaction = MagicMock(return_value={"applied": True})
+        scope = functions("backend/services/subscription_service.py", {"apply_subscription_state", "_as_dict", "_resolve_plan_type", "normalize_plan_type", "_subscription_plan_candidates", "period_end_iso", "subscription_period_end", "subscription_period_start"}, supabase=db, ACTIVE_STATUSES=ACTIVE_STATUSES, billing_rpc=transaction)
+        scope["apply_subscription_state"](user_id="u", plan_type="premium", subscription_status="incomplete", subscription_expires_at=None, stripe_subscription_id="sub_test")
+        payload = transaction.call_args.args[2]
+        self.assertEqual(payload["p_plan"], "free")
+        self.assertIsNone(payload["p_period_end"])
+        self.assertFalse(payload["p_payment_confirmed"])
 
     def test_provider_amount_validation(self):
         self.assertEqual(checkout_amount({"amount_total":12345,"currency":"ils"}), ("123.45","ILS"))

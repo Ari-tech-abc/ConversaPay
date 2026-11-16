@@ -4,6 +4,9 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import Any
 import logging
+from uuid import UUID
+from backend.services.subscription_checkout import billing_rpc
+from backend.services.subscription_catalog import PLANS, paid_subscription_period
 
 from supabase import Client, create_client
 
@@ -28,6 +31,14 @@ def subscription_period_end(subscription: dict) -> int | None:
     items = (subscription.get('items') or {}).get('data') or []
     periods = [item.get('current_period_end') for item in items if item.get('current_period_end')]
     return min(periods) if periods else None
+
+
+def subscription_period_start(subscription: dict) -> int | None:
+    direct = subscription.get('current_period_start') or subscription.get('start_date')
+    if direct:
+        return direct
+    periods = [item.get('current_period_start') for item in (subscription.get('items') or {}).get('data', []) if item.get('current_period_start')]
+    return max(periods) if periods else None
 
 
 def _as_dict(value: Any) -> dict[str, Any]:
@@ -104,45 +115,53 @@ def apply_subscription_state(
     cancel_at_period_end: bool = False,
     stripe_subscription_id: str | None = None,
     stripe_subscription: Any | None = None,
-) -> None:
+    payment_confirmed: bool = False,
+    db=None,
+) -> bool:
     """Apply Stripe-confirmed state through the service-role Supabase client."""
     subscription = _as_dict(stripe_subscription)
     metadata = _as_dict(subscription.get("metadata"))
     user_id = user_id or metadata.get("user_id")
     if not user_id:
-        return
+        raise ValueError("Subscription owner could not be resolved")
 
     plan = _resolve_plan_type(plan_type, stripe_subscription)
     provider_status = str(subscription_status or subscription.get("status") or "unknown").lower()
     expiry = subscription_expires_at or period_end_iso(subscription_period_end(subscription))
     stripe_subscription_id = stripe_subscription_id or subscription.get("id")
     customer_id = customer_id or subscription.get("customer")
-    auto_renew = not cancel_at_period_end
 
     if provider_status not in ACTIVE_STATUSES:
-        plan, expiry, auto_renew = "free", None, False
+        plan = "free"
     elif cancel_at_period_end and plan in {"pro", "premium"}:
         provider_status = "pending_cancellation"
-    if plan in {"pro", "premium"} and not expiry:
-        plan, auto_renew = "free", False
+    if provider_status in ACTIVE_STATUSES and plan not in {"pro", "premium"}:
+        raise ValueError("Subscription plan could not be verified")
 
-    now = datetime.now(timezone.utc).isoformat()
-    payload: dict[str, Any] = {
-        "plan_type": plan,
-        "subscription_status": provider_status,
-        "stripe_customer_id": customer_id,
-        "stripe_subscription_id": stripe_subscription_id,
-        "subscription_expires_at": expiry if plan != "free" else None,
-        "subscription_start_date": now if plan != "free" else None,
-        "subscription_end_date": expiry if plan != "free" else None,
-        "auto_renew": auto_renew if plan != "free" else False,
-        "updated_at": now,
-    }
-    profile = supabase.table("profiles").update(payload).eq("user_id", user_id).execute()
-    if not profile.data:
-        raise RuntimeError(f"Profile not found for Stripe user {user_id}")
-    supabase.table("businesses").update({"subscription_tier": plan, "subscription_status": provider_status}).eq("owner_id", user_id).execute()
-    logger.info("Successfully updated user %s to plan %s with status %s", user_id, plan, provider_status)
+    if not stripe_subscription_id:
+        raise ValueError("A verified subscription ID is required")
+    attempt_id = metadata.get("checkout_attempt_id")
+    if attempt_id:
+        attempt_id = str(UUID(attempt_id))
+    start = period_end_iso(subscription_period_start(subscription))
+    if payment_confirmed:
+        paid_plan = PLANS.get(_resolve_plan_type(plan_type, stripe_subscription))
+        paid_period = paid_subscription_period(subscription, paid_plan) if paid_plan else None
+        if paid_period is None:
+            payment_confirmed = False
+        else:
+            start = period_end_iso(paid_period[0])
+            paid_end = period_end_iso(paid_period[1])
+            expiry = min(expiry, paid_end) if expiry else paid_end
+    result = billing_rpc(db if db is not None else supabase, "apply_subscription_snapshot", {
+        "p_user_id": user_id, "p_provider": "stripe", "p_subscription_id": stripe_subscription_id,
+        "p_customer_id": customer_id, "p_plan": plan, "p_status": provider_status,
+        "p_period_start": start, "p_period_end": expiry,
+        "p_cancel_at_period_end": cancel_at_period_end, "p_attempt_id": attempt_id,
+        "p_payment_confirmed": payment_confirmed,
+    })
+    return result.get("applied") is True
+
 
 
 def mark_webhook_processed(event_id: str) -> None:

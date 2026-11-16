@@ -94,9 +94,9 @@ class StripeService:
             values["plan_type"] = values["plan_type"]
         return values
 
-    def _create_session(self, params: dict[str, Any], *, context: str) -> Any:
+    def _create_session(self, params: dict[str, Any], *, context: str, idempotency_key: str | None = None) -> Any:
         try:
-            return stripe.checkout.Session.create(**params)
+            return stripe.checkout.Session.create(**params, **({"idempotency_key": idempotency_key} if idempotency_key else {}))
         except stripe.error.StripeError as exc:
             reason = describe_stripe_error(exc)
             logger.error("Stripe rejected checkout session creation (%s): %s", context, reason, exc_info=True)
@@ -106,7 +106,7 @@ class StripeService:
             logger.error("Unexpected error during checkout session creation (%s): %s", context, reason, exc_info=True)
             raise StripeServiceError(f"Stripe Checkout session creation failed: {reason}") from exc
 
-    def create_checkout_session(self, *, amount: Decimal | int | float | str, product_name: str, currency: str = "ILS", mode: str = "payment", customer_email: str | None = None, metadata: dict[str, str] | None = None) -> dict[str, Any]:
+    def create_checkout_session(self, *, amount: Decimal | int | float | str, product_name: str, currency: str = "ILS", mode: str = "payment", customer_email: str | None = None, metadata: dict[str, str] | None = None, idempotency_key: str | None = None) -> dict[str, Any]:
         self._ensure_configured()
         if mode not in {"payment", "subscription"}:
             raise ValueError("Mode must be payment or subscription")
@@ -123,14 +123,19 @@ class StripeService:
         if mode == "payment":
             params["payment_intent_data"] = {"metadata": metadata_values}
         else:
-            params["subscription_data"] = {"metadata": {"user_id": metadata_values["user_id"], "plan_type": metadata_values["plan_type"]}}
-        session = self._create_session(params, context=f"mode={mode} price=inline_price_data currency={currency}")
+            params["subscription_data"] = {"metadata": metadata_values}
+        session = self._create_session(params, context=f"mode={mode} price=inline_price_data currency={currency}", idempotency_key=idempotency_key)
         return self._serialize_session(session)
 
-    def create_checkout_session_with_price(self, *, price_id: str, mode: str, metadata: dict[str, str] | None = None, customer_email: str | None = None) -> dict[str, Any]:
+    def create_checkout_session_with_price(self, *, price_id: str, mode: str, metadata: dict[str, str] | None = None, customer_email: str | None = None, idempotency_key: str | None = None, expected_unit_amount: int | None = None) -> dict[str, Any]:
         self._ensure_configured()
         if not price_id.strip() or mode not in {"payment", "subscription"}:
             raise ValueError("Valid price_id and mode are required")
+        if mode == "subscription" and expected_unit_amount is not None:
+            price = self.serialize_stripe_object(stripe.Price.retrieve(price_id))
+            recurring = price.get("recurring") or {}
+            if price.get("active") is not True or price.get("currency") != "ils" or price.get("unit_amount") != expected_unit_amount or recurring.get("interval") != "month" or recurring.get("interval_count", 1) != 1:
+                raise ValueError("Configured subscription price does not match the server catalog")
         metadata_values = self._metadata(metadata, subscription=mode == "subscription")
         params: dict[str, Any] = {"mode": mode, "line_items": [{"price": price_id, "quantity": 1}], "success_url": self._success_url(), "cancel_url": self._cancel_url(), "metadata": metadata_values}
         if customer_email:
@@ -138,8 +143,8 @@ class StripeService:
         if mode == "payment":
             params["payment_intent_data"] = {"metadata": metadata_values}
         else:
-            params["subscription_data"] = {"metadata": {"user_id": metadata_values["user_id"], "plan_type": metadata_values["plan_type"]}}
-        session = self._create_session(params, context=f"mode={mode} price_id={price_id}")
+            params["subscription_data"] = {"metadata": metadata_values}
+        session = self._create_session(params, context=f"mode={mode} price_id={price_id}", idempotency_key=idempotency_key)
         return self._serialize_session(session)
 
     def retrieve_checkout_session(self, session_id: str) -> dict[str, Any]:
@@ -158,7 +163,7 @@ class StripeService:
         if not subscription_id:
             raise ValueError("subscription_id is required")
         try:
-            subscription = stripe.Subscription.retrieve(subscription_id, expand=["items.data.price.product"])
+            subscription = stripe.Subscription.retrieve(subscription_id, expand=["items.data.price.product", "latest_invoice"])
         except stripe.error.StripeError as exc:
             logger.error("Stripe subscription retrieval failed (subscription_id=%s): %s", subscription_id, describe_stripe_error(exc), exc_info=True)
             raise StripeServiceError("Stripe subscription retrieval failed") from exc
