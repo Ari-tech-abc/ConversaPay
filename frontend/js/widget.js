@@ -118,6 +118,19 @@
     title.className = 'cp-checkout-title';
     title.textContent = `${escapeText(action.product_name)} · ${escapeText(action.quantity)} · ${escapeText(action.total)} ${escapeText(action.currency)}`;
     card.appendChild(title);
+    const contactForm = document.createElement('form');
+    contactForm.className = 'cp-checkout-contact';
+    const fields = {};
+    const definitions = [['name',english?'Full name':'שם מלא','text'],['email',english?'Email':'אימייל','email'],['phone',english?'Phone':'טלפון','tel']];
+    if(action.fulfillment==='delivery') definitions.push(['address',english?'Delivery address':'כתובת מלאה למשלוח','text']);
+    for(const [key,labelText,type] of definitions){
+      const label=document.createElement('label'),field=document.createElement('input');
+      label.textContent=labelText;field.type=type;field.name=key;field.required=true;field.minLength=key==='address'?5:key==='phone'?7:1;field.maxLength=key==='address'?1000:key==='phone'?30:160;
+      field.style.cssText='box-sizing:border-box;width:100%;min-height:44px;margin:4px 0 10px;color:#171923;background:#fff;border:1px solid #aaa;border-radius:8px;padding:8px;font:inherit';
+      field.autocomplete=({name:'name',email:'email',phone:'tel',address:'street-address'})[key];
+      label.append(field);contactForm.append(label);fields[key]=field;
+    }
+    card.append(contactForm);
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'cp-checkout-btn cp-quote-confirm';
@@ -127,10 +140,12 @@
     button.textContent = english ? 'Confirm quote and create payment link' : 'אישור ההצעה ויצירת קישור תשלום';
     button.addEventListener('click', async () => {
       if (sending || button.disabled || currentQuoteToken !== action.confirmation_token) return;
+      if(!contactForm.reportValidity())return;
+      const info=Object.fromEntries(Object.entries(fields).map(([key,field])=>[key,field.value.trim()]));
       button.disabled = true;
       button.setAttribute('aria-busy', 'true');
       button.textContent = english ? 'Creating payment link…' : 'יוצר קישור תשלום…';
-      await send(action.confirmation_token, english ? 'I confirm this quote.' : 'אני מאשר את ההצעה הזו.');
+      await send(action.confirmation_token, english ? 'I confirm this quote.' : 'אני מאשר את ההצעה הזו.', info);
       button.setAttribute('aria-busy', 'false');
       button.textContent = english ? 'Confirmation sent' : 'האישור נשלח';
     });
@@ -311,7 +326,7 @@
     return '\u05e9\u05d2\u05d9\u05d0\u05d4 \u05d1\u05ea\u05e7\u05e9\u05d5\u05e8\u05ea \u05e2\u05dd \u05d4\u05e9\u05e8\u05ea. \u05e0\u05e1\u05d4 \u05e9\u05d5\u05d1.';
   }
 
-  async function send(confirmationToken = null, confirmationMessage = null) {
+  async function send(confirmationToken = null, confirmationMessage = null, customerInfo = {}) {
     // DOM event handlers pass an Event; only explicit button callbacks pass tokens.
     if (typeof confirmationToken !== 'string') confirmationToken = null;
     if (sending || limitReached) return;
@@ -329,7 +344,7 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-Widget-Key': apiKey, ...authHeader() },
         signal: controller.signal,
-        body: JSON.stringify({ message, business_id: businessId, session_id: sessionId, customer_info: {}, confirmation_token: confirmationToken }),
+        body: JSON.stringify({ message, business_id: businessId, session_id: sessionId, customer_info: customerInfo, confirmation_token: confirmationToken }),
       });
       const data = await response.json().catch(() => ({}));
       hideTyping();

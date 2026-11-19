@@ -66,6 +66,7 @@ six
 packaging
 setuptools
 wheel
+sentry-sdk
 distro
 jiter
 dnspython

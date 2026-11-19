@@ -1,5 +1,6 @@
 """Email verification routes that sit in front of the legacy auth routes."""
-from fastapi import APIRouter, Depends, HTTPException, status
+import asyncio
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from supabase import Client, create_client
 import logging
@@ -24,42 +25,9 @@ EMAIL_REDIRECT_TO = f"{settings.FRONTEND_URL.rstrip('/')}/auth/callback"
 
 
 @router.post("/signup", response_model=dict, status_code=status.HTTP_201_CREATED)
-async def signup(request: UserRegister):
-    try:
-        auth_response = create_auth_client().auth.sign_up({
-            "email": str(request.email),
-            "password": request.password,
-            "options": {
-                "email_redirect_to": EMAIL_REDIRECT_TO,
-                "data": {"full_name": request.full_name, "business_name": request.business_name},
-            },
-        })
-        if not auth_response.user:
-            raise HTTPException(status_code=400, detail="Registration failed")
-
-        user = auth_response.user
-        token = generate_verification_token()
-        profile = create_user_profile(
-            user.id,
-            str(request.email),
-            request.full_name,
-            token,
-            (datetime.now(timezone.utc) + timedelta(hours=24)).isoformat(),
-        )
-        if not profile:
-            raise HTTPException(status_code=500, detail="server_error")
-
-        email_service.send_verification_email(to_email=str(request.email), token=token, user_name=request.full_name)
-        logger.info("User registered; verification required: %s", user.email)
-        return {"message": "Confirmation email sent. Please check your inbox.", "email_verification_required": True}
-    except HTTPException:
-        raise
-    except Exception as exc:
-        logger.error("Registration error: %s", exc, exc_info=True)
-        text = str(exc).lower()
-        if "already" in text or "duplicate" in text:
-            raise HTTPException(status_code=400, detail="User already registered")
-        raise HTTPException(status_code=400, detail="Registration failed")
+async def signup(request: UserRegister, request_obj: Request):
+    from backend.routers.onboarding import signup_with_code,SignupCodeRequest
+    return await signup_with_code(SignupCodeRequest(**request.model_dump()),request_obj)
 
 
 @router.post("/resend-verification", response_model=MessageResponse)
@@ -67,11 +35,11 @@ async def resend_verification(current_user: AuthUser = Depends(get_current_user)
     if current_user.email_verified:
         return MessageResponse(message="Email is already verified")
     try:
-        supabase.auth.resend({
+        (await asyncio.to_thread(lambda: supabase.auth.resend({
             "type": "signup",
             "email": current_user.email,
             "options": {"email_redirect_to": EMAIL_REDIRECT_TO},
-        })
+        })))
         logger.info("Verification email resent: user_id=%s", current_user.user_id)
         return MessageResponse(message="Verification email sent. Please check your inbox.")
     except Exception as exc:

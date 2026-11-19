@@ -1,0 +1,13 @@
+.git
+.venv*
+**/node_modules
+**/__pycache__
+.pytest_cache
+.deploy
+artifacts
+training
+tests
+.env
+.env.*
+*.log
+docs/design-preview/live-review

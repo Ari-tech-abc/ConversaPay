@@ -2,6 +2,8 @@
 Authentication router for user registration, login, logout, and password reset.
 Uses Supabase Auth for authentication.
 """
+import asyncio
+from backend.services.database import optional_result
 from fastapi import APIRouter, HTTPException, status, Depends, Request, Query
 from fastapi.security import HTTPBearer
 from fastapi.responses import HTMLResponse, RedirectResponse
@@ -126,6 +128,16 @@ def create_user_profile(user_id: str, email: str, full_name: str, token: str, ex
             return result.data[0]
     except Exception as e:
         logger.error(f"Error creating user profile: {str(e)}")
+        # Supabase installations can create a profile in an Auth trigger first.
+        # Initialize that same user's verification fields without resetting billing.
+        try:
+            existing=supabase.table("profiles").select("*").eq("user_id",user_id).limit(1).execute().data or []
+            if existing:
+                if existing[0].get("email_verified"):return existing[0]
+                changed=supabase.table("profiles").update({"email":email.strip().lower(),"full_name":full_name,"email_verification_token":token,"email_verification_expires_at":expires_at}).eq("user_id",user_id).execute().data or []
+                return changed[0] if changed else {}
+        except Exception:
+            logger.exception("Profile initialization failed for %s",user_id)
     
     return {}
 
@@ -135,7 +147,9 @@ def create_business_for_user(user_id: str, business_name: str) -> Optional[str]:
     try:
         # Generate business_id from business name (lowercase, no spaces)
         business_id = business_name.lower().replace(' ', '_').replace('-', '_')
-        business_id = ''.join(c for c in business_id if c.isalnum() or c == '_')
+        business_id = ''.join(c for c in business_id if c in 'abcdefghijklmnopqrstuvwxyz0123456789_')[:40]
+        if len(business_id)<3:
+            business_id = f"business_{user_id.replace('-', '_')}"
         if business_id == "conversapay":
             business_id = f"business_{user_id.replace('-', '_')}"
         
@@ -185,11 +199,11 @@ async def initialize_user_workspace(user_id: str, email: str, full_name: str, bu
     }
     
     # Step 1: Create profile if it doesn't exist
-    profile = get_user_profile(user_id)
+    profile = (await asyncio.to_thread(lambda: get_user_profile(user_id)))
     if not profile:
         token = generate_verification_token()
         expires_at = (datetime.utcnow() + timedelta(hours=24)).isoformat()
-        profile = create_user_profile(user_id, email, full_name, token, expires_at)
+        profile = (await asyncio.to_thread(lambda: create_user_profile(user_id, email, full_name, token, expires_at)))
         if profile:
             result["profile_created"] = True
             logger.info(f"User profile created for: {email}")
@@ -197,13 +211,13 @@ async def initialize_user_workspace(user_id: str, email: str, full_name: str, bu
     # Step 2: Create business if it doesn't exist
     if profile:
         # Check if user already has a business
-        existing_business = supabase.table("businesses")\
+        existing_business = (await asyncio.to_thread(lambda: supabase.table("businesses")\
             .select("id")\
             .eq("owner_id", user_id)\
-            .execute()
+            .execute()))
         
         if not existing_business.data:
-            business_uuid = create_business_for_user(user_id, business_name)
+            business_uuid = (await asyncio.to_thread(lambda: create_business_for_user(user_id, business_name)))
             if business_uuid:
                 result["business_created"] = True
                 result["business_id"] = business_uuid
@@ -273,80 +287,18 @@ def _is_database_permission_error(error: Exception) -> bool:
 # ============================================
 
 @router.post("/signup", response_model=dict, status_code=status.HTTP_201_CREATED)
-async def signup(request: UserRegister):
-    """
-    Register a new user with email and password.
-    Creates profile and sends verification email via Resend.
-    """
-    try:
-        # Register user with Supabase Auth
-        auth_response = create_auth_client().auth.sign_up({
-            "email": request.email,
-            "password": request.password,
-            "options": {
-                "data": {
-                    "full_name": request.full_name,
-                    "business_name": request.business_name
-                }
-            }
-        })
-        
-        if not auth_response.user:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Registration failed"
-            )
-        
-        user = auth_response.user
-        
-        # Generate token first
-        token = generate_verification_token()
-        expires_at = (datetime.utcnow() + timedelta(hours=24)).isoformat()
-        
-        # Create profile + token in one insert (avoids RLS blocking a separate UPDATE)
-        profile = create_user_profile(user.id, request.email, request.full_name, token, expires_at)
-        if not profile:
-            logger.error(f"Failed to create profile for {request.email}")
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="server_error")
-        
-        # Send verification email via Resend
-        email_sent = email_service.send_verification_email(
-            to_email=request.email,
-            token=token,
-            user_name=request.full_name
-        )
-        
-        if not email_sent:
-            logger.error(f"Failed to send verification email to {request.email}")
-        
-        logger.info(f"User registered: {user.email}")
-        return {"message": "Confirmation email sent. Please check your inbox."}
-    
-    except HTTPException:
-        raise
-    except SupabaseAuthApiError as e:
-        error_message = str(e)
-        logger.error(f"Registration error (AuthApiError): {error_message}")
-        if "already registered" in error_message.lower() or "already exists" in error_message.lower() or "duplicate" in error_message.lower():
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User already registered")
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
-        error_message = str(e)
-        logger.error(f"Registration error: {error_message}", exc_info=True)
-        if "already exists" in error_message.lower() or "duplicate" in error_message.lower():
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="email_exists")
-        if "rate limit" in error_message.lower() or "429" in error_message:
-            raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="rate_limit")
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="server_error")
+async def signup(request: UserRegister, request_obj: Request):
+    from backend.routers.onboarding import signup_with_code,SignupCodeRequest
+    return await signup_with_code(SignupCodeRequest(**request.model_dump()),request_obj)
 
 
 # Keep the old /register endpoint for backward compatibility
 @router.post("/register", response_model=dict, status_code=status.HTTP_201_CREATED)
-async def register_legacy(request: UserRegister):
+async def register_legacy(request: UserRegister, request_obj: Request):
     """
     Legacy registration endpoint - redirects to /signup.
     """
-    return await signup(request)
+    return await signup(request,request_obj)
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -358,10 +310,10 @@ async def login(request: UserLogin):
     """
     try:
         # Authenticate with Supabase
-        auth_response = create_auth_client().auth.sign_in_with_password({
+        auth_response = (await asyncio.to_thread(lambda: create_auth_client().auth.sign_in_with_password({
             "email": request.email,
             "password": request.password
-        })
+        })))
         
         if not auth_response.user or not auth_response.session:
             raise HTTPException(
@@ -373,7 +325,7 @@ async def login(request: UserLogin):
         session = auth_response.session
         
         # Check email verification status
-        profile = get_user_profile(user.id)
+        profile = (await asyncio.to_thread(lambda: get_user_profile(user.id)))
         if profile and not profile.get("email_verified", False):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -427,10 +379,10 @@ async def verify_email(token: str = Query(..., description="Email verification t
     """
     try:
         # Find user by verification token
-        result = supabase.table("profiles")\
+        result = (await asyncio.to_thread(lambda: supabase.table("profiles")\
             .select("*")\
             .eq("email_verification_token", token)\
-            .execute()
+            .execute()))
         
         if not result.data:
             return HTMLResponse(content="""
@@ -520,16 +472,16 @@ async def verify_email(token: str = Query(..., description="Email verification t
             </html>
             """)
         
-        consumed = supabase.rpc("consume_email_verification", {
+        consumed = (await asyncio.to_thread(lambda: supabase.rpc("consume_email_verification", {
             "p_user_id": profile["user_id"], "p_token": token,
-        }).execute()
+        }).execute()))
         if consumed.data is not True:
             raise HTTPException(400, "Invalid or expired verification token")
-        supabase.auth.admin.update_user_by_id(profile["user_id"], {"email_confirm": True})
+        (await asyncio.to_thread(lambda: supabase.auth.admin.update_user_by_id(profile["user_id"], {"email_confirm": True})))
         # Only confirmed Supabase Auth users may be marked verified.
-        verify_result = supabase.rpc(
+        verify_result = (await asyncio.to_thread(lambda: supabase.rpc(
             "mark_email_verified", {"p_user_id": profile["user_id"]}
-        ).execute()
+        ).execute()))
 
         if not verify_result.data:
             logger.error(f"Failed to mark email as verified for user_id: {profile['user_id']}")
@@ -591,7 +543,7 @@ async def logout(
         authorization = request.headers.get("Authorization", "")
         if authorization.startswith("Bearer "):
             access_token = authorization.split(" ", 1)[1]
-            supabase.auth.admin.sign_out(access_token, "global")
+            (await asyncio.to_thread(lambda: supabase.auth.admin.sign_out(access_token, "global")))
 
         logger.info(f"User logged out: {current_user.email}")
         return MessageResponse(message="Logged out successfully")
@@ -718,11 +670,11 @@ async def confirm_password_reset(request: Request):
         )
         
         try:
-            user_response = supabase.auth.get_user(request_data.token.strip())
+            user_response = (await asyncio.to_thread(lambda: supabase.auth.get_user(request_data.token.strip())))
             if user_response and user_response.user:
                 user_id = user_response.user.id
                 
-                supabase.table("audit_logs").insert({
+                (await asyncio.to_thread(lambda: supabase.table("audit_logs").insert({
                     "user_id": user_id,
                     "action": "password_reset",
                     "ip_address": client_ip,
@@ -732,7 +684,7 @@ async def confirm_password_reset(request: Request):
                         "method": "email_reset",
                         "success": True
                     }
-                }).execute()
+                }).execute()))
                 
                 logger.info(f"Password reset audit log created for user: {user_id}")
         except Exception as audit_error:
@@ -775,27 +727,27 @@ async def verify_identity_for_reset(
         
         try:
             email = email.strip().lower()
-            profile_lookup = supabase.table("profiles").select("user_id").eq("email", email).maybe_single().execute()
-            user_lookup = supabase.auth.admin.get_user_by_id(profile_lookup.data["user_id"]) if profile_lookup.data else None
+            profile_lookup = optional_result((await asyncio.to_thread(lambda: supabase.table("profiles").select("user_id").eq("email", email).maybe_single().execute())))
+            user_lookup = (await asyncio.to_thread(lambda: supabase.auth.admin.get_user_by_id(profile_lookup.data["user_id"]))) if profile_lookup.data else None
             if user_lookup and user_lookup.user:
                 user_id = user_lookup.user.id
                 
                 verification_token = generate_verification_token()
                 expires_at = (datetime.utcnow() + timedelta(minutes=10)).isoformat()
                 
-                update_profile_row(
+                (await asyncio.to_thread(lambda: update_profile_row(
                     user_id,
                     {
                         "email_verification_token": verification_token,
                         "email_verification_expires_at": expires_at
                     }
-                )
+                )))
                 
-                email_sent = email_service.send_verification_email(
+                email_sent = (await asyncio.to_thread(lambda: email_service.send_verification_email(
                     to_email=email,
                     token=verification_token,
                     user_name=user_lookup.user.user_metadata.get("full_name", "משתמש")
-                )
+                )))
                 
                 logger.info(
                     f"Identity verification initiated for: {email}, "
@@ -831,7 +783,7 @@ async def get_current_user_info(current_user: AuthUser = Depends(get_current_use
     Get current user information.
     Requires authentication.
     """
-    profile = get_user_profile(current_user.user_id)
+    profile = (await asyncio.to_thread(lambda: get_user_profile(current_user.user_id)))
     
     return UserInfoResponse(
         user_id=current_user.user_id,
@@ -849,12 +801,12 @@ async def update_whatsapp_settings(
     Update WhatsApp Business API settings for Premium users.
     """
     body = await request.json()
-    profile = get_user_profile(current_user.user_id)
+    profile = (await asyncio.to_thread(lambda: get_user_profile(current_user.user_id)))
     from backend.services.billing_reconciliation import active_plan_from_row
     if not current_user.email_verified or not profile or active_plan_from_row(profile) != "premium":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="premium_required")
 
-    result = update_profile_row(
+    result = (await asyncio.to_thread(lambda: update_profile_row(
         current_user.user_id,
         {
             "whatsapp_phone_number_id": body.get("whatsapp_phone_number_id"),
@@ -862,7 +814,7 @@ async def update_whatsapp_settings(
             "whatsapp_verify_token": body.get("whatsapp_verify_token")
         },
         "user_id,whatsapp_phone_number_id,whatsapp_access_token,whatsapp_verify_token"
-    )
+    )))
 
     if not result:
         raise HTTPException(status_code=500, detail="Failed to update WhatsApp settings")
@@ -889,7 +841,7 @@ async def update_current_user(
                 detail="No data to update"
             )
         
-        result = update_profile_row(current_user.user_id, update_data)
+        result = (await asyncio.to_thread(lambda: update_profile_row(current_user.user_id, update_data)))
         
         if result:
             return {
@@ -931,7 +883,7 @@ async def complete_oauth_session(current_user: AuthUser = Depends(get_current_us
         full_name = ""
         business_name = "העסק שלי"
         try:
-            user_lookup = supabase.auth.admin.get_user_by_id(current_user.user_id)
+            user_lookup = (await asyncio.to_thread(lambda: supabase.auth.admin.get_user_by_id(current_user.user_id)))
             metadata = (user_lookup.user.user_metadata or {}) if user_lookup and user_lookup.user else {}
             full_name = metadata.get("full_name") or metadata.get("name") or ""
             business_name = metadata.get("business_name") or (
@@ -944,10 +896,10 @@ async def complete_oauth_session(current_user: AuthUser = Depends(get_current_us
         # errors, which would make a missing profiles SELECT privilege look like
         # a missing row and lead to a misleading insert attempt.
         try:
-            profile_result = supabase.table("profiles") \
+            profile_result = (await asyncio.to_thread(lambda: supabase.table("profiles") \
                 .select("*") \
                 .eq("user_id", current_user.user_id) \
-                .execute()
+                .execute()))
             profile = profile_result.data[0] if profile_result.data else None
         except PostgrestAPIError as e:
             if _is_database_permission_error(e):
@@ -999,21 +951,21 @@ async def complete_oauth_session(current_user: AuthUser = Depends(get_current_us
         if not profile:
             token = generate_verification_token()
             expires_at = (datetime.utcnow() + timedelta(hours=24)).isoformat()
-            profile = create_user_profile(
+            profile = (await asyncio.to_thread(lambda: create_user_profile(
                 current_user.user_id, current_user.email, full_name, token, expires_at
-            )
+            )))
             if profile:
                 # Google already verified this email address for us.
-                supabase.rpc("mark_email_verified", {"p_user_id": current_user.user_id}).execute()
+                (await asyncio.to_thread(lambda: supabase.rpc("mark_email_verified", {"p_user_id": current_user.user_id}).execute()))
                 logger.info(f"Profile created for OAuth user: {current_user.email}")
 
-        existing_business = supabase.table("businesses") \
+        existing_business = (await asyncio.to_thread(lambda: supabase.table("businesses") \
             .select("id") \
             .eq("owner_id", current_user.user_id) \
-            .execute()
+            .execute()))
 
         if not existing_business.data:
-            create_business_for_user(current_user.user_id, business_name)
+            (await asyncio.to_thread(lambda: create_business_for_user(current_user.user_id, business_name)))
             logger.info(f"Business created for OAuth user: {current_user.email}")
 
         return {

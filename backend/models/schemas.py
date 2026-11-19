@@ -6,7 +6,10 @@ from enum import Enum
 from backend.services.password_policy import NewPassword
 
 class SubscriptionTier(str, Enum): FREE="free"; PRO="pro"; PREMIUM="premium"
-class SubscriptionStatus(str, Enum): ACTIVE="active"; CANCELED="canceled"; PAST_DUE="past_due"
+class SubscriptionStatus(str, Enum):
+    ACTIVE="active"; CANCELED="canceled"; PAST_DUE="past_due"; TRIALING="trialing"
+    PENDING_CANCELLATION="pending_cancellation"; INCOMPLETE="incomplete"; INCOMPLETE_EXPIRED="incomplete_expired"
+    UNPAID="unpaid"; PAUSED="paused"; UNKNOWN="unknown"; EXPIRED="expired"
 class ChannelType(str, Enum): WEB="web"; WHATSAPP="whatsapp"; TELEGRAM="telegram"; API="api"
 class ConversationStatus(str, Enum): ACTIVE="active"; CLOSED="closed"; ARCHIVED="archived"
 class OrderStatus(str, Enum): PENDING="pending"; PROCESSING="processing"; PAID="paid"; SHIPPED="shipped"; DELIVERED="delivered"; CANCELED="canceled"; REFUNDED="refunded"
@@ -54,12 +57,12 @@ class OrderBase(BaseModel): status:OrderStatus=OrderStatus.PENDING; subtotal:Dec
 class OrderCreate(OrderBase): business_id:str; customer_id:Optional[str]=None; conversation_id:Optional[str]=None
 class OrderUpdate(BaseModel): status:Optional[OrderStatus]=None; notes:Optional[str]=None
 class PaymentInfo(BaseModel): customer_email:Optional[str]=None; customer_name:Optional[str]=None
-class OrderResponse(OrderBase): model_config=ConfigDict(from_attributes=True); id:str; business_id:str; customer_id:Optional[str]=None; conversation_id:Optional[str]=None; order_number:str; public_access_token:Optional[str]=None; created_at:datetime; updated_at:datetime
+class OrderResponse(OrderBase): model_config=ConfigDict(from_attributes=True); id:str; business_id:str; customer_id:Optional[str]=None; conversation_id:Optional[str]=None; order_number:str; public_access_token:Optional[str]=None; fulfillment:Optional[str]=None; shipping:Decimal=Decimal("0.00"); created_at:datetime; updated_at:datetime
 class SubscriptionCreate(BaseModel): user_id:str; email:EmailStr; full_name:Optional[str]=None; plan_type:str="pro"
 class SubscriptionResponse(BaseModel): model_config=ConfigDict(from_attributes=True); session_id:str; url:str; payme_sale_id:Optional[str]=None
 class PaymentBase(BaseModel): amount:Decimal=Field(...,ge=0); currency:str=Field(default="ILS",min_length=3,max_length=3); status:PaymentStatus=PaymentStatus.PENDING; payment_method:Optional[str]=None; customer_email:Optional[str]=None; customer_name:Optional[str]=None; metadata:Dict[str,Any]={}
 class PaymentCreate(PaymentBase): business_id:str; order_id:Optional[str]=None
-class PaymentResponse(PaymentBase): model_config=ConfigDict(from_attributes=True); id:str; business_id:str; order_id:Optional[str]=None; paid_at:Optional[datetime]=None; created_at:datetime; updated_at:datetime
+class PaymentResponse(PaymentBase): model_config=ConfigDict(from_attributes=True); id:str; business_id:str; order_id:Optional[str]=None; refunded_amount:Decimal=Decimal("0.00"); paid_at:Optional[datetime]=None; created_at:datetime; updated_at:datetime
 class ChatRequest(BaseModel): message:str=Field(...,min_length=1,max_length=2000); business_id:str; session_id:Optional[str]=Field(None,max_length=128,pattern=r'^[a-zA-Z0-9_\-]{1,128}$'); customer_info:Optional[Dict[str,Any]]=None; confirmation_token:Optional[str]=Field(None,max_length=4096)
 class ChatResponse(BaseModel): intent:str; response:str; payment_url:Optional[str]=None; session_id:str; conversation_id:Optional[str]=None; action_data:Optional[Dict[str,Any]]=None
 class ProfileBase(BaseModel): email:EmailStr; full_name:Optional[str]=None

@@ -1,5 +1,6 @@
 """Authenticated SaaS profile, security, preferences, billing and privacy APIs."""
 from __future__ import annotations
+import asyncio
 from datetime import datetime, timezone
 from typing import Any
 import logging
@@ -89,7 +90,7 @@ def _subscription_active(plan: Any, end_date: Any) -> bool:
 
 @router.get("")
 async def get_profile(current_user: AuthUser = Depends(get_current_user)):
-    return {"user_id": current_user.user_id, "email": current_user.email, "profile": _profile_view(get_user_profile(current_user.user_id))}
+    return {"user_id": current_user.user_id, "email": current_user.email, "profile": _profile_view((await asyncio.to_thread(lambda: get_user_profile(current_user.user_id))))}
 
 @router.patch("")
 async def update_profile(payload: ProfileUpdatePayload, current_user: AuthUser = Depends(get_current_user)):
@@ -102,9 +103,9 @@ async def update_profile(payload: ProfileUpdatePayload, current_user: AuthUser =
 @router.post("/password")
 async def change_password(payload: PasswordPayload, current_user: AuthUser = Depends(get_current_user)):
     try:
-        auth_check = create_auth_client().auth.sign_in_with_password({"email": current_user.email, "password": payload.current_password})
+        auth_check = (await asyncio.to_thread(lambda: create_auth_client().auth.sign_in_with_password({"email": current_user.email, "password": payload.current_password})))
         if not auth_check or not auth_check.user: raise HTTPException(400, "Current password is incorrect")
-        supabase.auth.admin.update_user_by_id(current_user.user_id, {"password": payload.new_password})
+        (await asyncio.to_thread(lambda: supabase.auth.admin.update_user_by_id(current_user.user_id, {"password": payload.new_password})))
         return {"message":"Password updated"}
     except HTTPException: raise
     except Exception as exc: raise HTTPException(400, "Current password is incorrect or password update failed") from exc
@@ -121,7 +122,7 @@ async def toggle_2fa(current_user: AuthUser = Depends(get_current_user)):
 @router.post("/sessions/revoke-others")
 async def revoke_other_sessions(request: Request, current_user: AuthUser = Depends(get_current_user)):
     try:
-        result = supabase.auth.admin.sign_out(request.headers["Authorization"].split(" ", 1)[1], "others")
+        result = (await asyncio.to_thread(lambda: supabase.auth.admin.sign_out(request.headers["Authorization"].split(" ", 1)[1], "others")))
         if getattr(result, "error", None): raise RuntimeError(str(result.error))
     except Exception as exc:
         logger.error("Failed to revoke sessions for %s: %s", current_user.user_id, exc, exc_info=True); raise HTTPException(502,"Unable to revoke other sessions") from exc
@@ -147,7 +148,7 @@ async def billing_summary(current_user: AuthUser = Depends(get_current_user)):
     period_start = datetime.now(timezone.utc).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     period_end = period_start.replace(year=period_start.year+1, month=1) if period_start.month == 12 else period_start.replace(month=period_start.month+1)
     try:
-        activity = supabase.rpc("account_activity", {"p_user_id": current_user.user_id, "p_start": period_start.isoformat(), "p_end": period_end.isoformat()}).execute().data
+        activity = (await asyncio.to_thread(lambda: supabase.rpc("account_activity", {"p_user_id": current_user.user_id, "p_start": period_start.isoformat(), "p_end": period_end.isoformat()}).execute())).data
     except Exception as exc: logger.warning("Usage summary unavailable for %s: %s", current_user.user_id, exc)
     view = _profile_view(row)
     from backend.middleware.rate_limiter import free_dashboard_chat_limiter
@@ -159,11 +160,14 @@ async def billing_summary(current_user: AuthUser = Depends(get_current_user)):
 
 @router.get("/export")
 async def export_account(current_user: AuthUser = Depends(get_current_user)):
-    return {"exported_at":_now(),"user":{"id":current_user.user_id,"email":current_user.email},"profile":_profile_view(get_user_profile(current_user.user_id))}
+    return {"exported_at":_now(),"user":{"id":current_user.user_id,"email":current_user.email},"profile":_profile_view((await asyncio.to_thread(lambda: get_user_profile(current_user.user_id))))}
 
 @router.delete("")
 async def delete_account(request: Request, confirm: str = "", current_user: AuthUser = Depends(get_current_user)):
     if confirm != "DELETE MY ACCOUNT": raise HTTPException(400,"Confirmation phrase required")
-    try: supabase.auth.admin.delete_user(current_user.user_id)
-    except Exception as exc: raise HTTPException(500,"Account deletion failed") from exc
-    return {"message":"Account deletion requested"}
+    from backend.services.account_deletion import delete_account_data
+    try: await asyncio.to_thread(delete_account_data,supabase,current_user.user_id)
+    except Exception as exc:
+        logger.error("Account deletion is pending for %s (%s)",current_user.user_id,type(exc).__name__)
+        raise HTTPException(503,"Account deletion is pending. Billing must be confirmed stopped before deletion completes; retry shortly.") from None
+    return {"message":"Account deleted"}

@@ -85,6 +85,8 @@ Browser / Widget / WordPress
 
 ## ספקי תשלום
 
+עדכון 19.11.2026: מנויי Talk2Pay פעילים בקוד דרך Stripe. תשלומי מוצרים נוצרים ישירות בחשבון Stripe Connect של העסק; יש לחבר חשבון בהגדרות. PayMe חסום עד להשלמת callback מאומת. לפריסה ולתיקונים: [סיכום תיקוני הפרודקשן](docs/audit/PRODUCTION_REPAIRS_2026-11-16_HE.md).
+
 הספק הפעיל נקבע על ידי משתנה הסביבה `PAYMENT_PROVIDER` (ברירת מחדל: `stripe`). הפקטורי `get_checkout_adapter()` ב-`backend/services/payment_adapters.py` מחזיר את ה-adapter המתאים.
 
 | ספק | Adapter | הערות |

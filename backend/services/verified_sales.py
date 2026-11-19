@@ -18,12 +18,40 @@ class SalesPlan(BaseModel):
     intent: Literal["recommend", "price", "checkout", "payment_status", "link_expiry", "delivery", "clarify", "handoff"]
     item_key: str = Field(default="", max_length=100)
     quantity: int = Field(default=1, ge=1, le=100)
-    budget: str | None = Field(default=None, max_length=24, pattern=r"^\d{1,8}(?:\.\d{1,2})?$")
+    budget: str | None = Field(default=None, max_length=24, pattern=r"^[0-9]{1,8}(\.[0-9]{1,2})?$")
     fulfillment: Literal["delivery", "pickup", "unspecified"] = "unspecified"
 
 
 def locale_for(message):
     return "he" if re.search(r"[\u0590-\u05ff]", message) else "en"
+
+
+def quick_plan(message, catalog=None):
+    """Only whole, unambiguous read-only questions bypass inference.
+
+    Budgets, purchases and mixed instructions fall through to the planner.
+    Named price requests must match exactly one catalog item.
+    """
+    text = re.sub(r"[?!.,؟!？！]", " ", message.casefold())
+    text = " ".join(text.split())
+    greeting = r"(?:(?:היי|הי|שלום|אהלן|hello|hi|hey)\s+)?"
+    catalog_question = r"(?:אילו מוצרים (?:יש|זמינים)(?: (?:לכם|אצלכם))?(?: היום)?|איזה מוצרים (?:יש|זמינים)(?: (?:לכם|אצלכם))?(?: היום)?|מה יש (?:לכם|במלאי)(?: היום)?|what (?:products|items) (?:are available|do you have)(?: today)?|show (?:me )?(?:your |the )?(?:products|catalog))"
+    if text in {"היי","הי","שלום","אהלן","hello","hi","hey"} or re.fullmatch(greeting+catalog_question,text):
+        return SalesPlan(intent="recommend")
+    if text in {"כמה ימי עסקים לוקח המשלוח","כמה זמן לוקח המשלוח","מה זמן המשלוח","what is the delivery time","how long does delivery take"}:
+        return SalesPlan(intent="delivery")
+    matches = {}
+    for product in catalog or []:
+        for label in (str(product["name"]),str(product["item_key"])):
+            label = " ".join(re.sub(r"[?!.,؟!？！]"," ",label.casefold()).split())
+            if not label:
+                continue
+            name = re.escape(label)
+            if re.fullmatch(r"(?:מה המחיר של (?:ה)?|כמה עולה (?:ה)?|what is the price of (?:the )?|price of (?:the )?|how much is (?:the )?)"+name,text) or re.fullmatch(r"how much does (?:the )?"+name+r" cost",text):
+                matches[str(product["item_key"])] = product
+    if len(matches) == 1:
+        return SalesPlan(intent="price",item_key=next(iter(matches)))
+    return None
 
 
 def choose(locale, he, en):
@@ -101,12 +129,11 @@ def render_plan(plan, products, business_id, settings, message):
     if plan.intent == "delivery":
         days = settings.get("shipping_business_days")
         if isinstance(days,list) and len(days) == 2 and all(type(d) is int and 0 <= d <= 365 for d in days) and days[0] <= days[1]:
-            return result(choose(locale,f"זמן משלוח משוער: {days[0]}–{days[1]} ימי עסקים. זה אינו תוקף קישור תשלום.",
-                                 f"Estimated delivery: {days[0]}–{days[1]} business days. This is not a payment link expiry."))
+            return result(choose(locale,f"זמן המשלוח המשוער הוא {days[0]}–{days[1]} ימי עסקים.",
+                                 f"Estimated delivery takes {days[0]}–{days[1]} business days."))
         return result(choose(locale,"לא נמסר זמן משלוח מאומת. נציג יכול לברר.","No verified delivery estimate was supplied. A representative can check."))
     if plan.intent == "clarify":
-        return result(choose(locale,"איזה מוצר תרצה, ובאיזו כמות? אפשר לציין גם תקציב ואיסוף או משלוח.",
-                             "Which item and quantity would you like? You can also specify a budget and pickup or delivery."))
+        return result(choose(locale,"איזה מוצר מעניין אותך?","Which product would you like to know more about?"))
     selected = next((p for p in products if str(p["item_key"]) == plan.item_key),None)
     if plan.intent in {"price","checkout"}:
         if selected is None:
@@ -116,10 +143,13 @@ def render_plan(plan, products, business_id, settings, message):
             return result(choose(locale,"הכמות המבוקשת אינה זמינה במלאי. תרצה לבדוק כמות אחרת?",
                                  "The requested quantity is not available. Would you like to check a different quantity?"))
         if plan.intent == "price":
-            return result(choose(locale,f'{selected["name"]}: {money_db(selected["price"])} ₪ ליחידה, לפני משלוח או איסוף.',
-                                 f'{selected["name"]}: {money_db(selected["price"])} ILS per unit, before delivery or pickup fees.'))
+            return result(choose(locale,f'המחיר של {selected["name"]} הוא {money_db(selected["price"])} ₪ ליחידה, לפני דמי משלוח או איסוף. להמשיך עם משלוח או איסוף עצמי?',
+                                 f'{selected["name"]} costs {money_db(selected["price"])} ILS per unit, before delivery or pickup fees. Would you prefer delivery or pickup?'))
         q = quote(selected,plan.quantity,settings,plan.fulfillment)
         if q is None:
+            if plan.fulfillment == "unspecified":
+                return result(choose(locale,f'{selected["name"]} זמין. איך תרצה לקבל אותו — משלוח או איסוף עצמי?',
+                                     f'{selected["name"]} is available. Would you prefer delivery or pickup?'))
             return result(choose(locale,"לפני רכישה צריך לבחור איסוף או משלוח ולוודא את העלות. לא נמסרה עלות מאומתת לאפשרות שנבחרה.",
                                  "Before purchasing, choose pickup or delivery and confirm its fee. No verified fee was supplied for the selected option."))
         return result(quote_text(q,locale)+choose(locale," לאשר את ההצעה?"," Confirm this quote?"),"quote",q)
@@ -135,13 +165,24 @@ def render_plan(plan, products, business_id, settings, message):
         candidates = [p for p in candidates if Decimal(quote(p,plan.quantity,settings,plan.fulfillment)["total"]) <= budget]
     candidates.sort(key=lambda p:(money(p["price"]),str(p["item_key"])))
     if not candidates:
+        if budget is None:
+            return result(choose(locale,"כרגע לא מצאתי מוצרים זמינים ברשימה שבדקתי. איזה מוצר חיפשת?",
+                                 "I couldn't find any available products in the selection I checked. What were you looking for?"))
         return result(choose(locale,"לא נמצאה אפשרות זמינה בתקציב בקטלוג שנבדק. אפשר לבדוק מוצרים נוספים או לשנות את התקציב.",
                              "No available option fits the budget in the catalog checked. We can check more products or adjust the budget."))
     if budget is not None:
         return result(quote_text(quote(candidates[0],plan.quantity,settings,plan.fulfillment),locale)
                       +choose(locale," עומד בתקציב. מתאים לך?"," This fits your budget. Would it suit you?"))
-    names = "; ".join(f'{p["name"]}: {money_db(p["price"])} ILS' for p in candidates[:3])
-    return result(names+choose(locale," — מחירי יחידה לפני משלוח. מה התקציב שלך?"," — unit prices before delivery. What is your budget?"))
+    if len(candidates) == 1:
+        p = candidates[0]
+        return result(choose(locale,
+            f'זמין אצלנו {p["name"]} במחיר {money_db(p["price"])} ₪ ליחידה, לפני דמי משלוח או איסוף. מעניין אותך להמשיך עם המוצר הזה?',
+            f'{p["name"]} is available at {money_db(p["price"])} ILS per unit, before delivery or pickup fees. Would you like to continue with this product?'))
+    names = "\n".join(choose(locale,f'• {p["name"]} — {money_db(p["price"])} ₪ ליחידה',
+                             f'• {p["name"]} — {money_db(p["price"])} ILS per unit') for p in candidates[:3])
+    return result(choose(locale,"הנה כמה אפשרויות זמינות:\n","Here are some available options:\n")+names
+                  +choose(locale,"\nהמחירים לפני דמי משלוח או איסוף. איזה מוצר מעניין אותך?",
+                           "\nPrices exclude delivery or pickup fees. Which product interests you?"))
 
 
 def create_confirmation(q, business_id, conversation_id, secret, now=None):

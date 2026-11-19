@@ -179,32 +179,31 @@ async def create_order_checkout_session(request: dict[str, Any], current_user: A
     business_id, order_id = request.get("business_id"), request.get("order_id")
     if not business_id or not order_id:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Missing required fields: business_id, order_id")
-    business = supabase.table("businesses").select("id").eq("business_id", business_id).eq("owner_id", current_user.user_id).execute()
+    business = (await asyncio.to_thread(lambda: supabase.table("businesses").select("id").eq("business_id", business_id).eq("owner_id", current_user.user_id).execute()))
     if not business.data:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Business not found")
-    order = supabase.table("orders").select("*").eq("id", order_id).eq("business_id", business.data[0]["id"]).execute()
+    order = (await asyncio.to_thread(lambda: supabase.table("orders").select("*").eq("id", order_id).eq("business_id", business.data[0]["id"]).execute()))
     if not order.data:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Order not found")
 
-    provider = (settings.PAYMENT_PROVIDER or "stripe").strip().lower()
-    if provider == "stripe":
-        _require_stripe_secret_key()
+    row = order.data[0]
+    if row.get("status") in {"paid","shipped","delivered","canceled","refunded"}:
+        raise HTTPException(409,"Order cannot create a new checkout")
+    from backend.routers.chat import _create_order_checkout
     try:
-        checkout = await get_checkout_adapter(provider).create_checkout(_checkout_order_from_row(order.data[0], request))
-    except (PaymentAdapterError, ValueError) as exc:
-        logger.error("Order checkout creation failed (order_id=%s provider=%s): %s", order_id, provider, exc, exc_info=True)
-        raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(exc)) from exc
+        url, session_id, payment = await _create_order_checkout(row,row.get("customer_info") or {})
+    except (PaymentAdapterError,ValueError) as exc:
+        raise HTTPException(503,str(exc)) from None
+    return {"session_id":session_id,"url":url,"checkout_url":url,"provider":"stripe","payment_id":payment.get("id")}
 
-    payment = supabase.table("payments").insert({"business_id": business.data[0]["id"], "order_id": order_id, "amount": order.data[0]["total"], "currency": order.data[0].get("currency", "ILS"), "status": "pending", "customer_email": request.get("customer_email") or (order.data[0].get("customer_info") or {}).get("email"), "customer_name": request.get("customer_name") or (order.data[0].get("customer_info") or {}).get("name"), "metadata": {"provider": checkout.provider, "provider_session_id": checkout.provider_session_id, "checkout_url": checkout.checkout_url}}).execute()
-    return {"session_id": checkout.provider_session_id, "url": checkout.checkout_url, "checkout_url": checkout.checkout_url, "provider": checkout.provider, "payment_id": payment.data[0]["id"] if payment.data else None}
 
 
 @router.get("/profile", response_model=ProfileResponse)
 async def get_profile(current_user: AuthUser = Depends(require_auth)) -> ProfileResponse:
     fields = "id,user_id,email,full_name,plan_type,subscription_expires_at,created_at,updated_at"
-    result = supabase.table("profiles").select(fields).eq("user_id", current_user.user_id).execute()
+    result = (await asyncio.to_thread(lambda: supabase.table("profiles").select(fields).eq("user_id", current_user.user_id).execute()))
     if not result.data:
-        result = supabase.table("profiles").insert({"user_id": current_user.user_id, "email": current_user.email, "plan_type": "free"}).execute()
+        result = (await asyncio.to_thread(lambda: supabase.table("profiles").insert({"user_id": current_user.user_id, "email": current_user.email, "plan_type": "free"}).execute()))
     return ProfileResponse(**result.data[0])
 
 
@@ -220,31 +219,40 @@ async def payment_canceled(provider: str | None = None, order_id: str | None = N
 
 @router.get("", response_model=list[PaymentResponse])
 async def get_payments(business_id: str, current_user: AuthUser = Depends(require_auth)) -> list[PaymentResponse]:
-    business = supabase.table("businesses").select("id").eq("business_id", business_id).eq("owner_id", current_user.user_id).execute()
+    business = (await asyncio.to_thread(lambda: supabase.table("businesses").select("id").eq("business_id", business_id).eq("owner_id", current_user.user_id).execute()))
     if not business.data:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Business not found")
-    result = supabase.table("payments").select("*").eq("business_id", business.data[0]["id"]).order("created_at", desc=True).execute()
+    result = (await asyncio.to_thread(lambda: supabase.table("payments").select("*").eq("business_id", business.data[0]["id"]).order("created_at", desc=True).execute()))
     return [PaymentResponse(**item) for item in (result.data or [])]
 
 
 @router.get("/{payment_id}", response_model=PaymentResponse)
 async def get_payment(payment_id: str, current_user: AuthUser = Depends(require_auth)) -> PaymentResponse:
-    result = supabase.table("payments").select("*").eq("id", payment_id).execute()
+    result = (await asyncio.to_thread(lambda: supabase.table("payments").select("*").eq("id", payment_id).execute()))
     if not result.data:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Payment not found")
     item = result.data[0]
-    if not supabase.table("businesses").select("id").eq("id", item["business_id"]).eq("owner_id", current_user.user_id).execute().data:
+    if not (await asyncio.to_thread(lambda: supabase.table("businesses").select("id").eq("id", item["business_id"]).eq("owner_id", current_user.user_id).execute())).data:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Access denied")
     return PaymentResponse(**item)
 
 
 @router.get("/wordpress-plugin/{business_id}")
 async def get_wordpress_plugin(business_id: str, current_user: AuthUser = Depends(require_auth)) -> Response:
-    business = supabase.table("businesses").select("id").eq("business_id", business_id).eq("owner_id", current_user.user_id).execute()
+    from uuid import UUID
+    try:
+        UUID(business_id); field="id"
+    except ValueError:
+        field="business_id"
+    business = (await asyncio.to_thread(lambda: supabase.table("businesses").select("id").eq(field, business_id).eq("owner_id", current_user.user_id).execute()))
     if not business.data:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Business not found")
-    path = Path(__file__).parent.parent / "templates" / "conversapay-chat.php"
+    path = settings.base_dir / "wordpress-plugin" / "conversapay-chat.php"
     if not path.exists():
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Plugin file not found")
-    content = path.read_text(encoding="utf-8").replace("{{BUSINESS_ID}}", business_id).replace("{{FRONTEND_URL}}", settings.FRONTEND_URL)
-    return Response(content=content.encode(), media_type="application/x-httpd-php", headers={"Content-Disposition": f"attachment; filename=conversapay-chat-{business_id}.php"})
+    import io, zipfile
+    archive = io.BytesIO()
+    with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as bundle:
+        for name in ("conversapay-chat.php", "admin.css", "README.md"):
+            bundle.write(path.parent / name, "conversapay-chat/" + name)
+    return Response(content=archive.getvalue(), media_type="application/zip", headers={"Content-Disposition": "attachment; filename=conversapay-chat.zip"})

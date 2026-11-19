@@ -1,4 +1,6 @@
 """Public widget configuration with API-key enforcement (no Origin/Host trust)."""
+import asyncio
+from backend.services.database import optional_result
 import logging
 
 from fastapi import APIRouter, HTTPException, Request
@@ -11,17 +13,17 @@ from backend.middleware.rate_limiter import check_rate_limit, widget_config_rate
 from backend.services.widget_auth import authorize_widget_request
 
 logger = logging.getLogger(__name__)
-router = APIRouter(tags=["widget"])
+router = APIRouter(prefix="/widget", tags=["widget"])
 
 # Singleton client instead of creating a new one per request.
 _supabase = create_client(settings.SUPABASE_URL, settings.SUPABASE_SERVICE_ROLE_KEY)
 
 
 def plan_info(business_id, client):
-    business = client.table("businesses").select("owner_id").eq("id", business_id).maybe_single().execute()
+    business = optional_result(client.table("businesses").select("owner_id").eq("id", business_id).maybe_single().execute())
     if not business.data:
         return {"plan_type": "free", "active": False}
-    profile = client.table("profiles").select("plan_type,subscription_status,subscription_expires_at,subscription_end_date").eq("user_id", business.data["owner_id"]).maybe_single().execute()
+    profile = optional_result(client.table("profiles").select("plan_type,subscription_status,subscription_expires_at,subscription_end_date").eq("user_id", business.data["owner_id"]).maybe_single().execute())
     plan = active_plan(profile.data or {})
     return {"plan_type": plan, "active": True}
 
@@ -34,13 +36,14 @@ async def get_widget_config(business_id: str, request: Request):
     try:
         client = _supabase
         demo = business_id == "conversapay"
-        query = client.table("businesses").select("id,settings,bot_name,greeting_message,theme_colors")
-        result = (query.eq("business_id", business_id) if demo else query.eq("id", business_id)).maybe_single().execute()
+        query = client.table("businesses").select("id,settings").eq("is_active", True)
+        result = optional_result((await asyncio.to_thread(lambda: (query.eq("business_id", business_id) if demo else query.eq("id", business_id)).maybe_single().execute())))
         if not result.data:
             # Generic 404 regardless of *why* — avoids leaking which
             # business_ids exist vs. which are just unauthorized.
             raise HTTPException(404, "Business not found")
         business = result.data
+        business.update({key: (business.get("settings") or {}).get(key) for key in ("bot_name", "greeting_message", "theme_colors")})
         actual_id = business.get("id", business_id)
         plan = plan_info(actual_id, client)
 
@@ -55,7 +58,7 @@ async def get_widget_config(business_id: str, request: Request):
             client=client,
         )
 
-        return JSONResponse(content={"business_id": business_id, "bot_name": business.get("bot_name", "AI Assistant"), "greeting_message": business.get("greeting_message", "Hello! How can I help you today?"), "avatar_url": None, "theme_colors": business.get("theme_colors") or {"primary": "#A855F7", "secondary": "#00D9FF", "background": "#0B0F19"}, "features": {"checkout": plan["plan_type"] in ("pro", "premium"), "product_catalog": True, "plan_type": plan["plan_type"]}})
+        return JSONResponse(content={"business_id": business_id, "bot_name": business.get("bot_name") or "AI Assistant", "greeting_message": business.get("greeting_message") or "Hello! How can I help you today?", "avatar_url": None, "theme_colors": business.get("theme_colors") or {"primary": "#A855F7", "secondary": "#00D9FF", "background": "#0B0F19"}, "features": {"checkout": plan["plan_type"] in ("pro", "premium"), "product_catalog": True, "plan_type": plan["plan_type"]}})
     except HTTPException:
         raise
     except Exception as exc:

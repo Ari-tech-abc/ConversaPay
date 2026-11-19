@@ -1,3 +1,5 @@
+import asyncio
+from backend.services.database import optional_result
 import base64
 import hashlib
 import hmac
@@ -59,39 +61,35 @@ def _catalog_order(request,business_uuid):
 def _order_payload(request,business_uuid):
     # Service-role writes bypass RLS: validate every caller-supplied relation.
     for table, related_id in (("customers",request.customer_id),("conversations",request.conversation_id)):
-        if related_id and not supabase.table(table).select("id").eq("id",related_id).eq("business_id",business_uuid).maybe_single().execute().data:
+        if related_id and not optional_result(supabase.table(table).select("id").eq("id",related_id).eq("business_id",business_uuid).maybe_single().execute()).data:
             raise HTTPException(400,"Order references must belong to the same business")
     items,subtotal,currency=_catalog_order(request,business_uuid)
     return {"business_id":business_uuid,"customer_id":request.customer_id,"conversation_id":request.conversation_id,"order_number":_order_number(),"status":OrderStatus.PENDING.value,"payment_status":"pending","subtotal":subtotal,"tax":"0.00","total":subtotal,"currency":currency,"items":items,"customer_info":request.customer_info,"shipping_address":request.shipping_address,"notes":request.notes,"created_at":datetime.utcnow().isoformat()}
 @router.post("/pay",response_model=OrderResponse,status_code=status.HTTP_201_CREATED)
 async def create_order_public(request:OrderCreate,request_obj:Request):
-    check_rate_limit(request_obj); business=supabase.table("businesses").select("id").eq("business_id",request.business_id).eq("is_active",True).execute()
-    if not business.data: raise HTTPException(404,"Business not found")
-    result=supabase.table("orders").insert(_order_payload(request,business.data[0]["id"])).execute()
-    if not result.data: raise HTTPException(500,"Failed to create order")
-    return _order_response(result.data[0])
+    raise HTTPException(410,"Create a verified quote through the chat before checkout")
 @router.post("",response_model=OrderResponse,status_code=status.HTTP_201_CREATED)
 async def create_order(request:OrderCreate,current_user:AuthUser=Depends(require_auth)):
-    result=supabase.table("orders").insert(_order_payload(request,require_business_owner_for_business_id(request.business_id,current_user))).execute()
+    result=(await asyncio.to_thread(lambda: supabase.table("orders").insert(_order_payload(request,require_business_owner_for_business_id(request.business_id,current_user))).execute()))
     if not result.data: raise HTTPException(500,"Failed to create order")
     return _order_response(result.data[0])
 @router.get("",response_model=List[OrderResponse])
 async def list_orders(business_id:str=Query(...),limit:int=Query(50,ge=1,le=100),status_filter:str|None=Query(None),current_user:AuthUser=Depends(require_auth)):
-    query=supabase.table("orders").select("*").eq("business_id",require_business_owner_for_business_id(business_id,current_user)).order("created_at",desc=True).limit(limit)
+    query=supabase.table("orders").select("*").eq("business_id",(await asyncio.to_thread(lambda: require_business_owner_for_business_id(business_id,current_user)))).order("created_at",desc=True).limit(limit)
     if status_filter: query=query.eq("status",status_filter)
-    return [OrderResponse(**row) for row in (query.execute().data or [])]
+    return [OrderResponse(**row) for row in ((await asyncio.to_thread(lambda: query.execute())).data or [])]
 @router.get("/{order_id}/public")
 async def get_public_order(order_id:str,request:Request,guest_token:str|None=Query(None)):
     check_rate_limit(request,public_order_rate_limiter)
     if not _verify_order_guest_token(order_id,guest_token): raise HTTPException(status_code=403,detail="A valid order access token is required")
-    result=supabase.table("orders").select("id,order_number,status,total,currency,items,created_at").eq("id",order_id).maybe_single().execute()
+    result=optional_result((await asyncio.to_thread(lambda: supabase.table("orders").select("id,order_number,status,total,currency,items,created_at").eq("id",order_id).maybe_single().execute())))
     if not result.data: raise HTTPException(404,"Order not found")
     order=result.data; items=order.get("items") or []
     return {"id":order.get("id"),"order_number":order.get("order_number"),"status":order.get("status"),"total":money_db(order.get("total")),"currency":order.get("currency"),"items":items,"payment_link":items[0].get("payment_link") if len(items)==1 and isinstance(items[0],dict) else None,"created_at":order.get("created_at")}
 @router.get("/{order_id}",response_model=OrderResponse)
 async def get_order(order_id:str,current_user:AuthUser=Depends(require_auth)):
-    result=supabase.table("orders").select("*").eq("id",order_id).maybe_single().execute()
+    result=optional_result((await asyncio.to_thread(lambda: supabase.table("orders").select("*").eq("id",order_id).maybe_single().execute())))
     if not result.data: raise HTTPException(404,"Order not found")
     order=result.data
-    if not supabase.table("businesses").select("id").eq("id",order["business_id"]).eq("owner_id",current_user.user_id).maybe_single().execute().data: raise HTTPException(403,"Access denied")
+    if not optional_result((await asyncio.to_thread(lambda: supabase.table("businesses").select("id").eq("id",order["business_id"]).eq("owner_id",current_user.user_id).maybe_single().execute()))).data: raise HTTPException(403,"Access denied")
     return OrderResponse(**order)

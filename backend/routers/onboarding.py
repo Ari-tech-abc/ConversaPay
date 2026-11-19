@@ -1,5 +1,7 @@
 """Registration verification and business onboarding routes."""
 from __future__ import annotations
+import asyncio
+from backend.services.database import optional_result
 
 import hashlib
 import logging
@@ -89,36 +91,39 @@ async def signup_with_code(request: SignupCodeRequest, request_obj: Request):
     """Create an unconfirmed Supabase Auth user without sending Supabase's link email."""
     check_rate_limit(request_obj, extra_key=f"signup:{request.email.lower()}")
     try:
-        existing_profile = supabase.table("profiles").select("user_id,email_verified").eq("email", request.email).maybe_single().execute().data
+        existing_result = (await asyncio.to_thread(lambda: supabase.table("profiles").select("user_id,email_verified").eq("email", request.email).limit(1).execute()))
+        existing_profile = (getattr(existing_result, "data", None) or [None])[0]
         if existing_profile:
+            if not existing_profile.get("email_verified"):
+                raise HTTPException(409,"verification_pending")
             raise HTTPException(400, "email_exists")
 
-        auth_response = supabase.auth.admin.create_user({
+        auth_response = (await asyncio.to_thread(lambda: supabase.auth.admin.create_user({
             "email": request.email,
             "password": request.password,
             "email_confirm": False,
             "user_metadata": {"full_name": request.full_name, "business_name": request.business_name},
-        })
+        })))
         if not auth_response or not auth_response.user:
             raise HTTPException(400, "registration_failed")
 
         user_id = auth_response.user.id
         code = _new_code()
         expires_at = (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat()
-        profile = create_user_profile(
+        profile = (await asyncio.to_thread(lambda: create_user_profile(
             user_id,
             request.email,
             request.full_name,
             _code_hash(request.email, code),
             expires_at,
-        )
+        )))
         if not profile:
             try:
-                supabase.auth.admin.delete_user(user_id)
+                (await asyncio.to_thread(lambda: supabase.auth.admin.delete_user(user_id)))
             except Exception:
                 logger.exception("Could not roll back orphan auth user %s", user_id)
             raise HTTPException(500, "server_error")
-        if not email_service.send_verification_code(request.email, code, request.full_name):
+        if not (await asyncio.to_thread(lambda: email_service.send_verification_code(request.email, code, request.full_name))):
             raise HTTPException(502, "verification_email_failed")
         return {"message": "verification_code_sent", "email": request.email, "expires_in_minutes": 15}
     except HTTPException:
@@ -143,13 +148,13 @@ async def verify_email_code(request: VerifyCodeRequest, request_obj: Request):
     check_rate_limit(request_obj, extra_key=f"verify:{request.email.lower()}")
     if not verification_account_limiter.is_allowed(request.email.lower()):
         raise HTTPException(429, "verification_attempts_exceeded", headers={"Retry-After": "900"})
-    result = supabase.table("profiles").select("*").eq("email", request.email).maybe_single().execute()
+    result = optional_result((await asyncio.to_thread(lambda: supabase.table("profiles").select("*").eq("email", request.email).maybe_single().execute())))
     profile = result.data or {}
     if not profile:
         raise HTTPException(404, "verification_not_found")
     if profile.get("email_verified"):
         # A profile flag is never proof of control of the email address.
-        lookup = supabase.auth.admin.get_user_by_id(profile["user_id"])
+        lookup = (await asyncio.to_thread(lambda: supabase.auth.admin.get_user_by_id(profile["user_id"])))
         if lookup and lookup.user and lookup.user.email_confirmed_at:
             return {"verified": True}
         raise HTTPException(400, "verification_required")
@@ -168,18 +173,18 @@ async def verify_email_code(request: VerifyCodeRequest, request_obj: Request):
     if not secrets.compare_digest(expected, _code_hash(request.email, request.code)):
         raise HTTPException(400, "verification_code_invalid")
 
-    consumed = supabase.rpc("consume_email_verification", {"p_user_id": profile["user_id"], "p_token": expected}).execute()
+    consumed = (await asyncio.to_thread(lambda: supabase.rpc("consume_email_verification", {"p_user_id": profile["user_id"], "p_token": expected}).execute()))
     if consumed.data is not True:
         raise HTTPException(400, "verification_code_invalid")
 
     # Both sources of truth must become verified: Supabase Auth protects API access,
     # while profiles.email_verified is retained for the product's own state/UI.
     try:
-        supabase.auth.admin.update_user_by_id(profile["user_id"], {"email_confirm": True})
+        (await asyncio.to_thread(lambda: supabase.auth.admin.update_user_by_id(profile["user_id"], {"email_confirm": True})))
     except Exception as exc:
         logger.error("Failed to confirm Supabase Auth email for %s: %s", profile["user_id"], exc, exc_info=True)
         raise HTTPException(500, "verification_failed") from exc
-    verified = supabase.rpc("mark_email_verified", {"p_user_id": profile["user_id"]}).execute()
+    verified = (await asyncio.to_thread(lambda: supabase.rpc("mark_email_verified", {"p_user_id": profile["user_id"]}).execute()))
     if not verified.data:
         raise HTTPException(500, "verification_failed")
     return {"verified": True}
@@ -189,26 +194,26 @@ async def verify_email_code(request: VerifyCodeRequest, request_obj: Request):
 async def resend_code(request: ResendCodeRequest, request_obj: Request):
     request.email = str(request.email).strip().lower()
     check_rate_limit(request_obj, extra_key=f"resend:{request.email.lower()}")
-    result = supabase.table("profiles").select("*").eq("email", request.email).maybe_single().execute()
+    result = optional_result((await asyncio.to_thread(lambda: supabase.table("profiles").select("*").eq("email", request.email).maybe_single().execute())))
     profile = result.data or {}
     # Deliberately return a neutral result for unknown addresses to avoid account enumeration.
     if not profile:
         return {"message": "verification_code_sent"}
     if profile.get("email_verified"):
-        lookup = supabase.auth.admin.get_user_by_id(profile["user_id"])
+        lookup = (await asyncio.to_thread(lambda: supabase.auth.admin.get_user_by_id(profile["user_id"])))
         if lookup and lookup.user and lookup.user.email_confirmed_at:
             return {"message": "already_verified"}
 
     code = _new_code()
     expires_at = (datetime.now(timezone.utc) + timedelta(minutes=15)).isoformat()
-    updated = update_profile_row(profile["user_id"], {
+    updated = (await asyncio.to_thread(lambda: update_profile_row(profile["user_id"], {
         "email_verification_token": _code_hash(request.email, code),
         "email_verification_expires_at": expires_at,
         "email_verified": False,
-    })
+    })))
     if not updated:
         raise HTTPException(500, "server_error")
-    if not email_service.send_verification_code(request.email, code, profile.get("full_name") or ""):
+    if not (await asyncio.to_thread(lambda: email_service.send_verification_code(request.email, code, profile.get("full_name") or ""))):
         raise HTTPException(502, "verification_email_failed")
     return {"message": "verification_code_sent", "expires_in_minutes": 15}
 
@@ -222,11 +227,11 @@ async def get_current_user_with_onboarding(current_user: AuthUser = Depends(get_
 async def get_onboarding(current_user: AuthUser = Depends(get_current_user)):
     if not current_user.email_verified:
         raise HTTPException(403, "EMAIL_NOT_VERIFIED")
-    businesses = _owned_businesses(current_user.user_id)
+    businesses = (await asyncio.to_thread(lambda: _owned_businesses(current_user.user_id)))
     business = businesses[0] if businesses else None
     metadata: dict[str, Any] = {}
     try:
-        lookup = supabase.auth.admin.get_user_by_id(current_user.user_id)
+        lookup = (await asyncio.to_thread(lambda: supabase.auth.admin.get_user_by_id(current_user.user_id)))
         metadata = (lookup.user.user_metadata or {}) if lookup and lookup.user else {}
     except Exception as exc:
         logger.warning("Could not read onboarding metadata: %s", exc)
@@ -245,21 +250,21 @@ async def save_onboarding(request: OnboardingRequest, current_user: AuthUser = D
         raise HTTPException(403, "EMAIL_NOT_VERIFIED")
     category = request.business_category.strip()
     custom = request.custom_ai_instructions.strip()
-    businesses = _owned_businesses(current_user.user_id)
+    businesses = (await asyncio.to_thread(lambda: _owned_businesses(current_user.user_id)))
     business = businesses[0] if businesses else None
 
     if not business:
         business_name = "My Business"
         try:
-            lookup = supabase.auth.admin.get_user_by_id(current_user.user_id)
+            lookup = (await asyncio.to_thread(lambda: supabase.auth.admin.get_user_by_id(current_user.user_id)))
             metadata = (lookup.user.user_metadata or {}) if lookup and lookup.user else {}
             business_name = str(metadata.get("business_name") or business_name).strip() or business_name
         except Exception as exc:
             logger.warning("Could not read business name during onboarding: %s", exc)
-        business_id = create_business_for_user(current_user.user_id, business_name)
+        business_id = (await asyncio.to_thread(lambda: create_business_for_user(current_user.user_id, business_name)))
         if not business_id:
             raise HTTPException(500, "business_creation_failed")
-        businesses = _owned_businesses(current_user.user_id)
+        businesses = (await asyncio.to_thread(lambda: _owned_businesses(current_user.user_id)))
         business = businesses[0] if businesses else None
     if not business:
         raise HTTPException(500, "business_not_found")
@@ -271,7 +276,7 @@ async def save_onboarding(request: OnboardingRequest, current_user: AuthUser = D
         "onboarding_completed": True,
         "onboarding_completed_at": datetime.now(timezone.utc).isoformat(),
     })
-    updated = supabase.table("businesses").update({"settings": merged}).eq("id", business["id"]).eq("owner_id", current_user.user_id).execute()
+    updated = (await asyncio.to_thread(lambda: supabase.table("businesses").update({"settings": merged}).eq("id", business["id"]).eq("owner_id", current_user.user_id).execute()))
     if not updated.data:
         raise HTTPException(500, "onboarding_save_failed")
     return {"completed": True, "business_id": updated.data[0]["id"]}
@@ -285,25 +290,25 @@ async def complete_oauth_session_with_onboarding(current_user: AuthUser = Depend
         full_name = ""
         business_name = ""
         try:
-            user_lookup = supabase.auth.admin.get_user_by_id(current_user.user_id)
+            user_lookup = (await asyncio.to_thread(lambda: supabase.auth.admin.get_user_by_id(current_user.user_id)))
             metadata = (user_lookup.user.user_metadata or {}) if user_lookup and user_lookup.user else {}
             full_name = metadata.get("full_name") or metadata.get("name") or ""
             business_name = str(metadata.get("business_name") or "").strip()
         except Exception as exc:
             logger.warning("Could not fetch OAuth user metadata: %s", exc)
 
-        profile = get_user_profile(current_user.user_id)
+        profile = (await asyncio.to_thread(lambda: get_user_profile(current_user.user_id)))
         if not profile:
-            profile = create_user_profile(current_user.user_id, current_user.email, full_name, "oauth", "2099-01-01T00:00:00+00:00")
+            profile = (await asyncio.to_thread(lambda: create_user_profile(current_user.user_id, current_user.email, full_name, "oauth", "2099-01-01T00:00:00+00:00")))
             if not profile:
                 raise HTTPException(500, "profile_creation_failed")
         if not profile.get("email_verified", False):
-            supabase.rpc("mark_email_verified", {"p_user_id": current_user.user_id}).execute()
+            (await asyncio.to_thread(lambda: supabase.rpc("mark_email_verified", {"p_user_id": current_user.user_id}).execute()))
 
-        businesses = _owned_businesses(current_user.user_id)
+        businesses = (await asyncio.to_thread(lambda: _owned_businesses(current_user.user_id)))
         if not businesses and business_name:
-            create_business_for_user(current_user.user_id, business_name)
-            businesses = _owned_businesses(current_user.user_id)
+            (await asyncio.to_thread(lambda: create_business_for_user(current_user.user_id, business_name)))
+            businesses = (await asyncio.to_thread(lambda: _owned_businesses(current_user.user_id)))
         return {
             "user_id": current_user.user_id,
             "email": current_user.email,

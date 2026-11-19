@@ -12,7 +12,7 @@ services:
       - key: DEBUG
         value: "false"
       - key: SUBSCRIPTION_PROVIDER
-        value: isracard
+        value: stripe
       - key: SUBSCRIPTION_WORKER_ENABLED
         value: "true"
       - key: SECRET_KEY
@@ -32,6 +32,10 @@ services:
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_CONNECT_CLIENT_ID
+        sync: false
+      - key: STRIPE_CONNECT_WEBHOOK_SECRET
         sync: false
       - key: STRIPE_PRO_PRICE_ID
         sync: false

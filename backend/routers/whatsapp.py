@@ -70,7 +70,7 @@ def safe_connection(c: dict | None) -> dict:
 @router.get('/integrations/whatsapp')
 async def status(business_id: UUID, user: AuthUser = Depends(require_auth)):
     bid = str(business_id)
-    require_business_owner_for_business_id(bid, user)
+    (await asyncio.to_thread(lambda: require_business_owner_for_business_id(bid, user)))
     try:
         c = await connection_for(bid, user.user_id)
     except HTTPException:
@@ -89,7 +89,7 @@ async def status(business_id: UUID, user: AuthUser = Depends(require_auth)):
 @router.put('/integrations/whatsapp')
 async def connect(data: ConnectionInput, user: AuthUser = Depends(require_auth)):
     bid = str(data.business_id)
-    require_business_owner_for_business_id(bid, user)
+    (await asyncio.to_thread(lambda: require_business_owner_for_business_id(bid, user)))
     if not connect_limiter.is_allowed(user.user_id):
         raise HTTPException(429, detail={'code': 'whatsapp_rate_limited'}, headers={'Retry-After': '60'})
     if not configured():
@@ -119,7 +119,7 @@ async def connect(data: ConnectionInput, user: AuthUser = Depends(require_auth))
 @router.delete('/integrations/whatsapp')
 async def disconnect(business_id: UUID, user: AuthUser = Depends(require_auth)):
     bid = str(business_id)
-    require_business_owner_for_business_id(bid, user)
+    (await asyncio.to_thread(lambda: require_business_owner_for_business_id(bid, user)))
     await db_call(lambda: supabase.table('whatsapp_connections').delete().eq('business_id', bid).eq('owner_id', user.user_id).execute())
     return {'disconnected': True}
 

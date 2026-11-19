@@ -11,6 +11,7 @@ import unittest
 from unittest.mock import MagicMock
 from decimal import Decimal
 
+from backend.services.database import optional_result
 from backend.services.billing_reconciliation import active_plan_from_row, ACTIVE_STATUSES
 from backend.services.payment_validation import checkout_amount
 
@@ -30,7 +31,7 @@ def functions(path, names, **scope):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name in names:
             node.decorator_list = []
             body.append(node)
-    namespace = dict(datetime=datetime, timedelta=timedelta, timezone=timezone,
+    namespace = dict(asyncio=asyncio, optional_result=optional_result, datetime=datetime, timedelta=timedelta, timezone=timezone,
                      HTTPException=HTTPError, logger=logging.getLogger("security-tests"), **scope)
     exec(compile(ast.fix_missing_locations(ast.Module(body=body, type_ignores=[])), path, "exec"), namespace)
     return namespace
@@ -113,18 +114,23 @@ class BillingTests(unittest.TestCase):
 
 
 class WebhookTests(unittest.TestCase):
+    def webhook_db(self):
+        db=MagicMock()
+        db.table.return_value.select.return_value.eq.return_value.eq.return_value.limit.return_value.execute.return_value.data=[{"metadata":{}}]
+        return db
+
     def handler(self, payment_status):
         event = {"id":"evt_test", "type":"checkout.session.completed", "data":{"object":{
             "id":"cs_test","mode":"payment","payment_status":payment_status,
             "amount_total":10000,"currency":"ils","metadata":{"order_id":"o"}}}}
         update = MagicMock()
-        request = SimpleNamespace(headers={"stripe-signature":"test"}, body=MagicMock())
+        request = SimpleNamespace(url=SimpleNamespace(path="/api/v1/webhooks/stripe"), headers={"stripe-signature":"test"}, body=MagicMock())
         async def body(): return b"{}"
         request.body = body
         scope = functions("backend/routers/stripe_webhook.py", {"stripe_webhook"},
             settings=SimpleNamespace(STRIPE_WEBHOOK_SECRET="test"),
             stripe=SimpleNamespace(Webhook=SimpleNamespace(construct_event=lambda *args:event)),
-            _claim=lambda *a:True, _as_dict=lambda x:x, _update_order=update,
+            supabase=self.webhook_db(), _claim=lambda *a:True, _as_dict=lambda x:x, _update_order=update,
             mark_webhook_processed=lambda *a:None, mark_webhook_failed=lambda *a:None,
             JSONResponse=lambda **kw:kw)
         return scope, request, update

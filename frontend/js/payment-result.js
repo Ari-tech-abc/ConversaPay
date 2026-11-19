@@ -7,6 +7,18 @@
  let running=false;
  async function confirm(){if(running)return;running=true;retry.hidden=true;login.hidden=true;
  try{
+  const orderId=params.get('order_id'),guestToken=params.get('guest_token');
+  if(orderId&&guestToken){
+   status('warn',t('בודקים את מצב ההזמנה','Checking order status'),t('ממתינים לאישור ספק התשלום.','Awaiting payment provider confirmation.'));
+   for(let attempt=0;attempt<8;attempt++){
+    const response=await fetch('/api/v1/orders/'+encodeURIComponent(orderId)+'/public?guest_token='+encodeURIComponent(guestToken));
+    if(!response.ok)throw Error(t('לא ניתן לטעון את ההזמנה.','Could not load the order.'));
+    const order=await response.json();
+    if(['paid','shipped','delivered'].includes(order.status)){status('good',t('התשלום אושר','Payment confirmed'),t('ההזמנה התקבלה אצל העסק.','The business received your order.'));return;}
+    if(attempt<7)await new Promise(resolve=>setTimeout(resolve,1500));
+   }
+   status('warn',t('ממתינים לאישור','Awaiting confirmation'),t('אין צורך לשלם שוב. אפשר לבדוק שוב בעוד רגע.','Do not pay again. Check again shortly.'));retry.hidden=false;return;
+  }
   if(!sessionId){status('warn',t('לא ניתן לאמת את התשלום','Could not verify payment'),t('חסר מזהה תשלום. בדוק את הודעת ספק התשלום או חזור למסלולים.','The payment reference is missing. Check the provider email or return to plans.'));return;}
   const token=localStorage.getItem('access_token')||localStorage.getItem('conversapay_auth_token')||sessionStorage.getItem('access_token')||sessionStorage.getItem('conversapay_auth_token');
   if(!token){status('warn',t('נדרשת התחברות לאימות התשלום','Sign in to verify payment'),t('מצב התשלום טרם אומת. התחבר כדי להמשיך מאותה נקודה.','Payment is not verified yet. Sign in to continue here.'));login.hidden=false;return;}

@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     SUBSCRIPTION_WORKER_ENABLED: bool = False
     STRIPE_SECRET_KEY: Optional[str] = None
     STRIPE_WEBHOOK_SECRET: Optional[str] = None
+    STRIPE_CONNECT_CLIENT_ID: Optional[str] = None
+    STRIPE_CONNECT_WEBHOOK_SECRET: Optional[str] = None
     STRIPE_PRO_PRICE_ID: Optional[str] = None
     STRIPE_PREMIUM_PRICE_ID: Optional[str] = None
     STRIPE_SUCCESS_URL: Optional[str] = None
@@ -72,7 +74,7 @@ class Settings(BaseSettings):
             # Existing Render services do not automatically import new YAML env vars.
             # Preserve explicit settings while making this release safe to deploy.
             if "SUBSCRIPTION_PROVIDER" not in self.model_fields_set:
-                self.SUBSCRIPTION_PROVIDER = "isracard"
+                self.SUBSCRIPTION_PROVIDER = "stripe"
             if "SUBSCRIPTION_WORKER_ENABLED" not in self.model_fields_set:
                 self.SUBSCRIPTION_WORKER_ENABLED = True
         if self.AI_PROVIDER is None:

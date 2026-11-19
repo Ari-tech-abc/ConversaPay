@@ -20,7 +20,7 @@ class DeploymentTests(unittest.TestCase):
             os.environ.pop('SUBSCRIPTION_PROVIDER', None)
             os.environ.pop('SUBSCRIPTION_WORKER_ENABLED', None)
             configured = Settings(ENVIRONMENT='production', _env_file=None)
-        self.assertEqual(configured.SUBSCRIPTION_PROVIDER, 'isracard')
+        self.assertEqual(configured.SUBSCRIPTION_PROVIDER, 'stripe')
         self.assertTrue(configured.SUBSCRIPTION_WORKER_ENABLED)
         explicit = Settings(ENVIRONMENT='production', SUBSCRIPTION_PROVIDER='stripe', SUBSCRIPTION_WORKER_ENABLED=False, _env_file=None)
         self.assertEqual(explicit.SUBSCRIPTION_PROVIDER, 'stripe')

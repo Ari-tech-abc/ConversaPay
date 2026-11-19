@@ -24,6 +24,13 @@ build/
 # --- Virtual environments ---
 venv/
 .venv/
+.venv-tokenizer/
+
+# Training outputs and local model/tokenizer caches
+artifacts/ai-training/**/outputs/
+artifacts/ai-training/tokenizer-cache/
+*.gguf
+*.safetensors
 env/
 .env/
 ENV/
@@ -55,3 +62,7 @@ MD files/
 
 # --- Render / Docker build artefacts ---
 *.pyc
+artifacts/ai-training/tool-source/
+
+# Node test dependencies
+node_modules/

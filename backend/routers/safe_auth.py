@@ -1,5 +1,6 @@
 """Safe authenticated profile responses with an explicit allow-list."""
 from __future__ import annotations
+import asyncio
 from datetime import datetime
 from typing import Optional
 from fastapi import APIRouter, Depends
@@ -38,7 +39,7 @@ def safe_profile_view(raw: dict | None) -> dict | None:
 @router.get("/me", response_model=SafeMeResponse)
 async def safe_current_user_info(current_user: AuthUser = Depends(get_current_user)) -> SafeMeResponse:
     from backend.routers.auth import get_user_profile
-    raw = get_user_profile(current_user.user_id) or {}
+    raw = (await asyncio.to_thread(lambda: get_user_profile(current_user.user_id))) or {}
     allowed = {
         "email", "full_name", "plan_type", "email_verified", "subscription_status",
         "subscription_expires_at", "created_at", "updated_at",

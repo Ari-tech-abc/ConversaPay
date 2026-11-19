@@ -1,3 +1,4 @@
+from backend.services.database import optional_result
 import asyncio, logging, re, uuid
 from datetime import datetime
 from decimal import Decimal
@@ -12,6 +13,8 @@ from backend.services.payment_adapters import CheckoutOrder, PaymentAdapterError
 from backend.services.session_service import session_service
 from backend.services.money import money, money_db, multiply_money
 from backend.services.widget_auth import authorize_widget_request
+from backend.services.merchant_payments import merchant_account
+from backend.services.checkout_contact import contact_for_checkout
 from backend.services.verified_sales import (create_confirmation, verify_confirmation, quote,
     quote_text, checkout_text, safe_url, safe_amount, locale_for, choose, result, scoped_products)
 
@@ -101,30 +104,35 @@ async def _product_by_key(business_id: str, item_key: str) -> dict | None:
 
 async def _create_order_checkout(order: dict, customer_info: dict | None) -> tuple[str, str | None, dict]:
     info = customer_info or {}
-    checkout_order = CheckoutOrder(
-        order_id=str(order["id"]),
-        order_number=str(order.get("order_number") or order["id"]),
-        amount=Decimal(str(order.get("total") or "0")),
-        currency=str(order.get("currency") or "ILS").upper(),
-        items=list(order.get("items") or []),
-        customer_email=info.get("email"),
-        customer_name=info.get("name"),
-        metadata={"business_id": str(order.get("business_id") or "")},
-    )
+    account = await asyncio.to_thread(merchant_account,supabase,order["business_id"])
+    if order.get("stripe_account_id") and order["stripe_account_id"] != account:
+        raise PaymentAdapterError("Merchant account changed; request a new quote")
+    def existing_payment():
+        return supabase.table("payments").select("*").eq("order_id",order["id"]).eq("business_id",order["business_id"]).order("created_at",desc=True).limit(1).execute().data or []
+    previous = await asyncio.to_thread(existing_payment)
+    if previous:
+        metadata = previous[0].get("metadata") or {}
+        if previous[0].get("status")=="pending" and metadata.get("stripe_account_id")==account and safe_url(metadata.get("checkout_url")):
+            return metadata["checkout_url"],metadata["provider_session_id"],previous[0]
+        raise PaymentAdapterError("An existing payment must be resolved before retrying")
+    checkout_order = CheckoutOrder(order_id=str(order["id"]),order_number=str(order.get("order_number") or order["id"]),
+        amount=Decimal(str(order.get("total") or "0")),currency=str(order.get("currency") or "ILS").upper(),
+        items=list(order.get("items") or []),customer_email=info.get("email"),customer_name=info.get("name"),
+        metadata={"business_id":str(order["business_id"])},stripe_account_id=account)
     checkout = await get_checkout_adapter().create_checkout(checkout_order)
-    if safe_url(checkout.checkout_url) is None:
-        raise PaymentAdapterError("Provider returned an invalid checkout URL")
-    payment = supabase.table("payments").insert({
-        "business_id": order["business_id"],
-        "order_id": order["id"],
-        "amount": order["total"],
-        "currency": order.get("currency", "ILS"),
-        "status": "pending",
-        "customer_email": info.get("email"),
-        "customer_name": info.get("name"),
-        "metadata": {"provider": checkout.provider, "provider_session_id": checkout.provider_session_id, "checkout_url": checkout.checkout_url},
-    }).execute()
-    return checkout.checkout_url, checkout.provider_session_id, payment.data[0] if payment.data else {}
+    if safe_url(checkout.checkout_url) is None:raise PaymentAdapterError("Provider returned an invalid checkout URL")
+    payload={"business_id":order["business_id"],"order_id":order["id"],"amount":order["total"],"currency":order.get("currency","ILS"),
+        "status":"pending","customer_email":info.get("email"),"customer_name":info.get("name"),
+        "metadata":{"provider":checkout.provider,"provider_session_id":checkout.provider_session_id,"checkout_url":checkout.checkout_url,"stripe_account_id":account}}
+    try:
+        saved = await asyncio.to_thread(lambda:supabase.table("payments").insert(payload).execute())
+        payment=(saved.data or [None])[0]
+        if not payment:raise RuntimeError("Payment persistence was not confirmed")
+    except Exception:
+        matches=await asyncio.to_thread(existing_payment)
+        payment=next((p for p in matches if (p.get("metadata") or {}).get("provider_session_id")==checkout.provider_session_id),None)
+        if not payment:raise
+    return checkout.checkout_url,checkout.provider_session_id,payment
 
 
 async def _confirmed_checkout(request, business, conversation, customer):
@@ -135,13 +143,13 @@ async def _confirmed_checkout(request, business, conversation, customer):
     except ValueError:
         return result(choose(locale,"ההצעה פגה או אינה תקינה. בקש הצעת מחיר חדשה.","This quote expired or is invalid. Please request a new quote."))
     saved = approval["q"]
+    try:
+        contact = contact_for_checkout(request.customer_info,saved["fulfillment"])
+    except ValueError:
+        return result(choose(locale,"יש למלא שם, אימייל וטלפון, וכתובת למשלוח.","Enter your name, email, phone and delivery address."),"quote",{**saved,"confirmation_token":request.confirmation_token,"locale":locale})
     product = await _product_by_key(business["id"], saved["item_key"])
     if not product or not scoped_products([product],business["id"]):
         return result(choose(locale,"המוצר אינו זמין עוד. צריך הצעה חדשה.","This item is no longer available. A new quote is needed."))
-    fresh = quote(product,saved["quantity"],business.get("settings") or {},saved["fulfillment"])
-    if fresh != saved:
-        return result(choose(locale,"המחיר, התנאים או המלאי השתנו. צריך הצעה חדשה לפני אישור.",
-                             "The price, terms or stock changed. A new quote is needed before confirmation."))
     number = "ORD-" + approval["nonce"]
     def existing_order():
         return supabase.table("orders").select("*").eq("business_id",business["id"]).eq("conversation_id",conversation["id"]).eq("order_number",number).limit(1).execute().data or []
@@ -158,12 +166,21 @@ async def _confirmed_checkout(request, business, conversation, customer):
             return answer
         return result(choose(locale,"הבקשה כבר נקלטה. אין אישור ליצור שוב קישור; נציג יכול לבדוק את מצבה.",
                              "This request was already received. I cannot create another checkout; a representative can check its status."))
+    fresh = quote(product,saved["quantity"],business.get("settings") or {},saved["fulfillment"])
+    if fresh != saved:
+        return result(choose(locale,"המחיר, התנאים או המלאי השתנו. צריך הצעה חדשה לפני אישור.","The price, terms or stock changed. Please request a new quote."))
+    try:
+        account = await asyncio.to_thread(merchant_account,supabase,business["id"])
+    except Exception:
+        return result(choose(locale,"העסק עדיין לא השלים חיבור סליקה. אפשר לפנות אליו להמשך.","This business has not completed its payment connection. Please contact the business."),"error")
     data = {"business_id":business["id"],"customer_id":customer.get("id") if customer else None,
             "conversation_id":conversation["id"],"order_number":number,"status":"pending","payment_status":"pending",
             "subtotal":saved["subtotal"],"tax":"0.00","total":saved["total"],"currency":saved["currency"],
             "items":[{"product_id":saved["product_id"],"item_key":saved["item_key"],"name":saved["product_name"],
                       "quantity":saved["quantity"],"price":saved["unit_price"]}],
-            "customer_info":request.customer_info or {},"created_at":datetime.utcnow().isoformat()}
+            "customer_info":contact,"fulfillment":saved["fulfillment"],"shipping":saved["shipping"],"stripe_account_id":account,
+            "shipping_address":{"address":contact["address"],"name":contact["name"],"phone":contact["phone"]} if saved["fulfillment"]=="delivery" else None,
+            "created_at":datetime.utcnow().isoformat()}
     # order_number is unique in the existing schema: concurrent replay cannot insert a second order.
     try:
         created = await asyncio.to_thread(lambda:supabase.table("orders").insert(data).execute())
@@ -219,11 +236,11 @@ async def chat(request: ChatRequest, request_obj: Request):
     try:
         is_uuid = bool(re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", request.business_id, re.I))
         query = supabase.table("businesses").select("*").eq("is_active", True)
-        business_result = (query.eq("id", request.business_id) if is_uuid else query.eq("business_id", request.business_id)).execute()
+        business_result = (await asyncio.to_thread(lambda: (query.eq("id", request.business_id) if is_uuid else query.eq("business_id", request.business_id)).execute()))
         if not business_result.data:
             raise HTTPException(404, "Business not found")
         business = business_result.data[0]
-        profile = supabase.table("profiles").select("plan_type,subscription_status,subscription_expires_at,subscription_end_date").eq("user_id", business["owner_id"]).maybe_single().execute()
+        profile = optional_result((await asyncio.to_thread(lambda: supabase.table("profiles").select("plan_type,subscription_status,subscription_expires_at,subscription_end_date").eq("user_id", business["owner_id"]).maybe_single().execute())))
         plan_type = active_plan(profile.data or {})
 
         await authorize_widget_request(
@@ -258,12 +275,16 @@ async def chat(request: ChatRequest, request_obj: Request):
 
         can_checkout = plan_type in ("pro", "premium")
         conversation = await session_service.get_or_create_conversation(business_id=business["id"], session_id=request.session_id or f"session_{uuid.uuid4().hex}", channel="web")
+        history = await session_service.get_conversation_history(conversation_id=conversation["id"], limit=20)
         products = await _relevant_products(business["id"], request.message, limit=24)
+        previous_key=next(((m.get("metadata") or {}).get("sales_item_key") for m in reversed(history) if (m.get("metadata") or {}).get("sales_item_key")),None)
+        if previous_key and not any(p.get("item_key")==previous_key for p in products):
+            previous_product=await _product_by_key(business["id"],previous_key)
+            if previous_product:products=[previous_product]+products[:23]
         customer_context = None; customer = None
         if request.customer_info:
             customer = await session_service.get_or_create_customer(business_id=business["id"], email=request.customer_info.get("email"), phone=request.customer_info.get("phone"), name=request.customer_info.get("name"))
             customer_context = {"name": customer.get("name"), "email": customer.get("email"), "phone": customer.get("phone"), "purchase_count": customer.get("purchase_count", 0), "total_purchases": customer.get("total_purchases", 0)} if customer else None
-        history = await session_service.get_conversation_history(conversation_id=conversation["id"], limit=20)
         await session_service.add_message(conversation_id=conversation["id"], role="user", content=request.message)
         if request.confirmation_token:
             if not can_checkout:
@@ -289,7 +310,7 @@ async def chat(request: ChatRequest, request_obj: Request):
                         answer = result(quote_text(fresh,locale_for(request.message))+choose(locale_for(request.message)," לאשר את ההצעה?"," Confirm this quote?"),"quote",{**fresh,"confirmation_token":token,"locale":locale_for(request.message)})
         response = ChatResponse(intent=answer.get("intent","chat"),response=answer.get("response",""),session_id=conversation["session_id"],conversation_id=conversation["id"],payment_url=answer.get("payment_url"),action_data=answer.get("action_data"))
         # Persist the final server-verified reply, not an intermediate model draft.
-        await session_service.add_message(conversation_id=conversation["id"],role="assistant",content=response.response,intent=response.intent)
+        await session_service.add_message(conversation_id=conversation["id"],role="assistant",content=response.response,intent=response.intent,metadata={"sales_item_key":(response.action_data or {}).get("item_key")})
         return response
     except HTTPException:
         raise

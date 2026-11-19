@@ -1,3 +1,4 @@
+import asyncio
 from fastapi import APIRouter,HTTPException,status,Depends,Query
 from typing import List
 import logging
@@ -41,20 +42,19 @@ def _delete_unavailable(exc: Exception) -> HTTPException:
 
 @router.post("/bulk-delete")
 async def delete_products_bulk(request: BulkDeletePayload, current_user: AuthUser = Depends(require_auth)):
-    business_uuid = require_business_owner_for_business_id(str(request.business_id), current_user)
+    business_uuid = (await asyncio.to_thread(lambda: require_business_owner_for_business_id(str(request.business_id), current_user)))
     try:
         if request.all_products and request.expected_count > 500:
-            import asyncio
             job = await asyncio.to_thread(lambda: supabase.rpc("start_product_delete_job", {
                 "p_user_id": current_user.user_id, "p_business_id": business_uuid,
                 "p_expected_count": request.expected_count,
             }).execute())
             return job.data
-        result = supabase.rpc("delete_products_bulk", {
+        result = (await asyncio.to_thread(lambda: supabase.rpc("delete_products_bulk", {
             "p_user_id": current_user.user_id, "p_business_id": business_uuid,
             "p_product_ids": [str(value) for value in request.product_ids],
             "p_all_products": request.all_products, "p_expected_count": request.expected_count,
-        }).execute()
+        }).execute()))
     except Exception as exc:
         code = str(getattr(exc, "code", ""))
         if code == "P0001":
@@ -68,7 +68,6 @@ async def delete_products_bulk(request: BulkDeletePayload, current_user: AuthUse
 
 @router.get("/delete-jobs/{job_id}")
 async def product_delete_status(job_id: UUID, current_user: AuthUser = Depends(require_auth)):
-    import asyncio
     try:
         result = await asyncio.to_thread(lambda: supabase.table("product_delete_jobs").select("id,status,total,processed,deleted").eq("id", str(job_id)).eq("user_id", current_user.user_id).limit(1).execute())
     except Exception as exc:
@@ -79,9 +78,9 @@ async def product_delete_status(job_id: UUID, current_user: AuthUser = Depends(r
     return result.data[0]
 @router.post("",response_model=ProductResponse,status_code=201)
 async def create_product(request:ProductCreate,current_user:AuthUser=Depends(require_auth)):
-    business_uuid=require_business_owner_for_business_id(request.business_id,current_user); item_key=_normalized_item_key(request.item_key)
-    if supabase.table("products").select("id").eq("business_id",business_uuid).eq("item_key",item_key).execute().data: raise HTTPException(400,f"Product with item_key '{request.item_key}' already exists")
-    result=supabase.table("products").insert({"business_id":business_uuid,"item_key":item_key,"name":request.name.strip(),"description":request.description,"price":money_db(request.price),"currency":request.currency.upper(),"image_url":str(request.image_url) if request.image_url else None,"payment_link":str(request.payment_link) if request.payment_link else None,"is_active":request.is_active,"inventory_count":request.inventory_count,"metadata":request.metadata}).execute()
+    business_uuid=(await asyncio.to_thread(lambda: require_business_owner_for_business_id(request.business_id,current_user))); item_key=_normalized_item_key(request.item_key)
+    if (await asyncio.to_thread(lambda: supabase.table("products").select("id").eq("business_id",business_uuid).eq("item_key",item_key).execute())).data: raise HTTPException(400,f"Product with item_key '{request.item_key}' already exists")
+    result=(await asyncio.to_thread(lambda: supabase.table("products").insert({"business_id":business_uuid,"item_key":item_key,"name":request.name.strip(),"description":request.description,"price":money_db(request.price),"currency":request.currency.upper(),"image_url":str(request.image_url) if request.image_url else None,"payment_link":str(request.payment_link) if request.payment_link else None,"is_active":request.is_active,"inventory_count":request.inventory_count,"metadata":request.metadata}).execute()))
     if not result.data: raise HTTPException(500,"Failed to create product")
     return ProductResponse(**_db_product(result.data[0]))
 @router.post("/bulk")
@@ -94,7 +93,7 @@ async def create_products_bulk(request: List[ProductCreate], current_user: AuthU
     business_ids = {str(item.business_id) for item in request}
     if len(business_ids) != 1:
         raise HTTPException(400, "All imported products must belong to the same business")
-    business_uuid = require_business_owner_for_business_id(str(request[0].business_id), current_user)
+    business_uuid = (await asyncio.to_thread(lambda: require_business_owner_for_business_id(str(request[0].business_id), current_user)))
 
     normalized = []
     seen = set()
@@ -107,7 +106,7 @@ async def create_products_bulk(request: List[ProductCreate], current_user: AuthU
         seen.add(key)
         normalized.append((index, item, key))
 
-    existing = supabase.table("products").select("item_key").eq("business_id", business_uuid).in_("item_key", [x[2] for x in normalized]).execute().data or []
+    existing = (await asyncio.to_thread(lambda: supabase.table("products").select("item_key").eq("business_id", business_uuid).in_("item_key", [x[2] for x in normalized]).execute())).data or []
     existing_keys = {_normalized_item_key(x.get("item_key", "")) for x in existing}
 
     rows = []
@@ -133,7 +132,7 @@ async def create_products_bulk(request: List[ProductCreate], current_user: AuthU
         return {"created": 0, "skipped": len(errors), "errors": errors, "created_ids": []}
 
     try:
-        result = supabase.table("products").insert(rows).execute()
+        result = (await asyncio.to_thread(lambda: supabase.table("products").insert(rows).execute()))
     except Exception as exc:
         logger.exception("Bulk product import failed")
         raise HTTPException(500, "Bulk product import failed") from exc
@@ -149,8 +148,8 @@ async def create_products_bulk(request: List[ProductCreate], current_user: AuthU
 
 @router.get("",response_model=List[ProductResponse])
 async def get_products(business_id:str=Query(...),active_only:bool=Query(True),current_user:AuthUser=Depends(require_auth)):
-    q=supabase.table("products").select("*").eq("business_id",require_business_owner_for_business_id(business_id,current_user)); q=q.eq("is_active",True) if active_only else q
-    return [ProductResponse(**_db_product(x)) for x in (q.order("item_key").execute().data or [])]
+    q=supabase.table("products").select("*").eq("business_id",(await asyncio.to_thread(lambda: require_business_owner_for_business_id(business_id,current_user)))); q=q.eq("is_active",True) if active_only else q
+    return [ProductResponse(**_db_product(x)) for x in ((await asyncio.to_thread(lambda: q.order("item_key").execute())).data or [])]
 @router.get("/paged")
 async def get_products_paged(
     business_id:str=Query(...),
@@ -159,13 +158,13 @@ async def get_products_paged(
     page_size:int=Query(50,ge=1,le=100),
     current_user:AuthUser=Depends(require_auth)
 ):
-    business_uuid=require_business_owner_for_business_id(business_id,current_user)
+    business_uuid=(await asyncio.to_thread(lambda: require_business_owner_for_business_id(business_id,current_user)))
     q=supabase.table("products").select("*",count="exact").eq("business_id",business_uuid)
     if active_only:
         q=q.eq("is_active",True)
     start=(page-1)*page_size
     end=start+page_size-1
-    result=q.order("item_key").range(start,end).execute()
+    result=(await asyncio.to_thread(lambda: q.order("item_key").range(start,end).execute()))
     total=int(result.count or 0)
     products=[ProductResponse(**_db_product(x)) for x in (result.data or [])]
     return {
@@ -178,18 +177,21 @@ async def get_products_paged(
 
 @router.get("/{product_id}",response_model=ProductResponse)
 async def get_product(product_id:str,current_user:AuthUser=Depends(require_auth)):
-    result=supabase.table("products").select("*").eq("id",product_id).execute()
+    result=(await asyncio.to_thread(lambda: supabase.table("products").select("*").eq("id",product_id).execute()))
     if not result.data: raise HTTPException(404,"Product not found")
-    if not supabase.table("businesses").select("id").eq("id",result.data[0]["business_id"]).eq("owner_id",current_user.user_id).execute().data: raise HTTPException(403,"Access denied")
+    if not (await asyncio.to_thread(lambda: supabase.table("businesses").select("id").eq("id",result.data[0]["business_id"]).eq("owner_id",current_user.user_id).execute())).data: raise HTTPException(403,"Access denied")
     return ProductResponse(**_db_product(result.data[0]))
 @router.patch("/{product_id}",response_model=ProductResponse)
 @router.put("/{product_id}",response_model=ProductResponse)
 async def update_product(product_id:str,request:ProductUpdate,current_user:AuthUser=Depends(require_auth)):
-    product=supabase.table("products").select("business_id,item_key").eq("id",product_id).execute()
+    product=(await asyncio.to_thread(lambda: supabase.table("products").select("business_id,item_key").eq("id",product_id).execute()))
     if not product.data: raise HTTPException(404,"Product not found")
     bid=product.data[0]["business_id"]
-    if not supabase.table("businesses").select("id").eq("id",bid).eq("owner_id",current_user.user_id).execute().data: raise HTTPException(403,"Access denied")
-    data=request.model_dump(exclude_none=True)
+    if not (await asyncio.to_thread(lambda: supabase.table("businesses").select("id").eq("id",bid).eq("owner_id",current_user.user_id).execute())).data: raise HTTPException(403,"Access denied")
+    data=request.model_dump(exclude_unset=True)
+    nullable={"description","image_url","payment_link"}
+    if any(value is None and key not in nullable for key,value in data.items()):
+        raise HTTPException(422,"Only description and product URLs can be cleared")
     if "item_key" in data:
         requested_key=_normalized_item_key(data["item_key"])
         existing_key=_normalized_item_key(product.data[0]["item_key"])
@@ -200,18 +202,18 @@ async def update_product(product_id:str,request:ProductUpdate,current_user:AuthU
     if "currency" in data:data["currency"]=data["currency"].upper()
     if "price" in data:data["price"]=money_db(data["price"])
     if not data: raise HTTPException(400,"No mutable product fields to update")
-    result=supabase.table("products").update(data).eq("id",product_id).execute()
+    result=(await asyncio.to_thread(lambda: supabase.table("products").update(data).eq("id",product_id).execute()))
     if not result.data: raise HTTPException(500,"Failed to update product")
     return ProductResponse(**_db_product(result.data[0]))
 @router.delete("/{product_id}",status_code=204)
 async def delete_product(product_id:str,current_user:AuthUser=Depends(require_auth)):
-    result=supabase.table("products").select("business_id").eq("id",product_id).execute()
+    result=(await asyncio.to_thread(lambda: supabase.table("products").select("business_id").eq("id",product_id).execute()))
     if not result.data: raise HTTPException(404,"Product not found")
-    if not supabase.table("businesses").select("id").eq("id",result.data[0]["business_id"]).eq("owner_id",current_user.user_id).execute().data: raise HTTPException(403,"Access denied")
-    supabase.table("products").delete().eq("id",product_id).execute()
+    if not (await asyncio.to_thread(lambda: supabase.table("businesses").select("id").eq("id",result.data[0]["business_id"]).eq("owner_id",current_user.user_id).execute())).data: raise HTTPException(403,"Access denied")
+    (await asyncio.to_thread(lambda: supabase.table("products").delete().eq("id",product_id).execute()))
 @router.get("/business/{business_id}/public",response_model=List[ProductResponse])
 async def get_public_products(business_id:str):
-    business=supabase.table("businesses").select("id").eq("business_id",business_id).execute()
+    business=(await asyncio.to_thread(lambda: supabase.table("businesses").select("id").eq("business_id",business_id).execute()))
     if not business.data: raise HTTPException(404,"Business not found")
-    result=supabase.table("products").select("*").eq("business_id",business.data[0]["id"]).eq("is_active",True).order("item_key").execute()
+    result=(await asyncio.to_thread(lambda: supabase.table("products").select("*").eq("business_id",business.data[0]["id"]).eq("is_active",True).order("item_key").execute()))
     return [ProductResponse(**_db_product(x)) for x in (result.data or [])]

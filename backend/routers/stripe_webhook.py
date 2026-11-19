@@ -107,26 +107,37 @@ def _retrieve_subscription(subscription_id: str | None) -> dict[str, Any] | None
 async def stripe_webhook(request: Request) -> JSONResponse:
     raw = await request.body()
     signature = request.headers.get("stripe-signature")
-    if not signature or not settings.STRIPE_WEBHOOK_SECRET:
+    signing_secret = settings.STRIPE_CONNECT_WEBHOOK_SECRET if request.url.path.endswith("/connect") else settings.STRIPE_WEBHOOK_SECRET
+    if not signature or not signing_secret:
         raise HTTPException(400, "Missing Stripe signature configuration")
     try:
-        event = stripe.Webhook.construct_event(raw, signature, settings.STRIPE_WEBHOOK_SECRET)
+        event = stripe.Webhook.construct_event(raw, signature, signing_secret)
     except ValueError as exc:
         raise HTTPException(400, "Invalid Stripe payload") from exc
     except stripe.error.SignatureVerificationError as exc:
         raise HTTPException(400, "Invalid Stripe signature") from exc
 
     event_id, event_type = str(event["id"]), str(event["type"])
+    claimed = False
     try:
-        if not _claim(event_id, event_type):
+        claimed = await asyncio.to_thread(lambda: _claim(event_id,event_type))
+        if not claimed:
             return JSONResponse(status_code=200, content={"status": "ok", "processed": False, "duplicate": True})
         obj = _as_dict(event["data"]["object"])
         metadata = dict(obj.get("metadata") or {})
+        account = event.get("account")
+        if metadata.get("order_id"):
+            matches = (await asyncio.to_thread(lambda: supabase.table("payments").select("metadata").eq("order_id",metadata["order_id"]).eq("metadata->>provider_session_id",obj.get("id")).limit(1).execute())).data or []
+            if not matches or (matches[0].get("metadata") or {}).get("stripe_account_id") != account:
+                raise ValueError("Merchant payment account mismatch")
+        if account and (obj.get("mode")=="subscription" or event_type.startswith(("customer.subscription.","invoice."))):
+            await asyncio.to_thread(mark_webhook_processed,event_id)
+            return JSONResponse(status_code=200,content={"status":"ok","ignored":True})
         checkout_completed = False
         if event_type in {"checkout.session.completed", "checkout.session.async_payment_succeeded"}:
             order_id = metadata.get("order_id")
             if order_id and obj.get("payment_status") == "paid":
-                _update_order(order_id, session=obj, order_status="paid", payment_status="succeeded", paid=True, metadata_updates={"provider": "stripe", "provider_session_id": obj.get("id"), "payment_intent": obj.get("payment_intent"), "customer": obj.get("customer")})
+                await asyncio.to_thread(_update_order,order_id, session=obj, order_status="paid", payment_status="succeeded", paid=True, metadata_updates={"provider": "stripe", "provider_session_id": obj.get("id"), "payment_intent": obj.get("payment_intent"), "customer": obj.get("customer")})
                 checkout_completed = True
             if obj.get("mode") == "subscription" and obj.get("payment_status") == "paid":
                 subscription_id = obj.get("subscription") if isinstance(obj.get("subscription"), str) else None
@@ -140,10 +151,10 @@ async def stripe_webhook(request: Request) -> JSONResponse:
                 context = _subscription_context(source, subscription_id)
                 cm = context.get("metadata") or {}
                 _apply_from_event(user_id=cm.get("user_id") or metadata.get("user_id"), plan_type=cm.get("plan_type") or metadata.get("plan_type"), subscription_id=subscription_id or context.get("id"), customer_id=context.get("customer") or obj.get("customer"), context=context, stripe_subscription=subscription)
-        elif event_type == "checkout.session.async_payment_failed":
+        elif event_type in {"checkout.session.async_payment_failed","checkout.session.expired"}:
             order_id = metadata.get("order_id")
             if order_id:
-                _update_order(order_id, session=obj, order_status="pending", payment_status="failed", metadata_updates={"provider": "stripe", "provider_session_id": obj.get("id")})
+                (await asyncio.to_thread(lambda: supabase.rpc("expire_order_checkout",{"p_order_id":order_id,"p_session_id":obj["id"]}).execute()))
         elif event_type.startswith("customer.subscription."):
             subscription = await asyncio.to_thread(_retrieve_subscription, obj.get("id"))
             if not subscription:
@@ -154,7 +165,7 @@ async def stripe_webhook(request: Request) -> JSONResponse:
         elif event_type in {"invoice.paid", "invoice.payment_succeeded", "invoice.payment_failed"}:
             subscription_id = obj.get("subscription") or (((obj.get("parent") or {}).get("subscription_details") or {}).get("subscription"))
             if not subscription_id:
-                mark_webhook_processed(event_id)
+                (await asyncio.to_thread(lambda: mark_webhook_processed(event_id)))
                 return JSONResponse(status_code=200, content={"status": "ok", "processed": True})
             subscription = await asyncio.to_thread(_retrieve_subscription, subscription_id)
             if not subscription:
@@ -164,18 +175,23 @@ async def stripe_webhook(request: Request) -> JSONResponse:
             cm = context.get("metadata") or {}
             _apply_from_event(user_id=cm.get("user_id"), plan_type=cm.get("plan_type"), subscription_id=subscription_id or context.get("id"), customer_id=context.get("customer") or obj.get("customer"), context=context, stripe_subscription=subscription)
         elif event_type in {"charge.refunded", "charge.refund.updated", "refund.updated"}:
-            # A refund is a payment adjustment, not a subscription cancellation.
-            # In particular a merchant-order refund must never revoke SaaS access
-            # merely because the Charge shares a Stripe customer with a subscriber.
-            logger.info("Recorded refund event %s; subscription access is unchanged", event_id)
-        mark_webhook_processed(event_id)
+            if account:
+                charge = obj
+                if event_type != "charge.refunded":
+                    charge = await asyncio.to_thread(stripe.Charge.retrieve,obj["charge"],stripe_account=account)
+                amount,_ = checkout_amount({"amount_total":charge["amount_refunded"],"currency":charge["currency"]}) if charge["amount_refunded"] else ("0","")
+                (await asyncio.to_thread(lambda: supabase.rpc("apply_order_refund",{"p_payment_intent":charge["payment_intent"],"p_account":account,"p_amount":amount}).execute()))
+        (await asyncio.to_thread(lambda: mark_webhook_processed(event_id)))
         if checkout_completed:
             return JSONResponse(status_code=200, content={"status": "success"})
         return JSONResponse(status_code=200, content={"status": "ok", "processed": True, "event_type": event_type})
     except Exception as exc:
         try:
-            mark_webhook_failed(event_id, str(exc))
+            if claimed:
+                (await asyncio.to_thread(lambda: mark_webhook_failed(event_id, str(exc))))
         except Exception:
             logger.exception("Failed to mark webhook event failed")
         logger.exception("Stripe webhook processing failed for %s", event_id)
         raise HTTPException(500, "Webhook processing failed") from exc
+
+router.add_api_route("/connect",stripe_webhook,methods=["POST"])

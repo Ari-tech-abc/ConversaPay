@@ -33,6 +33,7 @@ class CheckoutOrder:
     cancel_url: str | None = None
     callback_url: str | None = None
     metadata: dict[str, str] = field(default_factory=dict)
+    stripe_account_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -47,6 +48,8 @@ class CheckoutAdapter(Protocol):
     provider: str
 
     async def create_checkout(self, order: CheckoutOrder) -> CheckoutResult:
+        if not order.stripe_account_id:
+            raise PaymentAdapterError("merchant_payment_account_required")
         """Create a hosted checkout page for an order."""
 
 
@@ -87,6 +90,8 @@ class StripeCheckoutAdapter:
                 mode="payment",
                 customer_email=order.customer_email,
                 metadata=metadata,
+                stripe_account_id=order.stripe_account_id,
+                idempotency_key="merchant-order:"+order.order_id,
             )
         except Exception as exc:
             raise PaymentAdapterError(f"Stripe checkout creation failed: {exc}") from exc
@@ -197,5 +202,5 @@ def get_checkout_adapter(provider: str | None = None) -> CheckoutAdapter:
     if selected == "stripe":
         return StripeCheckoutAdapter()
     if selected in {"payme", "payme_il"}:
-        return PayMeCheckoutAdapter()
+        raise PaymentAdapterError("PayMe checkout is unavailable until verified merchant callbacks are configured")
     raise PaymentAdapterError(f"Unsupported payment provider: {selected}")

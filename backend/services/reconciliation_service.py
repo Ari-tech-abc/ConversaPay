@@ -40,6 +40,7 @@ def reconcile_orders(
     business_id: str,
     older_than_minutes: int = 15,
     limit: int = 25,
+    payment_id: str | None = None,
 ) -> dict[str, Any]:
     """Reconcile old pending payments for one business.
 
@@ -55,7 +56,7 @@ def reconcile_orders(
     cutoff = (
         datetime.now(timezone.utc) - timedelta(minutes=older_than_minutes)
     ).isoformat()
-    rows = (
+    query = (
         supabase.table("payments")
         .select(
             "id,order_id,metadata,status,orders!inner(id,status,payment_status,business_id,created_at)"
@@ -64,10 +65,9 @@ def reconcile_orders(
         .in_("status", list(PENDING_STATUSES))
         .lt("created_at", cutoff)
         .limit(limit)
-        .execute()
-        .data
-        or []
     )
+    if payment_id:query=query.eq("id",payment_id)
+    rows=query.execute().data or []
 
     checked = updated = failed = skipped = 0
 
@@ -80,7 +80,11 @@ def reconcile_orders(
             continue
 
         try:
-            session = stripe_service.retrieve_checkout_session(session_id)
+            session = stripe_service.retrieve_checkout_session(session_id, stripe_account_id=metadata.get("stripe_account_id"))
+            if session.get("status")=="expired":
+                supabase.rpc("expire_order_checkout",{"p_order_id":row["order_id"],"p_session_id":session_id}).execute()
+                updated += 1
+                continue
             payment_status = str(session.get("payment_status") or "").lower()
 
             if payment_status in PAID_STATUSES:
@@ -105,7 +109,7 @@ def reconcile_orders(
                     "p_payment_status": payment_state,
                     "p_metadata_updates": _metadata_updates(
                         session_id, payment_status
-                    ),
+                    ) | {"payment_intent":(session.get("payment_intent") or {}).get("id") if isinstance(session.get("payment_intent"),dict) else session.get("payment_intent")},
                     "p_paid": paid,
                     "p_expected_amount": amount, "p_expected_currency": currency,
                     "p_provider_session_id": session_id, "p_provider": "stripe",

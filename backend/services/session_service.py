@@ -2,6 +2,7 @@
 Session service for managing chat sessions and conversation history.
 Replaces in-memory storage with database-backed sessions.
 """
+import asyncio
 from typing import Optional, Dict, List, Any
 from datetime import datetime
 import logging
@@ -47,11 +48,11 @@ class SessionService:
                 session_id = str(uuid.uuid4())
             
             # Try to find existing conversation
-            result = supabase.table("conversations")\
+            result = (await asyncio.to_thread(lambda: supabase.table("conversations")\
                 .select("*")\
                 .eq("session_id", session_id)\
                 .eq("business_id", business_id)\
-                .execute()
+                .execute()))
             
             if result.data:
                 conversation = result.data[0]
@@ -68,9 +69,9 @@ class SessionService:
                 "started_at": datetime.utcnow().isoformat()
             }
             
-            result = supabase.table("conversations")\
+            result = (await asyncio.to_thread(lambda: supabase.table("conversations")\
                 .insert(conversation_data)\
-                .execute()
+                .execute()))
             
             if result.data:
                 conversation = result.data[0]
@@ -99,12 +100,12 @@ class SessionService:
             List of message dicts
         """
         try:
-            result = supabase.table("messages")\
+            result = (await asyncio.to_thread(lambda: supabase.table("messages")\
                 .select("*")\
                 .eq("conversation_id", conversation_id)\
                 .order("created_at", desc=True)\
                 .limit(limit)\
-                .execute()
+                .execute()))
             
             return list(reversed(result.data)) if result.data else []
         
@@ -143,9 +144,9 @@ class SessionService:
                 "created_at": datetime.utcnow().isoformat()
             }
             
-            result = supabase.table("messages")\
+            result = (await asyncio.to_thread(lambda: supabase.table("messages")\
                 .insert(message_data)\
-                .execute()
+                .execute()))
             
             if result.data:
                 return result.data[0]
@@ -168,13 +169,13 @@ class SessionService:
             True if successful
         """
         try:
-            result = supabase.table("conversations")\
+            result = (await asyncio.to_thread(lambda: supabase.table("conversations")\
                 .update({
                     "status": "closed",
                     "ended_at": datetime.utcnow().isoformat()
                 })\
                 .eq("id", conversation_id)\
-                .execute()
+                .execute()))
             
             if result.data:
                 logger.info(f"Closed conversation: {conversation_id}")
@@ -213,7 +214,7 @@ class SessionService:
             if status:
                 query = query.eq("status", status)
             
-            result = query.execute()
+            result = (await asyncio.to_thread(lambda: query.execute()))
             return result.data if result.data else []
         
         except Exception as e:
@@ -241,30 +242,30 @@ class SessionService:
             threshold = (datetime.utcnow() - timedelta(days=days)).isoformat()
             
             # Get total conversations
-            result = supabase.table("conversations")\
+            result = (await asyncio.to_thread(lambda: supabase.table("conversations")\
                 .select("id", count="exact")\
                 .eq("business_id", business_id)\
                 .gte("started_at", threshold)\
-                .execute()
+                .execute()))
             
             total_conversations = result.count if hasattr(result, 'count') else len(result.data)
             
             # Get total messages
             # This requires a join, so we'll do it in two queries for simplicity
-            conversations = supabase.table("conversations")\
+            conversations = (await asyncio.to_thread(lambda: supabase.table("conversations")\
                 .select("id")\
                 .eq("business_id", business_id)\
                 .gte("started_at", threshold)\
-                .execute()
+                .execute()))
             
             conversation_ids = [c['id'] for c in conversations.data] if conversations.data else []
             
             total_messages = 0
             if conversation_ids:
-                messages_result = supabase.table("messages")\
+                messages_result = (await asyncio.to_thread(lambda: supabase.table("messages")\
                     .select("id", count="exact")\
                     .in_("conversation_id", conversation_ids)\
-                    .execute()
+                    .execute()))
                 total_messages = messages_result.count if hasattr(messages_result, 'count') else len(messages_result.data)
             
             return {
@@ -305,22 +306,22 @@ class SessionService:
         try:
             # Try to find by email first
             if email:
-                result = supabase.table("customers")\
+                result = (await asyncio.to_thread(lambda: supabase.table("customers")\
                     .select("*")\
                     .eq("business_id", business_id)\
                     .eq("email", email)\
-                    .execute()
+                    .execute()))
                 
                 if result.data:
                     return result.data[0]
             
             # Try to find by phone
             if phone:
-                result = supabase.table("customers")\
+                result = (await asyncio.to_thread(lambda: supabase.table("customers")\
                     .select("*")\
                     .eq("business_id", business_id)\
                     .eq("phone", phone)\
-                    .execute()
+                    .execute()))
                 
                 if result.data:
                     return result.data[0]
@@ -335,9 +336,9 @@ class SessionService:
                     "created_at": datetime.utcnow().isoformat()
                 }
                 
-                result = supabase.table("customers")\
+                result = (await asyncio.to_thread(lambda: supabase.table("customers")\
                     .insert(customer_data)\
-                    .execute()
+                    .execute()))
                 
                 if result.data:
                     return result.data[0]

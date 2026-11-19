@@ -28,3 +28,17 @@ jobs:
         run: python scripts/check_html_links.py
       - name: Check onboarding product flow contract
         run: python scripts/check_onboarding_contract.py
+      - name: Install test dependencies
+        run: |
+          pip install -r requirements-dev.txt
+          npm install --prefix tests --ignore-scripts --no-audit --no-fund
+          cd tests && npx playwright install --with-deps chromium
+      - name: Python security and sales regressions
+        run: pytest tests training/tests -q
+      - name: Browser and SQL regressions
+        env:
+          TEST_PYTHON: python
+          PLAYWRIGHT_CHANNEL: chromium
+        run: npm test --prefix tests
+      - name: Frontend delivery quality
+        run: python scripts/ui_quality_gate.py

@@ -23,7 +23,9 @@ The only three legitimate ways to treat a request as "ours" are:
      boundary. An owner previewing their own widget bypasses the plan/API
      key gate entirely (they're not "external" — it's their own business).
 """
+from backend.services.database import optional_result
 from datetime import datetime, timezone
+import asyncio
 import hashlib
 import hmac
 import logging
@@ -50,15 +52,27 @@ def _valid_widget_key(client, business_id: str, raw_key: str | None) -> bool:
     if not raw_key:
         return False
     result = (
-        client.table("api_keys")
-        .select("id")
+        optional_result(client.table("api_keys")
+        .select("id,expires_at,permissions")
         .eq("business_id", business_id)
         .eq("key_hash", _key_hash(raw_key))
         .eq("is_active", True)
         .maybe_single()
-        .execute()
+        .execute())
     )
     if not result.data:
+        return False
+    row = result.data
+    if row.get("expires_at"):
+        try:
+            expiry = datetime.fromisoformat(str(row["expires_at"]).replace("Z", "+00:00"))
+            if expiry.tzinfo is None:
+                expiry = expiry.replace(tzinfo=timezone.utc)
+            if expiry <= datetime.now(timezone.utc):
+                return False
+        except (TypeError, ValueError):
+            return False
+    if "widget" not in (row.get("permissions") or []):
         return False
     client.table("api_keys").update(
         {"last_used_at": datetime.now(timezone.utc).isoformat()}
@@ -75,7 +89,7 @@ async def _is_authenticated_owner(request: Request, actual_business_id: str) -> 
     if not user or not user.email_verified:
         return False
     try:
-        require_business_owner_for_business_id(actual_business_id, user)
+        await asyncio.to_thread(require_business_owner_for_business_id,actual_business_id,user)
         return True
     except HTTPException:
         return False
@@ -106,5 +120,5 @@ async def authorize_widget_request(
     if plan_type == "free":
         raise HTTPException(403, "External widget access requires PRO or PREMIUM")
 
-    if not _valid_widget_key(client, actual_business_id, request.headers.get("X-Widget-Key")):
+    if not await asyncio.to_thread(_valid_widget_key,client,actual_business_id,request.headers.get("X-Widget-Key")):
         raise HTTPException(401, "Valid widget API key required")

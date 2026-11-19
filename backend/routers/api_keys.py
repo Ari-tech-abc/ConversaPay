@@ -1,4 +1,6 @@
 """Tier-aware widget API key management with keyed hashes."""
+import asyncio
+from backend.services.database import optional_result
 import hashlib, hmac, secrets, logging
 from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -27,7 +29,7 @@ async def list_keys(business_id: str, current_user: AuthUser = Depends(require_a
     plan = get_user_plan(current_user.user_id)["plan_type"]; limit = _limit(plan)
     if not limit: return {"plan_type": plan, "limit": 0, "keys": [], "locked": True, "lock_message": "Widget API keys are available in PRO and PREMIUM."}
     try:
-        result = supabase.table("api_keys").select("id,business_id,name,key_prefix,permissions,expires_at,is_active,last_used_at,created_at").eq("business_id", business_id).eq("is_active", True).order("created_at", desc=True).execute()
+        result = (await asyncio.to_thread(lambda: supabase.table("api_keys").select("id,business_id,name,key_prefix,permissions,expires_at,is_active,last_used_at,created_at").eq("business_id", business_id).eq("is_active", True).order("created_at", desc=True).execute()))
     except Exception as exc:
         logging.getLogger(__name__).exception("API key list load failed for business %s", business_id)
         raise HTTPException(503, {"code": "api_keys_unavailable", "message": "API keys are temporarily unavailable."}) from exc
@@ -37,13 +39,13 @@ async def create_key(payload: KeyCreate, current_user: AuthUser = Depends(requir
     if not _owned_business(payload.business_id, current_user.user_id): raise HTTPException(404, "Business not found")
     plan = get_user_plan(current_user.user_id)["plan_type"]; limit = _limit(plan)
     if not limit: raise HTTPException(403, "Widget API keys are available in PRO and PREMIUM")
-    existing = supabase.table("api_keys").select("id", count="exact").eq("business_id", payload.business_id).eq("is_active", True).execute(); count = existing.count if existing.count is not None else len(existing.data or [])
+    existing = (await asyncio.to_thread(lambda: supabase.table("api_keys").select("id", count="exact").eq("business_id", payload.business_id).eq("is_active", True).execute())); count = existing.count if existing.count is not None else len(existing.data or [])
     if count >= limit: raise HTTPException(409, f"Your {plan.upper()} plan allows up to {limit} active widget keys")
-    raw = "cp_live_" + secrets.token_urlsafe(32); record = {"business_id": payload.business_id, "name": payload.name, "key_prefix": raw[:12], "key_hash": _hash(raw), "permissions": ["widget"], "is_active": True}; created = supabase.table("api_keys").insert(record).execute()
+    raw = "cp_live_" + secrets.token_urlsafe(32); record = {"business_id": payload.business_id, "name": payload.name, "key_prefix": raw[:12], "key_hash": _hash(raw), "permissions": ["widget"], "is_active": True}; created = (await asyncio.to_thread(lambda: supabase.table("api_keys").insert(record).execute()))
     if not created.data: raise HTTPException(500, "Failed to create API key")
     return {"key": raw, "key_info": {k: created.data[0].get(k) for k in ("id", "business_id", "name", "key_prefix", "permissions", "is_active", "created_at")}, "warning": "Copy this key now. It will not be shown again."}
 @router.delete("/{key_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def revoke_key(key_id: str, current_user: AuthUser = Depends(require_auth)):
-    owned = supabase.table("api_keys").select("id,business_id").eq("id", key_id).maybe_single().execute()
+    owned = optional_result((await asyncio.to_thread(lambda: supabase.table("api_keys").select("id,business_id").eq("id", key_id).maybe_single().execute())))
     if not owned.data or not _owned_business(owned.data["business_id"], current_user.user_id): raise HTTPException(404, "API key not found")
-    supabase.table("api_keys").update({"is_active": False}).eq("id", key_id).execute()
+    (await asyncio.to_thread(lambda: supabase.table("api_keys").update({"is_active": False}).eq("id", key_id).execute()))

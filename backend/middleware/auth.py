@@ -1,4 +1,6 @@
 """Authentication and authorization helpers for Supabase-backed users."""
+import asyncio
+from backend.services.database import optional_result
 from datetime import datetime, timezone
 from typing import Optional
 import logging
@@ -36,7 +38,7 @@ def _is_email_verified(user) -> bool:
 
 async def get_current_user(request: Request, credentials: HTTPAuthorizationCredentials = Depends(security)) -> AuthUser:
     try:
-        response = supabase_service.auth.get_user(credentials.credentials)
+        response = (await asyncio.to_thread(lambda: supabase_service.auth.get_user(credentials.credentials)))
         if not response or not response.user:
             raise HTTPException(401, "Invalid token")
         user = response.user
@@ -53,7 +55,7 @@ async def get_current_user_optional(request: Request) -> Optional[AuthUser]:
     if not auth.startswith("Bearer "):
         return None
     try:
-        response = supabase_client.auth.get_user(auth.split(" ", 1)[1])
+        response = (await asyncio.to_thread(lambda: supabase_client.auth.get_user(auth.split(" ", 1)[1])))
         if not response or not response.user:
             return None
         user = response.user
@@ -65,6 +67,9 @@ async def get_current_user_optional(request: Request) -> Optional[AuthUser]:
 def require_auth(user: AuthUser = Depends(get_current_user)) -> AuthUser:
     if not user.email_verified:
         raise HTTPException(status_code=403, detail="EMAIL_NOT_VERIFIED")
+    deletion = supabase_service.table("account_deletions").select("user_id").eq("user_id",user.user_id).limit(1).execute()
+    if isinstance(deletion.data,list) and deletion.data:
+        raise HTTPException(403,"ACCOUNT_DELETION_PENDING")
     return user
 
 
@@ -94,7 +99,7 @@ def active_plan(row: dict) -> str:
 
 def is_pro_user(user_id: str) -> bool:
     try:
-        result = supabase_service.table("profiles").select("plan_type,subscription_status,subscription_expires_at,subscription_end_date").eq("user_id", user_id).maybe_single().execute()
+        result = optional_result(supabase_service.table("profiles").select("plan_type,subscription_status,subscription_expires_at,subscription_end_date").eq("user_id", user_id).maybe_single().execute())
         return active_plan(result.data or {}) in {"pro", "premium"}
     except Exception as exc:
         logger.error("Plan check error: %s", exc)
@@ -102,7 +107,7 @@ def is_pro_user(user_id: str) -> bool:
 
 
 def require_business_owner_for_business_id(business_id: str, current_user: AuthUser) -> str:
-    result = supabase_service.table("businesses").select("id").eq("id", business_id).eq("owner_id", current_user.user_id).execute()
+    result = supabase_service.table("businesses").select("id").eq("id", business_id).eq("owner_id", current_user.user_id).eq("is_active",True).execute()
     if not result.data:
         raise HTTPException(403, "Unauthorized access to this business resources")
     return str(result.data[0]["id"])

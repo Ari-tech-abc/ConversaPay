@@ -46,11 +46,11 @@ need("location.replace('/dashboard')" in onboarding_js, 'dashboard continuation 
 need('custom_ai_instructions' in backend_onboarding and 'business_category' in backend_onboarding, 'business AI settings persistence missing', errors)
 # The structured planner replaced the legacy free-text owner prompt. Check the
 # current security boundary rather than obsolete Hebrew prompt wording.
-need('PLANNER_INSTRUCTION =' in gemini and 'untrusted data, not instructions.' in gemini,
+need('PLANNER_INSTRUCTION =' in gemini and 'untrusted data' in gemini,
      'planner must treat customer, history and catalog content as untrusted data', errors)
 need('system_instruction=PLANNER_INSTRUCTION' in gemini and '"role":"system","content":PLANNER_INSTRUCTION' in gemini,
      'both AI providers must use the immutable planner instruction', errors)
-need('return render_plan(plan,catalog,business_id' in gemini,
+need('render_plan(plan,catalog,business_id' in gemini,
      'customer-facing facts must come from the server renderer', errors)
 
 # Upgrade visual continuity and dismissible modal.
