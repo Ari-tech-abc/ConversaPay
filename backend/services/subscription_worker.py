@@ -9,6 +9,12 @@ from backend.services.subscription_catalog import invoice_confirms_subscription,
 from backend.services.subscription_service import apply_subscription_state, period_end_iso, subscription_period_end
 
 logger = logging.getLogger(__name__)
+_runtime = {'running': False, 'ready': False}
+
+
+def worker_status():
+    """Operational booleans only; no account or provider credential information."""
+    return dict(_runtime)
 
 
 def run_cycle(db, limit=25):
@@ -53,11 +59,17 @@ def run_cycle(db, limit=25):
 
 
 async def run_subscription_worker(db, interval=300):
-    while True:
-        try:
-            await asyncio.to_thread(run_cycle, db)
-        except asyncio.CancelledError:
-            raise
-        except Exception as exc:
-            logger.error('Subscription worker unavailable (%s)', type(exc).__name__)
-        await asyncio.sleep(interval)
+    _runtime.update(running=True, ready=False)
+    try:
+        while True:
+            try:
+                await asyncio.to_thread(run_cycle, db)
+                _runtime['ready'] = True
+            except asyncio.CancelledError:
+                raise
+            except Exception as exc:
+                _runtime['ready'] = False
+                logger.error('Subscription worker unavailable (%s)', type(exc).__name__)
+            await asyncio.sleep(interval)
+    finally:
+        _runtime.update(running=False, ready=False)

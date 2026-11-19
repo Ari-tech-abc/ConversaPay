@@ -82,7 +82,9 @@ app.add_middleware(CorrelationIdMiddleware); app.add_middleware(AuthRateLimitMid
 async def health():
     status=get_migration_status()
     if status in {"pending","in_progress","failed"}: return JSONResponse(status_code=503,content={"status":"not_ready","version":"2.5.0","environment":settings.ENVIRONMENT,"checks":{"migrations":status}})
-    return {"status":"healthy","version":"2.5.0","environment":settings.ENVIRONMENT,"checks":{"migrations":status}}
+    from backend.services.subscription_worker import worker_status
+    return {"status":"healthy","version":"2.5.0","environment":settings.ENVIRONMENT,"checks":{"migrations":status},
+            "subscriptions":{"provider":settings.SUBSCRIPTION_PROVIDER,"worker_enabled":settings.SUBSCRIPTION_WORKER_ENABLED,**worker_status()}}
 async def _check_database():
     if settings.DATABASE_URL:
         connection=await asyncpg.connect(settings.DATABASE_URL,timeout=3)

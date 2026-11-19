@@ -68,6 +68,13 @@ class Settings(BaseSettings):
 
     def __init__(self, **data):
         super().__init__(**data)
+        if self.is_production:
+            # Existing Render services do not automatically import new YAML env vars.
+            # Preserve explicit settings while making this release safe to deploy.
+            if "SUBSCRIPTION_PROVIDER" not in self.model_fields_set:
+                self.SUBSCRIPTION_PROVIDER = "isracard"
+            if "SUBSCRIPTION_WORKER_ENABLED" not in self.model_fields_set:
+                self.SUBSCRIPTION_WORKER_ENABLED = True
         if self.AI_PROVIDER is None:
             self.AI_PROVIDER = "gemini" if self.is_production else "ollama"
         if self.is_production and self.DEBUG:

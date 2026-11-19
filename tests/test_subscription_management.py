@@ -1,5 +1,7 @@
 """No network or charges: billing summaries, recovery and request boundaries."""
 import unittest
+import asyncio
+import os
 from unittest.mock import MagicMock, patch
 import test_application_security
 from fastapi.testclient import TestClient
@@ -9,6 +11,29 @@ from backend.routers import subscription
 from backend.services import subscription_history as history, subscription_worker as worker
 from backend.services.notification_templates import render_notification
 from test_subscription_operations import USER, provider_subscription
+
+
+class DeploymentTests(unittest.TestCase):
+    def test_production_defaults_use_selected_provider_and_enable_recovery(self):
+        from backend.config import Settings
+        with patch.dict(os.environ):
+            os.environ.pop('SUBSCRIPTION_PROVIDER', None)
+            os.environ.pop('SUBSCRIPTION_WORKER_ENABLED', None)
+            configured = Settings(ENVIRONMENT='production', _env_file=None)
+        self.assertEqual(configured.SUBSCRIPTION_PROVIDER, 'isracard')
+        self.assertTrue(configured.SUBSCRIPTION_WORKER_ENABLED)
+        explicit = Settings(ENVIRONMENT='production', SUBSCRIPTION_PROVIDER='stripe', SUBSCRIPTION_WORKER_ENABLED=False, _env_file=None)
+        self.assertEqual(explicit.SUBSCRIPTION_PROVIDER, 'stripe')
+        self.assertFalse(explicit.SUBSCRIPTION_WORKER_ENABLED)
+
+    def test_worker_reports_completed_cycle_and_cleans_up_on_shutdown(self):
+        async def stop_after_cycle(_):
+            self.assertEqual(worker.worker_status(), {'running':True,'ready':True})
+            raise asyncio.CancelledError()
+        with patch.object(worker, 'run_cycle', return_value={}), patch.object(worker.asyncio, 'sleep', side_effect=stop_after_cycle):
+            with self.assertRaises(asyncio.CancelledError):
+                asyncio.run(worker.run_subscription_worker(MagicMock()))
+        self.assertEqual(worker.worker_status(), {'running':False,'ready':False})
 
 
 class InvoiceTests(unittest.TestCase):
